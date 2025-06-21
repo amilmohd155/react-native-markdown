@@ -57,13 +57,6 @@ No syntax highlighting
 
 That was a horizontal rule (thematic break).
 
-Here's a table: (Not yet implemented)
-
-| Column 1 | Column 2 | Column 3 |
-| -------- | -------- | -------- |
-| Cell 1   | Cell 2   | Cell 3   |
-| Cell 4   | Cell 5   | Cell 6   | 
-
 Here are some links:
 
 - [Inline link](https://example.com)
@@ -74,28 +67,24 @@ Here are some links:
     2) [Inline link](https://example.com)
 - [Reference link][ref1]
 
-Reference links are not supported yet, but here's an example:
+Reference links are not supported yet:
 [ref1]: https://example.com "Reference link" 
 
 Here's an image:
 
 ![Alt text](https://fastly.picsum.photos/id/334/200/300.jpg?hmac=mY7moKpyBD1N0PF_abyW5_eUHxm9jV4JxZWPnxY7x3Q "Image title")
 
-Here's a reference image: Not yet supported, but here's an example:
+Here's a reference image: Not yet supported:
 
 ![Alt text][img1]
 
-[img1]: https://fastly.picsum.photos/id/334/200/300.jpg?hmac=mY7moKpyBD1N0PF_abyW5_eUHxm9jV4JxZWPnxY7x3Q "Reference image"
+[img1]: https://fastly.picsum.photos/id/135/200/300.jpg?hmac=d3sTOCUkxdC1OKCgh9wTPjck-gMWATyVHFvflla5vLI "Reference image"
 
 Line breaks can be created with two spaces at the end of a line  
 like this.
 
 Hard line breaks can also be created with a backslash\\
 at the end of a line.
-
-Escape characters: \\*not italic\\* $begin:math:display$not a link\\$end:math:display$
-
-Some special characters that might need escaping: \\* \\_ \\\` & < > [ ] ( ) # + - . ! | \\ ~
 
 A paragraph with a soft line break
 that continues on the next line.
@@ -105,3 +94,10 @@ that continues on the next line.
     And line breaks
 
 Final paragraph to end the document.`;
+
+// Here's a table: (Not yet implemented)
+
+// | Column 1 | Column 2 | Column 3 |
+// | -------- | -------- | -------- |
+// | Cell 1   | Cell 2   | Cell 3   |
+// | Cell 4   | Cell 5   | Cell 6   |
