@@ -1,67 +1,24 @@
 import type { Node, Root, RootContentMap } from 'mdast';
 import defaultRenderRules from './renderRules';
 import { getKey } from '../utils/getKey';
-import type { ExpandUnion } from '../types/utils';
+import type { ExpandUnion, Prettify } from '../types/utils';
 import { getMergedStyles, type StyleMap } from '../utils/getMergedStyles';
-
-type Prettify<T> = {
-  [K in keyof T]: T[K];
-} & {};
+import type { ReactElement } from 'react';
 
 type BaseNodeKeys = {
   [K in keyof RootContentMap]: RootContentMap[K] extends Node ? K : never;
 }[keyof RootContentMap];
 
-// type RootContentMapExcludeHeading = Omit<RootContentMap, 'heading'>;
-
-type ValidNodeKey = ExpandUnion<
-  | BaseNodeKeys
-  | 'unknown'
-  | 'root'
-  | 'heading1'
-  | 'heading2'
-  | 'heading3'
-  | 'heading4'
-  | 'heading5'
-  | 'heading6'
->;
-
-// type ValidNodeKey =
-//   | {
-//       [K in keyof RootContentMap]: RootContentMap[K] extends Node ? K : never;
-//     }[keyof RootContentMap]
-//   | 'unknown'
-//   | 'root'
-//   | 'heading1'
-//   | 'heading2'
-//   | 'heading3'
-//   | 'heading4'
-//   | 'heading5'
-//   | 'heading6';
+type ValidNodeKey = ExpandUnion<BaseNodeKeys | 'unknown' | 'root'>;
 
 type NodeTypeMap = Prettify<
   {
     [K in BaseNodeKeys]: RootContentMap[K];
   } & {
-    heading1: RootContentMap['heading'];
-    heading2: RootContentMap['heading'];
-    heading3: RootContentMap['heading'];
-    heading4: RootContentMap['heading'];
-    heading5: RootContentMap['heading'];
-    heading6: RootContentMap['heading'];
     unknown: Node;
     root: Root;
   }
 >;
-
-// export type RenderFunction = (
-//   node: Node,
-//   children: any[],
-//   parentStack: Node[],
-//   styles: NamedStyle,
-//   key?: string | number,
-//   ...extras: any[]
-// ) => any;
 
 export type RenderFunction<K extends ValidNodeKey = ValidNodeKey> = (
   node: NodeTypeMap[K],
@@ -72,29 +29,61 @@ export type RenderFunction<K extends ValidNodeKey = ValidNodeKey> = (
   ...extras: any[]
 ) => any;
 
-// export type RenderRules = Record<string, RenderFunction>;
 export type RenderRules = {
   [K in ValidNodeKey]?: RenderFunction<K>;
 };
+
+export type ListBulletStyle = 'disc' | 'dash';
+
+export interface ASTRendererOptions {
+  renderRules?: RenderRules;
+  styles?: StyleMap | null;
+  debug?: boolean;
+  listBulletStyle?: ListBulletStyle;
+  customBulletElement?: ReactElement | null;
+}
 
 export default class ASTRenderer {
   private _renderRules: RenderRules;
   private _styles: StyleMap;
   private _debug: boolean;
+  private _listBulletStyle: ListBulletStyle;
+  private _customBulletElement: ReactElement | null;
 
   constructor({
     renderRules,
     styles = null,
     debug = false,
-  }: {
-    renderRules?: RenderRules;
-    styles?: StyleMap | null;
-    debug?: boolean;
-  }) {
-    this._renderRules = renderRules ?? defaultRenderRules;
+    listBulletStyle = 'disc',
+    customBulletElement = null,
+  }: ASTRendererOptions) {
+    this._renderRules = this.fallbackMerge(defaultRenderRules, renderRules);
     this._styles = getMergedStyles(styles, true);
-
+    this._listBulletStyle = listBulletStyle;
     this._debug = debug;
+
+    this._customBulletElement = customBulletElement;
+  }
+
+  private fallbackMerge(
+    defaults: RenderRules,
+    overrides?: Partial<RenderRules>
+  ): RenderRules {
+    return {
+      ...Object.fromEntries(
+        Object.entries(defaults).filter(([key]) => !(key in (overrides ?? {})))
+      ),
+      ...(overrides ?? {}),
+    };
+  }
+
+  private get getListBulletCharacter() {
+    switch (this._listBulletStyle) {
+      case 'disc':
+        return '\u2022'; // Unicode for bullet character
+      case 'dash':
+        return '-';
+    }
   }
 
   private debugLog(length: number, type: string) {
@@ -122,11 +111,6 @@ export default class ASTRenderer {
     const children: any[] = [];
     let type = node.type as ValidNodeKey;
 
-    if (type === 'heading' && 'depth' in node) {
-      type = `heading${node.depth}` as ValidNodeKey;
-      node.type = type;
-    }
-
     if ('children' in node && Array.isArray(node.children)) {
       if (type === 'list') {
         const listNode = node as import('mdast').List;
@@ -135,7 +119,11 @@ export default class ASTRenderer {
 
         for (let i = 0; i < listNode.children.length; i++) {
           const listItemNode = listNode.children[i];
-          const bullet = ordered ? `${start + i}.` : `•`;
+          const listStyleType = ordered
+            ? `${start + i}.`
+            : this.getListBulletCharacter;
+
+          const customListStyleType = !ordered && this._customBulletElement;
 
           if (!listItemNode) {
             console.warn(`Skipping empty list item at index: ${i}`);
@@ -145,7 +133,7 @@ export default class ASTRenderer {
           const renderedChild = this.renderNode(
             listItemNode,
             [node, ...parentStack],
-            { bullet, index: i, ordered, start }
+            { listStyleType, index: i, ordered, start, customListStyleType }
           );
 
           children.push(renderedChild);

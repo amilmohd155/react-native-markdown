@@ -129,23 +129,22 @@ const renderRules: RenderRules = {
     return (
       <View key={key} style={styles.listItem}>
         {/* Display bullet or number */}
-        <Text style={styles.listBullet}>{extras?.bullet}</Text>
+        {extras?.customListStyleType ? (
+          extras.customListStyleType
+        ) : (
+          <Text style={styles.listBullet}>{extras?.listStyleType}</Text>
+        )}
         <View style={styles.listItemContent}>{children}</View>
       </View>
     );
   },
-
-  table: (node, key, styles, children) => (
-    <View key={key} style={styles._VIEW_SAFE_table}>
-      {children}
-    </View>
-  ),
-  heading1: headingRender,
-  heading2: headingRender,
-  heading3: headingRender,
-  heading4: headingRender,
-  heading5: headingRender,
-  heading6: headingRender,
+  heading: (node, key, styles, children) => {
+    return (
+      <Text key={key} style={styles[`heading${node.depth}`]}>
+        {children}
+      </Text>
+    );
+  },
   unknown: () => {
     return null;
   },

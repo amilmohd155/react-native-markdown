@@ -13,7 +13,7 @@ export const mdxString = `
 
 This is a paragraph with some **bold text** and _italic text_. You can also use **bold** and _italic_ syntax. Here's some **_bold and italic_** text together.
 
-This is another paragraph with \`inline code\` and ~~strikethrough text~~.
+This is another paragraph with \`inline code\`.
 
 > This is a blockquote
 >
@@ -67,9 +67,11 @@ Here's a table: (Not yet implemented)
 Here are some links:
 
 - [Inline link](https://example.com)
-- [Link with title](https://example.com "This is a title")
-- <https://autolink.example.com>
-- <email@example.com>
+  - [Link with title](https://example.com "This is a title")
+    - <https://autolink.example.com>
+1) <email@example.com>
+    1) [Link with title](https://example.com "This is a title")
+    2) [Inline link](https://example.com)
 - [Reference link][ref1]
 
 Reference links are not supported yet, but here's an example:

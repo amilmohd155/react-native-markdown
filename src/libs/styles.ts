@@ -46,7 +46,6 @@ export const styles: StyleMap = {
   break: {},
   thematicBreak: {
     flex: 1,
-    // width: '100%',
     height: 1,
     backgroundColor: '#0000006c',
     marginVertical: 12,
@@ -83,12 +82,16 @@ export const styles: StyleMap = {
         fontFamily: 'monospace',
       },
     }),
-    fontSize: 16,
     backgroundColor: '#f0f0f0',
     padding: 4,
     borderRadius: 4,
   },
   link: {
+    transform: [
+      {
+        translateY: 2, // Adjust vertical alignment for links
+      },
+    ],
     fontSize: 16,
     color: '#1e90ff',
     textDecorationLine: 'underline',
@@ -110,11 +113,11 @@ export const styles: StyleMap = {
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'flex-start',
+    gap: 8,
   },
   listBullet: {
     fontSize: 16,
     fontWeight: 'black',
-    marginHorizontal: 8,
   },
   listItemContent: {
     flex: 1,
