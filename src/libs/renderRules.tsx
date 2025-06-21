@@ -6,15 +6,7 @@ import {
   Image,
   type ImageProps,
 } from 'react-native';
-import type { RenderFunction, RenderRules } from './ASTRenderer';
-
-const headingRender: RenderFunction = (node, key, styles, children) => {
-  return (
-    <Text key={key} style={styles[node.type]}>
-      {children}
-    </Text>
-  );
-};
+import type { RenderRules } from '../components/ASTRenderer.types';
 
 const renderRules: RenderRules = {
   root: (_node, key, styles, children) => (

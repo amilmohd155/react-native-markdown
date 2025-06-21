@@ -1,47 +1,17 @@
-import type { Node, Root, RootContentMap } from 'mdast';
-import defaultRenderRules from './renderRules';
+import type { Node, Root } from 'mdast';
+import defaultRenderRules from '../libs/renderRules';
 import { getKey } from '../utils/getKey';
-import type { ExpandUnion, Prettify } from '../types/utils';
-import { getMergedStyles, type StyleMap } from '../utils/getMergedStyles';
+import { getMergedStyles } from '../utils/getMergedStyles';
 import type { ReactElement } from 'react';
-
-type BaseNodeKeys = {
-  [K in keyof RootContentMap]: RootContentMap[K] extends Node ? K : never;
-}[keyof RootContentMap];
-
-type ValidNodeKey = ExpandUnion<BaseNodeKeys | 'unknown' | 'root'>;
-
-type NodeTypeMap = Prettify<
-  {
-    [K in BaseNodeKeys]: RootContentMap[K];
-  } & {
-    unknown: Node;
-    root: Root;
-  }
->;
-
-export type RenderFunction<K extends ValidNodeKey = ValidNodeKey> = (
-  node: NodeTypeMap[K],
-  key: string,
-  styles: StyleMap,
-  children: any[],
-  parentStack: Node[],
-  ...extras: any[]
-) => any;
-
-export type RenderRules = {
-  [K in ValidNodeKey]?: RenderFunction<K>;
-};
-
-export type ListBulletStyle = 'disc' | 'dash';
-
-export interface ASTRendererOptions {
-  renderRules?: RenderRules;
-  styles?: StyleMap | null;
-  debug?: boolean;
-  listBulletStyle?: ListBulletStyle;
-  customBulletElement?: ReactElement | null;
-}
+import type { StyleMap } from '../types/style.types';
+import type {
+  ASTRendererOptions,
+  ListBulletStyle,
+  NodeTypeMap,
+  RenderFunction,
+  RenderRules,
+  ValidNodeKey,
+} from './ASTRenderer.types';
 
 export default class ASTRenderer {
   private _renderRules: RenderRules;

@@ -1,51 +1,7 @@
-import {
-  StyleSheet,
-  type ImageStyle,
-  type StyleProp,
-  type TextStyle,
-  type ViewStyle,
-} from 'react-native';
+import { StyleSheet, type TextStyle, type ViewStyle } from 'react-native';
 import { styles as defaultStyles } from '../libs/styles';
-
-type TextOnlyProps = Omit<TextStyle, keyof ViewStyle>;
-
-type NamedStyle = StyleProp<ViewStyle | TextStyle | ImageStyle>;
-
-export type StyleMap = Record<string, NamedStyle>;
-
-function removeTextStyleProps<T extends ViewStyle | TextStyle>(
-  style: T
-): ViewStyle {
-  const textOnlyKeys: (keyof TextOnlyProps)[] = [
-    'color',
-    'fontFamily',
-    'fontSize',
-    'fontStyle',
-    'fontWeight',
-    'letterSpacing',
-    'lineHeight',
-    'textAlign',
-    'textDecorationLine',
-    'textDecorationStyle',
-    'textDecorationColor',
-    'textShadowColor',
-    'textShadowOffset',
-    'textShadowRadius',
-    'textTransform',
-    'includeFontPadding',
-    'textAlignVertical',
-    'fontVariant',
-    'writingDirection',
-  ];
-
-  const result = { ...style };
-
-  textOnlyKeys.forEach((key) => {
-    delete (result as any)[key];
-  });
-
-  return result as ViewStyle;
-}
+import { removeTextStyleProps } from './removeProps';
+import type { StyleMap } from '../types/style.types';
 
 export function getMergedStyles(
   styles: StyleMap | null = null,

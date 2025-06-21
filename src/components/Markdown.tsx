@@ -1,10 +1,7 @@
 import { memo } from 'react';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import ASTRenderer, { type ASTRendererOptions } from '../libs/ASTRenderer';
-
-interface MarkdownProps extends ASTRendererOptions {
-  markdown: Uint8Array | string;
-}
+import ASTRenderer from './ASTRenderer';
+import type { MarkdownProps } from './Markdown.types';
 
 const Markdown = memo(
   ({

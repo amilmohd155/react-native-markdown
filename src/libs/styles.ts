@@ -1,9 +1,8 @@
 import { Platform } from 'react-native';
-import type { StyleMap } from '../utils/getMergedStyles';
+import type { StyleMap } from '../types/style.types';
 
 export const styles: StyleMap = {
   root: {},
-
   heading1: {
     fontSize: 48,
     fontWeight: 'bold',
