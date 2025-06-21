@@ -69,7 +69,6 @@
     "@release-it/conventional-changelog": "^9.0.2",
     "@types/jest": "^29.5.5",
     "@types/react": "^19.0.12",
-    "@types/react-syntax-highlighter": "^15.5.13",
     "commitlint": "^19.6.1",
     "del-cli": "^5.1.0",
     "eslint": "^9.22.0",
@@ -85,8 +84,7 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*",
-    "react-syntax-highlighter": "*"
+    "react-native": "*"
   },
   "workspaces": [
     "example"

@@ -2912,6 +2912,7 @@ __metadata:
   dependencies:
     "@babel/core": ^7.20.0
     "@expo/metro-runtime": ~5.0.4
+    "@types/react-syntax-highlighter": ^15.5.13
     expo: ~53.0.12
     expo-atlas: ^0.4.0
     expo-status-bar: ~2.2.3
@@ -2939,7 +2940,6 @@ __metadata:
     "@release-it/conventional-changelog": ^9.0.2
     "@types/jest": ^29.5.5
     "@types/react": ^19.0.12
-    "@types/react-syntax-highlighter": ^15.5.13
     commitlint: ^19.6.1
     css-to-react-native: ^3.2.0
     del-cli: ^5.1.0
@@ -2957,7 +2957,6 @@ __metadata:
   peerDependencies:
     react: "*"
     react-native: "*"
-    react-syntax-highlighter: "*"
   languageName: unknown
   linkType: soft
 
