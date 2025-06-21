@@ -1,11 +1,8 @@
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { CodeHighlighter, Markdown } from '@quizcript/react-native-markdown';
+import { Markdown } from '@quizcript/react-native-markdown';
 import { mdxString } from './example';
-import {
-  atomOneDarkReasonable,
-  docco,
-  gradientDark,
-} from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { atomOneDarkReasonable } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { CodeHighlighter } from './component/code-highlighter';
 
 export default function App() {
   return (
@@ -14,23 +11,20 @@ export default function App() {
         <Markdown
           markdown={mdxString}
           renderRules={{
-            code: (node, key, styles, children) => (
+            code: (node, key) => (
               <CodeHighlighter
                 key={key}
                 hljsStyle={atomOneDarkReasonable}
-                language={node.lang || 'javascript'}
+                language={node.lang || 'plaintext'}
                 scrollViewProps={{
                   bounces: false,
                   contentContainerStyle: {
                     padding: 20,
-                    width: '100%',
+                    // width: '100%',
                     borderRadius: 8,
                   },
                 }}
-                textStyle={{
-                  fontFamily: 'Courier New',
-                  fontSize: 16,
-                }}
+                textStyle={styles.codeTextStyle}
               >
                 {node.value}
               </CodeHighlighter>
@@ -41,36 +35,8 @@ export default function App() {
               backgroundColor: '#cad8ee',
             },
           }}
-          customBulletElement={
-            <View
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: 'black',
-              }}
-            />
-          }
+          customBulletElement={<View style={styles.customBullet} />}
         />
-        {/* <CodeHighlighter
-          hljsStyle={atomOneDarkReasonable}
-          language="javascript"
-          scrollViewProps={{
-            bounces: false,
-            contentContainerStyle: {
-              padding: 20,
-              width: '100%',
-            },
-          }}
-          textStyle={{
-            fontFamily: 'Courier New',
-            fontSize: 16,
-          }}
-        >
-          {`function hello(name) {
-  console.log("hello world aknagna agnognag " + name);
-}`}
-        </CodeHighlighter> */}
       </ScrollView>
     </View>
   );
@@ -84,5 +50,15 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: 100,
     paddingHorizontal: 20,
+  },
+  customBullet: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'black',
+  },
+  codeTextStyle: {
+    fontFamily: 'Courier New',
+    fontSize: 16,
   },
 });

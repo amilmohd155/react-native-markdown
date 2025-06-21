@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "expo-atlas": "^0.4.0",
     "react-native-builder-bob": "^0.40.12",
     "react-native-monorepo-config": "^0.1.9"

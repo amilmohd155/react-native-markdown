@@ -42,7 +42,7 @@ Here's a code block:
 
 \`\`\`javascript
 function hello(name) {
-  console.log("hello world");
+  console.log(\`Hello, \${name}!\`);
 }
 \`\`\`
 
