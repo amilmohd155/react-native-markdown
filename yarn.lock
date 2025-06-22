@@ -1805,6 +1805,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@docren/react-native-markdown-example@workspace:example":
+  version: 0.0.0-use.local
+  resolution: "@docren/react-native-markdown-example@workspace:example"
+  dependencies:
+    "@babel/core": ^7.20.0
+    "@expo/metro-runtime": ~5.0.4
+    "@types/react-syntax-highlighter": ^15.5.13
+    expo: ~53.0.12
+    expo-atlas: ^0.4.0
+    expo-status-bar: ~2.2.3
+    react: 19.0.0
+    react-dom: 19.0.0
+    react-native: 0.79.4
+    react-native-builder-bob: ^0.40.12
+    react-native-monorepo-config: ^0.1.9
+    react-native-web: ~0.20.0
+    react-syntax-highlighter: ^15.6.1
+  languageName: unknown
+  linkType: soft
+
 "@docren/react-native-markdown@workspace:.":
   version: 0.0.0-use.local
   resolution: "@docren/react-native-markdown@workspace:."
@@ -2939,26 +2959,6 @@ __metadata:
   checksum: 9e1e1ce5faa64719e866b02d10e28d727d809365eb3692ccfdc420ab6d2073b93abe403994691868f265e34a5601a8eee18ffff6562b27124d971418ba6bb815
   languageName: node
   linkType: hard
-
-"@quizcript/react-native-markdown-example@workspace:example":
-  version: 0.0.0-use.local
-  resolution: "@quizcript/react-native-markdown-example@workspace:example"
-  dependencies:
-    "@babel/core": ^7.20.0
-    "@expo/metro-runtime": ~5.0.4
-    "@types/react-syntax-highlighter": ^15.5.13
-    expo: ~53.0.12
-    expo-atlas: ^0.4.0
-    expo-status-bar: ~2.2.3
-    react: 19.0.0
-    react-dom: 19.0.0
-    react-native: 0.79.4
-    react-native-builder-bob: ^0.40.12
-    react-native-monorepo-config: ^0.1.9
-    react-native-web: ~0.20.0
-    react-syntax-highlighter: ^15.6.1
-  languageName: unknown
-  linkType: soft
 
 "@react-native/assets-registry@npm:0.79.4":
   version: 0.79.4

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "@quizcript/react-native-markdown": [
+      "@docren/react-native-markdown": [
         "./src/index"
       ]
     },
