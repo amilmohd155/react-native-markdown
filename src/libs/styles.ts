@@ -64,20 +64,20 @@ export const styles: StyleMap = {
     fontSize: 16,
     color: '#333',
     ...Platform.select({
-      ['ios']: {
+      ios: {
         fontFamily: 'Courier',
       },
-      ['android']: {
+      android: {
         fontFamily: 'monospace',
       },
     }),
   },
   inlineCode: {
     ...Platform.select({
-      ['ios']: {
+      ios: {
         fontFamily: 'Courier',
       },
-      ['android']: {
+      android: {
         fontFamily: 'monospace',
       },
     }),
@@ -97,9 +97,9 @@ export const styles: StyleMap = {
   },
   linkReference: {},
   image: {
-    width: 200,
-    height: 300,
-    resizeMode: 'contain',
+    width: '100%',
+    aspectRatio: 1,
+    resizeMode: 'cover',
     borderRadius: 8,
     marginVertical: 8,
     backgroundColor: '#f0f0f0',
@@ -121,5 +121,8 @@ export const styles: StyleMap = {
   listItemContent: {
     flex: 1,
     flexWrap: 'wrap',
+  },
+  delete: {
+    textDecorationLine: 'line-through',
   },
 };

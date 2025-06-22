@@ -1,6 +1,5 @@
 import type { Node, Root } from 'mdast';
 import defaultRenderRules from '../libs/renderRules';
-import { getKey } from '../utils/getKey';
 import { getMergedStyles } from '../utils/getMergedStyles';
 import type { ReactElement } from 'react';
 import type { StyleMap } from '../types/style.types';
@@ -123,21 +122,20 @@ export default class ASTRenderer {
       type === 'tableCell' ||
       type === 'tableRow'
     ) {
-      // console.warn(`Skipping unsupported node type: ${type}`);
+      console.warn(`Skipping unsupported node type: ${type}`);
       return null;
     }
 
     const renderFunction = this.getRenderFunction(type);
     this.debugLog(parentStack.length, type);
 
-    return renderFunction(
-      node as NodeTypeMap[typeof type],
-      getKey(node),
-      this._styles,
+    return renderFunction({
+      node: node as NodeTypeMap[typeof type],
+      styles: this._styles,
       children,
       parentStack,
-      extras
-    );
+      extras,
+    });
   };
 
   public render = (tree: Root): any => {

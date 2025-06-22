@@ -11,6 +11,10 @@ export const mdxString = `
 
 ###### Heading Level 6
 
+---
+
+That was a horizontal rule (thematic break).
+
 This is a paragraph with some **bold text** and _italic text_. You can also use **bold** and _italic_ syntax. Here's some **_bold and italic_** text together.
 
 This is another paragraph with \`inline code\`.
@@ -53,9 +57,6 @@ This is plain code
 No syntax highlighting
 \`\`\`
 
----
-
-That was a horizontal rule (thematic break).
 
 Here are some links:
 
@@ -72,7 +73,7 @@ Reference links are not supported yet:
 
 Here's an image:
 
-![Alt text](https://fastly.picsum.photos/id/334/200/300.jpg?hmac=mY7moKpyBD1N0PF_abyW5_eUHxm9jV4JxZWPnxY7x3Q "Image title")
+![Alt text](https://fastly.picsum.photos/id/70/200/200.jpg?hmac=hRU7tEHltyLUTf0bCrAWFXlPRXOBTsvCcvL-dIUG2CE "Image title")
 
 Here's a reference image: Not yet supported:
 

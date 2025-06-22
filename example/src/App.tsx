@@ -11,18 +11,15 @@ export default function App() {
         <Markdown
           markdown={mdxString}
           renderRules={{
-            code: (node, key) => (
+            code: ({ node }) => (
               <CodeHighlighter
-                key={key}
+                // @ts-ignore
+                key={node.key}
                 hljsStyle={atomOneDarkReasonable}
                 language={node.lang || 'plaintext'}
                 scrollViewProps={{
                   bounces: false,
-                  contentContainerStyle: {
-                    padding: 20,
-                    // width: '100%',
-                    borderRadius: 8,
-                  },
+                  contentContainerStyle: styles.codeContentContainer,
                 }}
                 textStyle={styles.codeTextStyle}
               >
@@ -60,5 +57,10 @@ const styles = StyleSheet.create({
   codeTextStyle: {
     fontFamily: 'Courier New',
     fontSize: 16,
+  },
+  codeContentContainer: {
+    padding: 20,
+    width: '100%',
+    borderRadius: 8,
   },
 });

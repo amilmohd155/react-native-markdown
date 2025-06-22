@@ -5,69 +5,75 @@ import {
   Linking,
   Image,
   type ImageProps,
+  type ImageStyle,
 } from 'react-native';
 import type { RenderRules } from '../components/ASTRenderer.types';
 
 const renderRules: RenderRules = {
-  root: (_node, key, styles, children) => (
-    <View key={key} style={styles[`_VIEW_SAFE_${_node.type}`]}>
+  root: ({ node, styles, children }) => (
+    <View key={node.key} style={styles._VIEW_SAFE_root}>
       {children}
     </View>
   ),
-  paragraph: (_node, key, styles, children) => (
-    <Text key={key} style={styles.paragraph}>
+  paragraph: ({ node, styles, children }) => (
+    <Text key={node.key} style={styles.paragraph}>
       {children}
     </Text>
   ),
-  strong: (_node, key, styles, children) => (
-    <Text key={key} style={styles.strong}>
+  strong: ({ node, styles, children }) => (
+    <Text key={node.key} style={styles.strong}>
       {children}
     </Text>
   ),
-  emphasis: (node, key, styles, children) => {
+  emphasis: ({ node, styles, children }) => {
     return (
-      <Text key={key} style={styles[node.type]}>
+      <Text key={node.key} style={styles.emphasis}>
         {children}
       </Text>
     );
   },
-  delete: () => {
-    return null; // Not implemented
-  },
-  text: (node, key, styles) => {
+  delete: ({ node, styles, children }) => {
+    // Won't work unless a plugin is used https://github.com/syntax-tree/mdast-util-gfm-strikethrough
     return (
-      <Text key={key} style={styles.text}>
+      <Text key={node.key} style={styles.delete}>
+        {children}
+      </Text>
+    );
+  },
+  text: ({ node, styles }) => {
+    return (
+      <Text key={node.key} style={styles.text} maxFontSizeMultiplier={1.2}>
         {node.value}
       </Text>
     );
   },
-  blockquote: (node, key, styles, children) => {
+  blockquote: ({ node, styles, children }) => {
     return (
-      <View key={key} style={styles[`_VIEW_SAFE_${node.type}`]}>
+      <View key={node.key} style={styles._VIEW_SAFE_blockquote}>
         {children}
       </View>
     );
   },
-  break: (node, key, styles) => {
+  break: ({ node, styles }) => {
     return (
-      <Text key={key} style={styles[`_VIEW_SAFE_${node.type}`]}>
+      <Text key={node.key} style={styles[`_VIEW_SAFE_${node.type}`]}>
         {'\n'}
       </Text>
     );
   },
-  thematicBreak: (node, key, styles) => {
-    return <View key={key} style={styles[`_VIEW_SAFE_${node.type}`]} />;
+  thematicBreak: ({ node, styles }) => {
+    return <View key={node.key} style={styles[`_VIEW_SAFE_${node.type}`]} />;
   },
-  code: (node, key, styles) => {
+  code: ({ node, styles }) => {
     return (
-      <View key={key} style={styles[`_VIEW_SAFE_${node.type}`]}>
+      <View key={node.key} style={styles[`_VIEW_SAFE_${node.type}`]}>
         <Text style={styles[node.type]}>{node.value}</Text>
       </View>
     );
   },
-  inlineCode: (node, key, styles) => {
+  inlineCode: ({ node, styles }) => {
     return (
-      <Text key={key} style={styles[node.type]}>
+      <Text key={node.key} style={styles[node.type]}>
         {node.value}
       </Text>
     );
@@ -78,10 +84,10 @@ const renderRules: RenderRules = {
   definition: () => {
     return null; // Not implemented
   },
-  image: (node, key, styles) => {
+  image: ({ node, styles }) => {
     const imageProps: ImageProps = {
       source: { uri: node.url },
-      style: { flex: 1 },
+      style: styles.image as ImageStyle,
     };
 
     if (node.alt) {
@@ -91,17 +97,17 @@ const renderRules: RenderRules = {
     }
 
     return (
-      <View key={key} style={styles._VIEW_SAFE_image}>
+      <View key={node.key}>
         <Image {...imageProps} />
       </View>
     );
   },
-  link: (_node, key, styles, children) => {
+  link: ({ node, styles, children }) => {
     return (
       <Pressable
-        key={key}
-        style={styles.link}
-        onPress={() => Linking.openURL(_node.url)}
+        key={node.key}
+        style={styles._VIEW_SAFE_link}
+        onPress={() => Linking.openURL(node.url)}
       >
         <Text style={styles.link}>{children}</Text>
       </Pressable>
@@ -110,16 +116,16 @@ const renderRules: RenderRules = {
   linkReference: () => {
     return null; // Not implemented
   },
-  list: (node, key, styles, children) => {
+  list: ({ node, styles, children }) => {
     return (
-      <View key={key} style={styles[`_VIEW_SAFE_${node.type}`]}>
+      <View key={node.key} style={styles[`_VIEW_SAFE_${node.type}`]}>
         {children}
       </View>
     );
   },
-  listItem: (_node, key, styles, children, _parent, extras) => {
+  listItem: ({ node, styles, children, extras }) => {
     return (
-      <View key={key} style={styles.listItem}>
+      <View key={node.key} style={styles.listItem}>
         {/* Display bullet or number */}
         {extras?.customListStyleType ? (
           extras.customListStyleType
@@ -130,14 +136,15 @@ const renderRules: RenderRules = {
       </View>
     );
   },
-  heading: (node, key, styles, children) => {
+  heading: ({ node, styles, children }) => {
     return (
-      <Text key={key} style={styles[`heading${node.depth}`]}>
+      <Text key={node.key} style={styles[`heading${node.depth}`]}>
         {children}
       </Text>
     );
   },
-  unknown: () => {
+  unknown: ({ node }) => {
+    console.warn('Unknown node type encountered', node.type);
     return null;
   },
 };

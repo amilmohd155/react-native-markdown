@@ -18,14 +18,13 @@ type NodeTypeMap = Prettify<
   }
 >;
 
-type RenderFunction<K extends ValidNodeKey = ValidNodeKey> = (
-  node: NodeTypeMap[K],
-  key: string,
-  styles: StyleMap,
-  children: any[],
-  parentStack: Node[],
-  ...extras: any[]
-) => any;
+type RenderFunction<K extends ValidNodeKey = ValidNodeKey> = (params: {
+  node: NodeTypeMap[K];
+  styles: StyleMap;
+  children: any[];
+  parentStack: Node[];
+  extras?: any;
+}) => any;
 
 type RenderRules = {
   [K in ValidNodeKey]?: RenderFunction<K>;
