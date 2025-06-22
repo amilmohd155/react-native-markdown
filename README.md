@@ -1,24 +1,14 @@
-# @quizcript/react-native-markdown
+# @docren/react-native-markdown
 
 Markdown renderer for React Native
 
 ## Installation
 
 ```sh
-npm install @quizcript/react-native-markdown
+npm install @docren/react-native-markdown
 ```
 
 ## Usage
-
-
-```js
-import { multiply } from '@quizcript/react-native-markdown';
-
-// ...
-
-const result = await multiply(3, 7);
-```
-
 
 ## Contributing
 
