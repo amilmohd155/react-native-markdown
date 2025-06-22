@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "@docren/react-native-markdown": [
+      "@amilmohd155/react-native-markdown": [
         "./src/index"
       ]
     },
