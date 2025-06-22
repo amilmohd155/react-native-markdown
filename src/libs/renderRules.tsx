@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  Pressable,
   Linking,
   Image,
   type ImageProps,
@@ -102,15 +101,13 @@ const renderRules: RenderRules = {
       </View>
     );
   },
-  link: ({ node, styles, children }) => {
+  link: ({ node, styles, children, extras }) => {
+    const onPress = extras?.onPress || (() => Linking.openURL(node.url));
+
     return (
-      <Pressable
-        key={node.key}
-        style={styles._VIEW_SAFE_link}
-        onPress={() => Linking.openURL(node.url)}
-      >
-        <Text style={styles.link}>{children}</Text>
-      </Pressable>
+      <Text key={node.key} onPress={onPress} style={styles.link}>
+        {children}
+      </Text>
     );
   },
   linkReference: () => {

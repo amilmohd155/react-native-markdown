@@ -18,6 +18,7 @@ export default class ASTRenderer {
   private _debug: boolean;
   private _listBulletStyle: ListBulletStyle;
   private _customBulletElement: ReactElement | null;
+  private _onLinkPress?: (url: string) => void;
 
   constructor({
     renderRules,
@@ -25,11 +26,14 @@ export default class ASTRenderer {
     debug = false,
     listBulletStyle = 'disc',
     customBulletElement = null,
+    onLinkPress,
   }: ASTRendererOptions) {
     this._renderRules = this.fallbackMerge(defaultRenderRules, renderRules);
     this._styles = getMergedStyles(styles, true);
     this._listBulletStyle = listBulletStyle;
     this._debug = debug;
+
+    this._onLinkPress = onLinkPress;
 
     this._customBulletElement = customBulletElement;
   }
@@ -80,6 +84,12 @@ export default class ASTRenderer {
     const children: any[] = [];
     let type = node.type as ValidNodeKey;
 
+    if (type === 'link' && this._onLinkPress) {
+      extras = {
+        ...extras,
+        onPress: this._onLinkPress,
+      };
+    }
     if ('children' in node && Array.isArray(node.children)) {
       if (type === 'list') {
         const listNode = node as import('mdast').List;
@@ -117,7 +127,7 @@ export default class ASTRenderer {
     if (
       type === 'definition' ||
       type === 'imageReference' ||
-      type === 'linkReference' ||
+      // type === 'linkReference' ||
       type === 'table' ||
       type === 'tableCell' ||
       type === 'tableRow'

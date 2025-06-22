@@ -38,6 +38,7 @@ interface ASTRendererOptions {
   debug?: boolean;
   listBulletStyle?: ListBulletStyle;
   customBulletElement?: ReactElement | null;
+  onLinkPress?: (url: string) => void;
 }
 
 export type {

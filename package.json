@@ -42,8 +42,12 @@
   },
   "keywords": [
     "react-native",
-    "ios",
-    "android"
+    "md",
+    "markdown",
+    "renderer",
+    "react-native-markdown",
+    "commonmark",
+    "mdast"
   ],
   "repository": {
     "type": "git",
