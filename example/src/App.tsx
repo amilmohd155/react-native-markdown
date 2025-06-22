@@ -10,10 +10,6 @@ export default function App() {
       <ScrollView contentContainerStyle={styles.content}>
         <Markdown
           markdown={mdxString}
-          //           markdown={`[alpha][Bravo]
-
-          // [Bravo]:https://example.com "bravo"
-          //             `}
           renderRules={{
             code: ({ node }) => (
               <CodeHighlighter
@@ -51,6 +47,7 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: 100,
     paddingHorizontal: 20,
+    paddingBottom: 50,
   },
   customBullet: {
     width: 8,

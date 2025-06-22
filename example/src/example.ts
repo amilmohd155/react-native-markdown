@@ -1,5 +1,6 @@
 export const mdxString = `
 [img1]: https://fastly.picsum.photos/id/135/200/300.jpg?hmac=d3sTOCUkxdC1OKCgh9wTPjck-gMWATyVHFvflla5vLI "Reference image"
+[linkRef]:https://example.com
 
 # Heading Level **1**
 
@@ -62,17 +63,12 @@ No syntax highlighting
 
 Here are some links:
 
-- [Inline link](https://example.com)
-  - [Link with title](https://example.com "This is a title")
-    - <https://autolink.example.com>
-1) <email@example.com>
-    1) [Link with title](https://example.com "This is a title")
-    2) [Inline link](https://example.com)
+- [Unordered list with link](https://example.com)
 - [Link Reference][linkRef]
+1) <email@example.com>
 
-Reference links:
+This is a link in a paragraph [Inline link](https://example.com)
 
-[linkRef]:https://example.com
 
 Here's an image:
 

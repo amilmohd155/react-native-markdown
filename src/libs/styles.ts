@@ -42,27 +42,26 @@ export const styles: StyleMap = {
     fontStyle: 'italic',
   },
   text: {},
-  break: {},
   thematicBreak: {
     flex: 1,
     height: 1,
     backgroundColor: '#0000006c',
-    marginVertical: 12,
+    marginVertical: 8,
   },
   blockquote: {
     backgroundColor: '#f5f5f5',
     borderColor: '#3840ba',
     borderLeftWidth: 4,
-    marginLeft: 5,
     paddingHorizontal: 5,
+    marginVertical: 8,
   },
 
   code: {
     backgroundColor: '#f0f0f0',
     padding: 8,
-    borderRadius: 4,
-    fontSize: 16,
-    color: '#333',
+    // borderRadius: 4,
+    // fontSize: 16,
+    color: '#1c1c1c',
     ...Platform.select({
       ios: {
         fontFamily: 'Courier',
@@ -82,8 +81,6 @@ export const styles: StyleMap = {
       },
     }),
     backgroundColor: '#f0f0f0',
-    padding: 4,
-    borderRadius: 4,
   },
   link: {
     transform: [
@@ -95,13 +92,12 @@ export const styles: StyleMap = {
     color: '#1e90ff',
     textDecorationLine: 'underline',
   },
-  linkReference: {},
   image: {
     width: '100%',
     aspectRatio: 1,
     resizeMode: 'cover',
-    borderRadius: 8,
-    marginVertical: 8,
+    // borderRadius: 8,
+    // marginVertical: 8,
     backgroundColor: '#f0f0f0',
     overflow: 'hidden',
   },
