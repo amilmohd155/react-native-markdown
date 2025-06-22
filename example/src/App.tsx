@@ -10,6 +10,10 @@ export default function App() {
       <ScrollView contentContainerStyle={styles.content}>
         <Markdown
           markdown={mdxString}
+          //           markdown={`[alpha][Bravo]
+
+          // [Bravo]:https://example.com "bravo"
+          //             `}
           renderRules={{
             code: ({ node }) => (
               <CodeHighlighter

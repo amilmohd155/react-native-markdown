@@ -1,4 +1,6 @@
 export const mdxString = `
+[img1]: https://fastly.picsum.photos/id/135/200/300.jpg?hmac=d3sTOCUkxdC1OKCgh9wTPjck-gMWATyVHFvflla5vLI "Reference image"
+
 # Heading Level **1**
 
 ## Heading Level 2
@@ -66,20 +68,20 @@ Here are some links:
 1) <email@example.com>
     1) [Link with title](https://example.com "This is a title")
     2) [Inline link](https://example.com)
-- [Reference link][ref1]
+- [Link Reference][linkRef]
 
-Reference links are not supported yet:
-[ref1]: https://example.com "Reference link" 
+Reference links:
+
+[linkRef]:https://example.com
 
 Here's an image:
 
 ![Alt text](https://fastly.picsum.photos/id/70/200/200.jpg?hmac=hRU7tEHltyLUTf0bCrAWFXlPRXOBTsvCcvL-dIUG2CE "Image title")
 
-Here's a reference image: Not yet supported:
+Here's a reference image:
 
 ![Alt text][img1]
 
-[img1]: https://fastly.picsum.photos/id/135/200/300.jpg?hmac=d3sTOCUkxdC1OKCgh9wTPjck-gMWATyVHFvflla5vLI "Reference image"
 
 Line breaks can be created with two spaces at the end of a line  
 like this.

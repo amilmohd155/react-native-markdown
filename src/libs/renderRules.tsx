@@ -77,12 +77,6 @@ const renderRules: RenderRules = {
       </Text>
     );
   },
-  imageReference: () => {
-    return null; // Not implemented
-  },
-  definition: () => {
-    return null; // Not implemented
-  },
   image: ({ node, styles }) => {
     const imageProps: ImageProps = {
       source: { uri: node.url },
@@ -109,9 +103,6 @@ const renderRules: RenderRules = {
         {children}
       </Text>
     );
-  },
-  linkReference: () => {
-    return null; // Not implemented
   },
   list: ({ node, styles, children }) => {
     return (

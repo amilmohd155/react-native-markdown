@@ -3,6 +3,7 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 import ASTRenderer from './ASTRenderer';
 import type { MarkdownProps } from './Markdown.types';
 import { getKeyFromMarkdown } from '../utils/getKey';
+import { resolveReference } from '../utils/resolveReference';
 
 const Markdown = memo(
   ({
@@ -15,7 +16,11 @@ const Markdown = memo(
     extensions = [],
   }: MarkdownProps) => {
     const tree = fromMarkdown(markdown, {
-      mdastExtensions: [getKeyFromMarkdown(), ...extensions],
+      mdastExtensions: [
+        resolveReference(),
+        getKeyFromMarkdown(),
+        ...extensions,
+      ],
     });
 
     const renderer = new ASTRenderer({

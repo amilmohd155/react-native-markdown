@@ -90,6 +90,7 @@ export default class ASTRenderer {
         onPress: this._onLinkPress,
       };
     }
+
     if ('children' in node && Array.isArray(node.children)) {
       if (type === 'list') {
         const listNode = node as import('mdast').List;
@@ -124,14 +125,7 @@ export default class ASTRenderer {
       }
     }
 
-    if (
-      type === 'definition' ||
-      type === 'imageReference' ||
-      // type === 'linkReference' ||
-      type === 'table' ||
-      type === 'tableCell' ||
-      type === 'tableRow'
-    ) {
+    if (type === 'table' || type === 'tableCell' || type === 'tableRow') {
       console.warn(`Skipping unsupported node type: ${type}`);
       return null;
     }
