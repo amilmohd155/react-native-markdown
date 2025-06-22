@@ -114,12 +114,12 @@ The `<Markdown>` component takes the following props.
 - [x] strong
 - [x] text
 - [x] thematicBreak
-- [ ] strikethrough
-- [ ] table
+- [ ] strikethrough (Planned)
+- [ ] table (Planned)
   - [ ] tableCell
   - [ ] tableRow
-- [ ] html
-- [ ] yaml
+- [ ] html (Not planned)
+- [ ] yaml (Not planned)
 
 ## Rules and Styles
 
@@ -219,13 +219,9 @@ const mdxString = `
 
 #### Syntax Highlighing
 
-This package doesn't include a syntax highlighting mechanish built-in, this decision was taken to keep the package lightweight. But you can use a package like [react-native-syntax-highlighter](https://www.npmjs.com/package/react-native-syntax-highlighter) or[react-native-code-highlighter](https://github.com/gmsgowtham/react-native-code-highlighter)
+This package does not include built-in syntax highlighting, as it aims to remain lightweight. However, you can integrate external libraries like [react-native-syntax-highlighter](https://www.npmjs.com/package/react-native-syntax-highlighter) or [react-native-code-highlighter](https://github.com/gmsgowtham/react-native-code-highlighter) for that functionality.
 
-Once the syntax highlighter is implemented, you can use it by ovveridding `renderRule.code`.
-
-This package does not include built-in syntax highlighting, as it aims to remain lightweight. However, you can integrate external libraries like [react-native-syntax-highlighter](https://www.npmjs.com/package/react-native-syntax-highlighter) or[react-native-code-highlighter](https://github.com/gmsgowtham/react-native-code-highlighter) for that functionality.
-
-Once integrated, you can apply syntax highlighting by overriding the renderRule.code function.
+Once integrated, you can apply syntax highlighting by overriding the `renderRule.code` function.
 
 An example implementation can be found in the included example app.
 
@@ -234,13 +230,16 @@ An example implementation can be found in the included example app.
 <p>
 
 ```jsx
+
+import CodeHighlighter from 'some-syntax-highlighting-package'
+
 <Markdown
   markdown={mdxString}
   renderRules={{
     code: ({ node }) => (
       <CodeHighlighter
         key={(node as any).key}
-        hljsStyle={atomOneDarkReasonable}
+        hljsStyle={atomOneDarkReasonable} //highlight.js theme
         language={node.lang || 'plaintext'}
         scrollViewProps={{
           bounces: false,
@@ -371,6 +370,11 @@ When in doubt check the [default styling](./src/libs/styles.ts) and [default ren
 | ----------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | heading     | - heading1 - heading2 - heading3 - heading4 - heading5 - heading6 | For a single heading render rule, there are six style variations corresponding to the different heading levels (h1 through h6).                                                                                                                                         |
 | listItem    | listItem, listBullet, listItemContent                             | listItem – Style for the container that wraps both the bullet and the content. listBullet – Style for the default bullet used in unordered lists ( • or –). [Not applicablefor custom bullet element] listItemContent – Style for the content portion of the list item. |
+
+## Roadmap
+
+- Themed Styling (Dark / light Mode)
+- Table Support
 
 ## Related
 
