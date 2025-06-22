@@ -2,7 +2,9 @@ export const mdxString = `
 [img1]: https://fastly.picsum.photos/id/135/200/300.jpg?hmac=d3sTOCUkxdC1OKCgh9wTPjck-gMWATyVHFvflla5vLI "Reference image"
 [linkRef]:https://example.com
 
-# Heading Level **1**
+> React Native Markdown Example
+
+# Heading Level 1
 
 ## Heading Level 2
 

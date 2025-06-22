@@ -89,14 +89,11 @@ const renderRules: RenderRules = {
       imageProps.accessible = true;
     }
 
-    return (
-      <View key={node.key}>
-        <Image {...imageProps} />
-      </View>
-    );
+    return <Image key={node.key} {...imageProps} />;
   },
   link: ({ node, styles, children, extras }) => {
-    const onPress = extras?.onPress || (() => Linking.openURL(node.url));
+    const onPress = () =>
+      extras?.onPress(node.url) || (() => Linking.openURL(node.url));
 
     return (
       <Text key={node.key} onPress={onPress} style={styles.link}>

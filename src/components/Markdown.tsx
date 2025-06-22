@@ -12,7 +12,9 @@ const Markdown = memo(
     renderRules,
     listBulletStyle,
     styles,
+    mergeStyle,
     customBulletElement,
+    onLinkPress,
     extensions = [],
   }: MarkdownProps) => {
     const tree = fromMarkdown(markdown, {
@@ -27,8 +29,10 @@ const Markdown = memo(
       renderRules,
       debug,
       styles,
+      mergeStyle,
       listBulletStyle,
       customBulletElement,
+      onLinkPress,
     });
 
     return renderer.render(tree);

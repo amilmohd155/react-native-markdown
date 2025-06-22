@@ -35,6 +35,7 @@ type ListBulletStyle = 'disc' | 'dash';
 interface ASTRendererOptions {
   renderRules?: RenderRules;
   styles?: StyleMap | null;
+  mergeStyle?: boolean;
   debug?: boolean;
   listBulletStyle?: ListBulletStyle;
   customBulletElement?: ReactElement | null;

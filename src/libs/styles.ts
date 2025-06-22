@@ -94,6 +94,7 @@ export const styles: StyleMap = {
   },
   image: {
     width: '100%',
+    height: 300,
     aspectRatio: 1,
     resizeMode: 'cover',
     // borderRadius: 8,

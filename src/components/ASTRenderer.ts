@@ -23,13 +23,18 @@ export default class ASTRenderer {
   constructor({
     renderRules,
     styles = null,
+    mergeStyle = true,
     debug = false,
     listBulletStyle = 'disc',
     customBulletElement = null,
     onLinkPress,
   }: ASTRendererOptions) {
-    this._renderRules = this.fallbackMerge(defaultRenderRules, renderRules);
-    this._styles = getMergedStyles(styles, true);
+    // this._renderRules = this.fallbackMerge(defaultRenderRules, renderRules);
+    this._renderRules = {
+      ...defaultRenderRules,
+      ...(renderRules || {}),
+    };
+    this._styles = getMergedStyles(styles, mergeStyle);
     this._listBulletStyle = listBulletStyle;
     this._debug = debug;
 
@@ -38,17 +43,17 @@ export default class ASTRenderer {
     this._customBulletElement = customBulletElement;
   }
 
-  private fallbackMerge(
-    defaults: RenderRules,
-    overrides?: Partial<RenderRules>
-  ): RenderRules {
-    return {
-      ...Object.fromEntries(
-        Object.entries(defaults).filter(([key]) => !(key in (overrides ?? {})))
-      ),
-      ...(overrides ?? {}),
-    };
-  }
+  // private fallbackMerge(
+  //   defaults: RenderRules,
+  //   overrides?: Partial<RenderRules>
+  // ): RenderRules {
+  //   return {
+  //     ...Object.fromEntries(
+  //       Object.entries(defaults).filter(([key]) => !(key in (overrides ?? {})))
+  //     ),
+  //     ...(overrides ?? {}),
+  //   };
+  // }
 
   private get getListBulletCharacter() {
     switch (this._listBulletStyle) {
