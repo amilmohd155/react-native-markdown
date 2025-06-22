@@ -185,9 +185,11 @@ Note: When defining rules, make sure to assign a unique key to each component. Y
 <p>
 
 ```jsx
- export default function App() {
+import {Image} from 'expo-image'
 
-const mdxString = `
+export default function App() {
+
+  const mdxString = `
           ![Alt text](https://fastly.picsum.photos/id/70/200/200.jpg?hmac=hRU7tEHltyLUTf0bCrAWFXlPRXOBTsvCcvL-dIUG2CE "Image title")
           `
 
@@ -368,7 +370,7 @@ When in doubt check the [default styling](./src/libs/styles.ts) and [default ren
 
 | Render Rule | Style                                                             | Note                                                                                                                                                                                                                                                                    |
 | ----------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| heading     | - heading1 - heading2 - heading3 - heading4 - heading5 - heading6 | For a single heading render rule, there are six style variations corresponding to the different heading levels (h1 through h6).                                                                                                                                         |
+| heading     | heading1 \| heading2 \| heading3 \| heading4 \| heading5 \| heading6 | For a single heading render rule, there are six style variations corresponding to the different heading levels (h1 through h6).                                                                                                                                         |
 | listItem    | listItem, listBullet, listItemContent                             | listItem – Style for the container that wraps both the bullet and the content. listBullet – Style for the default bullet used in unordered lists ( • or –). [Not applicablefor custom bullet element] listItemContent – Style for the content portion of the list item. |
 
 ## Roadmap
