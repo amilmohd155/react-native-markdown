@@ -7,6 +7,8 @@
 
 A flexible and performant Markdown renderer for React Native, powered by MDAST. Supports custom styling, nested elements, and extendable render rules for full control over output.
 
+https://github.com/user-attachments/assets/7e07a865-bccd-4961-b696-0b17935bbcc9
+
 ## Features
 
 - 📄 CommonMark-Compliant – Parses and renders Markdown based on the CommonMark spec
