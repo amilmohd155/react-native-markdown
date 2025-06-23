@@ -1,3 +1,5 @@
+import './types/index';
+
 export { default as Markdown } from './components/Markdown';
 export type { MarkdownProps } from './components/Markdown.types';
 
