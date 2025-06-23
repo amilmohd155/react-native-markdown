@@ -176,8 +176,6 @@ Note: When defining rules, make sure to assign a unique key to each component. Y
 
 > If you’re using this package with Expo, it’s recommended to use expo-image for rendering images.
 
-> ⚠️ Currently, there’s a known issue with the type definition of node.key. Until it’s resolved in an upcoming patch, you can use `(node as any).key` or `@ts-ignore` to avoid TypeScript errors.
-
 <details>
 
 <summary>Render rule example</summary>
@@ -368,10 +366,10 @@ When in doubt check the [default styling](./src/libs/styles.ts) and [default ren
 
 > No rules or styles are provided for definition, linkReference, and imageReference, as they are handled internally as link and image, as mentioned above.
 
-| Render Rule | Style                                                             | Note                                                                                                                                                                                                                                                                    |
-| ----------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Render Rule | Style                                                                | Note                                                                                                                                                                                                                                                                    |
+| ----------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | heading     | heading1 \| heading2 \| heading3 \| heading4 \| heading5 \| heading6 | For a single heading render rule, there are six style variations corresponding to the different heading levels (h1 through h6).                                                                                                                                         |
-| listItem    | listItem, listBullet, listItemContent                             | listItem – Style for the container that wraps both the bullet and the content. listBullet – Style for the default bullet used in unordered lists ( • or –). [Not applicablefor custom bullet element] listItemContent – Style for the content portion of the list item. |
+| listItem    | listItem, listBullet, listItemContent                                | listItem – Style for the container that wraps both the bullet and the content. listBullet – Style for the default bullet used in unordered lists ( • or –). [Not applicablefor custom bullet element] listItemContent – Style for the content portion of the list item. |
 
 ## Roadmap
 
