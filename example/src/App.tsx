@@ -13,7 +13,6 @@ export default function App() {
           renderRules={{
             code: ({ node }) => (
               <CodeHighlighter
-                // @ts-ignore
                 key={node.key}
                 hljsStyle={atomOneDarkReasonable}
                 language={node.lang || 'plaintext'}

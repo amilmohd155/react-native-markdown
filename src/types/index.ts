@@ -1,5 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Node } from 'mdast';
+import 'mdast';
 
 declare module 'mdast' {
   interface Node {

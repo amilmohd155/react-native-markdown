@@ -1,7 +1,7 @@
 import { StyleSheet, type TextStyle, type ViewStyle } from 'react-native';
 import { styles as defaultStyles } from '../libs/styles';
 import { removeTextStyleProps } from './removeProps';
-import type { StyleMap } from '../types/style.types';
+import type { StyleMap } from '../types/style';
 
 export function getMergedStyles(
   styles: StyleMap | null = null,

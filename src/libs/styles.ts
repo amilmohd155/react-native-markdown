@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import type { StyleMap } from '../types/style.types';
+import type { StyleMap } from '../types/style';
 
 export const styles: StyleMap = {
   root: {},

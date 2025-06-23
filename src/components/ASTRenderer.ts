@@ -2,7 +2,7 @@ import type { Node, Root } from 'mdast';
 import defaultRenderRules from '../libs/renderRules';
 import { getMergedStyles } from '../utils/getMergedStyles';
 import type { ReactElement } from 'react';
-import type { StyleMap } from '../types/style.types';
+import type { StyleMap } from '../types/style';
 import type {
   ASTRendererOptions,
   ListBulletStyle,

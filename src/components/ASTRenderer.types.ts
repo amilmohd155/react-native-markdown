@@ -1,6 +1,6 @@
 import type { Node, Root, RootContentMap } from 'mdast';
 import type { ExpandUnion, Prettify } from '../types/utils';
-import type { StyleMap } from '../types/style.types';
+import type { StyleMap } from '../types/style';
 import type { ReactElement } from 'react';
 
 type BaseNodeKeys = {
