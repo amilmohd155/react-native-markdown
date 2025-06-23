@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-shadow */
-/* eslint-disable @typescript-eslint/no-empty-interface */
+// @ts-ignore
 import type { Node } from 'mdast';
 
 declare module 'mdast' {
