@@ -1,6 +1,6 @@
 {
   "name": "@docren/react-native-markdown",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Markdown renderer for React Native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
