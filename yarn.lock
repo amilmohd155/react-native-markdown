@@ -17,60 +17,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@amilmohd155/react-native-markdown-example@workspace:example":
-  version: 0.0.0-use.local
-  resolution: "@amilmohd155/react-native-markdown-example@workspace:example"
-  dependencies:
-    "@babel/core": ^7.20.0
-    "@expo/metro-runtime": ~5.0.4
-    "@types/react-syntax-highlighter": ^15.5.13
-    expo: ~53.0.12
-    expo-atlas: ^0.4.0
-    expo-status-bar: ~2.2.3
-    react: 19.0.0
-    react-dom: 19.0.0
-    react-native: 0.79.4
-    react-native-builder-bob: ^0.40.12
-    react-native-monorepo-config: ^0.1.9
-    react-native-web: ~0.20.0
-    react-syntax-highlighter: ^15.6.1
-  languageName: unknown
-  linkType: soft
-
-"@amilmohd155/react-native-markdown@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "@amilmohd155/react-native-markdown@workspace:."
-  dependencies:
-    "@commitlint/config-conventional": ^19.6.0
-    "@eslint/compat": ^1.2.7
-    "@eslint/eslintrc": ^3.3.0
-    "@eslint/js": ^9.22.0
-    "@evilmartians/lefthook": ^1.5.0
-    "@react-native/babel-preset": 0.78.2
-    "@react-native/eslint-config": ^0.78.0
-    "@release-it/conventional-changelog": ^9.0.2
-    "@types/jest": ^29.5.5
-    "@types/react": ^19.0.12
-    commitlint: ^19.6.1
-    css-to-react-native: ^3.2.0
-    del-cli: ^5.1.0
-    eslint: ^9.22.0
-    eslint-config-prettier: ^10.1.1
-    eslint-plugin-prettier: ^5.2.3
-    jest: ^29.7.0
-    mdast-util-from-markdown: ^2.0.2
-    prettier: ^3.0.3
-    react: 19.0.0
-    react-native: 0.79.4
-    react-native-builder-bob: ^0.40.12
-    release-it: ^17.10.0
-    typescript: ^5.8.3
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  languageName: unknown
-  linkType: soft
-
 "@ampproject/remapping@npm:^2.2.0":
   version: 2.3.0
   resolution: "@ampproject/remapping@npm:2.3.0"
@@ -1858,6 +1804,60 @@ __metadata:
   checksum: 4be45d4d1335878772fe0ad6e279970569c9526b544af3f58d31d70199f40c8051459a22f02d87c458a7c95f0ba68cd9a839da19504c5c40045c5b0691354305
   languageName: node
   linkType: hard
+
+"@docren/react-native-markdown-example@workspace:example":
+  version: 0.0.0-use.local
+  resolution: "@docren/react-native-markdown-example@workspace:example"
+  dependencies:
+    "@babel/core": ^7.20.0
+    "@expo/metro-runtime": ~5.0.4
+    "@types/react-syntax-highlighter": ^15.5.13
+    expo: ~53.0.12
+    expo-atlas: ^0.4.0
+    expo-status-bar: ~2.2.3
+    react: 19.0.0
+    react-dom: 19.0.0
+    react-native: 0.79.4
+    react-native-builder-bob: ^0.40.12
+    react-native-monorepo-config: ^0.1.9
+    react-native-web: ~0.20.0
+    react-syntax-highlighter: ^15.6.1
+  languageName: unknown
+  linkType: soft
+
+"@docren/react-native-markdown@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@docren/react-native-markdown@workspace:."
+  dependencies:
+    "@commitlint/config-conventional": ^19.6.0
+    "@eslint/compat": ^1.2.7
+    "@eslint/eslintrc": ^3.3.0
+    "@eslint/js": ^9.22.0
+    "@evilmartians/lefthook": ^1.5.0
+    "@react-native/babel-preset": 0.78.2
+    "@react-native/eslint-config": ^0.78.0
+    "@release-it/conventional-changelog": ^9.0.2
+    "@types/jest": ^29.5.5
+    "@types/react": ^19.0.12
+    commitlint: ^19.6.1
+    css-to-react-native: ^3.2.0
+    del-cli: ^5.1.0
+    eslint: ^9.22.0
+    eslint-config-prettier: ^10.1.1
+    eslint-plugin-prettier: ^5.2.3
+    jest: ^29.7.0
+    mdast-util-from-markdown: ^2.0.2
+    prettier: ^3.0.3
+    react: 19.0.0
+    react-native: 0.79.4
+    react-native-builder-bob: ^0.40.12
+    release-it: ^17.10.0
+    typescript: ^5.8.3
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  languageName: unknown
+  linkType: soft
 
 "@eslint-community/eslint-utils@npm:^4.2.0, @eslint-community/eslint-utils@npm:^4.4.0":
   version: 4.7.0

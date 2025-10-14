@@ -1,5 +1,5 @@
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Markdown } from '@amilmohd155/react-native-markdown';
+import { Markdown } from '@docren/react-native-markdown';
 import { mdxString } from './example';
 import { atomOneDarkReasonable } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import { CodeHighlighter } from './component/code-highlighter';

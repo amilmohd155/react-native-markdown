@@ -1,7 +1,7 @@
 # React Native Markdown Renderer
 
-![NPM License](https://img.shields.io/npm/l/%40amilmohd155%2Freact-native-markdown)
-![NPM Version](https://img.shields.io/npm/v/%40amilmohd155%2Freact-native-markdown)
+![NPM License](https://img.shields.io/npm/l/%40docren%2Freact-native-markdown)
+![NPM Version](https://img.shields.io/npm/v/%40docren%2Freact-native-markdown)
 ![runs with expo](https://img.shields.io/badge/Runs%20with%20Expo-4630EB.svg?style=flat-square&logo=EXPO&labelColor=f3f3f3&logoColor=000)
 ![npm](https://img.shields.io/badge/types-included-blue?style=flat-square)
 
@@ -32,19 +32,19 @@ We’ve built on this foundation with a fully type-safe architecture, swapped in
 NPM
 
 ```sh
-npm install @amilmohd155/react-native-markdown
+npm install @docren/react-native-markdown
 ```
 
 Yarn
 
 ```sh
-yarn add @amilmohd155/react-native-markdown
+yarn add @docren/react-native-markdown
 ```
 
 PNPM
 
 ```sh
-pnpm add @amilmohd155/react-native-markdown
+pnpm add @docren/react-native-markdown
 ```
 
 ## Base Usage
@@ -52,7 +52,7 @@ pnpm add @amilmohd155/react-native-markdown
 ```jsx
 import { View, StyleSheet, ScrollView } from 'react-native';
 
-import { Markdown } from '@amilmohd155/react-native-markdown';
+import { Markdown } from '@docren/react-native-markdown';
 
 export default function App() {
   return (
