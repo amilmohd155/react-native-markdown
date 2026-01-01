@@ -93,7 +93,7 @@ const renderRules: RenderRules = {
   },
   link: ({ node, styles, children, extras }) => {
     const onPress = () =>
-      extras?.onPress(node.url) || (() => Linking.openURL(node.url));
+      extras?.onPress(node.url) || Linking.openURL(node.url);
 
     return (
       <Text key={node.key} onPress={onPress} style={styles.link}>
