@@ -1,0 +1,28 @@
+name: Release-it
+
+on:
+    workflow_dispatch:
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            id-token: write
+        steps:
+            - uses: actions/checkout@v6
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: "lts/*"
+                  registry-url: "https://registry.npmjs.org/"
+
+            - name: Install dependencies
+              run: yarn install --frozen-lockfile
+
+            - name: Build package
+              run: yarn prepare
+
+            - name: Create Release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: npx release-it --ci`
