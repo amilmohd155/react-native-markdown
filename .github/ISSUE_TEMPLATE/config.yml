@@ -1,8 +1,5 @@
-blank_issues_enabled: false
+blank_issues_enabled: true
 contact_links:
-  - name: Feature Request 💡
-    url: https://github.com/amilmohd155/react-native-markdown/discussions/new?category=ideas
-    about: If you have a feature request, please create a new discussion on GitHub.
   - name: Discussions on GitHub 💬
     url: https://github.com/amilmohd155/react-native-markdown/discussions
     about: If this library works as promised but you need help, please ask questions there.

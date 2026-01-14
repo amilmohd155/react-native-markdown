@@ -1,0 +1,42 @@
+name: '🐛 Bug report'
+description: Report an issue or possible bug
+title: '[BUG]:'
+labels: ['bug']
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Bug report
+
+        👋 Hi!
+
+        **Please fill the following carefully before opening a new issue ❗**
+        *(Your issue may be closed if it doesn't provide the required pieces of information)*
+
+  - type: checkboxes
+    id: verified
+    attributes:
+      label: Report hasn't been filed before.
+      options:
+        - label: I have verified that the bug I'm about to report hasn't been filed before.
+          required: true
+
+  - type: input
+    attributes:
+      label: What version of `react-native-markdown` are you using?
+      description: You can check the version by opening the `package.json` file in your project.
+      placeholder: 0.0.0
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Describe the Bug
+      description: |
+        To fill this field, please answer the following:
+          - What are the steps to reproduce it?
+          - What is the undesired behavior?
+          - What is the desired result?
+    validations:
+      required: true
