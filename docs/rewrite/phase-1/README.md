@@ -46,15 +46,15 @@ Defined in [07](../07-roadmap.md#phase-1-core-pure-js). Restated here only as a 
 
 ## Status
 
-Day-to-day tracking belongs in GitHub issues under a **Phase 1** milestone, not in these files. Once issues exist, [work-breakdown.md](./work-breakdown.md) links each milestone to them.
+Status is tracked in GitHub issues, not in these files: tracking issue [#7](https://github.com/amilmohd155/react-native-markdown/issues/7) with one sub-issue per milestone. The docs change only when the design or plan changes.
 
-| Milestone | Status |
+| Milestone | Issue |
 |---|---|
-| M0 Groundwork | Not started |
-| M1 Parser & node table | Not started |
-| M2 GFM plugins | Not started |
-| M3 Renderer | Not started |
-| M4 Theme | Not started |
-| M5 Public API | Not started |
-| M6 Tests & platforms | Not started |
-| M7 Benchmark & exit review | Not started |
+| M0 Groundwork | [#8](https://github.com/amilmohd155/react-native-markdown/issues/8) |
+| M1 Parser & node table | [#9](https://github.com/amilmohd155/react-native-markdown/issues/9) |
+| M2 GFM plugins | [#10](https://github.com/amilmohd155/react-native-markdown/issues/10) |
+| M3 Renderer | [#11](https://github.com/amilmohd155/react-native-markdown/issues/11) |
+| M4 Theme | [#12](https://github.com/amilmohd155/react-native-markdown/issues/12) |
+| M5 Public API | [#13](https://github.com/amilmohd155/react-native-markdown/issues/13) |
+| M6 Tests & platforms | [#14](https://github.com/amilmohd155/react-native-markdown/issues/14) |
+| M7 Benchmark & exit review | [#15](https://github.com/amilmohd155/react-native-markdown/issues/15) |

@@ -6,9 +6,9 @@
 
 | Suite | Source | How to run |
 |---|---|---|
-| CommonMark spec (~650 examples) | `spec.json` from the commonmark/commonmark-spec repo | Jest `each` over the examples |
+| CommonMark spec (652 examples) | `spec.txt` from the commonmark/commonmark-spec repo, tag 0.31.2 | Jest `each` over the examples |
 | GFM spec (CommonMark + extension examples) | github/cmark-gfm `test/spec.txt` and `test/extensions.txt` | same |
-| Pathological inputs | commonmark-spec `test/pathological_tests.py` patterns | Time-bounded Jest tests (e.g. < 100 ms each) |
+| Pathological inputs | commonmark/cmark `test/pathological_tests.py` patterns, ported to `test/fixtures/pathological/cases.ts` | Time-bounded Jest tests (e.g. < 100 ms each) |
 
 ### How the renderer is tested against HTML
 

@@ -33,6 +33,16 @@ export default defineConfig([
     },
   },
   {
+    // v1 code (Phase 1): no `any`, so internal types can't leak loosely into
+    // the public API. The v0.x code is exempt until it is removed in M5/M6.
+    files: [
+      'src/{api,mdast,model,parse,plugins,render,theme}/**/*.{ts,tsx}',
+    ],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+    },
+  },
+  {
     ignores: [
       'node_modules/',
       'lib/'
