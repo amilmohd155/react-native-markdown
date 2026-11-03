@@ -12,6 +12,16 @@ import type {
   ValidNodeKey,
 } from './ASTRenderer.types';
 
+const warnedTypes = new Set<string>();
+
+function warnOnce(type: string) {
+  if (warnedTypes.has(type)) return;
+  warnedTypes.add(type);
+  console.warn(
+    `Skipping unsupported node type: ${type}. Provide a render rule for "${type}" to render it.`
+  );
+}
+
 export default class ASTRenderer {
   private _renderRules: RenderRules;
   private _styles: StyleMap;
@@ -89,6 +99,16 @@ export default class ASTRenderer {
     const children: any[] = [];
     let type = node.type as ValidNodeKey;
 
+    // Tables have no default render rule yet. Skip them (and their children)
+    // unless the user supplied a rule for this node type.
+    if (
+      (type === 'table' || type === 'tableRow' || type === 'tableCell') &&
+      !this._renderRules[type]
+    ) {
+      warnOnce(type);
+      return null;
+    }
+
     if (type === 'link' && this._onLinkPress) {
       extras = {
         ...extras,
@@ -128,11 +148,6 @@ export default class ASTRenderer {
           children.push(this.renderNode(child, [node, ...parentStack]));
         }
       }
-    }
-
-    if (type === 'table' || type === 'tableCell' || type === 'tableRow') {
-      console.warn(`Skipping unsupported node type: ${type}`);
-      return null;
     }
 
     const renderFunction = this.getRenderFunction(type);

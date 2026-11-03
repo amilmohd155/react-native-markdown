@@ -1839,6 +1839,7 @@ __metadata:
     "@release-it/conventional-changelog": ^9.0.2
     "@types/jest": ^29.5.5
     "@types/react": ^19.0.12
+    "@types/react-test-renderer": ^19.0.0
     commitlint: ^19.6.1
     css-to-react-native: ^3.2.0
     del-cli: ^5.1.0
@@ -1851,6 +1852,7 @@ __metadata:
     react: 19.0.0
     react-native: 0.79.4
     react-native-builder-bob: ^0.40.12
+    react-test-renderer: 19.0.0
     release-it: 19.2.2
     typescript: ^5.8.3
   peerDependencies:
@@ -3697,6 +3699,15 @@ __metadata:
   dependencies:
     "@types/react": "*"
   checksum: 55f751c140eb6641b16a5644af3b6fc25223957141085758ae6898948e70eaca33d8276e86e75d5d60939aff63af1d20278aba0d3a25483266f9deee1eb468e3
+  languageName: node
+  linkType: hard
+
+"@types/react-test-renderer@npm:^19.0.0":
+  version: 19.3.0
+  resolution: "@types/react-test-renderer@npm:19.3.0"
+  dependencies:
+    "@types/react": "*"
+  checksum: fbc49458dbb661d7565d60c07bca5284bac15bf88fc7fef9bb5ff0f58c4dbe87faf430443bac94b9a7a3dd2fa1e520435fe4d245928545756220b0fb76e0b080
   languageName: node
   linkType: hard
 
@@ -11996,6 +12007,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-is@npm:^19.0.0":
+  version: 19.3.1
+  resolution: "react-is@npm:19.3.1"
+  checksum: e66f96e15807a8d5948502a026780b53ac95f993c5772f999e4e71ab591d5632fcc7f966abf6a8208ec6a2b880473ad61eb4767c332571422b2852e93f4750dc
+  languageName: node
+  linkType: hard
+
 "react-native-builder-bob@npm:^0.40.12":
   version: 0.40.12
   resolution: "react-native-builder-bob@npm:0.40.12"
@@ -12149,6 +12167,18 @@ __metadata:
   peerDependencies:
     react: ">= 0.14.0"
   checksum: 417b6f1f2e0c1e00dcc12d34da457b94c7419345306a951d0a8d2d031a0c964179d6b700137870ad1397572cbc3a4454e94de7bbef914a81674edae2098f02dc
+  languageName: node
+  linkType: hard
+
+"react-test-renderer@npm:19.0.0":
+  version: 19.0.0
+  resolution: "react-test-renderer@npm:19.0.0"
+  dependencies:
+    react-is: ^19.0.0
+    scheduler: ^0.25.0
+  peerDependencies:
+    react: ^19.0.0
+  checksum: 2e1e527588c69e822b7aa25262c9f4a48161ede9cee5109b88228ecafbd91ce82f7afed176645efcba903ba5a43d05842a8229cdde220049e42a0cf679715dbc
   languageName: node
   linkType: hard
 

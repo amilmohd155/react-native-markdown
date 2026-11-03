@@ -92,8 +92,17 @@ const renderRules: RenderRules = {
     return <Image key={node.key} {...imageProps} />;
   },
   link: ({ node, styles, children, extras }) => {
-    const onPress = () =>
-      extras?.onPress(node.url) || Linking.openURL(node.url);
+    const onPress = () => {
+      // A custom handler replaces the default behaviour entirely.
+      if (extras?.onPress) {
+        extras.onPress(node.url);
+        return;
+      }
+
+      Linking.openURL(node.url).catch((error) => {
+        console.warn(`Unable to open URL: ${node.url}`, error);
+      });
+    };
 
     return (
       <Text key={node.key} onPress={onPress} style={styles.link}>

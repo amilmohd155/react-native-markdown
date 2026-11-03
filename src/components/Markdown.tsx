@@ -1,9 +1,12 @@
-import { memo } from 'react';
-import { fromMarkdown } from 'mdast-util-from-markdown';
+import { memo, useMemo } from 'react';
+import { fromMarkdown, type Extension } from 'mdast-util-from-markdown';
 import ASTRenderer from './ASTRenderer';
 import type { MarkdownProps } from './Markdown.types';
 import { getKeyFromMarkdown } from '../utils/getKey';
 import { resolveReference } from '../utils/resolveReference';
+
+// Stable default so an omitted `extensions` prop doesn't invalidate the parse cache.
+const NO_EXTENSIONS: Extension[] = [];
 
 const Markdown = memo(
   ({
@@ -15,27 +18,45 @@ const Markdown = memo(
     mergeStyle,
     customBulletElement,
     onLinkPress,
-    extensions = [],
+    extensions = NO_EXTENSIONS,
   }: MarkdownProps) => {
-    const tree = fromMarkdown(markdown, {
-      mdastExtensions: [
-        resolveReference(),
-        getKeyFromMarkdown(),
-        ...extensions,
-      ],
-    });
+    // Re-parse only when the source or the parser extensions change.
+    const tree = useMemo(
+      () =>
+        fromMarkdown(markdown, {
+          mdastExtensions: [
+            resolveReference(),
+            getKeyFromMarkdown(),
+            ...extensions,
+          ],
+        }),
+      [markdown, extensions]
+    );
 
-    const renderer = new ASTRenderer({
-      renderRules,
-      debug,
-      styles,
-      mergeStyle,
-      listBulletStyle,
-      customBulletElement,
-      onLinkPress,
-    });
+    // Rebuild the renderer (and its merged styles) only when its options change.
+    const renderer = useMemo(
+      () =>
+        new ASTRenderer({
+          renderRules,
+          debug,
+          styles,
+          mergeStyle,
+          listBulletStyle,
+          customBulletElement,
+          onLinkPress,
+        }),
+      [
+        renderRules,
+        debug,
+        styles,
+        mergeStyle,
+        listBulletStyle,
+        customBulletElement,
+        onLinkPress,
+      ]
+    );
 
-    return renderer.render(tree);
+    return useMemo(() => renderer.render(tree), [renderer, tree]);
   }
 );
 

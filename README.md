@@ -84,7 +84,7 @@ The `<Markdown>` component takes the following props.
 | renderRules         | RenderRules           | [source](./src/libs/renderRules.tsx) | Customize how specific Markdown elements are rendered using an object of render functions. Merged by default.                                                                                                          |
 | listBulletStyle     | 'disc' \| 'dash'      | 'disc'                               | Defines the default bullet style for unordered lists (• or –).                                                                                                                                                         |
 | customBulletElement | ReactElement \| null  | N/A                                  | Override the default list bullet with a custom React element. Applies to all unordered list items.                                                                                                                     |
-| onLinkPress         | (url: string) => void | N/A                                  | Callback invoked when a link is pressed. Useful for navigation or analytics.                                                                                                                                           |
+| onLinkPress         | (url: string) => void | N/A                                  | Callback invoked when a link is pressed. When provided, it replaces the default `Linking.openURL` behaviour.                                                                                                           |
 | extensions          | Extension[]           | []                                   | Extend or modify Markdown parsing by providing custom MDAST extensions. Useful for GFM or custom syntax. [To know more](https://github.com/syntax-tree/mdast-util-from-markdown?tab=readme-ov-file#list-of-extensions) |
 | debug               | boolean               | false                                | Enable debug logs during parsing and rendering for development purposes.                                                                                                                                               |
 
@@ -290,7 +290,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Markdown markdown={mdxString} />
+        <Markdown markdown={mdxString} onLinkPress={onLinkPress} />
       </ScrollView>
     </View>
   );
