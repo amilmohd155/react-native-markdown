@@ -1,5 +1,7 @@
 # Phase 1 · Work breakdown
 
+**Tracking issue:** [#7 Phase 1 · Core (pure JS)](https://github.com/amilmohd155/react-native-markdown/issues/7). Each milestone below links to its own issue, which holds its status and checklist.
+
 Milestones are listed in build order. Each one has its inputs, deliverables and a **done** check that can be verified. Milestones on the same row of the dependency graph can run in parallel.
 
 ## Dependency graph
@@ -20,22 +22,26 @@ M0 Groundwork
 
 ## M0 · Groundwork
 
+**Issue:** [#8](https://github.com/amilmohd155/react-native-markdown/issues/8)
+
 **Goal:** a clean v1 workspace where tests and benchmarks run from day one.
 
 - Create the new `src/` layout ([03 · Package layout](../03-architecture.md#package-layout)) on a long-lived `v1` branch. v0.x keeps receiving fixes on `main`.
 - TypeScript `strict`, `noUncheckedIndexedAccess`, and no `any` in public types (lint rule).
 - Dependencies:
   - add `markdown-it` and `markdown-it-footnote`;
-  - remove `mdast-util-from-markdown` and `css-to-react-native` (the latter belongs to the example app only);
+  - move `css-to-react-native` to the example app, its only user. `mdast-util-from-markdown` stays until M5, because the v0 code (still the public entry point, so CI and the example keep working) depends on it;
   - set peer dependencies to real ranges (`react >= 18`, `react-native >= 0.76`; final values chosen in [decisions](./decisions.md)).
 - Vendor the spec fixtures with pinned versions ([testing-harness.md](./testing-harness.md#fixtures)).
-- Move `docs/rewrite/bench` into a `bench/` workspace that can import `src/`.
+- Move `docs/rewrite/bench` into a `bench/` workspace that can import `src/` (via `tsx`; see `bench/src-check.mjs`).
 - CI skeleton: lint, typecheck, Jest, plus empty web and Expo Go check jobs ([testing-harness.md](./testing-harness.md#ci-jobs)).
-- Remove `skipChecks: true` from the release-it config.
+- Gate releases on the repo's checks: a Verify step in the release workflow. `skipChecks` stays, because npm Trusted Publishing requires it ([P1-7](./decisions.md#p1-7-keep-release-it-skipchecks-gate-releases-in-the-release-workflow)).
 
 **Done when:** CI is green on the empty skeleton, the spec runner loads all fixtures (and every example fails as "not implemented"), and `bench` runs against `src/`.
 
 ## M1 · Parser & node table
+
+**Issue:** [#9](https://github.com/amilmohd155/react-native-markdown/issues/9)
 
 **Goal:** `parse(source) → MarkdownDocument` for CommonMark, backed by the node table.
 
@@ -54,13 +60,15 @@ M0 Groundwork
 
 ## M2 · GFM plugins
 
+**Issue:** [#10](https://github.com/amilmohd155/react-native-markdown/issues/10)
+
 **Goal:** full GFM by default, implemented through the same plugin mechanism users get.
 
 - Internal `definePlugin` with `syntax.markdownIt`, `nodes` and token registration. The public typing comes in M5.
 - Built-in plugins:
   - `tables` (markdown-it core) and `strikethrough` (markdown-it core): mapping only.
   - `taskLists`: an in-house core rule ([token-mapping.md](./token-mapping.md#task-lists)).
-  - `autolinks`: linkify-it with fuzzy matching, plus the thin GFM wrapper (filter, reject, trim) from [P1-1](./decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps). Start by porting the prototype in [`bench/autolink.cjs`](../bench/autolink.cjs). Write custom matching only for a gap the spec or real transcripts prove matters.
+  - `autolinks`: linkify-it with fuzzy matching, plus the thin GFM wrapper (filter, reject, trim) from [P1-1](./decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps). Start by porting the prototype in [`bench/autolink.cjs`](../../../bench/autolink.cjs). Write custom matching only for a gap the spec or real transcripts prove matters.
   - `tagfilter`: in-house.
   - `footnotes`: `markdown-it-footnote`, plus mapping ([token-mapping.md](./token-mapping.md#footnotes)).
 - `preset: 'gfm' | 'commonmark' | { base, exclude }`.
@@ -70,6 +78,8 @@ M0 Groundwork
 - Excluding each plugin removes exactly its syntax, verified by tests.
 
 ## M3 · Renderer
+
+**Issue:** [#11](https://github.com/amilmohd155/react-native-markdown/issues/11)
 
 **Goal:** the document renders through default elements with the performance properties from [03](../03-architecture.md#3-rendering-layer).
 
@@ -88,6 +98,8 @@ M0 Groundwork
 
 ## M4 · Theme
 
+**Issue:** [#12](https://github.com/amilmohd155/react-native-markdown/issues/12)
+
 **Goal:** tokens produce element styles once, and components read them from context.
 
 - `createTheme`, `lightTheme`, `darkTheme`, `'auto'`.
@@ -100,6 +112,8 @@ M0 Groundwork
 
 ## M5 · Public API
 
+**Issue:** [#13](https://github.com/amilmohd155/react-native-markdown/issues/13)
+
 **Goal:** the API in [04](../04-api.md) is complete and type-safe.
 
 - `<Markdown>` with every prop in [04](../04-api.md#markdown), with shallow per-key comparison for `components`, `plugins` and `theme`.
@@ -107,6 +121,7 @@ M0 Groundwork
 - The `defaults` export and the `inlineView()` helper.
 - Public `definePlugin` typing, with plugin elements extending `ElementName`/`ElementProps`.
 - `parse`, `<Markdown document>`, read-only `visit` (D7).
+- Swap the package entry point to the v1 API, then remove the v0 sources and `mdast-util-from-markdown` (deferred from M0).
 - Events: `onLinkPress` (returning `false` cancels, `openURL` errors caught), `onImagePress`, `onTaskToggle`.
 - URL sanitization and the `images` policy ([decisions P1-3](./decisions.md#p1-3-url-sanitization-layers)).
 
@@ -115,6 +130,8 @@ M0 Groundwork
 - No internal type (`NodeTable`, markdown-it `Token`) is reachable from the public `.d.ts` (checked by a script).
 
 ## M6 · Tests & platforms
+
+**Issue:** [#14](https://github.com/amilmohd155/react-native-markdown/issues/14)
 
 **Goal:** the full test matrix from [06](../06-testing.md), green on all platforms.
 
@@ -126,6 +143,8 @@ M0 Groundwork
 **Done when:** every job in [testing-harness.md · CI jobs](./testing-harness.md#ci-jobs) is green and required on the `v1` branch.
 
 ## M7 · Benchmark & exit review
+
+**Issue:** [#15](https://github.com/amilmohd155/react-native-markdown/issues/15)
 
 **Goal:** show the exit criteria are met on real devices.
 

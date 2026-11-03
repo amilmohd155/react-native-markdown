@@ -50,4 +50,4 @@ The rewrite is allowed to break the API, and does. Users work with **element com
 
 Implementation detail for Phase 1 (work breakdown, token mapping, element props, theme resolution, test harness, device benchmark protocol, implementation decisions) is in [`phase-1/`](./phase-1/README.md).
 
-The benchmark scripts are in [`bench/`](./bench).
+The benchmark scripts are in [`bench/`](../../bench) (a private workspace at the repo root).

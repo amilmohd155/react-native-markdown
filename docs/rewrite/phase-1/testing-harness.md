@@ -8,13 +8,15 @@ These are vendored in `test/fixtures/` (not downloaded at test time), each with 
 
 | Fixture | Source | Pinned version | Used for |
 |---|---|---|---|
-| `commonmark/spec.json` | commonmark/commonmark-spec, generated with `test/spec_tests.py --dump-tests` | 0.31.2 | CommonMark suite |
-| `gfm/spec.txt` | github/cmark-gfm `test/spec.txt` | latest tag at M0 | GFM suite (CommonMark plus GFM sections) |
-| `gfm/extensions.txt` | github/cmark-gfm `test/extensions.txt` | same tag | Tables, strikethrough, autolinks, tagfilter, task lists, footnotes |
-| `pathological/` | patterns from commonmark-spec `test/pathological_tests.py` | 0.31.2 | Time-bounded tests |
+| `commonmark/spec.txt` | commonmark/commonmark-spec `spec.txt` | tag `0.31.2` | CommonMark suite (652 examples) |
+| `gfm/spec.txt` | github/cmark-gfm `test/spec.txt` (GFM spec 0.29) | tag `0.29.0.gfm.13` | GFM suite (CommonMark plus GFM sections) |
+| `gfm/extensions.txt` | github/cmark-gfm `test/extensions.txt` | tag `0.29.0.gfm.13` | Tables, strikethrough, autolinks, tagfilter, task lists, footnotes |
+| `pathological/cases.ts` | ported by hand from commonmark/cmark `test/pathological_tests.py` (23 of 25 cases; the other 2 test cmark internals) | tag `0.31.1` | Time-bounded tests |
 | `docs/` | markdown-it README ×5 / ×60, plus real LLM transcripts (to be collected) | — | Benchmarks and snapshots |
 
-The `.txt` spec files are parsed with a small reader for the spec format (example blocks delimited by 32 backticks, with `→` standing for tab), so the parser examples and the GFM examples share one runner.
+All three spec files are kept as the original `.txt` and parsed by one small reader for the spec format (example blocks delimited by 32 backticks, with `→` standing for tab), so both suites share one runner. No generated `spec.json`: fetched scripts are never executed to build fixtures.
+
+Checksums and licenses (the spec files are CC-BY-SA 4.0 test data, not shipped in the npm package) are in `test/fixtures/SOURCES.md`.
 
 ## Spec runner
 

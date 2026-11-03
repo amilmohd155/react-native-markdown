@@ -24,7 +24,7 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 - **Context:**
   - An earlier check found that markdown-it doesn't link `www.x.com` with `linkify: true`. That turned out to be a **default setting, not a linkify-it limitation**: markdown-it ships linkify-it with `fuzzyLink: false`.
   - Before deciding to write our own matcher, we ran the GFM spec's autolink examples through markdown-it + linkify-it in four configurations. These are the 11 "Autolinks (extension)" examples from cmark-gfm `test/spec.txt` and the 3 "Autolinks" examples from `test/extensions.txt`, one of which bundles 32 cases.
-  - Script: [`../bench/autolink.cjs`](../bench/autolink.cjs) (`npm run autolink:fetch && npm run autolink`).
+  - Script: [`bench/autolink.cjs`](../../../bench/autolink.cjs) (`yarn workspace @docren/react-native-markdown-bench autolink`). It reads the pinned GFM spec files in `test/fixtures/gfm/`.
 
   | Configuration | Examples | Cases |
   |---|---|---|
@@ -106,3 +106,17 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 - **Context:** v0.x declares `react: "*"` and `react-native: "*"` ([01](../01-current-state.md)). v1 relies on Fabric text behaviour for nested Text and inline views, and on React 18+ features.
 - **Decision:** `react >= 18.2`, `react-native >= 0.76` (the New Architecture default). The old architecture is not tested.
 - **Consequences:** Projects on React Native below 0.76 stay on v0.x. To be confirmed against the Expo SDK versions that Expo Go supports at release time (D2).
+
+## P1-7: Keep release-it `skipChecks`; gate releases in the release workflow
+
+- **Status:** Accepted (2026-11-03, during M0; replaces the M0 item "remove `skipChecks`")
+- **Context:**
+  - The plan said to remove `npm.skipChecks: true`, reading it as "releases skip quality checks".
+  - It actually skips release-it's **npm prerequisite checks**: registry ping, `npm whoami` and collaborator access.
+  - The release workflow publishes with npm **Trusted Publishing** (OIDC, `id-token: write`, no npm token). release-it's docs state that with Trusted Publishing you *must* set `skipChecks: true` ([release-it docs · npm · Trusted publishing](https://github.com/release-it/release-it/blob/main/docs/npm.md)), because there's no token for `whoami` to validate. Removing it would break the next release.
+- **Decision:**
+  - Keep `skipChecks: true`.
+  - Meet the original goal (no release without passing checks) by adding a **Verify** step to `.github/workflows/release.yml`, before the build and `release-it`: lint, typecheck, unit tests, spec suites and the Expo Go check.
+- **Consequences:**
+  - Releases can't publish code that fails the repo's checks.
+  - npm authentication problems surface at publish time instead of in release-it's pre-checks. With OIDC that's the only place they can surface anyway.

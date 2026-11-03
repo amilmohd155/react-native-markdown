@@ -6,7 +6,7 @@ How much of the cost is the parser, and what are the realistic alternatives on a
 
 ## Method
 
-- Script: [`bench/bench.mjs`](./bench/bench.mjs), with dependency versions pinned in [`bench/package.json`](./bench/package.json).
+- Script: [`bench/bench.mjs`](../../bench/bench.mjs), with dependency versions pinned in [`bench/package.json`](../../bench/package.json).
 - Fixture: markdown-it's README plus a GFM snippet (table, task list, strikethrough, autolink literal), repeated N times.
 - Each parser gets 3 warm-up runs, then the median of 11 timed runs.
 - Run on Node 22 in a Linux cloud container. `--jitless` turns off V8's optimizing JIT, which is a **rough proxy** for Hermes. Hermes runs precompiled bytecode with no JIT.
@@ -41,12 +41,12 @@ Re-parsing the full 8 KB buffer at each of 200 append steps, as a chat UI does t
 
 ## Reproduce
 
+From the repo root, after `yarn install` (the `bench/` workspace is installed with the rest of the repo):
+
 ```bash
-cd docs/rewrite/bench
-npm install
-npm run bench          # 8 KB + streaming simulation
-npm run bench:large    # ~97 KB
-npm run bench:jitless  # ~97 KB, no JIT
+yarn workspace @docren/react-native-markdown-bench bench          # 8 KB + streaming simulation
+yarn workspace @docren/react-native-markdown-bench bench:large    # ~97 KB
+yarn workspace @docren/react-native-markdown-bench bench:jitless  # ~97 KB, no JIT
 ```
 
 ## Not measured yet (to do in phase 1)
