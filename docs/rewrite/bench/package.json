@@ -1,0 +1,25 @@
+{
+  "name": "markdown-parser-bench",
+  "private": true,
+  "type": "module",
+  "description": "Benchmarks and evidence scripts for docs/rewrite (02-benchmarks, 08-model-and-api, phase-1/decisions P1-1). Not part of the published package.",
+  "scripts": {
+    "bench": "node bench.mjs 5",
+    "bench:large": "node bench.mjs 60 --no-stream",
+    "bench:jitless": "node --jitless bench.mjs 60 --no-stream",
+    "model": "node model.mjs 60 time",
+    "model:jitless": "node --jitless model.mjs 60 time",
+    "model:memory": "for m in mdast tokens tree table; do node --expose-gc model.mjs 60 $m; done",
+    "autolink:fetch": "mkdir -p spec && curl -sSfL -o spec/spec.txt https://raw.githubusercontent.com/github/cmark-gfm/master/test/spec.txt && curl -sSfL -o spec/extensions.txt https://raw.githubusercontent.com/github/cmark-gfm/master/test/extensions.txt",
+    "autolink": "node autolink.cjs",
+    "autolink:detail": "node autolink.cjs --detail"
+  },
+  "dependencies": {
+    "commonmark": "0.31.2",
+    "markdown-it": "15.0.3",
+    "marked": "18.1.3",
+    "mdast-util-from-markdown": "2.1.0",
+    "mdast-util-gfm": "3.1.0",
+    "micromark-extension-gfm": "3.0.0"
+  }
+}
