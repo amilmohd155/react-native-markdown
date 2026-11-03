@@ -74,6 +74,7 @@
     "@release-it/conventional-changelog": "^9.0.2",
     "@types/jest": "^29.5.5",
     "@types/react": "^19.0.12",
+    "@types/react-test-renderer": "^19.0.0",
     "commitlint": "^19.6.1",
     "del-cli": "^5.1.0",
     "eslint": "^9.22.0",
@@ -84,6 +85,7 @@
     "react": "19.0.0",
     "react-native": "0.79.4",
     "react-native-builder-bob": "^0.40.12",
+    "react-test-renderer": "19.0.0",
     "release-it": "19.2.2",
     "typescript": "^5.8.3"
   },
@@ -100,6 +102,9 @@
     "modulePathIgnorePatterns": [
       "<rootDir>/example/node_modules",
       "<rootDir>/lib/"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?|mdast-util-.*|micromark.*|unist-util-.*|decode-named-character-reference|character-entities|devlop)/)"
     ]
   },
   "commitlint": {
