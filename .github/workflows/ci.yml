@@ -3,9 +3,11 @@ on:
   push:
     branches:
       - main
+      - v1
   pull_request:
     branches:
       - main
+      - v1
   merge_group:
     types:
       - checks_requested
@@ -37,6 +39,30 @@ jobs:
 
       - name: Run unit tests
         run: yarn test --maxWorkers=2 --coverage
+
+  spec:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Run CommonMark + GFM spec suites
+        run: yarn test:spec --maxWorkers=2
+
+  expo-go-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: No native code reachable from the main entry (D2)
+        run: yarn check:expo-go
 
   build-library:
     runs-on: ubuntu-latest

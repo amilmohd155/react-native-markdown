@@ -45,7 +45,7 @@ In parallel, `getMergedStyles` builds a doubled style map (`key` + `_VIEW_SAFE_k
 6. **One `<Text>` per text node**, which inflates element and shadow-node counts.
 7. **The `_VIEW_SAFE_` style hack** doubles the style map and makes choosing the wrong variant an easy bug.
 8. **Loose types.** There is a lot of `any`, `StyleMap = Record<string, …>`, and `@ts-ignore` in the module augmentation.
-9. **No tests.** The suite is a single `it.todo`, and release-it runs with `skipChecks: true`.
+9. **No tests.** The suite is a single `it.todo`, and the release workflow publishes without running any checks. (release-it's `skipChecks: true` is a separate matter: npm Trusted Publishing requires it; see [P1-7](./phase-1/decisions.md#p1-7-keep-release-it-skipchecks-gate-releases-in-the-release-workflow).)
 10. **Packaging and docs.**
     - `css-to-react-native` is a runtime dependency but only the example uses it.
     - Peer dependencies are `"*"`.

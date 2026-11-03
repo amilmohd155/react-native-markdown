@@ -24,6 +24,14 @@ jobs:
                   git config --global user.name "github-actions[bot]"
                   git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+            - name: Verify (lint, types, tests, spec suites, Expo Go check)
+              run: |
+                  yarn lint
+                  yarn typecheck
+                  yarn test --maxWorkers=2
+                  yarn test:spec --maxWorkers=2
+                  yarn check:expo-go
+
             - name: Build package
               run: yarn prepare
 

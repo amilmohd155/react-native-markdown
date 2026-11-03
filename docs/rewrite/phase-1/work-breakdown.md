@@ -33,9 +33,9 @@ M0 Groundwork
   - move `css-to-react-native` to the example app, its only user. `mdast-util-from-markdown` stays until M5, because the v0 code (still the public entry point, so CI and the example keep working) depends on it;
   - set peer dependencies to real ranges (`react >= 18`, `react-native >= 0.76`; final values chosen in [decisions](./decisions.md)).
 - Vendor the spec fixtures with pinned versions ([testing-harness.md](./testing-harness.md#fixtures)).
-- Move `docs/rewrite/bench` into a `bench/` workspace that can import `src/`.
+- Move `docs/rewrite/bench` into a `bench/` workspace that can import `src/` (via `tsx`; see `bench/src-check.mjs`).
 - CI skeleton: lint, typecheck, Jest, plus empty web and Expo Go check jobs ([testing-harness.md](./testing-harness.md#ci-jobs)).
-- Remove `skipChecks: true` from the release-it config.
+- Gate releases on the repo's checks: a Verify step in the release workflow. `skipChecks` stays, because npm Trusted Publishing requires it ([P1-7](./decisions.md#p1-7-keep-release-it-skipchecks-gate-releases-in-the-release-workflow)).
 
 **Done when:** CI is green on the empty skeleton, the spec runner loads all fixtures (and every example fails as "not implemented"), and `bench` runs against `src/`.
 
@@ -68,7 +68,7 @@ M0 Groundwork
 - Built-in plugins:
   - `tables` (markdown-it core) and `strikethrough` (markdown-it core): mapping only.
   - `taskLists`: an in-house core rule ([token-mapping.md](./token-mapping.md#task-lists)).
-  - `autolinks`: linkify-it with fuzzy matching, plus the thin GFM wrapper (filter, reject, trim) from [P1-1](./decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps). Start by porting the prototype in [`bench/autolink.cjs`](../bench/autolink.cjs). Write custom matching only for a gap the spec or real transcripts prove matters.
+  - `autolinks`: linkify-it with fuzzy matching, plus the thin GFM wrapper (filter, reject, trim) from [P1-1](./decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps). Start by porting the prototype in [`bench/autolink.cjs`](../../../bench/autolink.cjs). Write custom matching only for a gap the spec or real transcripts prove matters.
   - `tagfilter`: in-house.
   - `footnotes`: `markdown-it-footnote`, plus mapping ([token-mapping.md](./token-mapping.md#footnotes)).
 - `preset: 'gfm' | 'commonmark' | { base, exclude }`.

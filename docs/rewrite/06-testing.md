@@ -42,7 +42,7 @@ Every backend (markdown-it, native) runs the same suite. A documented, per-backe
 
 ## Performance regression tests
 
-- Port [`bench/bench.mjs`](./bench/bench.mjs) into a CI job that runs:
+- Port [`bench/bench.mjs`](../../bench/bench.mjs) into a CI job that runs:
   - parse time for 1 KB / 100 KB / 1 MB fixtures,
   - render time (element creation) for the same fixtures, and
   - streaming time for a 10 KB message in 500 chunks.
@@ -51,5 +51,6 @@ Every backend (markdown-it, native) runs the same suite. A documented, per-backe
 
 ## Release gating
 
-- Remove `skipChecks: true` from the release-it config.
+- Keep release-it's `skipChecks: true`: it only skips npm auth/registry pre-checks, which npm Trusted Publishing requires skipping ([P1-7](./phase-1/decisions.md#p1-7-keep-release-it-skipchecks-gate-releases-in-the-release-workflow)).
+- The release workflow runs lint, typecheck, unit tests, spec suites and the Expo Go check before building and publishing.
 - CI must pass the spec suites, unit tests, `tsc`, lint and the perf job before `release-it` runs.

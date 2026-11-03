@@ -33,12 +33,14 @@
   ],
   "scripts": {
     "example": "yarn workspace @docren/react-native-markdown-example",
-    "test": "jest",
+    "test": "jest --selectProjects unit",
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli lib",
     "prepare": "bob build",
-    "release": "release-it --only-version"
+    "release": "release-it --only-version",
+    "test:spec": "jest --selectProjects spec",
+    "check:expo-go": "node scripts/check-no-native.mjs"
   },
   "keywords": [
     "react-native",
@@ -94,17 +96,37 @@
     "react-native": ">=0.76.0"
   },
   "workspaces": [
-    "example"
+    "example",
+    "bench"
   ],
   "packageManager": "yarn@3.6.1",
   "jest": {
-    "preset": "react-native",
-    "modulePathIgnorePatterns": [
-      "<rootDir>/example/node_modules",
-      "<rootDir>/lib/"
-    ],
-    "transformIgnorePatterns": [
-      "node_modules/(?!((jest-)?react-native|@react-native(-community)?|mdast-util-.*|micromark.*|unist-util-.*|decode-named-character-reference|character-entities|devlop)/)"
+    "projects": [
+      {
+        "displayName": "unit",
+        "preset": "react-native",
+        "testMatch": [
+          "<rootDir>/src/**/__tests__/**/*.test.[jt]s?(x)"
+        ],
+        "modulePathIgnorePatterns": [
+          "<rootDir>/example/node_modules",
+          "<rootDir>/lib/"
+        ],
+        "transformIgnorePatterns": [
+          "node_modules/(?!((jest-)?react-native|@react-native(-community)?|mdast-util-.*|micromark.*|unist-util-.*|decode-named-character-reference|character-entities|devlop)/)"
+        ]
+      },
+      {
+        "displayName": "spec",
+        "testEnvironment": "node",
+        "testMatch": [
+          "<rootDir>/test/spec/**/*.test.ts"
+        ],
+        "modulePathIgnorePatterns": [
+          "<rootDir>/example/node_modules",
+          "<rootDir>/lib/"
+        ]
+      }
     ]
   },
   "commitlint": {

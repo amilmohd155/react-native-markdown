@@ -1,9 +1,10 @@
 // P1-1 evidence: run the GFM autolink spec examples through markdown-it + linkify-it.
 // Used by docs/rewrite/phase-1/decisions.md (P1-1).
 //
-//   npm run autolink:fetch   # downloads cmark-gfm test/spec.txt + test/extensions.txt into ./spec
-//   npm run autolink         # summary per configuration
-//   node autolink.cjs --detail   # also print every failing case for the wrapper config
+//   yarn autolink            # summary per configuration
+//   yarn autolink:detail     # also print every failing case for the wrapper config
+//
+// Uses the pinned GFM spec files vendored in test/fixtures/gfm (cmark-gfm 0.29.0.gfm.13).
 //
 // Configurations:
 //   1. markdown-it default linkify   (fuzzyLink: false)
@@ -14,7 +15,7 @@
 
 const fs = require('fs'); const path = require('path');
 const MarkdownIt = require('markdown-it');
-const dir = path.join(__dirname, 'spec');
+const dir = path.join(__dirname, '..', 'test', 'fixtures', 'gfm');
 
 function examples(file, startHeading) {
   const lines = fs.readFileSync(path.join(dir, file), 'utf8').split('\n');

@@ -34,7 +34,7 @@ D is rejected without measuring. It ties the renderer and any public API to mark
 
 ### Measurements
 
-Script: [`bench/model.mjs`](./bench/model.mjs). Fixture: the same ~97 KB GFM document used in [02](./02-benchmarks.md), with 6,421 nodes. Node 22. For memory, 20 documents were kept alive, then the retained heap was measured after a forced GC (`--expose-gc`), including `ArrayBuffer`s.
+Script: [`bench/model.mjs`](../../bench/model.mjs). Fixture: the same ~97 KB GFM document used in [02](./02-benchmarks.md), with 6,421 nodes. Node 22. For memory, 20 documents were kept alive, then the retained heap was measured after a forced GC (`--expose-gc`), including `ArrayBuffer`s.
 
 **Build time** (median of 11 runs):
 
