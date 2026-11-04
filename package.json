@@ -111,6 +111,9 @@
           "<rootDir>/example/node_modules",
           "<rootDir>/lib/"
         ],
+        "moduleNameMapper": {
+          "^@docren/react-native-markdown$": "<rootDir>/src/index.tsx"
+        },
         "transformIgnorePatterns": [
           "node_modules/(?!((jest-)?react-native|@react-native(-community)?)/)"
         ]
