@@ -11,6 +11,7 @@ import {
   type NodeTable,
 } from '../model';
 import type { HtmlMode } from './backend';
+import { convertInline } from './convertInline';
 import { Slugger } from './slug';
 
 export interface ConvertOptions {
@@ -41,8 +42,7 @@ const DROPPED = -1;
  * with an explicit stack (no recursion, so nesting depth can't overflow).
  * Spec: docs/rewrite/phase-1/token-mapping.md
  *
- * Inline content: each `inline` token currently becomes one `Text` node with
- * its raw content. The inline pass (M1 task 6) replaces this.
+ * Inline content is converted by `convertInline`, under the current block.
  */
 export function convertTokens(
   md: MarkdownIt,
@@ -245,11 +245,14 @@ export function convertTokens(
         break;
 
       case 'inline': {
-        // Interim (task 5): raw inline content as one text node.
-        if (token.content.length > 0) {
-          builder.add(NodeType.Text, parentNode(), 0, token.content);
-        }
-        if (headingText) headingText.push(token.content);
+        const heading = headingText;
+        convertInline(
+          builder,
+          token.children ?? [],
+          parentNode(),
+          heading ? (text) => heading.push(text) : null,
+          warn
+        );
         break;
       }
 
