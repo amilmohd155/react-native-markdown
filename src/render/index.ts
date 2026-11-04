@@ -4,11 +4,12 @@
  * Contents so far:
  * - Element names → semantic props and the component map type (./elements)
  * - Render context: theme, components, handlers, options (./context)
+ * - Node table → semantic element props (./props)
+ * - Block-level rendering (./renderBlock), BlockList and memoized Block
+ *   (./Block)
  *
  * Planned contents:
- * - BlockList and memoized Block
- * - Inline flattener (one <Text> per block)
- * - Node table → semantic element props
+ * - Inline flattener (one <Text> per block), replacing ./inline
  * - Default elements
  *
  * Design:
@@ -36,3 +37,12 @@ export {
   type SoftBreak,
   type TaskToggleInfo,
 } from './context';
+export {
+  Block,
+  BlockList,
+  blockPropsEqual,
+  type BlockListProps,
+  type BlockProps,
+} from './Block';
+export { renderBlock } from './renderBlock';
+export * from './props';

@@ -144,8 +144,12 @@ function deriveStyles(t: ThemeTokens) {
   const nestedList: StyleEntry = {
     container: { paddingLeft: 0, marginBottom: 0 },
   };
+  const tightParagraph: StyleEntry = {
+    text: blockText,
+    container: { marginBottom: 0 },
+  };
 
-  return { elements, headings, tableHeaderCell, nestedList };
+  return { elements, headings, tableHeaderCell, nestedList, tightParagraph };
 }
 
 /**
@@ -165,6 +169,7 @@ export function resolveTheme(tokens: ThemeTokens): ResolvedTheme {
   derived.headings.forEach((entry, i) => add(`h${i + 1}`, entry));
   add('tableHeaderCell', derived.tableHeaderCell);
   add('nestedList', derived.nestedList);
+  add('tightParagraph', derived.tightParagraph);
 
   const sheet = StyleSheet.create(flat);
   const pick = (key: string): ElementStyle =>
@@ -189,6 +194,7 @@ export function resolveTheme(tokens: ThemeTokens): ResolvedTheme {
     ] as const),
     tableHeaderCell: pick('tableHeaderCell'),
     nestedList: pick('nestedList'),
+    tightParagraph: pick('tightParagraph'),
   });
 }
 

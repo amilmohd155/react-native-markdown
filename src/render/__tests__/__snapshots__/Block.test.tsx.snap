@@ -1,0 +1,42 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`BlockList renders every block through the component map 1`] = `
+<View>
+  <Heading
+    id="title"
+    level={1}
+  >
+    Title
+  </Heading>
+  <Paragraph>
+    Some text.
+  </Paragraph>
+  <List
+    ordered={false}
+    start={1}
+    tight={true}
+  >
+    <ListItem
+      checked={null}
+      index={0}
+      marker="•"
+      ordered={false}
+    >
+      <Paragraph>
+        a
+      </Paragraph>
+    </ListItem>
+    <ListItem
+      checked={null}
+      index={1}
+      marker="•"
+      ordered={false}
+    >
+      <Paragraph>
+        b
+      </Paragraph>
+    </ListItem>
+  </List>
+  <Divider />
+</View>
+`;

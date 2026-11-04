@@ -114,4 +114,6 @@ export interface ResolvedTheme {
   readonly tableHeaderCell: ElementStyle;
   /** `List` nested inside a list item: no bottom margin. */
   readonly nestedList: ElementStyle;
+  /** `Paragraph` inside a tight list: no block spacing. */
+  readonly tightParagraph: ElementStyle;
 }
