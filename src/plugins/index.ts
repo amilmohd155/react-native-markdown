@@ -4,10 +4,11 @@
  * Contents:
  * - definePlugin and the internal plugin types (./definePlugin)
  * - Plugin registry: node type ids and token lookup (./registry)
+ * - Built-in GFM plugins (./gfm): tables, strikethrough
+ * - Presets: 'gfm' (default), 'commonmark', { base, exclude } (./presets)
  *
  * Planned contents:
- * - Built-in plugins: tables, taskLists, strikethrough, autolinks, footnotes, tagfilter
- * - Presets: 'gfm' (default) and 'commonmark'
+ * - Built-in plugins: taskLists, autolinks, footnotes, tagfilter
  *
  * Design:
  * - docs/rewrite/04-api.md#plugins
@@ -22,6 +23,8 @@ export {
   type MarkdownPlugin,
   type PluginNodeSpec,
 } from './definePlugin';
+export { GFM_PLUGINS, strikethrough, tables, type GfmPluginName } from './gfm';
+export { resolvePreset, type Preset, type PresetName } from './presets';
 export {
   baseTokenType,
   createRegistry,

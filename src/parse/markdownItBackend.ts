@@ -1,4 +1,6 @@
 import type { Env } from 'markdown-it';
+import type { MarkdownPlugin } from '../plugins/definePlugin';
+import { resolvePreset } from '../plugins/presets';
 import type { HtmlMode, ParseOptions, ParserBackend } from './backend';
 import { convertTokens, type ConvertResult } from './convert';
 import { getParser } from './markdownIt';
@@ -8,29 +10,35 @@ export function parseWithMarkdownIt(
   source: string,
   options: ParseOptions = {}
 ): ConvertResult {
-  const preset = options.preset ?? 'gfm';
   const html = options.html ?? 'safe';
-  const { md, registry } = getParser(preset, options.plugins);
+  const { md, registry } = getParser(pluginList(options));
   const env: Env = {};
   const tokens = md.parse(source, env);
   return convertTokens(md, tokens, source, {
     html,
     registry,
-    context: documentContext(preset, html, registry.names, env.references),
+    context: documentContext(html, registry.names, env.references),
   });
 }
 
+/** The preset's built-in plugins, then the user's. */
+function pluginList(options: ParseOptions): readonly MarkdownPlugin[] {
+  const preset = resolvePreset(options.preset ?? 'gfm');
+  const extra = options.plugins;
+  return extra && extra.length > 0 ? [...preset, ...extra] : preset;
+}
+
 /**
- * Everything outside a block's source text that changes the tree: preset,
- * html mode, plugin names and the link reference definitions (P1-9).
+ * Everything outside a block's source text that changes the tree: html
+ * mode, plugin names (which include the preset's) and the link reference
+ * definitions (P1-9).
  */
 function documentContext(
-  preset: string,
   html: HtmlMode,
   plugins: readonly string[],
   references: unknown
 ): string {
-  return JSON.stringify([preset, html, plugins, references ?? null]);
+  return JSON.stringify([html, plugins, references ?? null]);
 }
 
 /** The default, pure-JS parser backend. */

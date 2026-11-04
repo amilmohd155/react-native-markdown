@@ -303,26 +303,46 @@ describe('createRegistry', () => {
 });
 
 describe('parser cache', () => {
-  it('shares one markdown-it instance per preset and plugin list', () => {
+  it('shares one markdown-it instance per plugin list', () => {
     const setup = jest.fn();
     const counted = definePlugin({
       name: 'counted',
       syntax: { markdownIt: setup },
     });
-    const a = getParser('gfm', [counted, math]);
-    expect(getParser('gfm', [counted, math])).toBe(a);
+    const a = getParser([counted, math]);
+    expect(getParser([counted, math])).toBe(a);
     expect(setup).toHaveBeenCalledTimes(1);
 
-    expect(getParser('gfm', [math, counted])).not.toBe(a);
-    expect(getParser('commonmark', [counted, math])).not.toBe(a);
-    expect(getParser('gfm', [counted])).not.toBe(a);
-    expect(getParser('gfm')).not.toBe(a);
+    expect(getParser([math, counted])).not.toBe(a);
+    expect(getParser([counted])).not.toBe(a);
+    expect(getParser([])).not.toBe(a);
+  });
+
+  it('shares instances between parses with equal options', () => {
+    const setup = jest.fn();
+    const counted = definePlugin({
+      name: 'counted-2',
+      syntax: { markdownIt: setup },
+    });
+    parseWithMarkdownIt('x', { plugins: [counted] });
+    parseWithMarkdownIt('y', { preset: 'gfm', plugins: [counted] });
+    parseWithMarkdownIt('z', {
+      preset: { base: 'gfm', exclude: [] },
+      plugins: [counted],
+    });
+    expect(setup).toHaveBeenCalledTimes(1);
   });
 
   it('does not cache a plugin list that fails validation', () => {
     const bad = { name: '' };
-    expect(() => getParser('gfm', [bad])).toThrow();
-    expect(() => getParser('gfm', [bad])).toThrow();
+    expect(() => getParser([bad])).toThrow();
+    expect(() => getParser([bad])).toThrow();
+  });
+
+  it('rejects a user plugin named like a built-in one', () => {
+    expect(() =>
+      parseWithMarkdownIt('x', { preset: 'gfm', plugins: [{ name: 'tables' }] })
+    ).toThrow('Plugin "tables" is registered twice');
   });
 });
 

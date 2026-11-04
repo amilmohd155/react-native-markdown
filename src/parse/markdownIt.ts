@@ -1,7 +1,7 @@
 import markdownIt, { type MarkdownIt } from 'markdown-it';
 import type { MarkdownPlugin } from '../plugins/definePlugin';
+import { resolvePreset, type Preset } from '../plugins/presets';
 import { createRegistry, type PluginRegistry } from '../plugins/registry';
-import type { Preset } from './backend';
 
 /**
  * Maximum block/inline nesting depth. markdown-it parses nested containers
@@ -23,30 +23,24 @@ export interface Parser {
 }
 
 /**
- * Cache of parsers per preset, then per plugin list: a trie keyed by plugin
- * object. `WeakMap` edges, so plugins that are no longer referenced (e.g.
- * created inline per render) don't keep their instances alive.
+ * Cache of parsers per plugin list: a trie keyed by plugin object.
+ * `WeakMap` edges, so plugins that are no longer referenced (e.g. created
+ * inline per render) don't keep their instances alive.
  */
 interface CacheNode {
   parser?: Parser;
   next?: WeakMap<MarkdownPlugin, CacheNode>;
 }
 
-const roots = new Map<Preset, CacheNode>();
+const root: CacheNode = {};
 
 /**
- * Returns the shared parser for a preset plus extra plugins, creating it
- * once. The same plugin objects in the same order share one instance.
+ * Returns the shared parser for a plugin list (the preset's plugins, then
+ * the user's), creating it once. The same plugin objects in the same order
+ * share one instance.
  */
-export function getParser(
-  preset: Preset,
-  plugins: readonly MarkdownPlugin[] = []
-): Parser {
-  let node = roots.get(preset);
-  if (!node) {
-    node = {};
-    roots.set(preset, node);
-  }
+export function getParser(plugins: readonly MarkdownPlugin[]): Parser {
+  let node = root;
   for (const plugin of plugins) {
     node.next ??= new WeakMap();
     let child = node.next.get(plugin);
@@ -56,44 +50,34 @@ export function getParser(
     }
     node = child;
   }
-  node.parser ??= createParser(preset, plugins);
+  node.parser ??= createParser(plugins);
   return node.parser;
 }
 
 /** The shared markdown-it instance for a preset without extra plugins. */
 export function getMarkdownIt(preset: Preset): MarkdownIt {
-  return getParser(preset).md;
+  return getParser(resolvePreset(preset)).md;
 }
 
 /**
+ * Every instance starts from markdown-it's `commonmark` preset; GFM syntax
+ * comes only from plugins, so excluding a plugin removes exactly its syntax.
+ *
  * - `html: true`: raw HTML is always tokenized; the converter applies the
  *   `html` option (safe subset, text, strip) afterwards (D3).
  * - `linkify: false`: GFM autolinks come from the `autolinks` plugin's
- *   wrapper (P1-1, M2), never from raw linkify.
+ *   wrapper (P1-1), never from raw linkify.
  * - `typographer: false`: no smart quotes or replacements (not CommonMark).
  * - Default `validateLink` is kept: first layer of URL sanitization (P1-3).
- *
- * In M1, `gfm` only differs by markdown-it's built-in table and
- * strikethrough rules. The GFM plugins (task lists, autolinks, footnotes,
- * tagfilter) are registered on top in M2.
  */
-function createParser(
-  preset: Preset,
-  plugins: readonly MarkdownPlugin[]
-): Parser {
+function createParser(plugins: readonly MarkdownPlugin[]): Parser {
   const registry = createRegistry(plugins);
-  const options = {
+  const md = markdownIt('commonmark', {
     html: true,
     linkify: false,
     typographer: false,
     maxNesting: MAX_NESTING,
-  };
-
-  // `default` = CommonMark rules plus table and strikethrough.
-  const md = markdownIt(
-    preset === 'commonmark' ? 'commonmark' : 'default',
-    options
-  );
+  });
   for (const plugin of plugins) plugin.syntax?.markdownIt?.(md);
   return { md, registry };
 }

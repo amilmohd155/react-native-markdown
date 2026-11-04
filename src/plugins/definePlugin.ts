@@ -40,7 +40,10 @@ export interface MarkdownPlugin {
   readonly nodes?: Readonly<Record<string, PluginNodeSpec>>;
 }
 
-/** Declares a plugin. An identity function that exists for type inference. */
-export function definePlugin<P extends MarkdownPlugin>(plugin: P): P {
+/**
+ * Declares a plugin. An identity function that exists for type inference
+ * (`const`: the name stays a literal type, e.g. for preset exclusions).
+ */
+export function definePlugin<const P extends MarkdownPlugin>(plugin: P): P {
   return plugin;
 }

@@ -1,8 +1,8 @@
 import type { NodeTable } from '../model';
 import type { MarkdownPlugin } from '../plugins/definePlugin';
+import type { Preset } from '../plugins/presets';
 
-/** Which syntax set to parse. GFM is a set of built-in plugins (M2). */
-export type Preset = 'commonmark' | 'gfm';
+export type { Preset };
 
 /**
  * How raw HTML is handled (D3). HTML is always tokenized; this decides how
