@@ -3,6 +3,8 @@
  *
  * Contents:
  * - Node types, flag bits and per-type attributes (./types)
+ * - NodeTable shape (./nodeTable), TableBuilder (./tableBuilder)
+ * - Allocation-free readers (./read)
  *
  * Design:
  * - docs/rewrite/03-architecture.md#2-document-model
@@ -12,3 +14,12 @@
  */
 
 export * from './types';
+export type { NodeTable } from './nodeTable';
+export {
+  EMPTY_BLOCK_INDEX,
+  NONE,
+  ROOT,
+  TableBuilder,
+  type BlockIndex,
+} from './tableBuilder';
+export { childIds, forEachChild, getAttrs, getText } from './read';
