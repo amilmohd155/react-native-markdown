@@ -122,3 +122,52 @@ export interface ResolvedTheme {
    */
   readonly footnoteSection: ElementStyle;
 }
+
+/** Heading level, 1 to 6. */
+export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
+/**
+ * A per-element style override. Both parts are optional, and `text` and
+ * `container` are merged separately.
+ */
+export interface ElementOverride {
+  readonly text?: TextStyle;
+  readonly container?: ViewStyle;
+}
+
+/**
+ * Per-element overrides: the `theme.elements` layer. `Heading` may be a
+ * function of the level, called once per level at resolve time.
+ */
+export type ElementOverrides = {
+  readonly [E in Exclude<ElementName, 'Heading'>]?: ElementOverride;
+} & {
+  readonly Heading?:
+    | ElementOverride
+    | ((level: HeadingLevel) => ElementOverride);
+};
+
+/**
+ * What the user writes: any subset of the tokens plus element overrides.
+ * Token groups merge key by key, and `listBullets` replaces.
+ * Spec: docs/rewrite/04-api.md#theme
+ */
+export interface ThemeInput {
+  readonly colors?: Partial<ThemeTokens['colors']>;
+  readonly fonts?: Partial<ThemeTokens['fonts']>;
+  readonly fontSize?: Partial<ThemeTokens['fontSize']>;
+  readonly lineHeight?: number;
+  readonly spacing?: Partial<ThemeTokens['spacing']>;
+  readonly radius?: Partial<ThemeTokens['radius']>;
+  readonly listBullets?: readonly string[];
+  readonly elements?: ElementOverrides;
+}
+
+/**
+ * The result of `createTheme`: every token present, plus the merged element
+ * overrides. It is also a valid `ThemeInput`, so it can be passed straight
+ * to the `theme` prop.
+ */
+export interface Theme extends ThemeTokens {
+  readonly elements: ElementOverrides;
+}

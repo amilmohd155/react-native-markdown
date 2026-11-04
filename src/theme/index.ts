@@ -3,10 +3,12 @@
  *
  * Contents so far (minimal version for the M3 renderer):
  * - Element names, tokens and resolved-theme types (./types)
- * - Default light tokens (./tokens)
+ * - Built-in light and dark themes (./tokens)
  * - Token → element style derivation, one StyleSheet.create (./resolve)
  *
- * Planned (M4): createTheme, darkTheme, 'auto', merge order, resolve cache,
+ * - createTheme and the token/element merge helpers (./create)
+ *
+ * Planned (M4): 'auto', full merge order in the resolver, resolve cache,
  * MarkdownThemeContext and useMarkdownTheme().
  *
  * Design:
@@ -17,9 +19,15 @@
 export {
   ELEMENT_NAMES,
   type ElementName,
+  type ElementOverride,
+  type ElementOverrides,
   type ElementStyle,
+  type HeadingLevel,
   type ResolvedTheme,
+  type Theme,
+  type ThemeInput,
   type ThemeTokens,
 } from './types';
-export { lightTokens } from './tokens';
+export { darkTheme, lightTheme } from './tokens';
+export { createTheme, mergeElements, mergeTokens } from './create';
 export { getDefaultTheme, headingFontSize, resolveTheme } from './resolve';

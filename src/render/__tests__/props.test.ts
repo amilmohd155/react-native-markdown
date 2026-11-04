@@ -1,5 +1,5 @@
 import { NodeType, NONE, type NodeTable } from '../../model';
-import { lightTokens } from '../../theme';
+import { lightTheme } from '../../theme';
 import {
   blockImageOf,
   codeBlockProps,
@@ -20,7 +20,7 @@ import {
 } from '../props';
 import { nodesOfType, tableFor } from './helpers';
 
-const bullets = lightTokens.listBullets;
+const bullets = lightTheme.listBullets;
 
 /** List nesting depth of a list item, as the renderer computes it. */
 function depthOf(table: NodeTable, item: number): number {

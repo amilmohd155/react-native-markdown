@@ -1,5 +1,5 @@
 import { StyleSheet, type TextStyle, type ViewStyle } from 'react-native';
-import { lightTokens } from './tokens';
+import { lightTheme } from './tokens';
 import {
   ELEMENT_NAMES,
   type ElementName,
@@ -230,6 +230,6 @@ let defaultTheme: ResolvedTheme | null = null;
  * lifetime.
  */
 export function getDefaultTheme(): ResolvedTheme {
-  defaultTheme ??= resolveTheme(lightTokens);
+  defaultTheme ??= resolveTheme(lightTheme);
   return defaultTheme;
 }

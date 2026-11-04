@@ -5,7 +5,7 @@ import {
   type ReactTestInstance,
   type ReactTestRenderer,
 } from 'react-test-renderer';
-import { lightTokens, resolveTheme } from '../../theme';
+import { lightTheme, resolveTheme } from '../../theme';
 import { BlockList } from '../Block';
 import { createRenderCtx, type RenderCtx } from '../context';
 import { defaultComponents } from '../defaults';
@@ -92,14 +92,14 @@ describe('table column widths', () => {
   });
 
   it('caches per theme', () => {
-    const theme = resolveTheme(lightTokens);
+    const theme = resolveTheme(lightTheme);
     const ctx = createRenderCtx({ components: defaultComponents, theme });
     const root = mount('| x |\n|---|\n| y |\n', ctx);
     layOut(root, [100, 120]);
 
     const other = createRenderCtx({
       components: defaultComponents,
-      theme: resolveTheme(lightTokens),
+      theme: resolveTheme(lightTheme),
     });
     const fresh = mount('| x |\n|---|\n| y |\n', other);
     expect(cells(fresh).map(widthOf)).toEqual([undefined, undefined]);

@@ -1,5 +1,5 @@
 import { act, create } from 'react-test-renderer';
-import { getDefaultTheme, lightTokens, resolveTheme } from '../../theme';
+import { getDefaultTheme, lightTheme, resolveTheme } from '../../theme';
 import {
   createRenderCtx,
   useRenderCtx,
@@ -80,7 +80,7 @@ describe('useRenderCtx', () => {
 
   it('changes ctx when the theme or the component map changes', () => {
     const { seen, update } = renderCtx({ components });
-    update({ components, theme: resolveTheme(lightTokens) });
+    update({ components, theme: resolveTheme(lightTheme) });
     update({ components: Object.freeze({}) as Components });
     expect(new Set(seen).size).toBe(3);
   });
