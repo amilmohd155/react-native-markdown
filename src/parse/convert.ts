@@ -7,9 +7,15 @@ import {
   ROOT,
   TableBuilder,
   type Align,
+  type NodeAttrs,
   type NodeAttrsMap,
   type NodeTable,
 } from '../model';
+import {
+  baseTokenType,
+  EMPTY_REGISTRY,
+  type PluginRegistry,
+} from '../plugins/registry';
 import type { HtmlMode } from './backend';
 import { InlineConverter } from './convertInline';
 import { Slugger } from './slug';
@@ -18,6 +24,8 @@ export interface ConvertOptions {
   readonly html: HtmlMode;
   /** Document context for block identity (P1-9); see `NodeTable.context`. */
   readonly context?: string;
+  /** Plugin nodes to map tokens to. Default: none. */
+  readonly registry?: PluginRegistry;
 }
 
 export interface ConvertResult {
@@ -57,6 +65,7 @@ export function convertTokens(
   const slugger = new Slugger();
   const warned = new Set<string>();
   const warnings: string[] = [];
+  const registry = options.registry ?? EMPTY_REGISTRY;
 
   const stack: Frame[] = [{ node: ROOT, type: NodeType.Root, childCount: 0 }];
   /** Dropped wrappers currently open; top-level = token.level minus this. */
@@ -92,7 +101,7 @@ export function convertTokens(
       `Unknown markdown-it token "${tokenType}": rendered as text. Register it with a plugin's \`nodes\` to render it properly.`
     );
   };
-  const inline = new InlineConverter(builder, options.html, warn);
+  const inline = new InlineConverter(builder, options.html, warn, registry);
   const indexBlock = (token: Token, node: number) => {
     if (token.level - droppedDepth === 0 && token.map) {
       blocks.addLines(node, token.map[0], token.map[1]);
@@ -102,7 +111,7 @@ export function convertTokens(
     token: Token,
     type: number,
     flags = 0,
-    attrs: NodeAttrsMap[keyof NodeAttrsMap] | null = null
+    attrs: NodeAttrs | null = null
   ): number => {
     const parent = top();
     parent.childCount++;
@@ -115,7 +124,7 @@ export function convertTokens(
     token: Token,
     type: number,
     text: string | null,
-    attrs: NodeAttrsMap[keyof NodeAttrsMap] | null = null
+    attrs: NodeAttrs | null = null
   ): number => {
     top().childCount++;
     const node = builder.add(type, parentNode(), 0, text, attrs);
@@ -262,7 +271,16 @@ export function convertTokens(
       }
 
       default: {
-        if (token.nesting === -1) {
+        const plugin = registry.block(baseTokenType(token));
+        if (plugin) {
+          if (token.nesting === 1) {
+            open(token, plugin.type, 0, plugin.from(token));
+          } else if (token.nesting === -1) {
+            close();
+          } else {
+            leaf(token, plugin.type, null, plugin.from(token));
+          }
+        } else if (token.nesting === -1) {
           // Closers of the containers above all pop one frame.
           if (isKnownClose(token.type)) {
             close();
@@ -289,7 +307,12 @@ export function convertTokens(
   }
 
   return {
-    table: builder.finish(blocks.finish(), source, options.context ?? ''),
+    table: builder.finish(
+      blocks.finish(),
+      source,
+      options.context ?? '',
+      registry.info
+    ),
     warnings,
   };
 }

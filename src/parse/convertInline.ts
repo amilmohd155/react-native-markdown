@@ -1,5 +1,10 @@
 import type { Token } from 'markdown-it';
 import { Flag, NodeType, type TableBuilder } from '../model';
+import {
+  baseTokenType,
+  EMPTY_REGISTRY,
+  type PluginRegistry,
+} from '../plugins/registry';
 import type { HtmlMode } from './backend';
 import {
   allowedTags,
@@ -38,7 +43,8 @@ export class InlineConverter {
   constructor(
     private readonly builder: TableBuilder,
     html: HtmlMode,
-    private readonly warn: (tokenType: string) => void
+    private readonly warn: (tokenType: string) => void,
+    private readonly registry: PluginRegistry = EMPTY_REGISTRY
   ) {
     this.allowed = allowedTags(html);
   }
@@ -49,7 +55,7 @@ export class InlineConverter {
     parent: number,
     sink: TextSink | null
   ): void {
-    const { builder, stack, allowed } = this;
+    const { builder, stack, allowed, registry } = this;
     this.parent = parent;
     stack.length = 0;
     stack.push(parent);
@@ -136,8 +142,24 @@ export class InlineConverter {
           break;
         }
 
-        default:
-          if (token.nesting === 1) {
+        default: {
+          const plugin = registry.inline(baseTokenType(token));
+          if (plugin) {
+            const flags = plugin.inlineView ? Flag.INLINE_VIEW : 0;
+            if (token.nesting === 1) {
+              this.open(plugin.type, flags, plugin.from(token));
+            } else if (token.nesting === -1) {
+              stack.pop();
+            } else {
+              builder.add(
+                plugin.type,
+                this.current(),
+                flags,
+                null,
+                plugin.from(token)
+              );
+            }
+          } else if (token.nesting === 1) {
             // Unknown container: keep its children, drop the wrapper.
             this.warn(token.type.replace(/_open$/, ''));
             stack.push(DROPPED);
@@ -150,6 +172,7 @@ export class InlineConverter {
             this.addText(token.content);
             sink?.(token.content);
           }
+        }
       }
     }
   }

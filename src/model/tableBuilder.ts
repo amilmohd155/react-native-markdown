@@ -1,5 +1,7 @@
 import type { NodeTable } from './nodeTable';
-import { NodeType, type NodeAttrs } from './types';
+import { NodeType, type NodeAttrs, type PluginNodeInfo } from './types';
+
+const NO_PLUGIN_NODES: readonly PluginNodeInfo[] = Object.freeze([]);
 
 /** Node id meaning "none" in the parent / child / sibling / text / attr columns. */
 export const NONE = -1;
@@ -129,11 +131,13 @@ export class TableBuilder {
   /**
    * Freezes the builder and returns the table, columns trimmed to `count`.
    * `source` and `context` feed block identity (`isSameBlock`, P1-9).
+   * `pluginNodes` describes the plugin node types (ids 128+) in the table.
    */
   finish(
     blockIndex: BlockIndex = EMPTY_BLOCK_INDEX,
     source = '',
-    context = ''
+    context = '',
+    pluginNodes: readonly PluginNodeInfo[] = NO_PLUGIN_NODES
   ): NodeTable {
     this.assertOpen();
     this.finished = true;
@@ -149,6 +153,7 @@ export class TableBuilder {
       attr: this.attr.subarray(0, n),
       strings: this.strings,
       attrs: this.attrs,
+      pluginNodes,
       source,
       context,
       ...blockIndex,

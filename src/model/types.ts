@@ -126,3 +126,12 @@ export type PluginNodeAttrs = Readonly<
 >;
 
 export type NodeAttrs = NodeAttrsMap[NodeTypeWithAttrs] | PluginNodeAttrs;
+
+/** What the renderer needs to know about a plugin node type. */
+export interface PluginNodeInfo {
+  /** Node (element) name from the plugin's `nodes`. */
+  readonly name: string;
+  readonly kind: 'block' | 'inline';
+  /** Inline nodes only: may render a View (D8). */
+  readonly inlineView: boolean;
+}

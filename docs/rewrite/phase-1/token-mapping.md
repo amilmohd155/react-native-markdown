@@ -177,6 +177,10 @@ Plugins register `token → NodeType` through `nodes: { Name: { token, kind, inl
 - `token: 'math_inline'` matches self-contained tokens. For `*_open`/`*_close` pairs, register the base name (e.g. `container_note`), and the converter treats it as a container.
 - `from(token)` returns the node's props. They're stored in the sparse attrs table, so they must be serializable plain values.
 - `inlineView: true` sets the `INLINE_VIEW` flag.
+- Node type ids are assigned from 128 in plugin order, then node order. The table's `pluginNodes` lists `{ name, kind, inlineView }` per id, so the renderer can resolve them.
+- A `block` node only matches tokens in the block stream, an `inline` node only in `inline.children`. A token of the other kind is handled as unknown (below).
+- Plugin names must be unique; they are part of the document context ([P1-9](./decisions.md#p1-9-block-identity-by-source-text-plus-context-and-index-keys)). The markdown-it instance is cached per preset and plugin list (by object identity), so pass the same plugin objects on every parse.
+- Implementation: `src/plugins/registry.ts`, used by `src/parse/convert.ts` and `convertInline.ts`.
 
 ## Unknown tokens
 

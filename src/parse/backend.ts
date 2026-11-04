@@ -1,4 +1,5 @@
 import type { NodeTable } from '../model';
+import type { MarkdownPlugin } from '../plugins/definePlugin';
 
 /** Which syntax set to parse. GFM is a set of built-in plugins (M2). */
 export type Preset = 'commonmark' | 'gfm';
@@ -18,6 +19,11 @@ export interface ParseOptions {
   readonly preset?: Preset;
   /** Default `'safe'`. */
   readonly html?: HtmlMode;
+  /**
+   * Extra plugins, applied after the preset's, in array order. Reuse the
+   * same plugin objects across parses: the parser is cached per plugin list.
+   */
+  readonly plugins?: readonly MarkdownPlugin[];
 }
 
 /**

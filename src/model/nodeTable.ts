@@ -1,4 +1,4 @@
-import type { NodeAttrs } from './types';
+import type { NodeAttrs, PluginNodeInfo } from './types';
 
 /**
  * The private, flat, struct-of-arrays document representation.
@@ -32,6 +32,11 @@ export interface NodeTable {
 
   readonly strings: readonly string[];
   readonly attrs: readonly NodeAttrs[];
+  /**
+   * Plugin node types used by this table's parse configuration, indexed by
+   * `type - PLUGIN_NODE_TYPE_MIN`. Empty without plugin nodes.
+   */
+  readonly pluginNodes: readonly PluginNodeInfo[];
 
   // Block index: one entry per top-level block, in document order
   /** Number of top-level blocks. */
