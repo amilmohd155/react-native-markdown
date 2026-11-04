@@ -163,3 +163,20 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 - **Consequences:**
   - After the line-offset fast path, the inline-pass allocation fixes and P1-9: 6.0 ms = **11.2%** in Node `--jitless` (13.3% with JIT).
   - **On device** (Samsung S25 FE, Hermes release build): 15.95 ms = **14.8%** of markdown-it's 107.95 ms. Passes, with little margin: the jitless proxy underestimates Hermes by about a third. If M7's low-end device fails it, the node builder is the first thing to optimize ([02 · Device results](../02-benchmarks.md#device-results-preliminary-m1)).
+
+## P1-11: In-house strikethrough with cmark-gfm semantics
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:**
+  - The plan used markdown-it's core `strikethrough` rule ("mapping only"). It differs from GFM in two ways, which fail `extensions.txt` examples 17 and 18:
+    1. It needs `~~`; GFM (cmark-gfm) also accepts a single `~`. Single tildes are common in LLM output.
+    2. It splits longer runs into pairs (`~~~~~one~~~~~` → nested strikethrough), while cmark-gfm keeps runs of three or more as text.
+  - cmark-gfm's `strikethrough` extension also pairs a closer only with an opener of the **same length**, and drops the closer otherwise (`No ~mismatch~~` stays text).
+- **Decision:** Replace markdown-it's rule functions in place (`ruler.at('strikethrough', …)` in `inline.ruler` and `inline.ruler2`, `src/plugins/strikethrough.ts`), keeping the rule names so excluding the plugin still disables them:
+  - A run of one or two `~` is a delimiter if it is left-flanking (can open) or right-flanking (can close); three or more is text.
+  - A separate `strikethrough_pairs` rule runs before `balance_pairs`: a closer pairs with the nearest open `~` delimiter if both runs have the same length, otherwise the closer is dropped. It uses a stack, so it stays linear on input with many unmatched tildes. Afterwards `~` delimiters are neither open nor close, so emphasis pairing ignores them.
+  - Tokens are the same `s_open`/`s_close` as before; `markup` is the run (`~` or `~~`).
+- **Consequences:**
+  - Both examples pass; no allowlist entry needed. The token mapping is unchanged.
+  - About 100 lines we maintain instead of markdown-it's. Interaction with emphasis delimiters follows markdown-it (pairs are found per marker), not cmark's single delimiter stack; no spec example depends on the difference.

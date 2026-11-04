@@ -1,4 +1,5 @@
 import { definePlugin } from './definePlugin';
+import { gfmStrikethrough } from './strikethrough';
 
 /**
  * Built-in GFM plugins. The `gfm` preset is exactly this list, in order.
@@ -15,12 +16,13 @@ export const tables = definePlugin({
 });
 
 /**
- * GFM strikethrough: markdown-it's core `strikethrough` rule (inline and
- * post-processing). Mapping: token-mapping.md#inline-tokens-inlinechildren
+ * GFM strikethrough (`~x~`, `~~x~~`): in-house rules with cmark-gfm's
+ * semantics, replacing markdown-it's core rule (P1-11).
+ * Mapping: token-mapping.md#inline-tokens-inlinechildren
  */
 export const strikethrough = definePlugin({
   name: 'strikethrough',
-  syntax: { markdownIt: (md) => md.enable('strikethrough') },
+  syntax: { markdownIt: gfmStrikethrough },
 });
 
 export const GFM_PLUGINS = Object.freeze([tables, strikethrough] as const);

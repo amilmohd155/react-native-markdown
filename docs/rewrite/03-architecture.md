@@ -62,7 +62,8 @@ Why markdown-it:
 
 | GFM feature | Source |
 |---|---|
-| Tables, strikethrough | built in |
+| Tables | built in |
+| Strikethrough | in-house rule replacing the built-in one, which needs `~~` ([phase-1 P1-11](./phase-1/decisions.md#p1-11-in-house-strikethrough-with-cmark-gfm-semantics)) |
 | Task list items | `markdown-it-task-lists` or a small in-house rule |
 | Autolinks (extended) | linkify-it with fuzzy matching, plus a thin GFM wrapper (filter, reject, trim). It passes 49/55 GFM autolink cases; the 6 edge cases are allowlisted ([phase-1 P1-1](./phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps)). |
 | Disallowed raw HTML (tagfilter) | in-house post-processing (small) |

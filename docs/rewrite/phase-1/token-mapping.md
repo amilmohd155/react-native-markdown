@@ -93,7 +93,7 @@ The `NodeType` enum (`Uint8`). Plugin types are registered from 128 upward.
 | `hardbreak` | `LineBreak` + `HARD` | — | |
 | `em_open` / `_close` | `Emphasis` | — | |
 | `strong_open` / `_close` | `Strong` | — | |
-| `s_open` / `_close` | `Strikethrough` | — | GFM strikethrough (markdown-it core) |
+| `s_open` / `_close` | `Strikethrough` | — | GFM strikethrough: `~x~` or `~~x~~` (in-house rule with cmark-gfm semantics, [P1-11](./decisions.md#p1-11-in-house-strikethrough-with-cmark-gfm-semantics)) |
 | `code_inline` | `InlineCode` | `text` = `content` | |
 | `link_open` / `_close` | `Link` | `href` (attr), `title` (attr or `null`) | `markup === 'autolink'` (from `<…>`) or `markup === 'linkify'` (GFM autolink via linkify-it + wrapper, [P1-1](./decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps)) → `AUTOLINK`. markdown-it's `validateLink` has already rejected `javascript:`, `vbscript:`, `file:` and non-image `data:`. See [P1-3](./decisions.md#p1-3-url-sanitization-layers). |
 | `image` | `Image` | `src`, `title`; `alt` = concatenated text of `token.children` | The `alt` attr is empty in the token. markdown-it builds alt text from the image's children. |
