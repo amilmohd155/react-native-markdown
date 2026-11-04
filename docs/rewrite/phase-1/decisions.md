@@ -120,3 +120,16 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 - **Consequences:**
   - Releases can't publish code that fails the repo's checks.
   - npm authentication problems surface at publish time instead of in release-it's pre-checks. With OIDC that's the only place they can surface anyway.
+
+## P1-8: Cap markdown-it nesting at 100
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:**
+  - markdown-it parses nested containers recursively. With no cap, 25,000 nested `>` throws `RangeError: Maximum call stack size exceeded` (checked in Node; the Hermes stack is smaller).
+  - Its `maxNesting` option stops nesting at a depth and keeps the rest as text. The `commonmark` preset uses 20, the `default` preset 100.
+  - Our own conversion pass is iterative, so the cap is only needed for markdown-it.
+- **Decision:** Set `maxNesting: 100` for every preset (`src/parse/markdownIt.ts`). 20 is low enough for real documents with deep lists to hit.
+- **Consequences:**
+  - Deep input never crashes; nesting beyond 100 levels renders as text.
+  - Pathological spec cases deeper than 100 (e.g. "nested block quotes", 25,000 levels) cannot match the spec's output. They're allowlisted in M1 triage, with this decision as the reason.
