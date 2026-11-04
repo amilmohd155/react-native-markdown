@@ -73,7 +73,7 @@ The `NodeType` enum (`Uint8`). Plugin types are registered from 128 upward.
 | `bullet_list_open` / `_close` | `List` | `markup` (`-`, `*`, `+`) | |
 | `ordered_list_open` / `_close` | `List` + `ORDERED` | `start` from attr `start` (default 1); delimiter from `markup` (`.` or `)`) | |
 | `list_item_open` / `_close` | `ListItem` | `index` (position in parent) | `ORDERED` copied from parent. Task detection: see [Task lists](#task-lists). |
-| `fence` | `CodeBlock` | `language` = first word of `info`, `meta` = rest of `info` (trimmed), or `null` | `text` = `content`. Info string entities are already decoded by markdown-it. |
+| `fence` | `CodeBlock` | `language` = first word of `info`, `meta` = rest of `info` (trimmed), or `null` | `text` = `content`. markdown-it leaves `info` raw, so the converter decodes escapes and entities with `md.utils.unescapeAll` first (CommonMark requires it). |
 | `code_block` | `CodeBlock` | `language = null`, `meta = null` | Indented code. `text` = `content`. |
 | `hr` | `Divider` | — | |
 | `html_block` | `HtmlBlock` | — | `text` = `content`. Never interpreted ([D3](../07-roadmap.md#decisions)). `tagfilter` applies first. |

@@ -4,8 +4,9 @@
  * Contents:
  * - ParserBackend interface and parse options (./backend)
  * - Shared markdown-it instances per preset (./markdownIt)
- * - Single-pass token → node table conversion, incl. the safe raw-HTML subset
- *   (lands with M1)
+ * - Single-pass token → node table conversion (./convert); inline tokens and
+ *   the safe raw-HTML subset land with M1 tasks 6–7
+ * - The markdown-it backend (./markdownItBackend), heading slugs (./slug)
  *
  * Design:
  * - docs/rewrite/03-architecture.md#1-parser-layer
@@ -16,3 +17,5 @@
 
 export type { HtmlMode, ParseOptions, ParserBackend, Preset } from './backend';
 export { getMarkdownIt, MAX_NESTING } from './markdownIt';
+export { convertTokens, type ConvertResult } from './convert';
+export { markdownItBackend, parseWithMarkdownIt } from './markdownItBackend';
