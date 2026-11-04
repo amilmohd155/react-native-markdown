@@ -281,7 +281,7 @@ describe('createRegistry', () => {
     ).toThrow('inlineView is only valid on inline nodes');
     expect(() =>
       createRegistry([
-        // @ts-expect-error: invalid kind on purpose
+        // Invalid kind on purpose (the internal plugin list type is erased).
         { name: 'a', nodes: { X: { ...node, kind: 'span' } } },
       ])
     ).toThrow("kind must be 'block' or 'inline'");

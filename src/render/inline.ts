@@ -1,6 +1,13 @@
 import type { ReactNode } from 'react';
 import type { TextStyle } from 'react-native';
-import { getText, NodeType, NONE, type NodeTable } from '../model';
+import {
+  Flag,
+  getText,
+  hasFlag,
+  NodeType,
+  NONE,
+  type NodeTable,
+} from '../model';
 import {
   BODY_FONT,
   fontStateIndex,
@@ -14,6 +21,13 @@ import { checkedInline, isDev } from './devInline';
 import { componentOf, createElementOf } from './element';
 import { cachedImageSize } from './imageSize';
 import { baselineOf, isInlineView } from './inlineView';
+import {
+  createPluginElement,
+  pluginComponentOf,
+  pluginNodeOf,
+  pluginPropsOf,
+  pluginStyleOf,
+} from './pluginNodes';
 import {
   footnoteReferenceProps,
   htmlProps,
@@ -79,6 +93,39 @@ export function renderInline(
 
   if (out.length === 0) return null;
   return out.length === 1 ? out[0] : out;
+}
+
+/**
+ * A plugin inline node: a leaf (`math_inline`) or a container (`ins`).
+ * Declared inline views (`inlineView: true` on the node) get `baseline`;
+ * others are checked for View output in dev (D8).
+ */
+function pluginInline(
+  table: NodeTable,
+  id: number,
+  ctx: RenderCtx,
+  dev: boolean,
+  blockText: TextStyle | undefined,
+  font: FontState
+): ReactNode {
+  const plugin = pluginNodeOf(table, id);
+  if (plugin === undefined) return null;
+  const children =
+    table.firstChild[id] === NONE
+      ? undefined
+      : renderInline(table, id, ctx, blockText, font);
+  const component = pluginComponentOf(ctx, plugin.name);
+  if (component === undefined) return children ?? null;
+
+  const declared = hasFlag(table.flags[id]!, Flag.INLINE_VIEW);
+  return createPluginElement(
+    declared || !dev ? component : checkedInline(plugin.name, component),
+    id,
+    pluginPropsOf(table, id),
+    pluginStyleOf(ctx, plugin.name),
+    children,
+    declared ? { baseline: baselineOf(blockText, ctx.theme.tokens) } : undefined
+  );
 }
 
 function inline<K extends ElementName>(
@@ -236,8 +283,6 @@ function renderInlineNode(
         elements.FootnoteReference
       );
     default:
-      // Plugin inline nodes render from the plugin registry in M5; declared
-      // inline views come with the inline views task.
-      return null;
+      return pluginInline(table, id, ctx, dev, blockText, font);
   }
 }

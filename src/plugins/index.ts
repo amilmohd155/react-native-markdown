@@ -14,12 +14,14 @@
  * - docs/rewrite/phase-1/token-mapping.md#plugin-tokens
  * - docs/rewrite/phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps
  *
- * Internal until M5, which adds the public typing (components, theme).
+ * Public typing (generic MarkdownPlugin, components, theme) since M5; the
+ * entry point re-exports it when M5 swaps it to v1.
  */
 
 export {
   definePlugin,
   type MarkdownPlugin,
+  type PluginElementComponentProps,
   type PluginNodeSpec,
 } from './definePlugin';
 export {

@@ -41,6 +41,27 @@ export const ELEMENT_NAMES = [
 export type ElementName = (typeof ELEMENT_NAMES)[number];
 
 /**
+ * Props of the elements plugins add, by element name (without `children` and
+ * `style`). Empty here: a plugin package augments it so `components` and
+ * `theme.elements` type-check its elements:
+ *
+ * ```ts
+ * declare module '@docren/react-native-markdown' {
+ *   interface PluginElementPropsMap {
+ *     Mention: { userId: string };
+ *   }
+ * }
+ * ```
+ *
+ * Lives with the theme types because `theme.elements` is keyed by it.
+ */
+
+export interface PluginElementPropsMap {}
+
+/** Names of the elements plugins add (those declared in the map above). */
+export type PluginElementName = keyof PluginElementPropsMap & string;
+
+/**
  * One font family per face, for fonts loaded with `expo-font`'s `useFonts`
  * (which registers each face as its own family). Missing faces fall back to
  * `fontWeight`/`fontStyle` on the nearest face.
@@ -121,6 +142,12 @@ export interface ElementStyle {
 export interface ResolvedTheme {
   readonly tokens: ThemeTokens;
   readonly elements: { readonly [E in ElementName]: ElementStyle };
+  /**
+   * Styles of plugin elements, by name: only what the plugin themes and the
+   * `theme.elements` prop set for them (they have no token-derived style).
+   * Elements with no override are absent; the renderer uses an empty style.
+   */
+  readonly pluginElements: Readonly<Record<string, ElementStyle>>;
   /** `Heading` style by level: index 0 is h1. */
   readonly headings: readonly [
     ElementStyle,
@@ -171,6 +198,8 @@ export interface ElementOverride {
  */
 export type ElementOverrides = {
   readonly [E in Exclude<ElementName, 'Heading'>]?: ElementOverride;
+} & {
+  readonly [E in PluginElementName]?: ElementOverride;
 } & {
   readonly Heading?:
     | ElementOverride

@@ -27,6 +27,8 @@ export {
   type FontFaces,
   type FontFamily,
   type HeadingLevel,
+  type PluginElementName,
+  type PluginElementPropsMap,
   type ResolvedTheme,
   type Theme,
   type ThemeInput,
