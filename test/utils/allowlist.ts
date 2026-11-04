@@ -1,12 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { SpecSuite } from './specReader';
+import type { SuiteName } from './renderToHtml';
 
 /** One known divergence from the spec. Format: testing-harness.md#allowlist-format */
 export interface AllowlistEntry {
   backend: string;
-  suite: SpecSuite;
-  example: number;
+  suite: SuiteName;
+  /** Example number, or the case name for `pathological`. */
+  example: number | string;
   section: string;
   reason: string;
   issue: string;

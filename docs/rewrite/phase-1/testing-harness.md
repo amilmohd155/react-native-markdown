@@ -20,18 +20,14 @@ Checksums and licenses (the spec files are CC-BY-SA 4.0 test data, not shipped i
 
 ## Spec runner
 
-```ts
-describe.each(examples)('$section #$example', ({ markdown, html, example, section }) => {
-  const known = allowlist.get(backend, example);
-  const actual = normalizeHtml(documentToHtml(parse(markdown, { preset })));
-  if (known) test.failing(known.reason, () => expect(actual).toBe(normalizeHtml(html)));
-  else test('matches spec', () => expect(actual).toBe(normalizeHtml(html)));
-});
-```
+`test/spec/spec.test.ts` (as built in M1):
 
+- **Implemented suites** (`IMPLEMENTED_SUITES` in `test/utils/renderToHtml.ts`) register one test per example, compared **exactly** with the spec's HTML. Allowlisted examples use `test.failing` instead.
+- **Suites not required yet** (the GFM suites until M2) register a single informational test that reports how many examples already pass. Per-example `test.failing` doesn't work there: once the core parser exists, the CommonMark examples inside the GFM spec pass, and `test.failing` rejects a pass.
 - **Allowlisted examples use `test.failing`.** If an allowlisted example starts passing, the test fails, which forces the allowlist entry to be removed so the list only shrinks.
-- **Presets:** the CommonMark suite runs with `preset: 'commonmark'`. The GFM suite runs with `preset: 'gfm'`.
-- **HTML option:** the spec suites run with `html: 'render'`, a **test-only** mode in which HTML passes through `documentToHtml` unchanged, because the spec expects raw HTML output. The public `html` modes are covered by the D3 tests instead.
+- **Presets:** the CommonMark suite runs with `preset: 'commonmark'`. The GFM suites run with `preset: 'gfm'`.
+- **HTML option:** the spec expects raw HTML passed through. The suites run with the public `html: 'text'` mode, where every tag stays a literal node, and the serializer prints literal HTML nodes unescaped. No test-only parse mode is needed. The other `html` modes are covered by the D3 unit tests.
+- **Pathological cases** are matched by name in the allowlist (`"suite": "pathological"`, `"example": "<case name>"`).
 
 ### Allowlist format
 
@@ -44,18 +40,19 @@ describe.each(examples)('$section #$example', ({ markdown, html, example, sectio
 ]
 ```
 
-Known entries expected from the start: the 6 GFM autolink cases listed in [P1-1](./decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps). Because one `extensions.txt` example bundles 32 cases (5 of the 6 gaps are in it), that example is allowlisted as a whole, and a **case-level** test split from it keeps the other 27 cases enforced.
+Entries after M1: the 5 pathological cases that nest deeper than markdown-it's cap of 100 levels ([P1-8](./decisions.md#p1-8-cap-markdown-it-nesting-at-100)). Expected in M2: the 6 GFM autolink cases listed in [P1-1](./decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps). Because one `extensions.txt` example bundles 32 cases (5 of the 6 gaps are in it), that example is allowlisted as a whole, and a **case-level** test split from it keeps the other 27 cases enforced.
 
-Every entry needs a reason and a linked issue. Reviewing the allowlist is part of the M1 and M2 done checks ([work-breakdown](./work-breakdown.md)).
+Every entry needs a reason and a link: an issue, or the decision that accepted the divergence. Reviewing the allowlist is part of the M1 and M2 done checks ([work-breakdown](./work-breakdown.md)).
 
 ## HTML serializer
 
-`documentToHtml(doc)` lives in `test/utils/`, not in the published package. It walks the node table and produces the HTML the spec expects:
+`documentToHtml(table)` lives in `test/utils/`, not in the published package. It walks the node table and produces HTML in the spec's (cmark's) conventions:
 
-- Element → tag mapping is the reverse of [token-mapping.md](./token-mapping.md). For example, `List` + `ORDERED` with `start ≠ 1` → `<ol start="n">`, `TableCell` `align` → `style="text-align: …"` as cmark-gfm emits it.
-- Tight lists omit `<p>` inside `<li>`, as in the spec.
-- Text is escaped as the spec does (`&`, `<`, `>`, `"`).
-- `normalizeHtml` ports the spec's `normalize.py`: collapse whitespace between tags, normalize attribute order and self-closing tags. This keeps the comparison semantic, not byte-exact.
+- Element → tag mapping is the reverse of [token-mapping.md](./token-mapping.md). For example, `List` + `ORDERED` with `start ≠ 1` → `<ol start="n">`; header cells → `<th>`, alignment as `align="…"` as cmark-gfm emits it.
+- Tight lists omit `<p>` inside `<li>`. A block that opens right after a tight paragraph starts on a new line, and `<li>` stays on its line when empty or when it starts with a tight paragraph, as in cmark's output.
+- Text and attributes are escaped as the spec does (`&`, `<`, `>`, `"`). Literal HTML nodes are printed as-is.
+- **Iterative**, with an explicit stack: pathological inputs nest inline containers tens of thousands deep.
+- **Exact comparison.** `normalizeHtml` only normalizes line endings. Because the serializer matches the spec's conventions, porting the spec's `normalize.py` wasn't needed, and exact comparison also catches whitespace differences that `normalize.py` would hide.
 
 This tests **parser + conversion** (where compliance bugs come from) without involving React. Rendering is covered by snapshot tests.
 

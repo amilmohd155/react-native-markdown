@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "backend": "markdown-it",
+    "suite": "pathological",
+    "example": "nested block quotes",
+    "section": "pathological",
+    "reason": "nesting capped at 100 levels (P1-8); input nests 25,000 blockquotes",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-8-cap-markdown-it-nesting-at-100"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "pathological",
+    "example": "deeply nested lists",
+    "section": "pathological",
+    "reason": "nesting capped at 100 levels (P1-8); input nests 500 lists (1,000 levels)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-8-cap-markdown-it-nesting-at-100"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "pathological",
+    "example": "empty lines in deeply nested lists",
+    "section": "pathological",
+    "reason": "nesting capped at 100 levels (P1-8); input nests 30,000 lists",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-8-cap-markdown-it-nesting-at-100"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "pathological",
+    "example": "empty lines in deeply nested lists in blockquote",
+    "section": "pathological",
+    "reason": "nesting capped at 100 levels (P1-8); input nests 30,000 lists",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-8-cap-markdown-it-nesting-at-100"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "pathological",
+    "example": "emph in deep blockquote",
+    "section": "pathological",
+    "reason": "nesting capped at 100 levels (P1-8); input nests 100,000 blockquotes",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-8-cap-markdown-it-nesting-at-100"
+  }
+]

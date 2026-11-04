@@ -2,20 +2,24 @@
  * CommonMark + GFM spec suites and pathological inputs.
  * Harness design: docs/rewrite/phase-1/testing-harness.md
  *
- * Until the v1 parser exists (PARSER_IMPLEMENTED === false), every example
- * is registered with `test.failing`: it must fail, which keeps CI green while
- * showing the full size of the work. Allowlisted examples use `test.failing`
- * permanently, so an allowlisted example that starts passing fails the run
- * and its entry must be removed.
+ * Suites not yet in IMPLEMENTED_SUITES register every example with
+ * `test.failing`: it must fail, which keeps CI green while showing the
+ * remaining work. Allowlisted examples use `test.failing` permanently, so an
+ * allowlisted example that starts passing fails the run and its entry must
+ * be removed.
  */
 import { loadAllowlist } from '../utils/allowlist';
 import {
+  IMPLEMENTED_SUITES,
   normalizeHtml,
-  PARSER_IMPLEMENTED,
   presetFor,
   renderToHtml,
 } from '../utils/renderToHtml';
-import { readSpec, type SpecSuite } from '../utils/specReader';
+import {
+  readSpec,
+  type SpecExample,
+  type SpecSuite,
+} from '../utils/specReader';
 import { pathologicalCases } from '../fixtures/pathological/cases';
 
 const SUITES: { suite: SpecSuite; file: string; expected: number }[] = [
@@ -43,12 +47,36 @@ for (const { suite, file, expected } of SUITES) {
       expect(examples).toHaveLength(expected);
     });
 
-    for (const ex of examples) {
+    // Not registered at all, as cmark-gfm's own runner does.
+    const active = examples.filter((ex) => ex.extension !== DISABLED);
+    const matches = (ex: SpecExample): boolean => {
+      const actual = renderToHtml(ex.markdown, { preset: presetFor(suite) });
+      return (
+        ex.html === IGNORE_OUTPUT ||
+        normalizeHtml(actual) === normalizeHtml(ex.html)
+      );
+    };
+
+    if (!IMPLEMENTED_SUITES.has(suite)) {
+      // Not required yet: one informational test instead of per-example
+      // expectations (the core CommonMark examples here already pass, so
+      // `test.failing` would reject them).
+      it('is not required yet (reports progress only)', () => {
+        const passing = active.filter((ex) => {
+          try {
+            return matches(ex);
+          } catch {
+            return false;
+          }
+        }).length;
+        console.info(`${suite}: ${passing}/${active.length} examples pass`);
+        expect(passing).toBeGreaterThanOrEqual(0);
+      });
+      return;
+    }
+
+    for (const ex of active) {
       const title = `#${ex.example} ${ex.section} (line ${ex.line})`;
-
-      // Not registered at all, as cmark-gfm's own runner does.
-      if (ex.extension === DISABLED) continue;
-
       const run = () => {
         const actual = renderToHtml(ex.markdown, { preset: presetFor(suite) });
         if (ex.html !== IGNORE_OUTPUT) {
@@ -59,8 +87,6 @@ for (const { suite, file, expected } of SUITES) {
       const known = allowlist.get(`${suite}:${ex.example}`);
       if (known) {
         test.failing(`${title} [allowlisted: ${known.reason}]`, run);
-      } else if (!PARSER_IMPLEMENTED) {
-        test.failing(`${title} [not implemented]`, run);
       } else {
         test(title, run);
       }
@@ -75,10 +101,17 @@ describe('pathological', () => {
       expect(html).toMatch(pattern);
     };
 
-    if (PARSER_IMPLEMENTED) {
-      test(name, run, PATHOLOGICAL_TIMEOUT_MS);
-    } else {
+    const known = allowlist.get(`pathological:${name}`);
+    if (known) {
+      test.failing(
+        `${name} [allowlisted: ${known.reason}]`,
+        run,
+        PATHOLOGICAL_TIMEOUT_MS
+      );
+    } else if (!IMPLEMENTED_SUITES.has('pathological')) {
       test.failing(`${name} [not implemented]`, run, PATHOLOGICAL_TIMEOUT_MS);
+    } else {
+      test(name, run, PATHOLOGICAL_TIMEOUT_MS);
     }
   }
 });
