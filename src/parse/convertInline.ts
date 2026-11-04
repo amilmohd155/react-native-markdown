@@ -1,5 +1,13 @@
 import type { Token } from 'markdown-it';
 import { Flag, NodeType, type TableBuilder } from '../model';
+import type { HtmlMode } from './backend';
+import {
+  allowedTags,
+  isSafeTag,
+  pairHtmlTags,
+  parseSimpleTag,
+  SAFE_HTML_TAGS,
+} from './htmlSubset';
 
 /** Collects a heading's plain text for its slug. */
 export type TextSink = (text: string) => void;
@@ -13,8 +21,10 @@ const DROPPED = -1;
  * - Adjacent text, entities, escapes and soft breaks merge into one `Text`
  *   node (soft breaks stay as `\n`; rendering decides, P1-2).
  * - Containers use an explicit stack, like the block pass.
- * - Raw HTML is kept as `HtmlInline` text for now; the safe-subset pairing
- *   (D3) lands with M1 task 7.
+ * - Raw HTML follows the `html` mode (D3): matched pairs of allowed tags
+ *   become elements, `<br>` a hard break; other tags stay literal (unmatched
+ *   allowed tags merge into text, anything else is an `HtmlInline` node);
+ *   `strip` drops every tag and keeps the text between them.
  *
  * Returns nothing; `sink` receives plain text for heading slugs.
  */
@@ -23,8 +33,11 @@ export function convertInline(
   children: readonly Token[],
   parent: number,
   sink: TextSink | null,
-  warn: (tokenType: string) => void
+  warn: (tokenType: string) => void,
+  html: HtmlMode
 ): void {
+  const allowed = allowedTags(html);
+  const paired = allowed ? pairHtmlTags(children, allowed) : null;
   const stack: number[] = [parent];
   const current = (): number => {
     for (let i = stack.length - 1; i >= 0; i--) {
@@ -49,7 +62,7 @@ export function convertInline(
     attrs: Parameters<TableBuilder['add']>[4] = null
   ) => stack.push(builder.add(type, current(), flags, null, attrs));
 
-  for (const token of children) {
+  children.forEach((token, index) => {
     switch (token.type) {
       case 'text':
         addText(token.content);
@@ -102,10 +115,27 @@ export function convertInline(
         break;
       }
 
-      case 'html_inline':
-        // Interim (task 6): literal HTML. Task 7 applies the safe subset (D3).
-        builder.add(NodeType.HtmlInline, current(), 0, token.content);
+      case 'html_inline': {
+        if (!allowed) break; // strip: drop the tag, keep surrounding text
+        const tag = parseSimpleTag(token.content);
+        if (tag && allowed.has(tag.name) && isSafeTag(tag.name)) {
+          if (tag.name === 'br' && !tag.closing) {
+            builder.add(NodeType.LineBreak, current(), Flag.HARD);
+            sink?.(' ');
+          } else if (paired!.has(index)) {
+            if (tag.closing) stack.pop();
+            else open(SAFE_HTML_TAGS[tag.name]);
+          } else {
+            // Unmatched or unclosed allowed tag: literal text.
+            addText(token.content);
+            sink?.(token.content);
+          }
+        } else {
+          // Any other tag (or one with attributes): literal HtmlInline node.
+          builder.add(NodeType.HtmlInline, current(), 0, token.content);
+        }
         break;
+      }
 
       default:
         if (token.nesting === 1) {
@@ -122,7 +152,7 @@ export function convertInline(
           sink?.(token.content);
         }
     }
-  }
+  });
 }
 
 /**

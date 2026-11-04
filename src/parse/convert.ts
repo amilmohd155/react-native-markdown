@@ -251,7 +251,8 @@ export function convertTokens(
           token.children ?? [],
           parentNode(),
           heading ? (text) => heading.push(text) : null,
-          warn
+          warn,
+          options.html
         );
         break;
       }

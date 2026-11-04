@@ -5,7 +5,7 @@
  * - ParserBackend interface and parse options (./backend)
  * - Shared markdown-it instances per preset (./markdownIt)
  * - Single-pass token → node table conversion: blocks (./convert), inline
- *   content (./convertInline); the safe raw-HTML subset lands with M1 task 7
+ *   content (./convertInline), the safe raw-HTML subset (./htmlSubset)
  * - The markdown-it backend (./markdownItBackend), heading slugs (./slug)
  *
  * Design:

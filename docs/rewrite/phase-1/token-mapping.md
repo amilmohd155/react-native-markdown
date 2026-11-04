@@ -106,20 +106,26 @@ The `NodeType` enum (`Uint8`). Plugin types are registered from 128 upward.
 
 `html: true` must be enabled in markdown-it so that HTML is tokenized. Each tag is a separate `html_inline` token (`<sup>` and `</sup>` are two tokens around a `text` token). The safe subset ([04 · Raw HTML](../04-api.md#raw-html)) is applied while converting:
 
+Pairing is decided in a **pre-pass** over the inline token's children, so the main pass never has to rewrite a node it already created (`src/parse/htmlSubset.ts`):
+
 ```
-on html_inline(content):
-  tag = parseSimpleTag(content)          // /^<\/?([a-z]+)\s*\/?>$/i, no attributes → null
-  if mode == 'strip':                     drop the token; continue
-  if tag && tag.name in allowlist:
-    if tag.name == 'br':                  add LineBreak + HARD
-    elif opening:                         push element row (Superscript, Underline, …) onto the inline stack, with a pending marker
-    elif closing && top of stack is the same element with a pending marker:
-                                          pop
-    else:                                 add Text(content)          // unmatched close → literal
-  else:                                   add HtmlInline(text=content) // rendered as literal text, or dropped in 'strip' mode
-at end of inline token:
-  for each still-pending opened element:  convert it back: prepend Text("<tag>") and keep its children (literal-text fallback)
+pre-pass (pairHtmlTags), one stack shared with markdown containers:
+  allowed, non-void open tag (not <br>, not self-closing)  → push it
+  allowed close tag, top of stack is the same tag            → mark both as paired, pop
+  markdown container open (em_open, link_open, …)            → push a marker
+  markdown container close                                   → pop up to and including its marker
+                                                               (html tags still open inside it stay unpaired)
+
+main pass, on html_inline(content):
+  mode == 'strip'                         → drop the token (text around it is kept)
+  tag = parseSimpleTag(content)           // /^<(\/?)([a-z][a-z0-9]*)\s*(\/?)>$/i; attributes → null
+  tag allowed && tag is <br> (opening)    → LineBreak + HARD
+  tag allowed && paired                   → open: push the element (Superscript, Underline, …); close: pop
+  tag allowed && not paired               → Text(content), merged into the run (unmatched or unclosed)
+  otherwise                               → HtmlInline(content), shown as literal text
 ```
+
+An unclosed `<sup>x` therefore comes out as the literal text `<sup>x`, the same result the "convert back" approach would give.
 
 - **Attributes:** tags with attributes (`<span class="x">`) don't match `parseSimpleTag` and become literal text. That's deliberate: attributes are never interpreted.
 - **Nesting:** pairing is per `inline` token. HTML can't span blocks.

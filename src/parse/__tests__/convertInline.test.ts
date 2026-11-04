@@ -117,8 +117,8 @@ describe('links and images', () => {
   });
 });
 
-describe('raw HTML (interim, until the safe subset in task 7)', () => {
-  it('keeps inline HTML tags as HtmlInline nodes', () => {
+describe('raw HTML', () => {
+  it('keeps tags outside the safe subset as HtmlInline nodes', () => {
     expect(inline('a <span>x</span>')).toEqual([
       text('a '),
       { type: 'HtmlInline', text: '<span>' },
