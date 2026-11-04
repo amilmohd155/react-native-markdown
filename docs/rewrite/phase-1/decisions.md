@@ -329,7 +329,7 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 - **Consequences:**
   - Package size and the dependency tree shrink; `check:expo-go` guards a single implementation.
   - Custom `renderRules` that read mdast `node.*` must be rewritten against element props.
-  - M5 gets a migration-guide task (the guide itself is not part of M5's done-when).
+  - The migration guide is written in its own milestone, M8 ([P1-22](#p1-22-the-migration-guide-is-its-own-milestone-m8)).
 
 ## P1-20: `toMdast` is deferred to Phase 3
 
@@ -358,3 +358,17 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - Apps that render untrusted content must set `images`; the docs say so on the prop.
   - Local images (`require`d assets, `file:`) can't be combined with an allowlist. Use `'allow'`, or render them through `components.Image`.
   - `images` is part of `ctx` identity, compared shallowly (an inline `{ allowHosts: [...] }` with equal entries keeps the context).
+
+## P1-22: The migration guide is its own milestone (M8)
+
+- **Status:** Accepted (2026-11-05)
+- **Date:** 2026-11-05
+- **Context:** P1-19 removed v0 and promised a migration guide, first as an M5 task. M5's done-when (API-contract type tests, no internal type in the public `.d.ts`) doesn't need it, and a guide reads best once the API and the benchmark results are final. Migrating the example app to the v1 API was already an M6 deliverable, so it needs no milestone of its own.
+- **Decision:**
+  - Add M8 · Migration guide, last in Phase 1 (after M7). It holds the guide, the v1 root README and the `fromRenderRules()` ship-or-drop decision.
+  - The example migration stays in M6, as planned.
+  - M7's exit review doesn't wait for M8. Phase 1 is complete when M8 is too.
+- **Consequences:**
+  - [work-breakdown](./work-breakdown.md#m8--migration-guide) gets the M8 section; the [README](./README.md), [roadmap](../07-roadmap.md) and [04](../04-api.md#migration-from-v0x) point to it. The roadmap's Phase 3 list no longer carries the guide.
+  - Until M8, the root README keeps its "v1 pre-release" note over the v0 text.
+  - M8 is tracked in [#23](https://github.com/amilmohd155/react-native-markdown/issues/23), a sub-issue of #7.

@@ -15,6 +15,7 @@ Phase 1 delivers everything needed to ship a usable v1 core, except streaming (p
 - Public API: `<Markdown>`, `components`, `definePlugin`, theme tokens, `parse`/`visit`, events, URL and image policy, safe HTML subset
 - Spec suites, renderer and API-contract tests, platform CI (iOS, Android, web, Expo Go check), perf CI job
 - Device benchmark against v0.8.5
+- Migration guide and v1 README, last (M8)
 
 ## Exit criteria
 
@@ -30,13 +31,13 @@ Defined in [07](../07-roadmap.md#phase-1-core-pure-js). Restated here only as a 
 
 | Document | Contents |
 |---|---|
-| [work-breakdown.md](./work-breakdown.md) | Milestones M0–M7 in order, with dependencies and done criteria for each |
+| [work-breakdown.md](./work-breakdown.md) | Milestones M0–M8 in order, with dependencies and done criteria for each |
 | [token-mapping.md](./token-mapping.md) | Every markdown-it token → node table row, including the HTML subset, task lists, footnotes and plugin tokens |
 | [element-props.md](./element-props.md) | How each element's public props are derived from the node table |
 | [theme-resolution.md](./theme-resolution.md) | How tokens become element styles, merge order, caching |
 | [testing-harness.md](./testing-harness.md) | Spec runner, HTML serializer, allowlist format, platform CI jobs |
 | [benchmark-protocol.md](./benchmark-protocol.md) | Devices, fixtures, metrics, method and pass bars |
-| [decisions.md](./decisions.md) | Implementation-level decisions P1-1 to P1-18 (all accepted), separate from the design decisions D1–D8 |
+| [decisions.md](./decisions.md) | Implementation-level decisions P1-1 to P1-22 (all accepted), separate from the design decisions D1–D8 |
 
 ## Reading order
 
@@ -58,3 +59,4 @@ Status is tracked in GitHub issues, not in these files: tracking issue [#7](http
 | M5 Public API | [#13](https://github.com/amilmohd155/react-native-markdown/issues/13) |
 | M6 Tests & platforms | [#14](https://github.com/amilmohd155/react-native-markdown/issues/14) |
 | M7 Benchmark & exit review | [#15](https://github.com/amilmohd155/react-native-markdown/issues/15) |
+| M8 Migration guide | [#23](https://github.com/amilmohd155/react-native-markdown/issues/23) |

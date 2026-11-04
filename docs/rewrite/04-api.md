@@ -235,4 +235,4 @@ See [05](./05-streaming.md).
 | `extensions` (mdast-util-from-markdown) | `plugins` (`definePlugin` with `syntax.markdownIt`) |
 | `debug` | removed (use React DevTools) |
 
-A temporary `renderRules` → `components` adapter (`fromRenderRules()`, deprecated on arrival) can ship in v1.0 for the simple cases in this table, plus a migration guide.
+A temporary `renderRules` → `components` adapter (`fromRenderRules()`, deprecated on arrival) can ship in v1.0 for the simple cases in this table. The migration guide is written in Phase 1 M8, which also decides whether the adapter ships ([P1-22](./phase-1/decisions.md#p1-22-the-migration-guide-is-its-own-milestone-m8)).

@@ -12,6 +12,7 @@ Implementation detail: [`phase-1/`](./phase-1/README.md).
 - Raw HTML safe subset (D3), declared inline views (D8).
 - Platform CI: iOS, Android, web (react-native-web), plus an Expo Go check that the main entry has no native imports (D1, D2).
 - Device benchmark: current vs. new, on a low-end Android device with Hermes.
+- Migration guide and a v1 README, as the last milestone (M8, [P1-22](./phase-1/decisions.md#p1-22-the-migration-guide-is-its-own-milestone-m8)).
 
 **Exit criteria:** passes the spec suites (allowlisting documented exceptions only). Runs unchanged in Expo Go and on the web. Parse plus first render of a 100 KB document is at least 5× faster than v0.8.5 on the device.
 
@@ -26,7 +27,7 @@ Implementation detail: [`phase-1/`](./phase-1/README.md).
 - Image aspect-ratio cache and placeholder, table column measurement cache.
 - `/highlight` entry point (lazy-loaded tokenizer).
 - Footnotes UI, task toggling, accessibility pass.
-- `fromRenderRules()` migration adapter (deprecated on arrival), the `/mdast` interop entry point, a migration guide, and official plugins (`math`, `mentions`, `emoji`).
+- `fromRenderRules()` migration adapter (deprecated on arrival; M8 decides whether it ships earlier), the `/mdast` interop entry point ([P1-20](./phase-1/decisions.md#p1-20-tomdast-is-deferred-to-phase-3)), and official plugins (`math`, `mentions`, `emoji`).
 
 ### Phase 4: Native backend (only if profiling justifies it)
 - md4c or cmark-gfm in C++ behind a JSI or Nitro module, with a binary node buffer (no JSON).
@@ -61,7 +62,7 @@ Two current libraries already take the native route:
 |---|---|
 | markdown-it plugins diverge from the GFM spec | In-house rules for autolinks and tagfilter, plus a per-backend allowlist in the spec suite |
 | Tail re-parse heuristics produce wrong intermediate output | `done()` always does a full parse, and randomized equivalence tests |
-| Breaking API change for current users | `fromRenderRules()` adapter, migration table ([04](./04-api.md#migration-from-v0x)), guide, and v1.0 semver |
+| Breaking API change for current users | migration table ([04](./04-api.md#migration-from-v0x)) and guide (Phase 1 M8), optional `fromRenderRules()` adapter, and v1.0 semver |
 | The flat table's indirection costs too much at render time on a device | Measure in phase 1. The table is private, so it can fall back to an object tree without an API change. |
 | Benchmarks so far are Node proxies, not devices | The phase 1 exit criteria require on-device numbers |
 

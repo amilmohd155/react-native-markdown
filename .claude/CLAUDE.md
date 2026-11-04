@@ -11,7 +11,7 @@ Markdown renderer for React Native (`@docren/react-native-markdown`). Mid-rewrit
 
 - Design: `docs/rewrite/` (start at `README.md`). Plan: `docs/rewrite/phase-1/`.
 - Decisions: D1–D8 in `docs/rewrite/07-roadmap.md`, P1-n in `docs/rewrite/phase-1/decisions.md`. Record new ones there.
-- Tracking: issue #7, with sub-issues #8–#15 (one per milestone M0–M7).
+- Tracking: issue #7, with sub-issues #8–#15 and #23 (one per milestone M0–M8).
 
 ## Layout
 
