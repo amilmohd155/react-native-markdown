@@ -3049,11 +3049,13 @@ __metadata:
   resolution: "@docren/react-native-markdown-example@workspace:example"
   dependencies:
     "@babel/core": ^7.29.7
+    "@expo-google-fonts/inter": ^0.4.2
     "@expo/metro-runtime": ~58.0.17
     "@types/react-syntax-highlighter": ^15.5.13
     css-to-react-native: ^3.2.0
     expo: ~58.0.23
     expo-atlas: ^0.4.0
+    expo-font: ~58.0.11
     expo-splash-screen: ~58.0.13
     expo-status-bar: ~58.0.4
     react: 19.3.0
@@ -3400,6 +3402,13 @@ __metadata:
     lefthook: bin/index.js
   checksum: e934095f95a2ed93f18b859677ef35a630ce0d950f439c1191ca94b574373329fa5fa5272e330d3b6c6a3dde4296e9909370d0465e26dac60136dc2a0b8ecc0d
   conditions: (os=darwin | os=linux | os=win32) & (cpu=x64 | cpu=arm64 | cpu=ia32)
+  languageName: node
+  linkType: hard
+
+"@expo-google-fonts/inter@npm:^0.4.2":
+  version: 0.4.2
+  resolution: "@expo-google-fonts/inter@npm:0.4.2"
+  checksum: 3a8ea9cc3e3f0968bbd615f28a454ffd2bb0540a513ad64e0b7fa2f1b2b310d09ba1b9ad675ed5d5a9f4dc3210fa466bcd828395e527b1ddf373ce205dcbaf42
   languageName: node
   linkType: hard
 

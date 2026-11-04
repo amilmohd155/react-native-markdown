@@ -2,17 +2,35 @@ import { useState, type ComponentType } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import {
+  Inter_400Regular,
+  Inter_400Regular_Italic,
+  Inter_700Bold,
+  Inter_700Bold_Italic,
+  useFonts,
+} from '@expo-google-fonts/inter';
+import { FontLab } from './screens/FontLab';
 import { V0Demo } from './screens/V0Demo';
-import { V1Parse } from './screens/V1Parse';
+import { V1Preview } from './screens/V1Preview';
 
 const SCREENS: { name: string; component: ComponentType }[] = [
+  { name: 'v1 preview', component: V1Preview },
+  { name: 'fonts', component: FontLab },
   { name: 'v0 demo', component: V0Demo },
-  { name: 'v1 parse', component: V1Parse },
 ];
 
 export default function App() {
   const [index, setIndex] = useState(0);
+  // Inter from Google Fonts, one family per face (Expo Go has no font
+  // resources, so faces can't share a family name there).
+  const [fontsLoaded] = useFonts({
+    Inter_400Regular,
+    Inter_400Regular_Italic,
+    Inter_700Bold,
+    Inter_700Bold_Italic,
+  });
   const Screen = SCREENS[index]!.component;
+  if (!fontsLoaded) return null;
 
   return (
     <SafeAreaProvider>

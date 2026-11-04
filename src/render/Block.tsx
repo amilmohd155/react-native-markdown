@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { View } from 'react-native';
 import { blockKey, isSameBlock, type NodeTable } from '../model';
 import type { RenderCtx } from './context';
+import { RenderCtxContext } from './contexts';
 import { renderBlock } from './renderBlock';
 
 export interface BlockProps {
@@ -50,5 +51,9 @@ export function BlockList({ table, ctx }: BlockListProps) {
   for (let i = 0; i < table.blockCount; i++) {
     blocks[i] = <Block key={blockKey(i)} table={table} index={i} ctx={ctx} />;
   }
-  return <View>{blocks}</View>;
+  return (
+    <RenderCtxContext.Provider value={ctx}>
+      <View>{blocks}</View>
+    </RenderCtxContext.Provider>
+  );
 }

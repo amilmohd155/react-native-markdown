@@ -10,9 +10,11 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
     "@expo/metro-runtime": "~58.0.17",
     "css-to-react-native": "^3.2.0",
     "expo": "~58.0.23",
+    "expo-font": "~58.0.11",
     "expo-splash-screen": "~58.0.13",
     "expo-status-bar": "~58.0.4",
     "react": "19.3.0",

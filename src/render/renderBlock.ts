@@ -1,6 +1,7 @@
 import { createElement, Fragment, type ReactNode } from 'react';
 import { NodeType, NONE, type NodeTable } from '../model';
 import type { RenderCtx } from './context';
+import { ListMarkerContext } from './contexts';
 import { element } from './element';
 import { renderInline } from './inline';
 import {
@@ -109,16 +110,21 @@ function renderNode(
 
     case NodeType.List: {
       const props = listProps(table, id);
+      const items = renderChildren(table, id, ctx, {
+        depth: place.depth,
+        tight: props.tight,
+      });
+      // Longest marker: the last ordered number plus its delimiter.
+      const markerChars = props.ordered
+        ? String(props.start + items.length - 1).length + 1
+        : 1;
       return element(
         ctx,
         'List',
         id,
         props,
         place.depth > 0 ? theme.nestedList : elements.List,
-        renderChildren(table, id, ctx, {
-          depth: place.depth,
-          tight: props.tight,
-        })
+        createElement(ListMarkerContext.Provider, { value: markerChars }, items)
       );
     }
 

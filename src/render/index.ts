@@ -10,9 +10,7 @@
  * - Inline flattener: merged text runs, one component call per inline
  *   element (./inline), and the dev check for undeclared inline Views
  *   (./devInline)
- *
- * Planned contents:
- * - Default elements
+ * - Default block and inline elements (./defaults), link handling (./links)
  *
  * Design:
  * - docs/rewrite/03-architecture.md#3-rendering-layer
@@ -48,4 +46,12 @@ export {
 } from './Block';
 export { renderBlock } from './renderBlock';
 export { renderInline } from './inline';
+export { defaultComponents } from './defaults';
+export { isOpenableUrl, pressLink } from './links';
+export {
+  InheritedTextContext,
+  ListMarkerContext,
+  RenderCtxContext,
+  useRenderContext,
+} from './contexts';
 export * from './props';
