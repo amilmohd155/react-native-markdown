@@ -70,6 +70,38 @@ describe('<Markdown>', () => {
     expect(JSON.stringify(cm.root.toJSON())).not.toContain('line-through');
   });
 
+  describe('html', () => {
+    const source = 'a <b>bold</b> and <mark>marked</mark> b';
+    const render = (html?: MarkdownProps['html']) =>
+      textOf(mount({ source, html }).root.toJSON());
+
+    it("renders the safe subset as elements by default ('safe')", () => {
+      expect(render()).toBe('a bold and marked b');
+      expect(render('safe')).toBe('a bold and marked b');
+    });
+
+    it("shows all tags as text with 'text'", () => {
+      expect(render('text')).toBe(source);
+    });
+
+    it("removes tags and keeps their text with 'strip'", () => {
+      expect(render('strip')).toBe('a bold and marked b');
+    });
+
+    it('renders only the allowed tags with { allow }', () => {
+      expect(render({ allow: ['b'] })).toBe('a bold and <mark>marked</mark> b');
+    });
+
+    it('styles safe tags as elements, not text', () => {
+      const safe = JSON.stringify(mount({ source }).root.toJSON());
+      const literal = JSON.stringify(
+        mount({ source, html: 'text' }).root.toJSON()
+      );
+      expect(safe).toContain('"fontWeight":"700"');
+      expect(literal).not.toContain('"fontWeight":"700"');
+    });
+  });
+
   describe('memoization', () => {
     it('keeps the render context for equal inline props', () => {
       let renders = 0;
