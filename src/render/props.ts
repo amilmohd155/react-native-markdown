@@ -178,8 +178,13 @@ export function footnoteReferenceProps(
   table: NodeTable,
   id: number
 ): SemanticProps<'FootnoteReference'> {
-  const { label, index } = attrsOf(table, id, NodeType.FootnoteReference);
-  return { label, index };
+  const { label, index, subId } = attrsOf(
+    table,
+    id,
+    NodeType.FootnoteReference
+  );
+  // `subId` counts from 0; the public `reference` is 1-based (P1-15).
+  return { label, index, reference: subId + 1 };
 }
 
 export function footnoteDefinitionProps(

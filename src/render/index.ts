@@ -20,16 +20,19 @@
  */
 
 export type {
+  AnyElementName,
   Components,
   ElementProps,
   ElementPropsMap,
   HeadingLevel,
   InlineElementName,
+  PluginComponents,
 } from './elements';
 export {
   DEFAULT_RENDER_OPTIONS,
   createRenderCtx,
   useRenderCtx,
+  type FootnotePressInfo,
   type HandlersRef,
   type ImagePressInfo,
   type LinkPressInfo,
@@ -37,6 +40,7 @@ export {
   type RenderCtxInput,
   type RenderHandlers,
   type RenderOptions,
+  type ScriptFallback,
   type SoftBreak,
   type TaskToggleInfo,
 } from './context';
@@ -57,7 +61,7 @@ export {
   type InlineBaseline,
   type InlineViewProps,
 } from './inlineView';
-export { defaultComponents } from './defaults';
+export { defaultComponents, defaults } from './defaults';
 export {
   cachedImageSize,
   loadImageSize,

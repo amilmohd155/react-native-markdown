@@ -15,6 +15,9 @@ export function isOpenableUrl(href: string): boolean {
   return OPENABLE.test(href.trim());
 }
 
+/** No app can open it (or the user cancelled): nothing to do. */
+function ignore(): void {}
+
 /**
  * A link press: `onLinkPress` first (it always receives the href, even for
  * schemes the default refuses); returning `false` cancels the default,
@@ -27,7 +30,9 @@ export function pressLink(
 ): void {
   const result = handlers.current.onLinkPress?.(href, info);
   if (result === false || !isOpenableUrl(href)) return;
-  Linking.openURL(href).catch(() => {
-    // No app can open it (or the user cancelled): nothing to do.
-  });
+  try {
+    Linking.openURL(href).catch(ignore);
+  } catch {
+    // Some platforms throw synchronously (e.g. an unsupported URL).
+  }
 }

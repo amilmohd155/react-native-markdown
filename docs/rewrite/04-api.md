@@ -76,7 +76,7 @@ Returning a `View` from an undeclared inline element triggers a dev-mode warning
 | `Link` | `href`, `title` |
 | `InlineImage` | `src`, `alt`, `title`, `width?`, `height?` |
 | `LineBreak` | `hard: boolean` (no `children`) |
-| `FootnoteReference` | `label`, `index` |
+| `FootnoteReference` | `label`, `index`, `reference` (1-based) |
 | `Underline`, `Highlight` | — (from `<u>`, `<mark>` in the [safe HTML subset](#raw-html)) |
 | `Superscript`, `Subscript` | — (from `<sup>`, `<sub>`) |
 | `Kbd` | — (from `<kbd>`) |
@@ -104,7 +104,15 @@ type Components = {
 // ElementProps<'Heading'> = { level: 1|2|3|4|5|6; id: string; children: ReactNode; style: ElementStyle }
 ```
 
-Plugins extend `ElementName` and `ElementProps` through their `nodes` declaration, so their components are type-checked too.
+Plugins extend `ElementName` and `ElementProps` through their `nodes` declaration, so their components are type-checked too. Inside `definePlugin`, `components` are checked against the props each node's `from` returns. For the `components` and `theme.elements` props of `<Markdown>`, a plugin package declares its elements once, by augmenting `PluginElementPropsMap`:
+
+```ts
+declare module '@docren/react-native-markdown' {
+  interface PluginElementPropsMap {
+    Mention: { userId: string };
+  }
+}
+```
 
 ## Theme
 
