@@ -49,8 +49,32 @@ yarn workspace @docren/react-native-markdown-bench bench:large    # ~97 KB
 yarn workspace @docren/react-native-markdown-bench bench:jitless  # ~97 KB, no JIT
 ```
 
-## Not measured yet (to do in phase 1)
+## Device results (preliminary, M1)
 
-- Render cost (element creation + Fabric commit) for the current renderer vs. the proposed one.
-- Hermes on a device: a low-end Android (Snapdragon 6xx class) and a recent iPhone.
-- Memory: AST size per KB of input.
+First measurements on real Hermes, taken during M1 to tune P1-9 and P1-10. M7 repeats them with the full [benchmark protocol](./phase-1/benchmark-protocol.md) on a low-end Android and an iPhone.
+
+- **Device:** Samsung Galaxy S25 FE (SM-S731B, Exynos 2400), Android 37. Upper-mid range, **not** the low-end pass/fail device.
+- **Build:** the example app as a release build (`expo run:android --variant release`): Hermes, precompiled bytecode, `__DEV__ = false`.
+- **Method:** a temporary benchmark screen (not committed) running the same fixtures as the Node scripts. Median of 51 runs (1 KB) or 11 runs (97 KB) after 3 warm-up runs; v0 with fewer runs. Date: 2026-11-04.
+
+| Measurement | 1 KB (6 blocks) | 97 KB (900 blocks) |
+|---|---|---|
+| markdown-it parse | 1.52 ms | 107.95 ms |
+| token → table conversion | 0.10 ms (6.7% of parse) | 15.95 ms (**14.8%** of parse) |
+| v1 `parse()` end to end | 1.13 ms | 122.41 ms |
+| v0 `fromMarkdown` (current library) | 5.62 ms | 1,543.57 ms |
+| **v1 vs v0** | **5.0× faster** | **12.6× faster** |
+| block identity: FNV-1a hash of every block (before P1-9) | 0.09 ms | 12.24 ms |
+| block identity: `isSameBlock` on every block (P1-9) | 0.00 ms | 6.13 ms |
+
+What this shows:
+
+- **v1 parses 5–12.6× faster than v0 on Hermes.** The gap grows with document size.
+- **Node `--jitless` underestimates Hermes.** Conversion is 14.8% of parse on the device versus 11.2% in Node `--jitless`. The P1-10 budget (15%) passes on Hermes with little margin; the node builder is the place to optimize if M7's low-end device needs it.
+- **Text comparison costs more on Hermes than on V8.** Hermes copies substrings, so comparing all 900 blocks costs 6.13 ms (0.10 ms in Node). It's still 2× cheaper than hashing, and it only runs on re-render against a previous document, which always follows a ~122 ms parse. Hashing would cost 12.24 ms on every parse. Caching each block's text on its table after the first comparison would halve the copies for consecutive re-renders, if ever needed.
+
+## Not measured yet
+
+- Render cost (element creation + Fabric commit) for the current renderer vs. the proposed one (M3+).
+- A low-end Android (Snapdragon 6xx class) and a recent iPhone (M7).
+- Memory: AST size per KB of input, on device (M7).

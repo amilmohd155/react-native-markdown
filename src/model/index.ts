@@ -5,7 +5,7 @@
  * - Node types, flag bits and per-type attributes (./types)
  * - NodeTable shape (./nodeTable), TableBuilder (./tableBuilder)
  * - Allocation-free readers (./read)
- * - Line offsets, block index, FNV-1a block hashing, block keys (./blockIndex)
+ * - Line offsets, block index, block identity and keys (./blockIndex)
  *
  * Design:
  * - docs/rewrite/03-architecture.md#2-document-model
@@ -28,6 +28,6 @@ export {
   BlockIndexBuilder,
   blockKey,
   computeLineOffsets,
-  fnv1a,
+  isSameBlock,
   lineToOffset,
 } from './blockIndex';

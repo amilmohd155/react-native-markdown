@@ -48,14 +48,14 @@ M0 Groundwork
 - `NodeTable` and `TableBuilder` (growable typed arrays, string table, sparse attrs) ([03 · Document model](../03-architecture.md#2-document-model)).
 - `NodeType` enum and flag bits ([token-mapping.md](./token-mapping.md#node-types)).
 - Token → table conversion for all CommonMark tokens ([token-mapping.md](./token-mapping.md)).
-- Line-offset table, block index (`blocks`, `blockStart`, `blockEnd`), FNV-1a block hash.
+- Line-offset table, block index (`blocks`, `blockStart`, `blockEnd`, `blockContext`), block identity (`isSameBlock`, P1-9).
 - Raw HTML safe subset: pairing `html_inline` tokens ([token-mapping.md](./token-mapping.md#raw-html-pairing)).
 - `documentToHtml(doc)` serializer for tests ([testing-harness.md](./testing-harness.md#html-serializer)).
 - Opaque `MarkdownDocument` handle, frozen in dev.
 
 **Done when:**
 - The CommonMark suite passes, apart from a reviewed allowlist.
-- Converting the 97 KB fixture costs ≤ 5 ms on top of markdown-it's parse in Node `--jitless`.
+- Converting the 97 KB fixture costs ≤ 15% of markdown-it's own parse time in Node `--jitless` (`bench/convert.mjs`, P1-10).
 - Nested input like 10,000 `>` characters parses without a stack overflow.
 
 ## M2 · GFM plugins
@@ -83,7 +83,7 @@ M0 Groundwork
 
 **Goal:** the document renders through default elements with the performance properties from [03](../03-architecture.md#3-rendering-layer).
 
-- `BlockList` (plain `View`), `memo(Block)` comparing hash and `ctx`.
+- `BlockList` (plain `View`), `memo(Block)` comparing `ctx` and `isSameBlock` (P1-9).
 - Inline flattener: merged text runs and one `<Text>` per block.
 - Node → props mapping ([element-props.md](./element-props.md)).
 - All default elements in [04 · Element catalog](../04-api.md#element-catalog), including the HTML-subset elements.

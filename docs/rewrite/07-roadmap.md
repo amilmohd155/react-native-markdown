@@ -5,7 +5,7 @@
 ### Phase 1: Core (pure JS)
 Implementation detail: [`phase-1/`](./phase-1/README.md).
 - markdown-it backend with the full GFM set (linkify-it + thin GFM wrapper for autolinks, see [P1-1](./phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps); in-house tagfilter).
-- Private flat node table, token → table conversion, block index and hashing.
+- Private flat node table, token → table conversion, block index and block identity (P1-9).
 - `BlockList`, memoized `Block`, inline flattener, table → semantic props, all default elements (tables included).
 - Public API: `components`, `definePlugin` with GFM implemented as built-in plugins, theme tokens + `createTheme` (light and dark), `parse`/`visit`, `onLinkPress` semantics, URL sanitization.
 - CommonMark and GFM spec suites, renderer and API-contract tests, perf CI job.

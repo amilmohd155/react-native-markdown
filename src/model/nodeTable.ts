@@ -42,6 +42,19 @@ export interface NodeTable {
   readonly blockStart: Int32Array;
   /** Source offset (UTF-16, exclusive) where each block ends. */
   readonly blockEnd: Int32Array;
-  /** FNV-1a hash of each block's source slice. */
-  readonly blockHash: Uint32Array;
+  /**
+   * Per block: values it renders that come from outside its source text
+   * (heading slugs; footnote numbers in M2). '' for most blocks.
+   */
+  readonly blockContext: readonly string[];
+
+  // Block identity (P1-9, see `isSameBlock`)
+  /** The parsed source. Referenced, not copied. */
+  readonly source: string;
+  /**
+   * Document context: everything outside the source text that changes the
+   * tree (preset, html mode, plugins, link reference definitions). Backends
+   * must fill it; if it differs, every block counts as changed.
+   */
+  readonly context: string;
 }

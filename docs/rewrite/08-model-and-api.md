@@ -16,7 +16,7 @@ Earlier drafts assumed **mdast-shaped nodes** so that v0.x render rules and user
 ### What the model has to do
 
 - Be built from markdown-it tokens (JS backend) **and** from a native parser's output (phase 4).
-- Give top-level blocks a stable key and a content hash, for memoization.
+- Give top-level blocks a stable key and a cheap "unchanged?" check, for memoization (P1-9: source text plus context, no hashing).
 - Allow cheap splicing at a block boundary, for streaming.
 - Stay small in memory. Chat apps keep **many** documents alive (message history).
 - Be fast to read during render.
@@ -88,7 +88,9 @@ interface NodeTable {
   blocks: Int32Array;        // node ids of top-level blocks
   blockStart: Int32Array;    // source offsets of each block
   blockEnd: Int32Array;
-  blockHash: Uint32Array;
+  blockContext: string[];    // P1-9 (was blockHash; see phase-1 decisions)
+  source: string;
+  context: string;
 }
 ```
 

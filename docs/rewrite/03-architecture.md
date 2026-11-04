@@ -125,10 +125,10 @@ level type               nesting map     inline children
 
 1. **Top-level block boundaries are already there.** Every token with `level === 0` and `nesting !== -1` starts a new top-level block, and its `map` gives that block's line range. We never have to search a tree to find the blocks we memoize and virtualize.
 
-2. **Keys and hashes cost almost nothing.**
-   - A line-start offset table is built once per parse.
+2. **Block ranges and identity cost almost nothing.**
+   - A line-start offset table is built once per parse (native `indexOf` jumps between newlines).
    - It turns each block's `map` into `[start, end)` character offsets in O(1).
-   - The `key` and the content `hash` come straight from that source slice, with no extra traversal.
+   - Identity needs no hashing: the renderer compares block source text natively, plus small context strings ([P1-9](./phase-1/decisions.md#p1-9-block-identity-by-source-text-plus-context-and-index-keys)).
 
 3. **The conversion is one forward loop with an explicit stack.** It appends rows to the flat node table ([§2](#2-document-model)). The token stream is already in document order, so node ids come out in document order too, and each top-level block occupies a contiguous id range.
 
@@ -152,7 +152,7 @@ level type               nesting map     inline children
          if (tok.level === 0) t.beginBlock(id, lineOffsets[tok.map![0]], lineOffsets[tok.map![1]]);
        }
      }
-     t.finishBlocks(source);                         // hash each block's source slice
+     t.finish(blocks, source, context);              // block index + identity context (P1-9)
    }
    ```
 
@@ -233,7 +233,10 @@ interface NodeTable {
   blocks: Int32Array;        // first node id of each top-level block
   blockStart: Int32Array;    // source offsets
   blockEnd: Int32Array;
-  blockHash: Uint32Array;    // FNV-1a of the block's source slice
+  blockContext: string[];    // per block: values derived from outside it (heading slugs, …)
+  // block identity (P1-9)
+  source: string;            // the parsed source (a reference, not a copy)
+  context: string;           // document context: preset, html mode, plugins, reference definitions
 }
 
 // public: an opaque handle
@@ -248,7 +251,10 @@ interface MarkdownDocument { readonly blockCount: number; /* no node access */ }
 
   The numbers are in [08](./08-model-and-api.md#measurements).
 - **References are resolved while parsing.** A reference link becomes a link node when its definition exists. Otherwise it stays as text, as CommonMark requires. No separate transform pass.
-- **Identity exists only at block granularity.** Each top-level block has a key (`${index}:${blockStart}`) and a hash. Inline elements are keyed by position within their block, which is safe because a block's inline content is always rebuilt as a unit.
+- **Identity exists only at block granularity** ([P1-9](./phase-1/decisions.md#p1-9-block-identity-by-source-text-plus-context-and-index-keys)).
+  - **Key:** the block's index. Not its offset: editing a block moves the offsets of every later block, and offset-based keys would remount them all.
+  - **Unchanged** (`isSameBlock`): same document context, same block context, same source text (lengths first, then a native string compare). Source text alone isn't enough: reference definitions, de-duplicated heading slugs and parse options come from outside a block.
+  - Inline elements are keyed by position within their block, which is safe because a block's inline content is always rebuilt as a unit.
 - **Immutable after build.** A streaming update produces a new table that shares the unchanged prefix arrays where possible (typed-array `subarray` views).
 - **Reversible.** Because nothing outside the renderer reads the table, it could be swapped for an object tree if device profiling ever favours that, without an API change.
 
@@ -267,7 +273,7 @@ function BlockList({ doc, ctx, virtualize }) {
                        renderItem={({ item }) => <Block block={item} ctx={ctx} />} />;
   }
   return <View>{doc.blocks.map(b => <Block key={b.key} block={b} ctx={ctx} />)}</View>;
-  // `doc.blocks` here is a lightweight view over the table's block index: { id, key, hash }
+  // `doc.blocks` here is a lightweight view over the table's block index: { index, id, key }
 }
 ```
 
@@ -277,7 +283,10 @@ function BlockList({ doc, ctx, virtualize }) {
 ### Block (memoized)
 
 ```tsx
-const Block = memo(BlockImpl, (a, b) => a.block.hash === b.block.hash && a.ctx === b.ctx);
+const Block = memo(
+  BlockImpl,
+  (a, b) => a.ctx === b.ctx && isSameBlock(a.table, a.index, b.table, b.index)
+);
 ```
 
 - `ctx` holds the resolved theme, the merged component map (defaults → plugins → `components` prop), the event handlers and other options. It's created once per change of those props, inside `useMemo`, so its identity is stable.
@@ -375,7 +384,7 @@ A theme has two levels ([04](./04-api.md#theme)):
 ```
 src/
   parse/        backend interface, markdown-it backend, token → table conversion
-  model/        node table, builder, block index, hashing, definitions (private)
+  model/        node table, builder, block index, block identity (private)
   plugins/      definePlugin, built-in GFM plugins (tables, taskLists, strikethrough, autolinks, footnotes, tagfilter)
   render/       BlockList, Block, inline flattener, table → props, default elements
   theme/        tokens, createTheme, light/dark themes, context

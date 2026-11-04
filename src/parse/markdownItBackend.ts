@@ -1,4 +1,5 @@
-import type { ParseOptions, ParserBackend } from './backend';
+import type { Env } from 'markdown-it';
+import type { HtmlMode, ParseOptions, ParserBackend } from './backend';
 import { convertTokens, type ConvertResult } from './convert';
 import { getMarkdownIt } from './markdownIt';
 
@@ -7,9 +8,27 @@ export function parseWithMarkdownIt(
   source: string,
   options: ParseOptions = {}
 ): ConvertResult {
-  const md = getMarkdownIt(options.preset ?? 'gfm');
-  const tokens = md.parse(source, {});
-  return convertTokens(md, tokens, source, { html: options.html ?? 'safe' });
+  const preset = options.preset ?? 'gfm';
+  const html = options.html ?? 'safe';
+  const md = getMarkdownIt(preset);
+  const env: Env = {};
+  const tokens = md.parse(source, env);
+  return convertTokens(md, tokens, source, {
+    html,
+    context: documentContext(preset, html, env.references),
+  });
+}
+
+/**
+ * Everything outside a block's source text that changes the tree: preset,
+ * html mode and the link reference definitions (P1-9). Plugins join in M2.
+ */
+function documentContext(
+  preset: string,
+  html: HtmlMode,
+  references: unknown
+): string {
+  return JSON.stringify([preset, html, references ?? null]);
 }
 
 /** The default, pure-JS parser backend. */

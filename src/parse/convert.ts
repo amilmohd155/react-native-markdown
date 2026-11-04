@@ -11,11 +11,13 @@ import {
   type NodeTable,
 } from '../model';
 import type { HtmlMode } from './backend';
-import { convertInline } from './convertInline';
+import { InlineConverter } from './convertInline';
 import { Slugger } from './slug';
 
 export interface ConvertOptions {
   readonly html: HtmlMode;
+  /** Document context for block identity (P1-9); see `NodeTable.context`. */
+  readonly context?: string;
 }
 
 export interface ConvertResult {
@@ -90,6 +92,7 @@ export function convertTokens(
       `Unknown markdown-it token "${tokenType}": rendered as text. Register it with a plugin's \`nodes\` to render it properly.`
     );
   };
+  const inline = new InlineConverter(builder, options.html, warn);
   const indexBlock = (token: Token, node: number) => {
     if (token.level - droppedDepth === 0 && token.map) {
       blocks.addLines(node, token.map[0], token.map[1]);
@@ -135,10 +138,14 @@ export function convertTokens(
       }
       case 'heading_close': {
         const node = top().node;
+        const id = slugger.slug(headingText?.join('') ?? '');
         builder.setAttrs(node, {
           level: Number(token.tag.slice(1)) as 1 | 2 | 3 | 4 | 5 | 6,
-          id: slugger.slug(headingText?.join('') ?? ''),
+          id,
         });
+        // The slug's de-duplication suffix depends on earlier headings, so it
+        // is part of the enclosing top-level block's identity (P1-9).
+        blocks.appendContext(id);
         headingText = null;
         close();
         break;
@@ -246,13 +253,10 @@ export function convertTokens(
 
       case 'inline': {
         const heading = headingText;
-        convertInline(
-          builder,
+        inline.convert(
           token.children ?? [],
           parentNode(),
-          heading ? (text) => heading.push(text) : null,
-          warn,
-          options.html
+          heading ? (text) => heading.push(text) : null
         );
         break;
       }
@@ -284,7 +288,10 @@ export function convertTokens(
     }
   }
 
-  return { table: builder.finish(blocks.finish()), warnings };
+  return {
+    table: builder.finish(blocks.finish(), source, options.context ?? ''),
+    warnings,
+  };
 }
 
 const KNOWN_CLOSE = new Set([

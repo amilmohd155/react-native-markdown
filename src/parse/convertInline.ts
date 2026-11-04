@@ -15,7 +15,7 @@ export type TextSink = (text: string) => void;
 const DROPPED = -1;
 
 /**
- * Converts one `inline` token's children under `parent`.
+ * Converts `inline` tokens' children into the node table.
  * Spec: docs/rewrite/phase-1/token-mapping.md#inline-tokens-inlinechildren
  *
  * - Adjacent text, entities, escapes and soft breaks merge into one `Text`
@@ -26,133 +26,168 @@ const DROPPED = -1;
  *   allowed tags merge into text, anything else is an `HtmlInline` node);
  *   `strip` drops every tag and keeps the text between them.
  *
- * Returns nothing; `sink` receives plain text for heading slugs.
+ * One instance per document: methods instead of per-call closures and one
+ * reused stack keep allocation low (this runs once per paragraph, heading
+ * and table cell, and matters without a JIT).
  */
-export function convertInline(
-  builder: TableBuilder,
-  children: readonly Token[],
-  parent: number,
-  sink: TextSink | null,
-  warn: (tokenType: string) => void,
-  html: HtmlMode
-): void {
-  const allowed = allowedTags(html);
-  const paired = allowed ? pairHtmlTags(children, allowed) : null;
-  const stack: number[] = [parent];
-  const current = (): number => {
+export class InlineConverter {
+  private readonly stack: number[] = [];
+  private readonly allowed: ReadonlySet<string> | null;
+  private parent = 0;
+
+  constructor(
+    private readonly builder: TableBuilder,
+    html: HtmlMode,
+    private readonly warn: (tokenType: string) => void
+  ) {
+    this.allowed = allowedTags(html);
+  }
+
+  /** Converts one `inline` token's children under `parent`. `sink` gets plain text for heading slugs. */
+  convert(
+    children: readonly Token[],
+    parent: number,
+    sink: TextSink | null
+  ): void {
+    const { builder, stack, allowed } = this;
+    this.parent = parent;
+    stack.length = 0;
+    stack.push(parent);
+    const paired =
+      allowed && hasHtml(children) ? pairHtmlTags(children, allowed) : null;
+
+    for (let index = 0; index < children.length; index++) {
+      const token = children[index]!;
+      switch (token.type) {
+        case 'text':
+          this.addText(token.content);
+          sink?.(token.content);
+          break;
+        case 'softbreak':
+          this.addText('\n');
+          sink?.(' ');
+          break;
+        case 'hardbreak':
+          builder.add(NodeType.LineBreak, this.current(), Flag.HARD);
+          sink?.(' ');
+          break;
+        case 'code_inline':
+          builder.add(NodeType.InlineCode, this.current(), 0, token.content);
+          sink?.(token.content);
+          break;
+
+        case 'em_open':
+          this.open(NodeType.Emphasis);
+          break;
+        case 'strong_open':
+          this.open(NodeType.Strong);
+          break;
+        case 's_open':
+          this.open(NodeType.Strikethrough);
+          break;
+        case 'link_open': {
+          const title = token.attrGet('title');
+          this.open(
+            NodeType.Link,
+            token.markup === 'autolink' ? Flag.AUTOLINK : 0,
+            {
+              href: String(token.attrGet('href') ?? ''),
+              title: title === null ? null : String(title),
+            }
+          );
+          break;
+        }
+        case 'em_close':
+        case 'strong_close':
+        case 's_close':
+        case 'link_close':
+          stack.pop();
+          break;
+
+        case 'image': {
+          const title = token.attrGet('title');
+          builder.add(NodeType.Image, this.current(), 0, null, {
+            src: String(token.attrGet('src') ?? ''),
+            alt: plainText(token.children ?? []),
+            title: title === null ? null : String(title),
+          });
+          break;
+        }
+
+        case 'html_inline': {
+          if (!allowed) break; // strip: drop the tag, keep surrounding text
+          const tag = parseSimpleTag(token.content);
+          if (tag && allowed.has(tag.name) && isSafeTag(tag.name)) {
+            if (tag.name === 'br' && !tag.closing) {
+              builder.add(NodeType.LineBreak, this.current(), Flag.HARD);
+              sink?.(' ');
+            } else if (paired!.has(index)) {
+              if (tag.closing) stack.pop();
+              else this.open(SAFE_HTML_TAGS[tag.name]);
+            } else {
+              // Unmatched or unclosed allowed tag: literal text.
+              this.addText(token.content);
+              sink?.(token.content);
+            }
+          } else {
+            // Any other tag (or one with attributes): literal HtmlInline node.
+            builder.add(NodeType.HtmlInline, this.current(), 0, token.content);
+          }
+          break;
+        }
+
+        default:
+          if (token.nesting === 1) {
+            // Unknown container: keep its children, drop the wrapper.
+            this.warn(token.type.replace(/_open$/, ''));
+            stack.push(DROPPED);
+          } else if (token.nesting === -1) {
+            this.warn(token.type.replace(/_close$/, ''));
+            stack.pop();
+          } else {
+            // Unknown leaf: keep its content as text.
+            this.warn(token.type);
+            this.addText(token.content);
+            sink?.(token.content);
+          }
+      }
+    }
+  }
+
+  private current(): number {
+    const { stack } = this;
     for (let i = stack.length - 1; i >= 0; i--) {
       if (stack[i] !== DROPPED) return stack[i]!;
     }
-    return parent;
-  };
+    return this.parent;
+  }
 
-  const addText = (text: string) => {
+  private addText(text: string): void {
     if (text.length === 0) return;
-    const node = current();
+    const { builder } = this;
+    const node = this.current();
     const last = builder.lastChildOf(node);
     if (last !== -1 && builder.typeOf(last) === NodeType.Text) {
       builder.appendText(last, text);
     } else {
       builder.add(NodeType.Text, node, 0, text);
     }
-  };
-  const open = (
+  }
+
+  private open(
     type: number,
     flags = 0,
     attrs: Parameters<TableBuilder['add']>[4] = null
-  ) => stack.push(builder.add(type, current(), flags, null, attrs));
+  ): void {
+    this.stack.push(this.builder.add(type, this.current(), flags, null, attrs));
+  }
+}
 
-  children.forEach((token, index) => {
-    switch (token.type) {
-      case 'text':
-        addText(token.content);
-        sink?.(token.content);
-        break;
-      case 'softbreak':
-        addText('\n');
-        sink?.(' ');
-        break;
-      case 'hardbreak':
-        builder.add(NodeType.LineBreak, current(), Flag.HARD);
-        sink?.(' ');
-        break;
-      case 'code_inline':
-        builder.add(NodeType.InlineCode, current(), 0, token.content);
-        sink?.(token.content);
-        break;
-
-      case 'em_open':
-        open(NodeType.Emphasis);
-        break;
-      case 'strong_open':
-        open(NodeType.Strong);
-        break;
-      case 's_open':
-        open(NodeType.Strikethrough);
-        break;
-      case 'link_open': {
-        const title = token.attrGet('title');
-        open(NodeType.Link, token.markup === 'autolink' ? Flag.AUTOLINK : 0, {
-          href: String(token.attrGet('href') ?? ''),
-          title: title === null ? null : String(title),
-        });
-        break;
-      }
-      case 'em_close':
-      case 'strong_close':
-      case 's_close':
-      case 'link_close':
-        stack.pop();
-        break;
-
-      case 'image': {
-        const title = token.attrGet('title');
-        builder.add(NodeType.Image, current(), 0, null, {
-          src: String(token.attrGet('src') ?? ''),
-          alt: plainText(token.children ?? []),
-          title: title === null ? null : String(title),
-        });
-        break;
-      }
-
-      case 'html_inline': {
-        if (!allowed) break; // strip: drop the tag, keep surrounding text
-        const tag = parseSimpleTag(token.content);
-        if (tag && allowed.has(tag.name) && isSafeTag(tag.name)) {
-          if (tag.name === 'br' && !tag.closing) {
-            builder.add(NodeType.LineBreak, current(), Flag.HARD);
-            sink?.(' ');
-          } else if (paired!.has(index)) {
-            if (tag.closing) stack.pop();
-            else open(SAFE_HTML_TAGS[tag.name]);
-          } else {
-            // Unmatched or unclosed allowed tag: literal text.
-            addText(token.content);
-            sink?.(token.content);
-          }
-        } else {
-          // Any other tag (or one with attributes): literal HtmlInline node.
-          builder.add(NodeType.HtmlInline, current(), 0, token.content);
-        }
-        break;
-      }
-
-      default:
-        if (token.nesting === 1) {
-          // Unknown container: keep its children, drop the wrapper.
-          warn(token.type.replace(/_open$/, ''));
-          stack.push(DROPPED);
-        } else if (token.nesting === -1) {
-          warn(token.type.replace(/_close$/, ''));
-          stack.pop();
-        } else {
-          // Unknown leaf: keep its content as text.
-          warn(token.type);
-          addText(token.content);
-          sink?.(token.content);
-        }
-    }
-  });
+function hasHtml(children: readonly Token[]): boolean {
+  for (let i = 0; i < children.length; i++) {
+    if (children[i]!.type === 'html_inline') return true;
+  }
+  return false;
 }
 
 /**

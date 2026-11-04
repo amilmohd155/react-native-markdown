@@ -1,3 +1,4 @@
+import type { NodeTable } from './nodeTable';
 import type { BlockIndex } from './tableBuilder';
 
 /**
@@ -9,6 +10,21 @@ import type { BlockIndex } from './tableBuilder';
 export function computeLineOffsets(source: string): Int32Array {
   const offsets: number[] = [0];
   const length = source.length;
+
+  // Fast path: no `\r` anywhere, so jump between `\n`s with native indexOf
+  // instead of reading every character (much faster without a JIT).
+  if (source.indexOf('\r') === -1) {
+    for (
+      let i = source.indexOf('\n');
+      i !== -1;
+      i = source.indexOf('\n', i + 1)
+    ) {
+      offsets.push(i + 1);
+    }
+    offsets.push(length);
+    return Int32Array.from(offsets);
+  }
+
   for (let i = 0; i < length; i++) {
     const code = source.charCodeAt(i);
     if (code === 10 /* \n */) {
@@ -27,41 +43,57 @@ export function lineToOffset(lineOffsets: Int32Array, line: number): number {
   return lineOffsets[Math.min(line, lineOffsets.length - 1)]!;
 }
 
-const FNV_OFFSET_BASIS = 0x811c9dc5;
-const FNV_PRIME = 0x01000193;
-
 /**
- * 32-bit FNV-1a over the UTF-16 code units of `source[start, end)`, without
- * slicing. For ASCII this equals byte-wise FNV-1a. Used to detect unchanged
- * blocks, not for security.
+ * Stable React key of a top-level block: its position.
+ *
+ * Index only, not the source offset: editing a block moves the offsets of
+ * every later block, and offset-based keys would remount all of them. With
+ * index keys they stay mounted and `isSameBlock` skips re-rendering them.
+ * Inserting a block still shifts later keys (they re-render, not remount).
  */
-export function fnv1a(source: string, start = 0, end = source.length): number {
-  let hash = FNV_OFFSET_BASIS;
-  for (let i = start; i < end; i++) {
-    hash ^= source.charCodeAt(i);
-    hash = Math.imul(hash, FNV_PRIME);
-  }
-  return hash >>> 0;
-}
-
-/** Stable React key of a top-level block: position plus source offset. */
-export function blockKey(index: BlockIndex, block: number): string {
-  return `${block}:${index.blockStart[block]}`;
+export function blockKey(block: number): string {
+  return String(block);
 }
 
 /**
- * Collects top-level blocks in document order while the converter runs,
- * then hashes their source ranges.
+ * Whether block `i` of `a` renders exactly like block `j` of `b` (P1-9).
+ * The renderer uses this to skip unchanged blocks.
+ *
+ * Source text alone isn't enough: reference definitions, heading slugs and
+ * parse options come from outside a block. So a block is the same only if:
+ * 1. the document contexts match (options, definitions; see NodeTable.context),
+ * 2. the block contexts match (values derived from other blocks),
+ * 3. the block's source text matches (lengths first, then a native compare).
  */
+export function isSameBlock(
+  a: NodeTable,
+  i: number,
+  b: NodeTable,
+  j: number
+): boolean {
+  if (a.context !== b.context) return false;
+  if (a.blockContext[i] !== b.blockContext[j]) return false;
+
+  const aStart = a.blockStart[i]!;
+  const aEnd = a.blockEnd[i]!;
+  const bStart = b.blockStart[j]!;
+  if (aEnd - aStart !== b.blockEnd[j]! - bStart) return false;
+  if (a.source === b.source && aStart === bStart) return true;
+  return (
+    a.source.slice(aStart, aEnd) ===
+    b.source.slice(bStart, bStart + aEnd - aStart)
+  );
+}
+
+/** Collects top-level blocks in document order while the converter runs. */
 export class BlockIndexBuilder {
   private readonly nodes: number[] = [];
   private readonly starts: number[] = [];
   private readonly ends: number[] = [];
-  /** Precomputed hash, or -1 to hash the source range in `finish`. */
-  private readonly hashes: number[] = [];
+  private readonly contexts: string[] = [];
 
   constructor(
-    private readonly source: string,
+    source: string,
     private readonly lineOffsets: Int32Array = computeLineOffsets(source)
   ) {}
 
@@ -75,45 +107,46 @@ export class BlockIndexBuilder {
       node,
       lineToOffset(this.lineOffsets, startLine),
       lineToOffset(this.lineOffsets, endLine),
-      -1
+      ''
     );
   }
 
   /**
-   * Adds a block with explicit offsets and, optionally, a precomputed hash.
-   * For synthesized blocks with no source range, such as the footnote
-   * section (P1-4).
+   * Adds a block with explicit offsets and a block context. For synthesized
+   * blocks with no source range, such as the footnote section (P1-4), the
+   * context must carry everything they render.
    */
-  addRange(node: number, start: number, end: number, hash?: number): void {
-    this.add(node, start, end, hash === undefined ? -1 : hash >>> 0);
+  addRange(node: number, start: number, end: number, context = ''): void {
+    this.add(node, start, end, context);
+  }
+
+  /**
+   * Appends to the current (last) block's context: a value it renders that
+   * comes from outside its source text, e.g. a de-duplicated heading slug.
+   */
+  appendContext(value: string): void {
+    const last = this.contexts.length - 1;
+    if (last < 0) return;
+    this.contexts[last] += `${value}\u0000`;
   }
 
   finish(): BlockIndex {
-    const blockCount = this.nodes.length;
-    const blockHash = new Uint32Array(blockCount);
-    for (let i = 0; i < blockCount; i++) {
-      const precomputed = this.hashes[i]!;
-      blockHash[i] =
-        precomputed === -1
-          ? fnv1a(this.source, this.starts[i], this.ends[i])
-          : precomputed;
-    }
     return {
-      blockCount,
+      blockCount: this.nodes.length,
       blocks: Int32Array.from(this.nodes),
       blockStart: Int32Array.from(this.starts),
       blockEnd: Int32Array.from(this.ends),
-      blockHash,
+      blockContext: this.contexts,
     };
   }
 
-  private add(node: number, start: number, end: number, hash: number): void {
+  private add(node: number, start: number, end: number, context: string): void {
     if (start > end) {
       throw new RangeError(`Block range [${start}, ${end}) is reversed`);
     }
     this.nodes.push(node);
     this.starts.push(start);
     this.ends.push(end);
-    this.hashes.push(hash);
+    this.contexts.push(context);
   }
 }

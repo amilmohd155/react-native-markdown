@@ -105,9 +105,9 @@ describe('TableBuilder', () => {
       blocks: Int32Array.of(1),
       blockStart: Int32Array.of(0),
       blockEnd: Int32Array.of(4),
-      blockHash: Uint32Array.of(123),
+      blockContext: ['ctx'],
     };
-    const table = b.finish(index);
+    const table = b.finish(index, 'para', 'doc');
 
     for (const column of [
       table.type,
@@ -121,7 +121,9 @@ describe('TableBuilder', () => {
       expect(column).toHaveLength(2);
     }
     expect(table.blockCount).toBe(1);
-    expect(table.blockHash[0]).toBe(123);
+    expect(table.blockContext[0]).toBe('ctx');
+    expect(table.source).toBe('para');
+    expect(table.context).toBe('doc');
   });
 
   it('defaults to an empty block index', () => {

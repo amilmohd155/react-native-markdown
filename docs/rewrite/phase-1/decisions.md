@@ -83,8 +83,8 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 - **Context:** `markdown-it-footnote` appends the footnote block with `map === null`, so it has no source range ([token-mapping](./token-mapping.md#footnotes)).
 - **Decision:** The footnote section gets a synthesized block entry:
   - `blockStart = blockEnd = source.length`;
-  - key `fn`;
-  - hash computed over its definitions' text.
+  - key: its index, like every block;
+  - block context: its definitions' text, since its source range is empty (updated by P1-9, which replaced block hashes).
 - **Consequences:**
   - Memoization still works.
   - Streaming (phase 2) must treat the footnote section as always open while streaming, and re-render it on `done()`.
@@ -133,3 +133,33 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 - **Consequences:**
   - Deep input never crashes; nesting beyond 100 levels renders as text.
   - Pathological spec cases deeper than 100 (e.g. "nested block quotes", 25,000 levels) cannot match the spec's output. They're allowlisted in M1 triage, with this decision as the reason.
+
+## P1-9: Block identity by source text plus context, and index keys
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:**
+  - The plan identified unchanged blocks (for `memo`) by an FNV-1a hash of each block's source. Hashing reads every character in interpreted JS: ~4 ms of the 97 KB conversion without a JIT. A native string compare of all 900 blocks costs 0.10 ms instead (`bench/identity.mjs`).
+  - Investigating that switch showed both approaches shared a correctness bug: **a block's own source text doesn't determine its rendering**. Checked with the real parser (`bench/identity-pitfalls.mjs`): a reference definition changed in another block, a duplicate heading added earlier (slug `intro-1` → `intro-2`), and different parse options all give the same block text but a different tree. With either approach the renderer would have shown stale output. Footnote numbers (M2) are the same class, and the synthetic footnote section has an empty source range.
+  - Keys `${index}:${blockStart}` remounted every later block on each edit, because editing moves all later offsets.
+- **Decision:**
+  - No block hashes. A block is unchanged (`isSameBlock`) only if all three match:
+    1. **Document context** (`NodeTable.context`): preset, html mode, plugins (M2) and the link reference definitions. Backends must fill it.
+    2. **Block context** (`NodeTable.blockContext`): values the block renders that come from outside its source text. Heading slugs now; footnote numbers and the footnote section's content in M2.
+    3. **Source text**: lengths first, then a native string compare. The table keeps a reference to the source (no copy).
+  - React key = the block index.
+- **Consequences:**
+  - Parse no longer pays for hashing; comparisons are exact (no collisions) and only happen on re-render.
+  - Editing a block keeps every later block mounted and skips re-rendering it. Inserting a block shifts later keys: those blocks re-render but don't remount.
+  - Hermes copies substrings, so each comparison allocates. **Measured on device** (Samsung S25 FE, Hermes release build, 97 KB / 900 blocks): `isSameBlock` on every block 6.13 ms vs hashing every block 12.24 ms. B is still 2× cheaper, and it runs only on re-render instead of every parse ([02 · Device results](../02-benchmarks.md#device-results-preliminary-m1)). M7 re-measures on a low-end device.
+  - Docs 03, 05, 07, 08 and the phase-1 plan updated.
+
+## P1-10: Relative conversion budget
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:** M1's done check said conversion must cost ≤ 5 ms on top of markdown-it's parse (97 KB, Node `--jitless`). That number came from an early prototype that did much less work, and absolute times depend on the machine: markdown-it alone takes 54 ms on one machine and 77 ms on another.
+- **Decision:** Conversion must cost **≤ 15% of markdown-it's own parse time**, for the 97 KB fixture, in Node `--jitless`. Checked by `bench/convert.mjs` (`yarn workspace @docren/react-native-markdown-bench convert:jitless`), which exits non-zero on failure.
+- **Consequences:**
+  - After the line-offset fast path, the inline-pass allocation fixes and P1-9: 6.0 ms = **11.2%** in Node `--jitless` (13.3% with JIT).
+  - **On device** (Samsung S25 FE, Hermes release build): 15.95 ms = **14.8%** of markdown-it's 107.95 ms. Passes, with little margin: the jitless proxy underestimates Hermes by about a third. If M7's low-end device fails it, the node builder is the first thing to optimize ([02 · Device results](../02-benchmarks.md#device-results-preliminary-m1)).

@@ -13,7 +13,7 @@ export interface BlockIndex {
   readonly blocks: Int32Array;
   readonly blockStart: Int32Array;
   readonly blockEnd: Int32Array;
-  readonly blockHash: Uint32Array;
+  readonly blockContext: readonly string[];
 }
 
 export const EMPTY_BLOCK_INDEX: BlockIndex = {
@@ -21,7 +21,7 @@ export const EMPTY_BLOCK_INDEX: BlockIndex = {
   blocks: new Int32Array(0),
   blockStart: new Int32Array(0),
   blockEnd: new Int32Array(0),
-  blockHash: new Uint32Array(0),
+  blockContext: [],
 };
 
 const DEFAULT_CAPACITY = 256;
@@ -126,8 +126,15 @@ export class TableBuilder {
     }
   }
 
-  /** Freezes the builder and returns the table, columns trimmed to `count`. */
-  finish(blockIndex: BlockIndex = EMPTY_BLOCK_INDEX): NodeTable {
+  /**
+   * Freezes the builder and returns the table, columns trimmed to `count`.
+   * `source` and `context` feed block identity (`isSameBlock`, P1-9).
+   */
+  finish(
+    blockIndex: BlockIndex = EMPTY_BLOCK_INDEX,
+    source = '',
+    context = ''
+  ): NodeTable {
     this.assertOpen();
     this.finished = true;
     const n = this.size;
@@ -142,6 +149,8 @@ export class TableBuilder {
       attr: this.attr.subarray(0, n),
       strings: this.strings,
       attrs: this.attrs,
+      source,
+      context,
       ...blockIndex,
     };
   }

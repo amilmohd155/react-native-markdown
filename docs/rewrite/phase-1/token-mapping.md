@@ -165,8 +165,8 @@ This follows the GFM spec's task list rules: only at the start of the item's fir
 
 Because the footnote section has no `map`, its block index entry is synthesized:
 - `blockStart` = `blockEnd` = `source.length`;
-- key `fn`;
-- hash computed over the definitions' text rows.
+- key: its index, like every block;
+- block context: the definitions' text, since its source range is empty (P1-9).
 
 See [P1-4](./decisions.md#p1-4-footnote-section-identity).
 
