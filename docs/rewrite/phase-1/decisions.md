@@ -217,3 +217,13 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - No cost for documents without disallowed tags (no attr rows).
   - `gfm` example 652 and `extensions.txt` example 22 pass.
   - M5's `toMdast` must emit `filteredHtml` for `html` nodes when it is present. token-mapping.md and element-props.md updated.
+
+## P1-14: GFM spec 0.29 vs CommonMark 0.31 emphasis
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:**
+  - The pinned GFM spec (cmark-gfm `0.29.0.gfm.13`) is based on CommonMark 0.29. CommonMark 0.30/0.31 changed some emphasis results, e.g. `__foo, __bar__, baz__` is now `<strong>foo, <strong>bar</strong>, baz</strong>` (nested) instead of one `<strong>`.
+  - markdown-it follows CommonMark 0.31, and so does our CommonMark suite. 9 `gfm/spec.txt` examples (398, 426, 434, 435, 436, 473, 474, 475, 477) fail only for this reason. Checked mechanically: each has a CommonMark 0.31 example with the **same input** (389, 417, 425, 426, 427, 464, 465, 466, 468), and our output matches that example's expected HTML.
+- **Decision:** Follow CommonMark 0.31. Allowlist the 9 GFM examples, each entry naming its CommonMark twin.
+- **Consequences:** The GFM suite passes apart from these 9 and the autolink gaps (P1-1). If a newer GFM spec is vendored, these entries should start passing and must be removed (`test.failing` enforces it).

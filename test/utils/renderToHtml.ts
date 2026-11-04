@@ -10,10 +10,12 @@ export type SuiteName = SpecSuite | 'pathological';
 /**
  * Suites the v1 parser is expected to pass. Others are registered as
  * expected failures, so the run stays green while showing the remaining
- * work. CommonMark is on from M1 (#9); the GFM suites join in M2 (#10).
+ * work. CommonMark is on from M1 (#9); the GFM suites from M2 (#10).
  */
 export const IMPLEMENTED_SUITES: ReadonlySet<SuiteName> = new Set<SuiteName>([
   'commonmark',
+  'gfm',
+  'gfm-extensions',
   'pathological',
 ]);
 

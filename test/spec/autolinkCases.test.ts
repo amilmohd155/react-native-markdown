@@ -26,6 +26,18 @@ describe(`gfm-extensions #${EXAMPLE} (${example.section}) by case`, () => {
     expect(outputs).toHaveLength(CASES);
   });
 
+  it('has case-level allowlist entries only for cases that exist', () => {
+    const prefix = `gfm-extensions:${EXAMPLE}/`;
+    const cases = [...allowlist.keys()]
+      .filter((key) => key.startsWith(prefix))
+      .map((key) => Number(key.slice(prefix.length)));
+    expect(cases.every((n) => Number.isInteger(n) && n < CASES)).toBe(true);
+    // The whole example stays allowlisted while any case is.
+    if (cases.length > 0) {
+      expect(allowlist.has(`gfm-extensions:${EXAMPLE}`)).toBe(true);
+    }
+  });
+
   inputs.forEach((markdown, index) => {
     const title = `case ${index}: ${JSON.stringify(markdown.trim())}`;
     const run = () => {

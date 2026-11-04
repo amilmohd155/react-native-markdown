@@ -119,3 +119,24 @@ describe('pathological', () => {
     }
   }
 });
+
+describe('allowlist', () => {
+  // Case-level entries (`"19/6"`) are checked by the file that splits the example.
+  const CASE_LEVEL = /^\d+\/\d+$/;
+
+  it('only names examples and cases that exist and run', () => {
+    const active = new Set<string>();
+    for (const { suite, file } of SUITES) {
+      for (const ex of readSpec(file, suite)) {
+        if (ex.extension !== DISABLED) active.add(`${suite}:${ex.example}`);
+      }
+    }
+    for (const { name } of pathologicalCases) {
+      active.add(`pathological:${name}`);
+    }
+    const stale = [...allowlist.keys()].filter(
+      (key) => !active.has(key) && !CASE_LEVEL.test(key.split(':')[1] ?? '')
+    );
+    expect(stale).toEqual([]);
+  });
+});
