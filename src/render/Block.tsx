@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { View } from 'react-native';
 import { blockKey, isSameBlock, type NodeTable } from '../model';
+import { MarkdownThemeContext } from '../theme';
 import type { RenderCtx } from './context';
 import { RenderCtxContext } from './contexts';
 import { renderBlock } from './renderBlock';
@@ -53,7 +54,9 @@ export function BlockList({ table, ctx }: BlockListProps) {
   }
   return (
     <RenderCtxContext.Provider value={ctx}>
-      <View>{blocks}</View>
+      <MarkdownThemeContext.Provider value={ctx.theme}>
+        <View>{blocks}</View>
+      </MarkdownThemeContext.Provider>
     </RenderCtxContext.Provider>
   );
 }

@@ -8,8 +8,10 @@
  *
  * - createTheme and the token/element merge helpers (./create)
  *
- * Planned (M4): 'auto', full merge order in the resolver, resolve cache,
- * MarkdownThemeContext and useMarkdownTheme().
+ * - Resolve cache keyed on scheme, theme input and plugin layers (./cache)
+ *
+ * - MarkdownThemeContext, useMarkdownTheme() and useResolvedTheme(), which
+ *   follows the color scheme for 'auto' (./context)
  *
  * Design:
  * - docs/rewrite/04-api.md#theme
@@ -22,6 +24,8 @@ export {
   type ElementOverride,
   type ElementOverrides,
   type ElementStyle,
+  type FontFaces,
+  type FontFamily,
   type HeadingLevel,
   type ResolvedTheme,
   type Theme,
@@ -30,4 +34,26 @@ export {
 } from './types';
 export { darkTheme, lightTheme } from './tokens';
 export { createTheme, mergeElements, mergeTokens } from './create';
+export {
+  clearThemeCache,
+  resolveThemeProp,
+  type ColorScheme,
+  type ThemeProp,
+} from './cache';
+export {
+  MarkdownThemeContext,
+  useMarkdownTheme,
+  useResolvedTheme,
+  type MarkdownTheme,
+} from './context';
+export {
+  BODY_FONT,
+  HEADING_FONT,
+  TABLE_HEAD_FONT,
+  fontStateIndex,
+  monoFamily,
+  regularFamily,
+  withFont,
+  type FontState,
+} from './fonts';
 export { getDefaultTheme, headingFontSize, resolveTheme } from './resolve';

@@ -41,6 +41,25 @@ export const ELEMENT_NAMES = [
 export type ElementName = (typeof ELEMENT_NAMES)[number];
 
 /**
+ * One font family per face, for fonts loaded with `expo-font`'s `useFonts`
+ * (which registers each face as its own family). Missing faces fall back to
+ * `fontWeight`/`fontStyle` on the nearest face.
+ * Spec: docs/rewrite/phase-1/decisions.md#p1-16-font-faces-for-custom-fonts
+ */
+export interface FontFaces {
+  readonly regular: string;
+  readonly italic?: string;
+  readonly bold?: string;
+  readonly boldItalic?: string;
+}
+
+/**
+ * A family name (the platform picks bold and italic from `fontWeight` and
+ * `fontStyle`), or a face map (styles switch `fontFamily` instead).
+ */
+export type FontFamily = string | FontFaces;
+
+/**
  * Theme tokens. Most apps change only these.
  * Spec: docs/rewrite/04-api.md#theme
  */
@@ -56,10 +75,11 @@ export interface ThemeTokens {
   };
   readonly fonts: {
     /** `undefined`: the platform's system font. */
-    readonly body: string | undefined;
+    readonly body: FontFamily | undefined;
     /** `undefined`: same as `body`. */
-    readonly heading: string | undefined;
-    readonly mono: string;
+    readonly heading: FontFamily | undefined;
+    /** Code has no bold or italic face, so a face map needs only `regular`. */
+    readonly mono: string | { readonly regular: string };
   };
   readonly fontSize: {
     readonly base: number;
@@ -110,6 +130,16 @@ export interface ResolvedTheme {
     ElementStyle,
     ElementStyle,
   ];
+  /**
+   * `Strong` and `Emphasis` styles by the font state they sit in (index from
+   * `fontStateIndex`). With face maps the face depends on nesting
+   * (`***x***`, `Emphasis` in a `Heading`); with family names every entry is
+   * the same style.
+   */
+  readonly fontVariants: {
+    readonly Strong: readonly ElementStyle[];
+    readonly Emphasis: readonly ElementStyle[];
+  };
   /** `TableCell` inside the table head. */
   readonly tableHeaderCell: ElementStyle;
   /** `List` nested inside a list item: no bottom margin. */

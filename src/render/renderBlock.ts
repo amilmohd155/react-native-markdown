@@ -8,6 +8,7 @@ import {
   TableKeyContext,
 } from './contexts';
 import { element } from './element';
+import { BODY_FONT, HEADING_FONT, TABLE_HEAD_FONT } from '../theme';
 import { renderInline } from './inline';
 import {
   blockImageOf,
@@ -99,7 +100,7 @@ function renderNode(
         id,
         props,
         heading,
-        renderInline(table, id, ctx, heading.text)
+        renderInline(table, id, ctx, heading.text, HEADING_FONT)
       );
     }
 
@@ -222,7 +223,13 @@ function renderNode(
         id,
         props,
         cell,
-        renderInline(table, id, ctx, cell.text)
+        renderInline(
+          table,
+          id,
+          ctx,
+          cell.text,
+          props.header ? TABLE_HEAD_FONT : BODY_FONT
+        )
       );
     }
 

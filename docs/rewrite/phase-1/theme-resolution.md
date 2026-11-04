@@ -48,6 +48,20 @@ Values are shown for the default tokens (`fontSize.base = 16`, `fontSize.scale =
 
 Only portable font weights are used (`'400'`, `'600'`, `'700'`).
 
+## Font faces
+
+With a family name (`fonts.body: 'Inter'`), the table above applies as written. With a face map ([P1-16](./decisions.md#p1-16-font-faces-for-custom-fonts)):
+
+| Context | `fontFamily` | `fontWeight` / `fontStyle` |
+|---|---|---|
+| plain body text | `regular` | — |
+| `Strong` | `bold` | not set if `bold` exists, else `'700'` |
+| `Emphasis` | `italic` | not set if `italic` exists, else `'italic'` |
+| both (`***x***`, `Emphasis` in `Heading`) | `boldItalic` | not set if it exists, else fall back per axis |
+| `Heading` (all levels) | heading map's `bold` | as above |
+
+The flattener passes a `{ bold, italic }` state down, seeded by the container (`Heading` starts bold). An element emits `fontFamily` only when it differs from its parent's.
+
 ## List markers
 
 - **Bullets by depth:** `•`, `◦`, `▪`, then repeat. Overridable with the `listBullets: string[]` token.

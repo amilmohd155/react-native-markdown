@@ -256,7 +256,7 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 
 ## P1-16: Font faces for custom fonts
 
-- **Status:** Proposed (2026-11-04), to settle in M4
+- **Status:** Accepted (2026-11-04), with the refinements below
 - **Date:** 2026-11-04
 - **Context:**
   - The theme styles `Strong` with `fontWeight: '700'` and `Emphasis` with `fontStyle: 'italic'` only ([theme-resolution](./theme-resolution.md#derived-element-styles)), relying on the platform to pick the bold or italic face.
@@ -270,11 +270,16 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 
   - So with a custom body font, `Strong` and `Emphasis` render as plain text on iOS, and as synthesized faces on Android. The system font works on both (except the S25 FE's system font, which has no italic and isn't synthesized).
   - Not checked yet: fonts embedded through the `expo-font` config plugin in a dev build, which can register several faces under one family name, so `fontWeight`/`fontStyle` may select real faces there.
-- **Proposed decision:** `fonts.body` and `fonts.heading` accept either a family name (as now) or a face map `{ regular, italic?, bold?, boldItalic? }`.
-  - With a face map, styles switch `fontFamily` instead of setting `fontWeight`/`fontStyle`: `Strong` → `bold`, `Emphasis` → `italic`, headings → `bold`.
-  - Nesting needs the combined face (`***x***`, or `Emphasis` inside a `Heading`), so the inline flattener tracks the bold/italic state it is in and picks `boldItalic` when both apply. That is a renderer change, not only a theme one.
-  - Missing faces fall back to `fontWeight`/`fontStyle` on the nearest face, so partial maps still work where the platform synthesizes.
-- **Consequences (if accepted):** `theme-resolution.md` and 04 · Theme updated in M4; the flattener gains a font-state parameter; a device check on a dev build with config-plugin fonts decides whether the string form needs a note in the docs.
+- **Decision:** `fonts.body` and `fonts.heading` accept either a family name (as now) or a face map `{ regular, italic?, bold?, boldItalic? }`. `fonts.mono` accepts a family name or `{ regular }`.
+  - The string form stays the default and behaves as before: `fontWeight`/`fontStyle` select the face. It is right for the system font and, probably, for config-plugin fonts that register several faces under one family.
+  - With a face map, styles switch `fontFamily` instead of setting `fontWeight`/`fontStyle`: `Strong` → `bold`, `Emphasis` → `italic`, all headings → `bold`. The map has no semibold slot, so `h3`–`h6` use `bold` rather than `'600'`.
+  - When the needed face exists, `fontWeight`/`fontStyle` are **not** also set, because Android would synthesize bold or italic on top of a real face. When it is missing, the style falls back to `fontWeight`/`fontStyle` on the nearest face, so partial maps work where the platform synthesizes.
+  - Nesting needs the combined face (`***x***`, or `Emphasis` inside a `Heading`). The inline flattener tracks a `{ bold, italic }` state, seeded by the container (`Heading` starts bold), and picks `boldItalic` when both apply. The rule lives in one function that every inline element uses, and its output is a pure function of its input so block memoization is unaffected.
+  - An element emits `fontFamily` only when it differs from its parent's, which keeps "inline styles carry only what they change" from [theme-resolution](./theme-resolution.md#derived-element-styles).
+- **Consequences:**
+  - `theme-resolution.md` and 04 · Theme updated (done with this decision).
+  - The flattener gains a font-state parameter (M4 implementation), with a test that equal input gives equal output.
+  - Open, docs only: a device check on a dev build with config-plugin fonts decides whether the string form needs a note in the docs.
 
 ## P1-17: Unicode characters for superscript and subscript by default
 

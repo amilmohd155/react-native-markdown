@@ -1,15 +1,29 @@
 import { StyleSheet, type TextStyle, type ViewStyle } from 'react-native';
+import { mergeElements } from './create';
+import {
+  BODY_FONT,
+  FONT_STATE_COUNT,
+  fontDelta,
+  fontStateAt,
+  fontStyleFor,
+  hasFaceMap,
+  monoFamily,
+  regularFamily,
+} from './fonts';
 import { lightTheme } from './tokens';
 import {
   ELEMENT_NAMES,
   type ElementName,
+  type ElementOverride,
+  type ElementOverrides,
   type ElementStyle,
+  type HeadingLevel,
   type ResolvedTheme,
+  type Theme,
   type ThemeTokens,
 } from './types';
 
 type StyleEntry = { text?: TextStyle; container?: ViewStyle };
-type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 const HEADING_LEVELS: readonly HeadingLevel[] = [1, 2, 3, 4, 5, 6];
 
@@ -25,25 +39,41 @@ export function headingFontSize(tokens: ThemeTokens, level: number): number {
   );
 }
 
+/** Layers an override on top of a derived entry: `override` wins per key. */
+function overlay(entry: StyleEntry, override?: ElementOverride): StyleEntry {
+  if (override === undefined) return entry;
+  return {
+    text:
+      override.text === undefined
+        ? entry.text
+        : { ...entry.text, ...override.text },
+    container:
+      override.container === undefined
+        ? entry.container
+        : { ...entry.container, ...override.container },
+  };
+}
+
 /**
- * Derived element styles for the given tokens.
+ * Derived element styles for the given tokens (layer 3 of the merge order).
  * Spec: docs/rewrite/phase-1/theme-resolution.md#derived-element-styles
  *
  * Inline styles carry only what they change, so nested `<Text>` inherits
  * the rest (a `Strong` inside a `Heading` keeps the heading's size).
  */
-function deriveStyles(t: ThemeTokens) {
+function deriveElements(t: ThemeTokens): Record<ElementName, StyleEntry> {
   const { colors, fonts, fontSize, spacing } = t;
   const base = fontSize.base;
+  const mono = monoFamily(fonts.mono);
 
   const blockText: TextStyle = {
     fontSize: base,
     lineHeight: base * t.lineHeight,
     color: colors.text,
-    ...family(fonts.body),
+    ...family(regularFamily(fonts.body)),
   };
   const monoInline: TextStyle = {
-    fontFamily: fonts.mono,
+    fontFamily: mono,
     fontSize: base * 0.9,
     backgroundColor: colors.codeBg,
   };
@@ -55,7 +85,7 @@ function deriveStyles(t: ThemeTokens) {
     padding: spacing.block * 0.5,
   };
 
-  const elements: Record<ElementName, StyleEntry> = {
+  return {
     Heading: {},
     Paragraph: {
       text: blockText,
@@ -74,7 +104,7 @@ function deriveStyles(t: ThemeTokens) {
     ListItem: { text: blockText, container: { flexDirection: 'row' } },
     CodeBlock: {
       text: {
-        fontFamily: fonts.mono,
+        fontFamily: mono,
         fontSize: codeSize,
         lineHeight: codeSize * 1.45,
         color: colors.text,
@@ -98,7 +128,7 @@ function deriveStyles(t: ThemeTokens) {
     },
     Image: { container: { marginBottom: spacing.block } },
     HtmlBlock: {
-      text: { ...blockText, fontFamily: fonts.mono, color: colors.muted },
+      text: { ...blockText, fontFamily: mono, color: colors.muted },
       container: { marginBottom: spacing.block },
     },
     FootnoteDefinition: {
@@ -107,8 +137,8 @@ function deriveStyles(t: ThemeTokens) {
       text: { fontSize: base * 0.875, lineHeight: base * 0.875 * t.lineHeight },
       container: { flexDirection: 'row' },
     },
-    Strong: { text: { fontWeight: '700' } },
-    Emphasis: { text: { fontStyle: 'italic' } },
+    Strong: { text: fontDelta(fonts, BODY_FONT, { bold: true }) },
+    Emphasis: { text: fontDelta(fonts, BODY_FONT, { italic: true }) },
     Strikethrough: { text: { textDecorationLine: 'line-through' } },
     Underline: { text: { textDecorationLine: 'underline' } },
     Highlight: { text: { backgroundColor: colors.highlight } },
@@ -122,65 +152,152 @@ function deriveStyles(t: ThemeTokens) {
     FootnoteReference: { text: { ...scriptText, color: colors.link } },
     HtmlInline: { text: {} },
   };
+}
 
-  const headings = HEADING_LEVELS.map(
-    (level): StyleEntry => ({
-      text: {
-        fontSize: headingFontSize(t, level),
-        lineHeight: Math.round(headingFontSize(t, level) * 1.25),
-        fontWeight: level <= 2 ? '700' : '600',
-        color: colors.text,
-        ...family(fonts.heading ?? fonts.body),
-      },
-      container: {
-        marginTop: spacing.block * 1.5,
-        marginBottom: spacing.block * 0.5,
-      },
-    })
-  );
-
-  const tableHeaderCell: StyleEntry = {
-    text: { ...blockText, fontWeight: '600' },
-    container: cellContainer,
-  };
-  const nestedList: StyleEntry = {
-    container: { paddingLeft: 0, marginBottom: 0 },
-  };
-  const tightParagraph: StyleEntry = {
-    text: blockText,
-    container: { marginBottom: 0 },
-  };
-
-  const footnoteSection: StyleEntry = {
+/** Derived style of heading `level`, before overrides. */
+function deriveHeading(t: ThemeTokens, level: HeadingLevel): StyleEntry {
+  const { colors, fonts, spacing } = t;
+  const headingFamily = fonts.heading ?? fonts.body;
+  const size = headingFontSize(t, level);
+  return {
     text: {
-      fontSize: base * 0.875,
-      lineHeight: base * 0.875 * t.lineHeight,
-      color: colors.muted,
+      fontSize: size,
+      lineHeight: Math.round(size * 1.25),
+      color: colors.text,
+      // Headings are bold: the `bold` face of a face map, else `fontWeight`
+      // (h3–h6 use '600').
+      ...family(regularFamily(headingFamily)),
+      ...fontStyleFor(
+        headingFamily,
+        { bold: true, italic: false },
+        level <= 2 ? '700' : '600'
+      ),
     },
     container: {
-      marginTop: spacing.block,
-      paddingTop: spacing.block,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.border,
+      marginTop: spacing.block * 1.5,
+      marginBottom: spacing.block * 0.5,
     },
-  };
-
-  return {
-    elements,
-    headings,
-    tableHeaderCell,
-    nestedList,
-    tightParagraph,
-    footnoteSection,
   };
 }
 
+function tokensOf(theme: ThemeTokens | Theme): ThemeTokens {
+  if (!('elements' in theme)) return theme;
+  const { colors, fonts, fontSize, lineHeight, spacing, radius, listBullets } =
+    theme;
+  return Object.freeze({
+    colors,
+    fonts,
+    fontSize,
+    lineHeight,
+    spacing,
+    radius,
+    listBullets,
+  });
+}
+
 /**
- * Resolves tokens into element styles with a single `StyleSheet.create`
+ * Resolves a theme into element styles with a single `StyleSheet.create`
  * call covering every element, heading level and variant.
+ *
+ * Merge order (docs/rewrite/phase-1/theme-resolution.md#merge-order), given
+ * tokens that are already merged (base + user, see `createTheme`):
+ * 3. element styles derived from the tokens;
+ * 4. `pluginThemes`, in plugin order;
+ * 5. the theme's own `elements` overrides.
+ * Variants (`tightParagraph`, `nestedList`, `tableHeaderCell`, font
+ * variants) derive from the merged elements, so an override of `Paragraph`
+ * or `List` reaches them too. A `Heading` function is called once per level.
  */
-export function resolveTheme(tokens: ThemeTokens): ResolvedTheme {
-  const derived = deriveStyles(tokens);
+export function resolveTheme(
+  theme: ThemeTokens | Theme,
+  pluginThemes: readonly ElementOverrides[] = []
+): ResolvedTheme {
+  const tokens = tokensOf(theme);
+  const { fonts } = tokens;
+
+  let overrides: ElementOverrides | undefined;
+  for (const layer of pluginThemes) {
+    overrides = mergeElements(overrides, layer);
+  }
+  overrides = mergeElements(
+    overrides,
+    'elements' in theme ? theme.elements : undefined
+  );
+
+  const derived = deriveElements(tokens);
+  const merged = {} as Record<ElementName, StyleEntry>;
+  for (const name of ELEMENT_NAMES) {
+    merged[name] =
+      name === 'Heading'
+        ? derived.Heading
+        : overlay(derived[name], overrides[name]);
+  }
+
+  const headingOverride = overrides.Heading;
+  const headings = HEADING_LEVELS.map((level) =>
+    overlay(
+      deriveHeading(tokens, level),
+      typeof headingOverride === 'function'
+        ? headingOverride(level)
+        : headingOverride
+    )
+  );
+
+  // Variants, from the merged elements.
+  const paragraph = merged.Paragraph;
+  const tableCell = merged.TableCell;
+  const tableHeaderCell: StyleEntry = {
+    text: {
+      ...tableCell.text,
+      ...fontStyleFor(fonts.body, { bold: true, italic: false }, '600'),
+    },
+    container: tableCell.container,
+  };
+  const nestedList: StyleEntry = {
+    container: { ...merged.List.container, marginBottom: 0 },
+  };
+  const tightParagraph: StyleEntry = {
+    text: paragraph.text,
+    container: { ...paragraph.container, marginBottom: 0 },
+  };
+  const footnoteSection: StyleEntry = {
+    text: {
+      fontSize: tokens.fontSize.base * 0.875,
+      lineHeight: tokens.fontSize.base * 0.875 * tokens.lineHeight,
+      color: tokens.colors.muted,
+    },
+    container: {
+      marginTop: tokens.spacing.block,
+      paddingTop: tokens.spacing.block,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: tokens.colors.border,
+    },
+  };
+
+  // Font variants: only face maps make `Strong`/`Emphasis` depend on where
+  // they sit, so family names reuse the one element style.
+  const faceMode = hasFaceMap(fonts);
+  const variantEntries: Record<'Strong' | 'Emphasis', StyleEntry[]> = {
+    Strong: [],
+    Emphasis: [],
+  };
+  if (faceMode) {
+    for (let i = 0; i < FONT_STATE_COUNT; i++) {
+      const parent = fontStateAt(i);
+      variantEntries.Strong.push(
+        overlay(
+          { text: fontDelta(fonts, parent, { bold: true }) },
+          overrides.Strong
+        )
+      );
+      variantEntries.Emphasis.push(
+        overlay(
+          { text: fontDelta(fonts, parent, { italic: true }) },
+          overrides.Emphasis
+        )
+      );
+    }
+  }
 
   // Flatten everything into one sheet: `${key}.text` / `${key}.container`.
   const flat: Record<string, TextStyle | ViewStyle> = {};
@@ -188,12 +305,14 @@ export function resolveTheme(tokens: ThemeTokens): ResolvedTheme {
     flat[`${key}.text`] = entry.text ?? {};
     flat[`${key}.container`] = entry.container ?? {};
   };
-  for (const name of ELEMENT_NAMES) add(name, derived.elements[name]);
-  derived.headings.forEach((entry, i) => add(`h${i + 1}`, entry));
-  add('tableHeaderCell', derived.tableHeaderCell);
-  add('nestedList', derived.nestedList);
-  add('tightParagraph', derived.tightParagraph);
-  add('footnoteSection', derived.footnoteSection);
+  for (const name of ELEMENT_NAMES) add(name, merged[name]);
+  headings.forEach((entry, i) => add(`h${i + 1}`, entry));
+  add('tableHeaderCell', tableHeaderCell);
+  add('nestedList', nestedList);
+  add('tightParagraph', tightParagraph);
+  add('footnoteSection', footnoteSection);
+  variantEntries.Strong.forEach((e, i) => add(`Strong@${i}`, e));
+  variantEntries.Emphasis.forEach((e, i) => add(`Emphasis@${i}`, e));
 
   const sheet = StyleSheet.create(flat);
   const pick = (key: string): ElementStyle =>
@@ -204,6 +323,17 @@ export function resolveTheme(tokens: ThemeTokens): ResolvedTheme {
 
   const elements = {} as Record<ElementName, ElementStyle>;
   for (const name of ELEMENT_NAMES) elements[name] = pick(name);
+
+  const variants = (name: 'Strong' | 'Emphasis'): readonly ElementStyle[] => {
+    if (!faceMode) {
+      return Object.freeze(
+        Array<ElementStyle>(FONT_STATE_COUNT).fill(elements[name])
+      );
+    }
+    return Object.freeze(
+      Array.from({ length: FONT_STATE_COUNT }, (_, i) => pick(`${name}@${i}`))
+    );
+  };
 
   return Object.freeze({
     tokens,
@@ -216,6 +346,10 @@ export function resolveTheme(tokens: ThemeTokens): ResolvedTheme {
       pick('h5'),
       pick('h6'),
     ] as const),
+    fontVariants: Object.freeze({
+      Strong: variants('Strong'),
+      Emphasis: variants('Emphasis'),
+    }),
     tableHeaderCell: pick('tableHeaderCell'),
     nestedList: pick('nestedList'),
     tightParagraph: pick('tightParagraph'),

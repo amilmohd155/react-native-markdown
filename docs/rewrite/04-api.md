@@ -112,7 +112,7 @@ Plugins extend `ElementName` and `ElementProps` through their `nodes` declaratio
 const theme = createTheme(
   {
     colors: { text, muted, link, codeBg, border, quoteBar, highlight },
-    fonts: { body, heading, mono },
+    fonts: { body, heading, mono },       // each a family name, or a face map (see below)
     fontSize: { base: 16, scale: 1.2 },   // heading sizes derived from base and scale
     lineHeight: 1.5,
     spacing: { block: 12, listIndent: 20 },
@@ -128,6 +128,7 @@ const theme = createTheme(
 ```
 
 - `lightTheme` and `darkTheme` ship with the library. `theme="auto"` switches with `useColorScheme()`.
+- **Font faces:** `fonts.body` and `fonts.heading` take a family name or `{ regular, italic?, bold?, boldItalic? }`; `fonts.mono` takes a name or `{ regular }`. Use a face map with fonts loaded by `expo-font`'s `useFonts` (one family per face), where `fontWeight`/`fontStyle` don't select faces on iOS. Missing faces fall back to `fontWeight`/`fontStyle` ([P1-16](./phase-1/decisions.md#p1-16-font-faces-for-custom-fonts)).
 - Element styles are split into `text` and `container`, so view and text styles can't be mixed up.
 - Resolved once per change of the theme value, then shared through context.
 - `useMarkdownTheme()` gives custom components access to the resolved theme and tokens.
