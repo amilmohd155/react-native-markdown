@@ -116,4 +116,9 @@ export interface ResolvedTheme {
   readonly nestedList: ElementStyle;
   /** `Paragraph` inside a tight list: no block spacing. */
   readonly tightParagraph: ElementStyle;
+  /**
+   * The footnote section (structural, not an element): `container` sets it
+   * apart from the document, `text` cascades into its definitions.
+   */
+  readonly footnoteSection: ElementStyle;
 }

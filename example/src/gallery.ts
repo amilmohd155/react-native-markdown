@@ -79,12 +79,22 @@ function greet(name: string): string {
 
 ![Block image](https://picsum.photos/id/1015/800/450)
 
+A portrait image keeps its own aspect ratio, never wider than its natural size:
+
+![Portrait image](https://picsum.photos/id/1011/240/320)
+
+A broken image shows its alt text:
+
+![This image failed to load](https://example.invalid/missing.png)
+
 Inline image ![icon](https://picsum.photos/id/1025/64/64) inside text.
 
 ## Footnotes
 
-A claim with a footnote[^1] and another[^note].
+A claim with a footnote[^1] and another[^note]. The first one again[^1].
 
-[^1]: The first footnote.
+[^1]: The first footnote, referenced twice: two back-links.
 [^note]: A named footnote, referenced once.
+
+    It has a second paragraph, indented under the definition.
 `;

@@ -10,6 +10,8 @@
  * - Inline flattener: merged text runs, one component call per inline
  *   element (./inline), and the dev check for undeclared inline Views
  *   (./devInline)
+ * - Declared inline views: inlineView(), baseline metrics (./inlineView)
+ * - Image size cache (./imageSize), table column width cache (./tableLayout)
  * - Default block and inline elements (./defaults), link handling (./links)
  *
  * Design:
@@ -22,6 +24,7 @@ export type {
   ElementProps,
   ElementPropsMap,
   HeadingLevel,
+  InlineElementName,
 } from './elements';
 export {
   DEFAULT_RENDER_OPTIONS,
@@ -46,12 +49,35 @@ export {
 } from './Block';
 export { renderBlock } from './renderBlock';
 export { renderInline } from './inline';
+export {
+  baselineOf,
+  inlineView,
+  inlineViewOffset,
+  isInlineView,
+  type InlineBaseline,
+  type InlineViewProps,
+} from './inlineView';
 export { defaultComponents } from './defaults';
+export {
+  cachedImageSize,
+  loadImageSize,
+  useImageSize,
+  type ImageSize,
+} from './imageSize';
+export {
+  MAX_COLUMN_WIDTH,
+  MIN_COLUMN_WIDTH,
+  cachedColumnWidths,
+  columnWidths,
+} from './tableLayout';
 export { isOpenableUrl, pressLink } from './links';
 export {
   InheritedTextContext,
   ListMarkerContext,
   RenderCtxContext,
+  TableKeyContext,
+  TableLayoutContext,
   useRenderContext,
+  type TableLayout,
 } from './contexts';
 export * from './props';

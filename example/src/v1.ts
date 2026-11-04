@@ -13,6 +13,8 @@ export { tableOf } from '../../src/api/document';
 export {
   BlockList,
   defaultComponents,
+  inlineView,
+  inlineViewOffset,
   useRenderCtx,
   type RenderHandlers,
   type SoftBreak,

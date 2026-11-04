@@ -1,6 +1,7 @@
-import { useContext } from 'react';
+import { useContext, useMemo, useRef, useState } from 'react';
 import {
   Image as RNImage,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,9 +13,20 @@ import type { ElementStyle } from '../../theme';
 import {
   InheritedTextContext,
   ListMarkerContext,
+  TableKeyContext,
+  TableLayoutContext,
   useRenderContext,
+  type TableLayout,
 } from '../contexts';
 import type { ElementProps } from '../elements';
+import { useImageSize } from '../imageSize';
+import {
+  cachedColumnWidths,
+  columnWidths,
+  MAX_COLUMN_WIDTH,
+  MIN_COLUMN_WIDTH,
+  storeColumnWidths,
+} from '../tableLayout';
 
 /**
  * Default block elements. Spec: docs/rewrite/03-architecture.md#default-elements
@@ -151,25 +163,123 @@ export function HtmlBlock({ html, style }: ElementProps<'HtmlBlock'>) {
   );
 }
 
+/** Aspect ratio of the placeholder box while the image size loads. */
+const PLACEHOLDER_RATIO = 16 / 9;
+
 /**
- * Basic block image: full width with a fixed aspect ratio. The image task
- * adds the cached aspect ratio (Image.getSize) and the image policy.
+ * Block image at full width (never wider than its natural size), with its
+ * real aspect ratio from the size cache. A placeholder box holds the space
+ * while the size loads, so the layout doesn't jump more than once. Images
+ * that fail to load show their alt text instead.
  */
-export function Image({ src, alt, style }: ElementProps<'Image'>) {
+export function Image({ src, alt, title, style }: ElementProps<'Image'>) {
+  const { theme, handlers, options } = useRenderContext();
+  const size = useImageSize(src);
+  const { colors } = theme.tokens;
+
+  if (size === 'error') {
+    return (
+      <View
+        style={[
+          style.container,
+          styles.imageFallback,
+          { backgroundColor: colors.codeBg, borderColor: colors.border },
+        ]}
+        accessibilityRole="image"
+        accessibilityLabel={alt}
+      >
+        <Text style={{ color: colors.muted }}>{alt === '' ? src : alt}</Text>
+      </View>
+    );
+  }
+
+  const image = (
+    <RNImage
+      source={{ uri: src }}
+      accessibilityLabel={alt}
+      accessibilityHint={title ?? undefined}
+      resizeMode="contain"
+      style={[
+        styles.blockImage,
+        size === null
+          ? { aspectRatio: PLACEHOLDER_RATIO, backgroundColor: colors.codeBg }
+          : { aspectRatio: size.width / size.height },
+      ]}
+    />
+  );
+
+  // The frame caps the width at the natural size; the image fills the
+  // frame. (Yoga derives an aspect-ratio height from `width` before
+  // applying `maxWidth`, so both can't sit on the image itself.)
   return (
     <View style={style.container}>
-      <RNImage
-        source={{ uri: src }}
-        accessibilityLabel={alt}
-        resizeMode="contain"
-        style={styles.blockImage}
-      />
+      <View
+        style={[
+          styles.imageFrame,
+          size === null ? undefined : { maxWidth: size.width },
+        ]}
+      >
+        {options.interactiveImages ? (
+          <Pressable
+            accessibilityRole="imagebutton"
+            accessibilityLabel={alt}
+            onPress={() => handlers.current.onImagePress?.(src, { alt, title })}
+          >
+            {image}
+          </Pressable>
+        ) : (
+          image
+        )}
+      </View>
     </View>
   );
 }
 
-/** Basic table; the table task adds cached column widths. */
+/**
+ * Table in a horizontal ScrollView, with fixed column widths: on first
+ * render every cell reports its natural width (capped), then each column
+ * takes its widest cell. The result is cached per table content and theme,
+ * so re-renders and remounts skip the measuring pass.
+ */
 export function Table({ style, children }: ElementProps<'Table'>) {
+  const { theme } = useRenderContext();
+  const key = useContext(TableKeyContext);
+  const [state, setState] = useState(() => ({
+    theme,
+    widths: cachedColumnWidths(theme, key),
+  }));
+  const measured = useRef<number[]>([]);
+  const scheduled = useRef(false);
+
+  let widths = state.widths;
+  if (state.theme !== theme) {
+    // New fonts or sizes: use that theme's cached widths, or re-measure.
+    widths = cachedColumnWidths(theme, key);
+    measured.current = [];
+    setState({ theme, widths });
+  }
+
+  const layout = useMemo<TableLayout>(
+    () => ({
+      widths,
+      report(column, width) {
+        if (widths !== null) return;
+        const all = measured.current;
+        all[column] = Math.max(all[column] ?? 0, width);
+        if (scheduled.current) return;
+        // Cells lay out in the same frame; collect them all, then commit.
+        scheduled.current = true;
+        requestAnimationFrame(() => {
+          scheduled.current = false;
+          const final = columnWidths(all);
+          storeColumnWidths(theme, key, final);
+          setState({ theme, widths: final });
+        });
+      },
+    }),
+    [widths, theme, key]
+  );
+
   return (
     <ScrollView
       horizontal
@@ -177,7 +287,12 @@ export function Table({ style, children }: ElementProps<'Table'>) {
       style={style.container}
       showsHorizontalScrollIndicator={false}
     >
-      <View>{children}</View>
+      {/* Hidden while measuring, so unaligned columns never show. */}
+      <View style={widths === null ? styles.measuring : undefined}>
+        <TableLayoutContext.Provider value={layout}>
+          {children}
+        </TableLayoutContext.Provider>
+      </View>
     </ScrollView>
   );
 }
@@ -194,12 +309,27 @@ const CELL_ALIGN = {
 
 export function TableCell({
   align,
+  column,
   style,
   children,
 }: ElementProps<'TableCell'>) {
   const { options } = useRenderContext();
+  const layout = useContext(TableLayoutContext);
+  const width = layout?.widths?.[column];
+  const measuring = layout !== null && layout.widths === null;
+
   return (
-    <View style={[style.container, styles.cell]}>
+    <View
+      style={[
+        style.container,
+        width === undefined ? styles.cellMeasure : { width },
+      ]}
+      onLayout={
+        measuring
+          ? (event) => layout.report(column, event.nativeEvent.layout.width)
+          : undefined
+      }
+    >
       <Text
         style={[style.text, align === null ? undefined : CELL_ALIGN[align]]}
         selectable={options.selectable}
@@ -212,15 +342,54 @@ export function TableCell({
 }
 
 /** Basic definition row; the footnotes task adds the footer section. */
+const SUPERSCRIPT_DIGITS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+
+/** GitHub-style back-link marks, one per reference: "↩ ↩² ↩³". */
+export function backLinks(references: number): string {
+  const marks: string[] = [];
+  for (let i = 1; i <= references; i++) {
+    marks.push(
+      i === 1
+        ? '↩'
+        : '↩' +
+            String(i)
+              .split('')
+              .map((d) => SUPERSCRIPT_DIGITS[Number(d)])
+              .join('')
+    );
+  }
+  return marks.join(' ');
+}
+
+/**
+ * One footnote: its number, its content, and a back-link mark per
+ * reference. The marks aren't pressable yet: jumping to a reference needs
+ * the host's scroll view (see the footnotes notes in the plan).
+ */
 export function FootnoteDefinition({
   index,
+  references,
   style,
   children,
 }: ElementProps<'FootnoteDefinition'>) {
+  const inherited = useContext(InheritedTextContext);
   return (
     <View style={style.container}>
-      <Text style={[style.text, styles.footnoteLabel]}>{index}.</Text>
-      <View style={styles.content}>{children}</View>
+      <Text style={[inherited, style.text, styles.footnoteLabel]}>
+        {`${index}.`}
+      </Text>
+      <View style={styles.content}>
+        {children}
+        {references > 0 ? (
+          <Text
+            style={[inherited, style.text, styles.backLinks]}
+            accessible={false}
+            importantForAccessibility="no"
+          >
+            {backLinks(references)}
+          </Text>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -229,7 +398,15 @@ const styles = StyleSheet.create({
   markerColumn: { paddingRight: MARKER_GAP },
   markerOrdered: { textAlign: 'right' },
   content: { flex: 1, minWidth: 0 },
-  blockImage: { width: '100%', aspectRatio: 16 / 9 },
-  cell: { minWidth: 80, maxWidth: 240 },
+  imageFrame: { width: '100%' },
+  blockImage: { width: '100%' },
+  imageFallback: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 6,
+    padding: 12,
+  },
+  measuring: { opacity: 0 },
+  cellMeasure: { minWidth: MIN_COLUMN_WIDTH, maxWidth: MAX_COLUMN_WIDTH },
   footnoteLabel: { minWidth: 24 },
+  backLinks: { marginTop: -6, marginBottom: 6 },
 });

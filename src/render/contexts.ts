@@ -32,3 +32,20 @@ export const InheritedTextContext = createContext<TextStyle | null>(null);
  * every item's marker column has the same width and ordered markers align.
  */
 export const ListMarkerContext = createContext(1);
+
+/**
+ * Identity of the enclosing table's content (its block's source text and
+ * context, plus its position in the block), provided by the renderer. Keys
+ * the column width cache.
+ */
+export const TableKeyContext = createContext('');
+
+/** Column widths of the enclosing table, provided by the default `Table`. */
+export interface TableLayout {
+  /** Fixed width per column once measured; `null` while measuring. */
+  readonly widths: readonly number[] | null;
+  /** Cells report their natural width while measuring. */
+  readonly report: (column: number, width: number) => void;
+}
+
+export const TableLayoutContext = createContext<TableLayout | null>(null);

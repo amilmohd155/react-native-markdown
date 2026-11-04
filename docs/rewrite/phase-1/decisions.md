@@ -104,6 +104,10 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - Render `Superscript` and `Subscript` as smaller text (`fontSize * 0.75`) with no vertical offset by default.
   - Projects that need true raised or lowered text can override them as declared inline views ([D8](../07-roadmap.md#decisions)) that apply a `translateY`.
 - **Consequences:** The default looks slightly different from browsers, in exchange for consistent behaviour across platforms. To be revisited with a device check in M3.
+- **Device check (M3, 2026-11-04, Android only):** Samsung Galaxy S25 FE, Expo Go (SDK 58), example app "v1 preview" with "inline views" on.
+  - The default (smaller text, no offset) is readable: `H<sub>2</sub>O`, `mc<sup>2</sup>`.
+  - The override works as described: `inlineView()` components with `translateY: -fontSize * 0.4` (superscript) and `+fontSize * 0.2` (subscript), sized from the `baseline` prop, render as raised and lowered inline attachments. The line containing them grows slightly taller.
+  - Decision unchanged. iOS still to be checked (M3 visual QA task).
 
 ## P1-6: Peer dependency ranges
 

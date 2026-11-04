@@ -560,7 +560,13 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
     }
   >
     <View>
-      <View>
+      <View
+        style={
+          {
+            "opacity": 0,
+          }
+        }
+      >
         <View
           style={
             {
@@ -569,6 +575,7 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
           }
         >
           <View
+            onLayout={[Function]}
             style={
               [
                 {
@@ -577,8 +584,8 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 240,
-                  "minWidth": 80,
+                  "maxWidth": 280,
+                  "minWidth": 48,
                 },
               ]
             }
@@ -601,6 +608,7 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
             </Text>
           </View>
           <View
+            onLayout={[Function]}
             style={
               [
                 {
@@ -609,8 +617,8 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 240,
-                  "minWidth": 80,
+                  "maxWidth": 280,
+                  "minWidth": 48,
                 },
               ]
             }
@@ -643,6 +651,7 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
           }
         >
           <View
+            onLayout={[Function]}
             style={
               [
                 {
@@ -651,8 +660,8 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 240,
-                  "minWidth": 80,
+                  "maxWidth": 280,
+                  "minWidth": 48,
                 },
               ]
             }
@@ -674,6 +683,7 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
             </Text>
           </View>
           <View
+            onLayout={[Function]}
             style={
               [
                 {
@@ -682,8 +692,8 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 240,
-                  "minWidth": 80,
+                  "maxWidth": 280,
+                  "minWidth": 48,
                 },
               ]
             }
@@ -717,21 +727,37 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
       }
     }
   >
-    <Image
-      accessibilityLabel="img"
-      resizeMode="contain"
-      source={
-        {
-          "uri": "a.png",
-        }
-      }
+    <View
       style={
-        {
-          "aspectRatio": 1.7777777777777777,
-          "width": "100%",
-        }
+        [
+          {
+            "width": "100%",
+          },
+          undefined,
+        ]
       }
-    />
+    >
+      <Image
+        accessibilityLabel="img"
+        resizeMode="contain"
+        source={
+          {
+            "uri": "a.png",
+          }
+        }
+        style={
+          [
+            {
+              "width": "100%",
+            },
+            {
+              "aspectRatio": 1.7777777777777777,
+              "backgroundColor": "#f6f8fa",
+            },
+          ]
+        }
+      />
+    </View>
   </View>
   <Text
     selectable={false}
@@ -765,56 +791,99 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
     </Text>
   </Text>
   <View
+    accessibilityLabel="Footnotes"
+    accessibilityRole="summary"
     style={
       {
-        "flexDirection": "row",
+        "borderTopColor": "#d1d9e0",
+        "borderTopWidth": 0.5,
+        "marginTop": 12,
+        "paddingTop": 12,
       }
     }
   >
-    <Text
-      style={
-        [
-          {
-            "color": "#1f2328",
-            "fontSize": 14,
-            "lineHeight": 24,
-          },
-          {
-            "minWidth": 24,
-          },
-        ]
-      }
-    >
-      1
-      .
-    </Text>
     <View
       style={
         {
-          "flex": 1,
-          "minWidth": 0,
+          "flexDirection": "row",
         }
       }
     >
       <Text
-        selectable={false}
         style={
           [
             {
-              "marginBottom": 12,
+              "color": "#59636e",
+              "fontSize": 14,
+              "lineHeight": 21,
             },
             {
-              "color": "#1f2328",
-              "fontSize": 16,
-              "lineHeight": 24,
+              "fontSize": 14,
+              "lineHeight": 21,
             },
-            null,
-            undefined,
+            {
+              "minWidth": 24,
+            },
           ]
         }
       >
-        The note.
+        1.
       </Text>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 12,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              {
+                "color": "#59636e",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              undefined,
+            ]
+          }
+        >
+          The note.
+        </Text>
+        <Text
+          accessible={false}
+          importantForAccessibility="no"
+          style={
+            [
+              {
+                "color": "#59636e",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "marginBottom": 6,
+                "marginTop": -6,
+              },
+            ]
+          }
+        >
+          ↩
+        </Text>
+      </View>
     </View>
   </View>
 </View>

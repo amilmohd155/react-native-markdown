@@ -1,7 +1,9 @@
+import type { ComponentType } from 'react';
 import { Image, Text } from 'react-native';
 import { useRenderContext } from '../contexts';
-import { markInlineView } from '../devInline';
 import type { ElementProps } from '../elements';
+import { useImageSize } from '../imageSize';
+import { markInlineView, type InlineViewProps } from '../inlineView';
 import { pressLink } from '../links';
 
 /**
@@ -70,25 +72,40 @@ export function LineBreak({ hard }: ElementProps<'LineBreak'>) {
 }
 
 /**
- * Inline image as an inline attachment. Without a known size it uses a
- * placeholder square of the text's line height. A declared inline view.
+ * Inline image as an inline attachment (a declared inline view). Its size
+ * comes from the props when the renderer already knows it, else from the
+ * size cache; it is scaled down to at most the text's line height, so it
+ * sits in the line like an emoji. While loading (or on error) it holds a
+ * square of the line height.
  */
 export const InlineImage = markInlineView(function InlineImage({
   src,
   alt,
   width,
   height,
-}: ElementProps<'InlineImage'>) {
-  const { tokens } = useRenderContext().theme;
-  const placeholder = tokens.fontSize.base * tokens.lineHeight;
+  baseline,
+}: InlineViewProps<'InlineImage'>) {
+  const loaded = useImageSize(src);
+  const known =
+    width !== null && height !== null
+      ? { width, height }
+      : loaded !== null && loaded !== 'error'
+        ? loaded
+        : null;
+  const max = baseline.lineHeight;
+  const scale = known === null ? 1 : Math.min(1, max / known.height);
   return (
     <Image
       source={{ uri: src }}
       accessibilityLabel={alt}
-      style={{ width: width ?? placeholder, height: height ?? placeholder }}
+      style={
+        known === null
+          ? { width: max, height: max }
+          : { width: known.width * scale, height: known.height * scale }
+      }
     />
   );
-});
+}) as ComponentType<ElementProps<'InlineImage'>>;
 
 export function FootnoteReference({
   index,

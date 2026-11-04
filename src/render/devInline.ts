@@ -5,6 +5,7 @@ import {
   type ReactNode,
 } from 'react';
 import { Image, Pressable, ScrollView, View } from 'react-native';
+import { isInlineView } from './inlineView';
 
 /**
  * Dev-only check (D8): an inline element that isn't declared as an inline
@@ -42,18 +43,6 @@ const wrappers = new WeakMap<object, unknown>();
 /** `__DEV__` as React Native and Jest define it; false when absent. */
 export function isDev(): boolean {
   return (globalThis as { __DEV__?: unknown }).__DEV__ === true;
-}
-
-const declaredViews = new WeakSet<object>();
-
-/**
- * Marks a component as a declared inline view (D8): it may return a View,
- * so the check skips it. Used by defaults such as `InlineImage`, and by
- * `inlineView()` (inline views task).
- */
-export function markInlineView<C extends object>(component: C): C {
-  declaredViews.add(component);
-  return component;
 }
 
 /** Test hook: forget which element names already warned. */
@@ -109,7 +98,7 @@ export function checkedInline<P extends object>(
   name: string,
   component: ComponentType<P>
 ): ComponentType<P> {
-  if (declaredViews.has(component)) return component;
+  if (isInlineView(component)) return component;
   const cached = wrappers.get(component);
   if (cached !== undefined) return cached as ComponentType<P>;
 

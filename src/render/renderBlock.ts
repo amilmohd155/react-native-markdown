@@ -1,7 +1,12 @@
-import { createElement, Fragment, type ReactNode } from 'react';
+import { createElement, type ReactNode } from 'react';
+import { View } from 'react-native';
 import { NodeType, NONE, type NodeTable } from '../model';
 import type { RenderCtx } from './context';
-import { ListMarkerContext } from './contexts';
+import {
+  InheritedTextContext,
+  ListMarkerContext,
+  TableKeyContext,
+} from './contexts';
 import { element } from './element';
 import { renderInline } from './inline';
 import {
@@ -27,9 +32,24 @@ interface Place {
   readonly depth: number;
   /** Inside a tight list: paragraphs render without block spacing. */
   readonly tight: boolean;
+  /** Index of the top-level block being rendered. */
+  readonly block: number;
+  /** Node id of that block. */
+  readonly root: number;
 }
 
-const TOP: Place = Object.freeze({ depth: 0, tight: false });
+/**
+ * Identity of a table's content, for the column width cache: what its
+ * top-level block renders (document context, block context, source text,
+ * as in `isSameBlock`) plus the table's position inside the block.
+ */
+function tableKey(table: NodeTable, id: number, place: Place): string {
+  const start = table.blockStart[place.block]!;
+  const end = table.blockEnd[place.block]!;
+  return `${table.context}\u0001${table.blockContext[place.block]}\u0001${
+    id - place.root
+  }\u0001${table.source.slice(start, end)}`;
+}
 
 function renderChildren(
   table: NodeTable,
@@ -45,11 +65,16 @@ function renderChildren(
 }
 
 /** Table rows, skipping the structural `TableHead`/`TableBody` rows. */
-function renderRows(table: NodeTable, id: number, ctx: RenderCtx): ReactNode[] {
+function renderRows(
+  table: NodeTable,
+  id: number,
+  ctx: RenderCtx,
+  place: Place
+): ReactNode[] {
   const out: ReactNode[] = [];
   for (let g = table.firstChild[id]!; g !== NONE; g = table.nextSibling[g]!) {
     for (let r = table.firstChild[g]!; r !== NONE; r = table.nextSibling[r]!) {
-      out.push(renderNode(table, r, ctx, TOP));
+      out.push(renderNode(table, r, ctx, place));
     }
   }
   return out;
@@ -67,13 +92,14 @@ function renderNode(
   switch (table.type[id]) {
     case NodeType.Heading: {
       const props = headingProps(table, id);
+      const heading = theme.headings[props.level - 1]!;
       return element(
         ctx,
         'Heading',
         id,
         props,
-        theme.headings[props.level - 1]!,
-        renderInline(table, id, ctx)
+        heading,
+        renderInline(table, id, ctx, heading.text)
       );
     }
 
@@ -88,13 +114,14 @@ function renderNode(
           elements.Image
         );
       }
+      const paragraph = place.tight ? theme.tightParagraph : elements.Paragraph;
       return element(
         ctx,
         'Paragraph',
         id,
         {},
-        place.tight ? theme.tightParagraph : elements.Paragraph,
-        renderInline(table, id, ctx)
+        paragraph,
+        renderInline(table, id, ctx, paragraph.text)
       );
     }
 
@@ -111,7 +138,7 @@ function renderNode(
     case NodeType.List: {
       const props = listProps(table, id);
       const items = renderChildren(table, id, ctx, {
-        depth: place.depth,
+        ...place,
         tight: props.tight,
       });
       // Longest marker: the last ordered number plus its delimiter.
@@ -135,10 +162,7 @@ function renderNode(
         id,
         listItemProps(table, id, place.depth, theme.tokens.listBullets),
         elements.ListItem,
-        renderChildren(table, id, ctx, {
-          depth: place.depth + 1,
-          tight: place.tight,
-        })
+        renderChildren(table, id, ctx, { ...place, depth: place.depth + 1 })
       );
 
     case NodeType.CodeBlock:
@@ -162,15 +186,22 @@ function renderNode(
         elements.HtmlBlock
       );
 
-    case NodeType.Table:
-      return element(
-        ctx,
-        'Table',
-        id,
-        tableProps(table, id),
-        elements.Table,
-        renderRows(table, id, ctx)
+    case NodeType.Table: {
+      const key = tableKey(table, id, place);
+      // Keyed by content: a changed table remounts and re-measures.
+      return createElement(
+        TableKeyContext.Provider,
+        { key, value: key },
+        element(
+          ctx,
+          'Table',
+          id,
+          tableProps(table, id),
+          elements.Table,
+          renderRows(table, id, ctx, place)
+        )
       );
+    }
 
     case NodeType.TableRow:
       return element(
@@ -179,29 +210,42 @@ function renderNode(
         id,
         tableRowProps(table, id),
         elements.TableRow,
-        renderChildren(table, id, ctx, TOP)
+        renderChildren(table, id, ctx, place)
       );
 
     case NodeType.TableCell: {
       const props = tableCellProps(table, id);
+      const cell = props.header ? theme.tableHeaderCell : elements.TableCell;
       return element(
         ctx,
         'TableCell',
         id,
         props,
-        props.header ? theme.tableHeaderCell : elements.TableCell,
-        renderInline(table, id, ctx)
+        cell,
+        renderInline(table, id, ctx, cell.text)
       );
     }
 
-    case NodeType.FootnoteSection:
-      // Structural: its definitions render in order. The footnotes task
-      // adds the footer presentation.
+    case NodeType.FootnoteSection: {
+      // Structural, not an element: a footer set apart from the document,
+      // whose text style cascades into the definitions. Users restyle it
+      // with the theme and override `FootnoteDefinition`.
+      const section = theme.footnoteSection;
       return createElement(
-        Fragment,
-        { key: id },
-        renderChildren(table, id, ctx, TOP)
+        View,
+        {
+          key: id,
+          style: section.container,
+          accessibilityRole: 'summary',
+          accessibilityLabel: 'Footnotes',
+        },
+        createElement(
+          InheritedTextContext.Provider,
+          { value: section.text },
+          renderChildren(table, id, ctx, place)
+        )
       );
+    }
 
     case NodeType.FootnoteDefinition:
       return element(
@@ -210,7 +254,7 @@ function renderNode(
         id,
         footnoteDefinitionProps(table, id),
         elements.FootnoteDefinition,
-        renderChildren(table, id, ctx, TOP)
+        renderChildren(table, id, ctx, place)
       );
 
     default:
@@ -219,11 +263,17 @@ function renderNode(
   }
 }
 
-/** Renders top-level block `id` through the components in `ctx`. */
+/** Renders top-level block `index` through the components in `ctx`. */
 export function renderBlock(
   table: NodeTable,
-  id: number,
+  index: number,
   ctx: RenderCtx
 ): ReactNode {
-  return renderNode(table, id, ctx, TOP);
+  const root = table.blocks[index]!;
+  return renderNode(table, root, ctx, {
+    depth: 0,
+    tight: false,
+    block: index,
+    root,
+  });
 }

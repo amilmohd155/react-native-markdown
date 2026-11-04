@@ -1,4 +1,4 @@
-import { Linking, StyleSheet, Text } from 'react-native';
+import { Image, Linking, StyleSheet, Text } from 'react-native';
 import {
   act,
   create,
@@ -13,6 +13,14 @@ import { defaultComponents } from '../defaults';
 import { resetInlineViewWarnings } from '../devInline';
 import { isOpenableUrl } from '../links';
 import { tableFor } from './helpers';
+
+// Image sizes never resolve here: no async state updates after render.
+let getSize: jest.SpyInstance;
+beforeEach(() => {
+  getSize = jest.spyOn(Image, 'getSize') as jest.SpyInstance;
+  getSize.mockReturnValue(new Promise(() => {}));
+});
+afterEach(() => getSize.mockRestore());
 
 function render(
   source: string,

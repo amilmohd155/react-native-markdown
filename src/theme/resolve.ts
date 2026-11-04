@@ -102,7 +102,9 @@ function deriveStyles(t: ThemeTokens) {
       container: { marginBottom: spacing.block },
     },
     FootnoteDefinition: {
-      text: { ...blockText, fontSize: base * 0.875 },
+      // Label and back-links; the definition's paragraphs take the
+      // section's text style.
+      text: { fontSize: base * 0.875, lineHeight: base * 0.875 * t.lineHeight },
       container: { flexDirection: 'row' },
     },
     Strong: { text: { fontWeight: '700' } },
@@ -149,7 +151,28 @@ function deriveStyles(t: ThemeTokens) {
     container: { marginBottom: 0 },
   };
 
-  return { elements, headings, tableHeaderCell, nestedList, tightParagraph };
+  const footnoteSection: StyleEntry = {
+    text: {
+      fontSize: base * 0.875,
+      lineHeight: base * 0.875 * t.lineHeight,
+      color: colors.muted,
+    },
+    container: {
+      marginTop: spacing.block,
+      paddingTop: spacing.block,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+    },
+  };
+
+  return {
+    elements,
+    headings,
+    tableHeaderCell,
+    nestedList,
+    tightParagraph,
+    footnoteSection,
+  };
 }
 
 /**
@@ -170,6 +193,7 @@ export function resolveTheme(tokens: ThemeTokens): ResolvedTheme {
   add('tableHeaderCell', derived.tableHeaderCell);
   add('nestedList', derived.nestedList);
   add('tightParagraph', derived.tightParagraph);
+  add('footnoteSection', derived.footnoteSection);
 
   const sheet = StyleSheet.create(flat);
   const pick = (key: string): ElementStyle =>
@@ -195,6 +219,7 @@ export function resolveTheme(tokens: ThemeTokens): ResolvedTheme {
     tableHeaderCell: pick('tableHeaderCell'),
     nestedList: pick('nestedList'),
     tightParagraph: pick('tightParagraph'),
+    footnoteSection: pick('footnoteSection'),
   });
 }
 

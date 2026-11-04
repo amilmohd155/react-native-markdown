@@ -13,7 +13,7 @@ export interface BlockProps {
 }
 
 function BlockImpl({ table, index, ctx }: BlockProps) {
-  return renderBlock(table, table.blocks[index]!, ctx);
+  return renderBlock(table, index, ctx);
 }
 
 /**

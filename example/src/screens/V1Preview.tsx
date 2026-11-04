@@ -7,6 +7,11 @@ import {
   Text,
   View,
 } from 'react-native';
+import {
+  LinkChip,
+  LoweredSubscript,
+  RaisedSuperscript,
+} from '../components/inlineViews';
 import { gallery } from '../gallery';
 import {
   BlockList,
@@ -27,6 +32,18 @@ export function V1Preview() {
   const [newlines, setNewlines] = useState(false);
   const [tasks, setTasks] = useState(true);
   const [inter, setInter] = useState(false);
+  const [chips, setChips] = useState(false);
+
+  // Declared inline views (D8): link chips and raised/lowered scripts.
+  const chipComponents = useMemo(
+    () => ({
+      ...defaultComponents,
+      Link: LinkChip,
+      Superscript: RaisedSuperscript,
+      Subscript: LoweredSubscript,
+    }),
+    []
+  );
 
   // Inter as the body font (loaded in App with expo-font).
   const interTheme = useMemo(
@@ -55,7 +72,7 @@ export function V1Preview() {
   };
 
   const ctx = useRenderCtx({
-    components: defaultComponents,
+    components: chips ? chipComponents : defaultComponents,
     handlers,
     softBreak: newlines ? 'newline' : 'space',
     theme: inter ? interTheme : undefined,
@@ -79,6 +96,10 @@ export function V1Preview() {
         <View style={styles.toggle}>
           <Text style={styles.meta}>Inter</Text>
           <Switch value={inter} onValueChange={setInter} />
+        </View>
+        <View style={styles.toggle}>
+          <Text style={styles.meta}>inline views</Text>
+          <Switch value={chips} onValueChange={setChips} />
         </View>
       </View>
       <BlockList table={table} ctx={ctx} />

@@ -90,6 +90,23 @@ export type ElementProps<K extends ElementName> = ElementPropsMap[K] & {
   readonly style: ElementStyle;
 };
 
+/** Inline elements: those rendered inside a block's <Text>. */
+export type InlineElementName =
+  | 'Strong'
+  | 'Emphasis'
+  | 'Strikethrough'
+  | 'InlineCode'
+  | 'Link'
+  | 'InlineImage'
+  | 'LineBreak'
+  | 'FootnoteReference'
+  | 'Underline'
+  | 'Highlight'
+  | 'Superscript'
+  | 'Subscript'
+  | 'Kbd'
+  | 'HtmlInline';
+
 /** A complete element → component map (defaults → plugins → `components`). */
 export type Components = {
   readonly [K in ElementName]: ComponentType<ElementProps<K>>;

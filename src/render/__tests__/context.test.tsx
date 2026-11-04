@@ -38,6 +38,7 @@ describe('createRenderCtx', () => {
       selectable: false,
       maxFontSizeMultiplier: null,
       interactiveTasks: false,
+      interactiveImages: false,
     });
     expect(Object.isFrozen(ctx)).toBe(true);
   });

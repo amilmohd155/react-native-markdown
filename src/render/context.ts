@@ -33,6 +33,8 @@ export interface RenderOptions {
   readonly maxFontSizeMultiplier: number | null;
   /** True when `onTaskToggle` is set: task checkboxes are pressable. */
   readonly interactiveTasks: boolean;
+  /** True when `onImagePress` is set: block images are pressable. */
+  readonly interactiveImages: boolean;
 }
 
 export const DEFAULT_RENDER_OPTIONS: RenderOptions = Object.freeze({
@@ -40,6 +42,7 @@ export const DEFAULT_RENDER_OPTIONS: RenderOptions = Object.freeze({
   selectable: false,
   maxFontSizeMultiplier: null,
   interactiveTasks: false,
+  interactiveImages: false,
 });
 
 /**
@@ -85,6 +88,7 @@ function optionsOf(input: RenderCtxInput): RenderOptions {
       input.maxFontSizeMultiplier ??
       DEFAULT_RENDER_OPTIONS.maxFontSizeMultiplier,
     interactiveTasks: input.handlers?.onTaskToggle !== undefined,
+    interactiveImages: input.handlers?.onImagePress !== undefined,
   });
 }
 
@@ -108,8 +112,13 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
 
   const theme = input.theme ?? getDefaultTheme();
   const options = optionsOf(input);
-  const { softBreak, selectable, maxFontSizeMultiplier, interactiveTasks } =
-    options;
+  const {
+    softBreak,
+    selectable,
+    maxFontSizeMultiplier,
+    interactiveTasks,
+    interactiveImages,
+  } = options;
 
   return useMemo(
     () =>
@@ -128,6 +137,7 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
       selectable,
       maxFontSizeMultiplier,
       interactiveTasks,
+      interactiveImages,
     ]
   );
 }

@@ -1,12 +1,16 @@
 import type { ReactNode } from 'react';
+import type { TextStyle } from 'react-native';
 import { getText, NodeType, NONE, type NodeTable } from '../model';
 import type { ElementName, ElementStyle } from '../theme';
 import type { RenderCtx } from './context';
 import { checkedInline, isDev } from './devInline';
 import { componentOf, createElementOf } from './element';
+import { cachedImageSize } from './imageSize';
+import { baselineOf, isInlineView } from './inlineView';
 import {
   footnoteReferenceProps,
   htmlProps,
+  imageProps,
   inlineCodeProps,
   inlineImageProps,
   lineBreakProps,
@@ -31,7 +35,9 @@ import {
 export function renderInline(
   table: NodeTable,
   id: number,
-  ctx: RenderCtx
+  ctx: RenderCtx,
+  /** The block's text style: declared inline views get its metrics. */
+  blockText?: TextStyle
 ): ReactNode {
   const softBreakAsSpace = ctx.options.softBreak === 'space';
   const dev = isDev();
@@ -47,7 +53,7 @@ export function renderInline(
           : text;
       continue;
     }
-    const node = renderInlineNode(table, c, ctx, dev);
+    const node = renderInlineNode(table, c, ctx, dev, blockText);
     if (node === null) continue;
     if (run !== '') {
       out.push(run);
@@ -64,6 +70,7 @@ export function renderInline(
 function inline<K extends ElementName>(
   ctx: RenderCtx,
   dev: boolean,
+  blockText: TextStyle | undefined,
   name: K,
   key: number,
   props: SemanticProps<K>,
@@ -71,6 +78,14 @@ function inline<K extends ElementName>(
   children?: ReactNode
 ): ReactNode {
   const component = componentOf(ctx, name);
+  if (isInlineView(component)) {
+    // Declared inline views (D8) also get the block's font metrics.
+    const withBaseline = {
+      ...props,
+      baseline: baselineOf(blockText, ctx.theme.tokens),
+    };
+    return createElementOf(component, key, withBaseline, style, children);
+  }
   return createElementOf(
     dev ? checkedInline(name, component) : component,
     key,
@@ -98,7 +113,8 @@ function renderInlineNode(
   table: NodeTable,
   id: number,
   ctx: RenderCtx,
-  dev: boolean
+  dev: boolean,
+  blockText: TextStyle | undefined
 ): ReactNode {
   const { elements } = ctx.theme;
   const type = table.type[id]!;
@@ -108,11 +124,12 @@ function renderInlineNode(
     return inline(
       ctx,
       dev,
+      blockText,
       wrapper,
       id,
       {},
       elements[wrapper],
-      renderInline(table, id, ctx)
+      renderInline(table, id, ctx, blockText)
     );
   }
 
@@ -121,35 +138,47 @@ function renderInlineNode(
       return inline(
         ctx,
         dev,
+        blockText,
         'Link',
         id,
         linkProps(table, id),
         elements.Link,
-        renderInline(table, id, ctx)
+        renderInline(table, id, ctx, blockText)
       );
     case NodeType.InlineCode:
       return inline(
         ctx,
         dev,
+        blockText,
         'InlineCode',
         id,
         inlineCodeProps(table, id),
         elements.InlineCode
       );
-    case NodeType.Image:
-      // Size cache lands with the image task; until then, placeholder size.
+    case NodeType.Image: {
+      // A size already in the cache is passed as props; otherwise the
+      // element looks it up itself.
+      const { src } = imageProps(table, id);
+      const size = cachedImageSize(src);
       return inline(
         ctx,
         dev,
+        blockText,
         'InlineImage',
         id,
-        inlineImageProps(table, id),
+        inlineImageProps(
+          table,
+          id,
+          size === undefined || size === 'error' ? null : size
+        ),
         elements.InlineImage
       );
+    }
     case NodeType.LineBreak:
       return inline(
         ctx,
         dev,
+        blockText,
         'LineBreak',
         id,
         lineBreakProps(table, id),
@@ -159,6 +188,7 @@ function renderInlineNode(
       return inline(
         ctx,
         dev,
+        blockText,
         'HtmlInline',
         id,
         htmlProps(table, id),
@@ -168,6 +198,7 @@ function renderInlineNode(
       return inline(
         ctx,
         dev,
+        blockText,
         'FootnoteReference',
         id,
         footnoteReferenceProps(table, id),
