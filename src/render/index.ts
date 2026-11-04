@@ -62,6 +62,7 @@ export {
   type InlineViewProps,
 } from './inlineView';
 export { defaultComponents, defaults } from './defaults';
+export { hostOf, imageAllowed, type ImagesPolicy } from './imagePolicy';
 export {
   cachedImageSize,
   loadImageSize,

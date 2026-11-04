@@ -40,6 +40,7 @@ export type {
   FootnotePressInfo,
   HeadingLevel,
   ImagePressInfo,
+  ImagesPolicy,
   InlineBaseline,
   InlineViewProps,
   LinkPressInfo,

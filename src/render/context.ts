@@ -1,6 +1,7 @@
 import { useInsertionEffect, useMemo, useRef } from 'react';
 import { getDefaultTheme, type ResolvedTheme } from '../theme';
 import type { Components } from './elements';
+import type { ImagesPolicy } from './imagePolicy';
 
 /** How soft line breaks render (P1-2). */
 export type SoftBreak = 'space' | 'newline';
@@ -63,6 +64,8 @@ export interface RenderOptions {
   /** True when `onFootnotePress` is set: references and back-links are pressable. */
   readonly interactiveFootnotes: boolean;
   readonly scriptFallback: ScriptFallback;
+  /** Which images load; the rest render as their alt text. */
+  readonly images: ImagesPolicy;
 }
 
 const NO_HANDLERS: RenderHandlers = Object.freeze({});
@@ -75,6 +78,7 @@ export const DEFAULT_RENDER_OPTIONS: RenderOptions = Object.freeze({
   interactiveImages: false,
   interactiveFootnotes: false,
   scriptFallback: 'smaller',
+  images: 'allow',
 });
 
 /**
@@ -111,6 +115,8 @@ export interface RenderCtxInput {
   readonly selectable?: boolean;
   readonly maxFontSizeMultiplier?: number | null;
   readonly scriptFallback?: ScriptFallback;
+  /** Default `'allow'`. Keep the reference stable: it is part of `ctx` identity. */
+  readonly images?: ImagesPolicy;
 }
 
 function optionsOf(input: RenderCtxInput): RenderOptions {
@@ -125,6 +131,7 @@ function optionsOf(input: RenderCtxInput): RenderOptions {
     interactiveFootnotes: input.handlers?.onFootnotePress !== undefined,
     scriptFallback:
       input.scriptFallback ?? DEFAULT_RENDER_OPTIONS.scriptFallback,
+    images: input.images ?? DEFAULT_RENDER_OPTIONS.images,
   });
 }
 
@@ -161,6 +168,7 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
   const interactiveFootnotes = latest.onFootnotePress !== undefined;
   const scriptFallback =
     input.scriptFallback ?? DEFAULT_RENDER_OPTIONS.scriptFallback;
+  const images = input.images ?? DEFAULT_RENDER_OPTIONS.images;
 
   const options = useMemo<RenderOptions>(
     () =>
@@ -172,6 +180,7 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
         interactiveImages,
         interactiveFootnotes,
         scriptFallback,
+        images,
       }),
     [
       softBreak,
@@ -181,6 +190,7 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
       interactiveImages,
       interactiveFootnotes,
       scriptFallback,
+      images,
     ]
   );
 

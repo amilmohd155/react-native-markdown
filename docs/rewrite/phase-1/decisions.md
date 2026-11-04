@@ -330,3 +330,19 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - Package size and the dependency tree shrink; `check:expo-go` guards a single implementation.
   - Custom `renderRules` that read mdast `node.*` must be rewritten against element props.
   - M5 gets a migration-guide task (the guide itself is not part of M5's done-when).
+
+## P1-21: `images` policy semantics
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:** [P1-3](#p1-3-url-sanitization-layers) covers links. Images are the other URL the renderer acts on: a remote image loads without a press, so on untrusted content (LLM output, user comments) it is a tracking beacon and a way to leak the conversation through the URL. The `images` prop (`'allow' | 'deny' | { allowHosts }`) was specified but not its details.
+- **Decision:**
+  - The policy applies at render time, to block and inline images alike, so changing it never re-parses.
+  - A refused image renders as its alt text, plain, in the surrounding text; an empty alt renders nothing. A block image that is refused becomes an ordinary paragraph. Components never see a refused image.
+  - `{ allowHosts }` matches the URL's host, lowercased, without port, userinfo or a trailing dot. An entry is an exact host or `*.example.com` (any subdomain, not the apex).
+  - Under an allowlist only `http(s)` and protocol-relative URLs can match. Relative paths and `data:` images have no host, so they are refused. A URL the check can't read the way a browser would (backslashes, whitespace, control characters) is refused too, rather than guessed.
+  - The default stays `'allow'`: this is a safe-by-opt-in prop, like `html` is safe-by-default only because it cannot execute anything.
+- **Consequences:**
+  - Apps that render untrusted content must set `images`; the docs say so on the prop.
+  - Local images (`require`d assets, `file:`) can't be combined with an allowlist. Use `'allow'`, or render them through `components.Image`.
+  - `images` is part of `ctx` identity, compared shallowly (an inline `{ allowHosts: [...] }` with equal entries keeps the context).

@@ -9,6 +9,7 @@ import {
 } from './contexts';
 import { element } from './element';
 import { BODY_FONT, HEADING_FONT, TABLE_HEAD_FONT } from '../theme';
+import { imageAllowed } from './imagePolicy';
 import { renderInline } from './inline';
 import {
   createPluginElement,
@@ -113,7 +114,10 @@ function renderNode(
 
     case NodeType.Paragraph: {
       const image = blockImageOf(table, id);
-      if (image !== NONE) {
+      if (
+        image !== NONE &&
+        imageAllowed(ctx.options.images, imageProps(table, image).src)
+      ) {
         return element(
           ctx,
           'Image',

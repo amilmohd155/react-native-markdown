@@ -8,6 +8,7 @@ import {
   type Components,
   type FootnotePressInfo,
   type ImagePressInfo,
+  type ImagesPolicy,
   type LinkPressInfo,
   type PluginComponents,
   type RenderHandlers,
@@ -59,6 +60,11 @@ export type MarkdownProps = MarkdownInput & {
   /** Called first for every link; return `false` to cancel the default. */
   readonly onLinkPress?: (href: string, info: LinkPressInfo) => boolean | void;
   readonly onImagePress?: (src: string, info: ImagePressInfo) => void;
+  /**
+   * Which images load; the rest render as their alt text. Default
+   * `'allow'`. Use `'deny'` or `{ allowHosts }` for untrusted content.
+   */
+  readonly images?: ImagesPolicy;
   /** Makes task list checkboxes interactive. */
   readonly onTaskToggle?: (checked: boolean, info: TaskToggleInfo) => void;
   /**
@@ -86,6 +92,15 @@ function presetEqual(a: Preset | undefined, b: Preset | undefined): boolean {
   if (a === b) return true;
   if (typeof a !== 'object' || typeof b !== 'object') return false;
   return a.base === b.base && shallowEqualArray(a.exclude, b.exclude);
+}
+
+function imagesEqual(
+  a: ImagesPolicy | undefined,
+  b: ImagesPolicy | undefined
+): boolean {
+  if (a === b) return true;
+  if (typeof a !== 'object' || typeof b !== 'object') return false;
+  return shallowEqualArray(a.allowHosts, b.allowHosts);
 }
 
 function htmlEqual(a: HtmlMode | undefined, b: HtmlMode | undefined): boolean {
@@ -122,6 +137,7 @@ export function Markdown(props: MarkdownProps) {
   const preset = useStable(props.preset, presetEqual);
   const html = useStable(props.html, htmlEqual);
   const components = useStable(props.components, shallowEqualObject);
+  const images = useStable(props.images, imagesEqual);
 
   const parsed = useMemo(() => {
     if (document !== undefined) return document;
@@ -157,6 +173,7 @@ export function Markdown(props: MarkdownProps) {
     handlers,
     softBreak,
     scriptFallback,
+    images,
     selectable,
     maxFontSizeMultiplier,
   });

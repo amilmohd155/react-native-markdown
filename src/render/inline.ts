@@ -19,6 +19,7 @@ import {
 import type { RenderCtx } from './context';
 import { checkedInline, isDev } from './devInline';
 import { componentOf, createElementOf } from './element';
+import { imageAllowed } from './imagePolicy';
 import { cachedImageSize } from './imageSize';
 import { baselineOf, isInlineView } from './inlineView';
 import {
@@ -236,7 +237,11 @@ function renderInlineNode(
     case NodeType.Image: {
       // A size already in the cache is passed as props; otherwise the
       // element looks it up itself.
-      const { src } = imageProps(table, id);
+      const { src, alt } = imageProps(table, id);
+      // Images the `images` policy refuses never load: their alt text stands
+      // in, as plain text.
+      if (!imageAllowed(ctx.options.images, src))
+        return alt === '' ? null : alt;
       const size = cachedImageSize(src);
       return inline(
         ctx,

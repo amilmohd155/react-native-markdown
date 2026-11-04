@@ -41,6 +41,7 @@ describe('createRenderCtx', () => {
       interactiveImages: false,
       interactiveFootnotes: false,
       scriptFallback: 'smaller',
+      images: 'allow',
     });
     expect(Object.isFrozen(ctx)).toBe(true);
   });
