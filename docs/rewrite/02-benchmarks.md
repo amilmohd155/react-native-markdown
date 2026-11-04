@@ -73,8 +73,36 @@ What this shows:
 - **Node `--jitless` underestimates Hermes.** Conversion is 14.8% of parse on the device versus 11.2% in Node `--jitless`. The P1-10 budget (15%) passes on Hermes with little margin; the node builder is the place to optimize if M7's low-end device needs it.
 - **Text comparison costs more on Hermes than on V8.** Hermes copies substrings, so comparing all 900 blocks costs 6.13 ms (0.10 ms in Node). It's still 2× cheaper than hashing, and it only runs on re-render against a previous document, which always follows a ~122 ms parse. Hashing would cost 12.24 ms on every parse. Caching each block's text on its table after the first comparison would halve the copies for consecutive re-renders, if ever needed.
 
+## Device results (preliminary, M3)
+
+First parse-plus-render measurement of the M3 renderer against v0.8.5, with the [benchmark protocol](./phase-1/benchmark-protocol.md#harness-m3)'s harness. M7 repeats it on the low-end pass/fail device.
+
+- **Device:** Samsung Galaxy S25 FE (SM-S731B), Android 37. Upper-mid range, **not** the pass/fail device.
+- **Build:** the example app as a release build (`expo prebuild` + `gradlew assembleRelease`): Hermes, bytecode, `__DEV__ = false`, New Architecture.
+- **Method:** the **bench** tab, "full" mode: 5 warm-up + 20 measured runs per fixture, v0 and v1 alternating, unmount and 2 frames between runs. Fixtures from `bench/fixtures/` (no images). Raw data: [`bench/results/sm-s731b-2026-11-04.json`](../../bench/results/sm-s731b-2026-11-04.json).
+- **Conditions:** airplane mode on, battery 68% but charging over USB (needed for adb), phone warm (36.9 °C) at the start. Date: 2026-11-04.
+
+Medians (p90 in the raw data), milliseconds:
+
+| Metric | F1 (0.8 KB) v1 / v0 | F2 (9.5 KB) v1 / v0 | F3 (98 KB) v1 / v0 |
+|---|---|---|---|
+| `parse` (v1) | 4.6 | 18.8 | 194.8 |
+| `firstRender` (v1) | 23.0 | 89.3 | 254.1 |
+| `parse+firstRender` | 28.3 / 25.5 (**0.9×**) | 113.4 / 79.1 (**0.7×**) | 448.1 / 457.6 (**1.0×**) |
+| `reRenderOneBlock` | 2.8 / 11.0 (**4.0×**) | 4.6 / 35.1 (**7.6×**) | 33.9 / 380.0 (**11.2×**) |
+
+Parse only, same fixtures, Node `--jitless` (`bench/fixtures-parse.mjs`): v1 `parse()` 0.5 / 7.8 / 77.9 ms vs v0's `fromMarkdown` (no GFM) 1.4 / 18.0 / 179.9 ms, **2.3–2.8×** faster.
+
+What this shows:
+
+- **Memoization works, but misses its bar narrowly.** Editing one block of F3 costs 33.9 ms, 11× less than v0. The protocol's bar is ≤ 1/10 of v1's own `firstRender` (254.1 ms → 25.4 ms): at 13% it misses. With 554 blocks, comparing every block (P1-9: 6.1 ms on this device in M1) and reconciling the block list are a fixed cost per edit; worth profiling before M7.
+- **First render is not faster than v0.8.5 yet: 0.7–1.0×, against the ≥ 5× exit criterion.** Two reasons:
+  - **The comparison isn't like for like.** v0.8.5 parses without GFM: its `fromMarkdown` call has no micromark GFM syntax, and its `extensions` prop only takes mdast extensions, so GFM can't be turned on. F2/F3's tables (F3: 34 tables, 952 cells), task lists, strikethrough, autolinks and footnotes are plain text in v0, and v1 renders them all as elements, tables with a measuring pass.
+  - **v1's render dominates.** On F3, `firstRender` (254 ms) is more than its parse (195 ms). The M1 estimate of 12.6× (parse only, against a GFM-capable parse) doesn't carry over to parse + render.
+- **The exit criterion needs a fair baseline before M7.** Options: compare on CommonMark-only content (where v0 does the same work), and/or measure v1's render cost against element count, and profile it (tables, the per-code-block `ScrollView`, prop and element creation). To decide in M7 planning; recorded as an open item, not a decision.
+
 ## Not measured yet
 
-- Render cost (element creation + Fabric commit) for the current renderer vs. the proposed one (M3+).
+- `retainedHeap` and `droppedFrames` (F5), and images in the fixtures (M7).
 - A low-end Android (Snapdragon 6xx class) and a recent iPhone (M7).
 - Memory: AST size per KB of input, on device (M7).

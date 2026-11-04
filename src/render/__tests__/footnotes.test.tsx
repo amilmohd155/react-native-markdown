@@ -8,6 +8,9 @@ import { backLinks } from '../defaults/block';
 import type { Components } from '../elements';
 import { tableFor } from './helpers';
 
+/** Back-link mark (↩ in text presentation). */
+const B = '↩\uFE0E';
+
 const DOC = 'a[^1] b[^n] c[^1]\n\nmore\n\n[^1]: First.\n[^n]: Named.\n';
 
 function mount(source: string, ctx: RenderCtx) {
@@ -44,7 +47,7 @@ describe('footnote section', () => {
     const texts = section
       .findAll((n) => n.type === Text)
       .map((n) => n.props.children);
-    expect(texts).toEqual(['1.', 'First.', '↩ ↩²', '2.', 'Named.', '↩']);
+    expect(texts).toEqual(['1.', 'First.', `${B} ${B}²`, '2.', 'Named.', B]);
 
     // The section is the last block.
     const top = root.toJSON() as { children: { props: object }[] };
@@ -99,8 +102,8 @@ describe('footnote section', () => {
 
 describe('backLinks', () => {
   it('numbers repeated back-links with superscript digits', () => {
-    expect(backLinks(1)).toBe('↩');
-    expect(backLinks(3)).toBe('↩ ↩² ↩³');
-    expect(backLinks(12).split(' ').at(-1)).toBe('↩¹²');
+    expect(backLinks(1)).toBe(B);
+    expect(backLinks(3)).toBe(`${B} ${B}² ${B}³`);
+    expect(backLinks(12).split(' ').at(-1)).toBe(`${B}¹²`);
   });
 });

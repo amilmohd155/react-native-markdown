@@ -3,7 +3,7 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
-  Switch,
+  Pressable,
   Text,
   View,
 } from 'react-native';
@@ -23,6 +23,11 @@ import {
   useRenderCtx,
   type RenderHandlers,
 } from '../v1';
+
+// Parsed (and timed) once at load, outside render: the gallery is static.
+const parseStart = performance.now();
+const table = tableOf(parse(gallery));
+const parseMs = performance.now() - parseStart;
 
 /**
  * v1 renderer preview: the gallery fixture through BlockList and the
@@ -55,12 +60,6 @@ export function V1Preview() {
     []
   );
 
-  const { table, parseMs } = useMemo(() => {
-    const start = performance.now();
-    const doc = parse(gallery);
-    return { table: tableOf(doc), parseMs: performance.now() - start };
-  }, []);
-
   const handlers: RenderHandlers = {
     onLinkPress: (href) => {
       console.log('[v1] link', href);
@@ -85,25 +84,42 @@ export function V1Preview() {
           parse {parseMs.toFixed(1)} ms · {table.blockCount} blocks ·{' '}
           {__DEV__ ? 'dev' : 'release'}
         </Text>
-        <View style={styles.toggle}>
-          <Text style={styles.meta}>newlines</Text>
-          <Switch value={newlines} onValueChange={setNewlines} />
-        </View>
-        <View style={styles.toggle}>
-          <Text style={styles.meta}>tasks</Text>
-          <Switch value={tasks} onValueChange={setTasks} />
-        </View>
-        <View style={styles.toggle}>
-          <Text style={styles.meta}>Inter</Text>
-          <Switch value={inter} onValueChange={setInter} />
-        </View>
-        <View style={styles.toggle}>
-          <Text style={styles.meta}>inline views</Text>
-          <Switch value={chips} onValueChange={setChips} />
-        </View>
+        <Toggle label="newlines" value={newlines} onChange={setNewlines} />
+        <Toggle label="tasks" value={tasks} onChange={setTasks} />
+        <Toggle label="Inter" value={inter} onChange={setInter} />
+        <Toggle label="inline views" value={chips} onChange={setChips} />
       </View>
       <BlockList table={table} ctx={ctx} />
     </ScrollView>
+  );
+}
+
+/**
+ * A pressable on/off chip. Native switches don't respond to the simulator
+ * automation used for device QA, so the preview uses these instead.
+ */
+function Toggle({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="switch"
+      accessibilityLabel={label}
+      accessibilityState={{ checked: value }}
+      onPress={() => onChange(!value)}
+      style={[styles.toggle, value && styles.toggleOn]}
+    >
+      <Text style={[styles.meta, value && styles.toggleOnText]}>
+        {value ? '✓ ' : ''}
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -113,9 +129,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
     marginBottom: 12,
   },
-  toggle: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  toggle: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#d1d9e0',
+  },
+  toggleOn: { backgroundColor: '#0969da', borderColor: '#0969da' },
+  toggleOnText: { color: '#ffffff' },
   meta: { fontSize: 12, color: '#59636e' },
 });

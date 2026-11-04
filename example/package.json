@@ -6,6 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
+    "android:release": "expo run:android --variant release",
+    "ios:release": "expo run:ios --configuration Release",
     "atlas": "EXPO_UNSTABLE_ATLAS=true expo start",
     "web": "expo start --web"
   },
@@ -17,6 +19,7 @@
     "expo-font": "~58.0.11",
     "expo-splash-screen": "~58.0.13",
     "expo-status-bar": "~58.0.4",
+    "md-v0": "npm:@docren/react-native-markdown@0.8.5",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-native": "0.88.1",

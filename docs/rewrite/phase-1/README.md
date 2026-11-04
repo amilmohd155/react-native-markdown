@@ -36,7 +36,7 @@ Defined in [07](../07-roadmap.md#phase-1-core-pure-js). Restated here only as a 
 | [theme-resolution.md](./theme-resolution.md) | How tokens become element styles, merge order, caching |
 | [testing-harness.md](./testing-harness.md) | Spec runner, HTML serializer, allowlist format, platform CI jobs |
 | [benchmark-protocol.md](./benchmark-protocol.md) | Devices, fixtures, metrics, method and pass bars |
-| [decisions.md](./decisions.md) | Implementation-level decisions P1-1 to P1-10 (all accepted), separate from the design decisions D1–D8 |
+| [decisions.md](./decisions.md) | Implementation-level decisions P1-1 to P1-16 (P1-16 proposed, the rest accepted), separate from the design decisions D1–D8 |
 
 ## Reading order
 

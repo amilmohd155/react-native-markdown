@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useInsertionEffect, useMemo, useRef } from 'react';
 import { getDefaultTheme, type ResolvedTheme } from '../theme';
 import type { Components } from './elements';
 
@@ -36,6 +36,8 @@ export interface RenderOptions {
   /** True when `onImagePress` is set: block images are pressable. */
   readonly interactiveImages: boolean;
 }
+
+const NO_HANDLERS: RenderHandlers = Object.freeze({});
 
 export const DEFAULT_RENDER_OPTIONS: RenderOptions = Object.freeze({
   softBreak: 'space',
@@ -107,37 +109,46 @@ export function createRenderCtx(input: RenderCtxInput): RenderCtx {
  * component map or an option changes; handlers are read through a ref.
  */
 export function useRenderCtx(input: RenderCtxInput): RenderCtx {
-  const handlers = useRef<RenderHandlers>({});
-  handlers.current = input.handlers ?? {};
+  // Latest handlers, read by elements on press (always after commit).
+  // Updated in an effect, not during render (rules of React).
+  const handlers = useRef<RenderHandlers>(NO_HANDLERS);
+  const latest = input.handlers ?? NO_HANDLERS;
+  useInsertionEffect(() => {
+    handlers.current = latest;
+  });
 
   const theme = input.theme ?? getDefaultTheme();
-  const options = optionsOf(input);
-  const {
-    softBreak,
-    selectable,
-    maxFontSizeMultiplier,
-    interactiveTasks,
-    interactiveImages,
-  } = options;
+  const softBreak = input.softBreak ?? DEFAULT_RENDER_OPTIONS.softBreak;
+  const selectable = input.selectable ?? DEFAULT_RENDER_OPTIONS.selectable;
+  const maxFontSizeMultiplier =
+    input.maxFontSizeMultiplier ?? DEFAULT_RENDER_OPTIONS.maxFontSizeMultiplier;
+  const interactiveTasks = latest.onTaskToggle !== undefined;
+  const interactiveImages = latest.onImagePress !== undefined;
 
-  return useMemo(
+  const options = useMemo<RenderOptions>(
     () =>
       Object.freeze({
-        theme,
-        components: input.components,
-        handlers,
-        options,
+        softBreak,
+        selectable,
+        maxFontSizeMultiplier,
+        interactiveTasks,
+        interactiveImages,
       }),
-    // `options` is rebuilt each render; its fields are the real deps.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      theme,
-      input.components,
       softBreak,
       selectable,
       maxFontSizeMultiplier,
       interactiveTasks,
       interactiveImages,
     ]
+  );
+
+  const { components } = input;
+  // Not frozen: passing the ref into a call during render counts as reading
+  // it for the React Compiler. The object is internal (reached through
+  // context only) and never mutated.
+  return useMemo(
+    () => ({ theme, components, handlers, options }),
+    [theme, components, options]
   );
 }

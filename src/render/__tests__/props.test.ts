@@ -67,7 +67,7 @@ describe('element props', () => {
 
   it('ListItem: bullets by nesting depth, repeating', () => {
     const source = '- a\n  - b\n    - c\n      - d\n';
-    expect(markers(source)).toEqual(['•', '◦', '▪', '•']);
+    expect(markers(source)).toEqual(['•', '◦', '▪\uFE0E', '•']);
   });
 
   it('ListItem: index and checked (null unless a task item)', () => {

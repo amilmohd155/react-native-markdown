@@ -25,6 +25,7 @@ The reasoning behind this design, including the options rejected, is in [08 · D
 | `onLinkPress` | `(href, info) => boolean \| void` | opens with `Linking` | Called first for every link. Return `false` to cancel the default. The default opens only `http`, `https`, `mailto`, `tel` and relative URLs, so custom-scheme deep links need this handler ([P1-3](./phase-1/decisions.md#p1-3-url-sanitization-layers)). Errors from `openURL` are caught. |
 | `onImagePress` | `(src, info) => void` | none | |
 | `onTaskToggle` | `(checked, info) => void` | none | Makes task list checkboxes interactive |
+| `onFootnotePress` | `(label, info) => void` | none | Makes footnote references and back-links pressable. `info = { index, direction: 'reference' \| 'definition', reference }`: where to go, and which reference (1-based). The app scrolls; the renderer doesn't own the scroll view ([P1-15](./phase-1/decisions.md#p1-15-footnote-navigation-through-an-onfootnotepress-handler)). |
 | `virtualize` | `boolean \| FlashListProps` | `false` | For long standalone documents |
 | `html` | `'safe' \| 'text' \| 'strip' \| { allow: HtmlTag[] }` | `'safe'` | `'safe'` renders an allowlist of tags as elements and shows the rest as text. See [Raw HTML](#raw-html). |
 | `images` | `'allow' \| 'deny' \| { allowHosts: string[] }` | `'allow'` | Use `'deny'` or an allowlist for untrusted content |

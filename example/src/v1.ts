@@ -12,6 +12,7 @@ export * from '../../src/api';
 export { tableOf } from '../../src/api/document';
 export {
   BlockList,
+  createRenderCtx,
   defaultComponents,
   inlineView,
   inlineViewOffset,
@@ -20,3 +21,4 @@ export {
   type SoftBreak,
 } from '../../src/render';
 export { lightTokens, resolveTheme } from '../../src/theme';
+export type { NodeTable } from '../../src/model';

@@ -9,6 +9,7 @@ import {
   Inter_700Bold_Italic,
   useFonts,
 } from '@expo-google-fonts/inter';
+import { Bench } from './screens/Bench';
 import { FontLab } from './screens/FontLab';
 import { V0Demo } from './screens/V0Demo';
 import { V1Preview } from './screens/V1Preview';
@@ -17,6 +18,7 @@ const SCREENS: { name: string; component: ComponentType }[] = [
   { name: 'v1 preview', component: V1Preview },
   { name: 'fonts', component: FontLab },
   { name: 'v0 demo', component: V0Demo },
+  { name: 'bench', component: Bench },
 ];
 
 export default function App() {

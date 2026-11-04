@@ -78,7 +78,7 @@ export function LineBreak({ hard }: ElementProps<'LineBreak'>) {
  * sits in the line like an emoji. While loading (or on error) it holds a
  * square of the line height.
  */
-export const InlineImage = markInlineView(function InlineImage({
+export const InlineImage = markInlineView(function DefaultInlineImage({
   src,
   alt,
   width,

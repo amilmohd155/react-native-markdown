@@ -384,7 +384,7 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
           }
           suppressHighlighting={true}
         >
-          ☑
+          ☑︎
         </Text>
       </View>
       <View
@@ -455,7 +455,7 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
           }
           suppressHighlighting={true}
         >
-          ☐
+          ☐︎
         </Text>
       </View>
       <View
@@ -881,7 +881,7 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
             ]
           }
         >
-          ↩
+          ↩︎
         </Text>
       </View>
     </View>

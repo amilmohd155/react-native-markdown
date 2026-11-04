@@ -1,0 +1,194 @@
+{
+  "protocol": "docs/rewrite/phase-1/benchmark-protocol.md",
+  "harness": "example/src/screens/Bench.tsx (bench tab), fixtures bench/fixtures/index.ts",
+  "commits": {
+    "v1": "9e40ed4 (feat/m3-renderer) plus uncommitted M3 tasks 11-13 working tree",
+    "v0": "@docren/react-native-markdown@0.8.5 from npm (md-v0 alias)"
+  },
+  "build": "release: expo prebuild + gradlew assembleRelease (Hermes, bytecode, __DEV__=false, New Architecture)",
+  "conditions": {
+    "airplaneMode": true,
+    "battery": "68%, charging over USB (needed for adb)",
+    "temperature": "36.9 C at start (warm after a call; not cooled down)",
+    "freshLaunch": true,
+    "idleAfterLaunchSeconds": 10
+  },
+  "notes": [
+    "Preliminary (M3): upper-mid device, not the low-end pass/fail device.",
+    "v0.8.5 parses without GFM (no micromark GFM syntax; its extensions prop only takes mdast extensions), so tables, strikethrough, task lists, autolinks and footnotes render as plain text in v0 while v1 renders them as elements. F2/F3 parse+firstRender is not a like-for-like comparison.",
+    "Raw samples were lost to the Android logcat line limit (~4 KB); the harness now logs in chunks. Summary (median, p90, n) is complete.",
+    "reRenderOneBlock is measured to the commit; v1 gets the edit pre-parsed, v0 parses in render."
+  ],
+  "date": "2026-11-04T13:48:47.103Z",
+  "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "hermes": true,
+    "dev": false
+  },
+  "mode": "full",
+  "warmup": 5,
+  "runs": 20,
+  "fixtures": [
+    {
+      "id": "F1",
+      "bytes": 790
+    },
+    {
+      "id": "F2",
+      "bytes": 9724
+    },
+    {
+      "id": "F3",
+      "bytes": 100747
+    }
+  ],
+  "summary": [
+    {
+      "fixture": "F1",
+      "impl": "v1",
+      "metric": "parse",
+      "n": 20,
+      "median": 4.560938000679016,
+      "p90": 6.119374990463257
+    },
+    {
+      "fixture": "F1",
+      "impl": "v1",
+      "metric": "firstRender",
+      "n": 20,
+      "median": 23.024882972240448,
+      "p90": 25.742577970027924
+    },
+    {
+      "fixture": "F1",
+      "impl": "v1",
+      "metric": "parse+firstRender",
+      "n": 20,
+      "median": 28.34261703491211,
+      "p90": 30.26300799846649
+    },
+    {
+      "fixture": "F1",
+      "impl": "v1",
+      "metric": "reRenderOneBlock",
+      "n": 20,
+      "median": 2.7646090388298035,
+      "p90": 3.6871490478515625
+    },
+    {
+      "fixture": "F1",
+      "impl": "v0",
+      "metric": "parse+firstRender",
+      "n": 20,
+      "median": 25.50816398859024,
+      "p90": 29.50691395998001
+    },
+    {
+      "fixture": "F1",
+      "impl": "v0",
+      "metric": "reRenderOneBlock",
+      "n": 20,
+      "median": 11.0293750166893,
+      "p90": 13.83328104019165
+    },
+    {
+      "fixture": "F2",
+      "impl": "v1",
+      "metric": "parse",
+      "n": 20,
+      "median": 18.825273990631104,
+      "p90": 26.264531016349792
+    },
+    {
+      "fixture": "F2",
+      "impl": "v1",
+      "metric": "firstRender",
+      "n": 20,
+      "median": 89.32765597105026,
+      "p90": 102.1721870303154
+    },
+    {
+      "fixture": "F2",
+      "impl": "v1",
+      "metric": "parse+firstRender",
+      "n": 20,
+      "median": 113.43910199403763,
+      "p90": 122.67851501703262
+    },
+    {
+      "fixture": "F2",
+      "impl": "v1",
+      "metric": "reRenderOneBlock",
+      "n": 20,
+      "median": 4.630429983139038,
+      "p90": 6.8456249833106995
+    },
+    {
+      "fixture": "F2",
+      "impl": "v0",
+      "metric": "parse+firstRender",
+      "n": 20,
+      "median": 79.07257801294327,
+      "p90": 93.73136699199677
+    },
+    {
+      "fixture": "F2",
+      "impl": "v0",
+      "metric": "reRenderOneBlock",
+      "n": 20,
+      "median": 35.126367032527924,
+      "p90": 45.3826180100441
+    },
+    {
+      "fixture": "F3",
+      "impl": "v1",
+      "metric": "parse",
+      "n": 20,
+      "median": 194.82621103525162,
+      "p90": 240.5476559996605
+    },
+    {
+      "fixture": "F3",
+      "impl": "v1",
+      "metric": "firstRender",
+      "n": 20,
+      "median": 254.12472599744797,
+      "p90": 262.8571870326996
+    },
+    {
+      "fixture": "F3",
+      "impl": "v1",
+      "metric": "parse+firstRender",
+      "n": 20,
+      "median": 448.08398401737213,
+      "p90": 506.91605401039124
+    },
+    {
+      "fixture": "F3",
+      "impl": "v1",
+      "metric": "reRenderOneBlock",
+      "n": 20,
+      "median": 33.88746100664139,
+      "p90": 37.95406299829483
+    },
+    {
+      "fixture": "F3",
+      "impl": "v0",
+      "metric": "parse+firstRender",
+      "n": 20,
+      "median": 457.6332029700279,
+      "p90": 516.0457810163498
+    },
+    {
+      "fixture": "F3",
+      "impl": "v0",
+      "metric": "reRenderOneBlock",
+      "n": 20,
+      "median": 380.03081995248795,
+      "p90": 416.26957100629807
+    }
+  ]
+}

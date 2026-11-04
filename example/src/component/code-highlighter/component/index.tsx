@@ -4,12 +4,38 @@ import {
   StyleSheet,
   Text,
   View,
+  type StyleProp,
   type TextStyle,
 } from 'react-native';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { transformHljsStyleToRN } from '../utils/transformHljsStyleToRN';
 import { trimNewlines } from '../utils/trimNewLines';
 import type { CodeHighlighterProps } from '../types';
+
+/** Highlighted rows → nested <Text>; `styleOf` gives each node's style. */
+function renderNodes(
+  nodes: rendererNode[],
+  keyPrefix: string,
+  styleOf: (node: rendererNode) => StyleProp<TextStyle>
+): ReactNode[] {
+  return nodes.flatMap<ReactNode>((node, index) => {
+    const key = `${keyPrefix}-${index}`;
+    if (node.value) {
+      return [trimNewlines(String(node.value))];
+    }
+    const children = node.children
+      ? renderNodes(node.children, key, styleOf)
+      : null;
+    if (children) {
+      return (
+        <Text style={styleOf(node)} key={key}>
+          {children}
+        </Text>
+      );
+    }
+    return [];
+  });
+}
 
 const CodeHighlighter = ({
   children,
@@ -32,35 +58,14 @@ const CodeHighlighter = ({
   );
 
   const renderNode = useCallback(
-    (nodes: rendererNode[], keyPrefix = 'row') => {
-      return nodes.flatMap<ReactNode>((node, index) => {
-        const key = `${keyPrefix}-${index}`;
-        const _children = node.children ? renderNode(node.children, key) : null;
-
-        if (node.value) {
-          //   console.log(
-          //     `Rendering node with value: ${trimNewlines(String(node.value))}`
-          //   );
-
-          return [trimNewlines(String(node.value))];
-        }
-
-        if (_children) {
-          const combinedStyle = StyleSheet.flatten([
-            { color: styleSheet.hljs?.color },
-            textStyle,
-            ...getStyleFromNode(node),
-          ]);
-          return (
-            <Text style={combinedStyle} key={key}>
-              {_children}
-            </Text>
-          );
-        }
-
-        return [];
-      });
-    },
+    (nodes: rendererNode[]) =>
+      renderNodes(nodes, 'row', (node) =>
+        StyleSheet.flatten([
+          { color: styleSheet.hljs?.color },
+          textStyle,
+          ...getStyleFromNode(node),
+        ])
+      ),
     [getStyleFromNode, styleSheet.hljs?.color, textStyle]
   );
 

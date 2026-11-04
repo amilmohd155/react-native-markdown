@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import { Image } from 'react-native';
 
 /**
@@ -10,6 +10,8 @@ import { Image } from 'react-native';
  * - Failed lookups are cached too, so a broken URL isn't retried on every
  *   render (it is retried after the entry is evicted).
  * - Bounded: the oldest entries are evicted past `MAX_ENTRIES`.
+ * - A small external store: components subscribe per URL with
+ *   `useSyncExternalStore` and re-render when that URL's size arrives.
  */
 
 export interface ImageSize {
@@ -22,6 +24,7 @@ type Entry = ImageSize | 'error';
 const MAX_ENTRIES = 500;
 const cache = new Map<string, Entry>();
 const pending = new Map<string, Promise<Entry>>();
+const listeners = new Map<string, Set<() => void>>();
 
 function remember(src: string, entry: Entry): Entry {
   if (cache.size >= MAX_ENTRIES) {
@@ -30,7 +33,23 @@ function remember(src: string, entry: Entry): Entry {
     if (!oldest.done) cache.delete(oldest.value);
   }
   cache.set(src, entry);
+  listeners.get(src)?.forEach((notify) => notify());
   return entry;
+}
+
+function subscribe(src: string, onChange: () => void): () => void {
+  let set = listeners.get(src);
+  if (set === undefined) {
+    set = new Set();
+    listeners.set(src, set);
+  }
+  set.add(onChange);
+  // Start the lookup on subscribe (after commit), not during render.
+  if (!cache.has(src)) loadImageSize(src);
+  return () => {
+    set.delete(onChange);
+    if (set.size === 0) listeners.delete(src);
+  };
 }
 
 /** The cached size of `src`: a size, `'error'`, or `undefined` if unknown. */
@@ -63,31 +82,18 @@ export function loadImageSize(src: string): Promise<Entry> {
  * loading. Renders once more when the lookup finishes.
  */
 export function useImageSize(src: string): Entry | null {
-  const [entry, setEntry] = useState<Entry | null>(
-    () => cache.get(src) ?? null
+  const subscribeToSrc = useCallback(
+    (onChange: () => void) => subscribe(src, onChange),
+    [src]
   );
-
-  useEffect(() => {
-    const cached = cache.get(src);
-    if (cached !== undefined) {
-      setEntry(cached);
-      return;
-    }
-    setEntry(null);
-    let live = true;
-    loadImageSize(src).then((next) => {
-      if (live) setEntry(next);
-    });
-    return () => {
-      live = false;
-    };
-  }, [src]);
-
-  return entry;
+  // Cached entries are frozen objects or 'error': stable snapshots.
+  const snapshot = () => cache.get(src) ?? null;
+  return useSyncExternalStore(subscribeToSrc, snapshot, snapshot);
 }
 
 /** Test hook: empty the cache. */
 export function clearImageSizeCache(): void {
   cache.clear();
   pending.clear();
+  listeners.clear();
 }

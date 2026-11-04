@@ -1,4 +1,4 @@
-import { useContext, useMemo, useRef, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import {
   Image as RNImage,
   Pressable,
@@ -72,6 +72,10 @@ export function List({ style, children }: ElementProps<'List'>) {
   return <View style={style.container}>{children}</View>;
 }
 
+/** Task checkbox glyphs, forced to text presentation (U+FE0E), never emoji. */
+const CHECKED = '☑\uFE0E';
+const UNCHECKED = '☐\uFE0E';
+
 /** Space between the marker column and the item content. */
 const MARKER_GAP = 6;
 
@@ -117,7 +121,7 @@ export function ListItem({
         onPress={toggle}
         suppressHighlighting
       >
-        {checked ? '☑' : '☐'}
+        {checked ? CHECKED : UNCHECKED}
       </Text>
     );
   }
@@ -248,37 +252,33 @@ export function Table({ style, children }: ElementProps<'Table'>) {
     theme,
     widths: cachedColumnWidths(theme, key),
   }));
-  const measured = useRef<number[]>([]);
-  const scheduled = useRef(false);
-
   let widths = state.widths;
   if (state.theme !== theme) {
     // New fonts or sizes: use that theme's cached widths, or re-measure.
     widths = cachedColumnWidths(theme, key);
-    measured.current = [];
     setState({ theme, widths });
   }
 
-  const layout = useMemo<TableLayout>(
-    () => ({
+  // One measuring pass per layout object: a new theme or table makes a new
+  // one, which starts again with no measurements.
+  const layout = useMemo<TableLayout>(() => {
+    const pass = { measured: [] as number[], scheduled: false };
+    return {
       widths,
       report(column, width) {
         if (widths !== null) return;
-        const all = measured.current;
-        all[column] = Math.max(all[column] ?? 0, width);
-        if (scheduled.current) return;
+        pass.measured[column] = Math.max(pass.measured[column] ?? 0, width);
+        if (pass.scheduled) return;
         // Cells lay out in the same frame; collect them all, then commit.
-        scheduled.current = true;
+        pass.scheduled = true;
         requestAnimationFrame(() => {
-          scheduled.current = false;
-          const final = columnWidths(all);
+          const final = columnWidths(pass.measured);
           storeColumnWidths(theme, key, final);
           setState({ theme, widths: final });
         });
       },
-    }),
-    [widths, theme, key]
-  );
+    };
+  }, [widths, theme, key]);
 
   return (
     <ScrollView
@@ -343,6 +343,8 @@ export function TableCell({
 
 /** Basic definition row; the footnotes task adds the footer section. */
 const SUPERSCRIPT_DIGITS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+/** ↩ with U+FE0E (text presentation): iOS draws an emoji button without it. */
+const BACK_LINK = '↩\uFE0E';
 
 /** GitHub-style back-link marks, one per reference: "↩ ↩² ↩³". */
 export function backLinks(references: number): string {
@@ -350,8 +352,8 @@ export function backLinks(references: number): string {
   for (let i = 1; i <= references; i++) {
     marks.push(
       i === 1
-        ? '↩'
-        : '↩' +
+        ? BACK_LINK
+        : BACK_LINK +
             String(i)
               .split('')
               .map((d) => SUPERSCRIPT_DIGITS[Number(d)])
