@@ -57,7 +57,18 @@ describe('parse', () => {
   });
 
   it('does not expose internals from the api entry', () => {
-    expect(Object.keys(api).sort()).toEqual(['parse']);
+    expect(Object.keys(api).sort()).toEqual([
+      'Markdown',
+      'createTheme',
+      'darkTheme',
+      'defaults',
+      'definePlugin',
+      'inlineView',
+      'lightTheme',
+      'parse',
+      'useMarkdownTheme',
+      'visit',
+    ]);
   });
 });
 
