@@ -123,7 +123,7 @@ M0 Groundwork
 - Public `definePlugin` typing, with plugin elements extending `ElementName`/`ElementProps`.
 - `parse`, `<Markdown document>`, read-only `visit` (D7).
 - Swap the package entry point to the v1 API, then remove the v0 sources and `mdast-util-from-markdown` (deferred from M0).
-- Events: `onLinkPress` (returning `false` cancels, `openURL` errors caught), `onImagePress`, `onTaskToggle`.
+- Events: `onLinkPress` (returning `false` cancels, `openURL` errors caught), `onImagePress`, `onTaskToggle`, `onFootnotePress` (references and back-links, [P1-15](./decisions.md#p1-15-footnote-navigation-through-an-onfootnotepress-handler)).
 - URL sanitization and the `images` policy ([decisions P1-3](./decisions.md#p1-3-url-sanitization-layers)).
 
 **Done when:**

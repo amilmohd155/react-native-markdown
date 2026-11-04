@@ -48,6 +48,17 @@ Fixtures are committed under `bench/fixtures/`. Images use local assets with kno
 - **Unmount between runs:** wait 2 frames after unmounting before the next run.
 - **Results:** save raw numbers as JSON (`bench/results/<device>-<date>.json`), with commit SHAs, device model and OS version.
 
+## Harness (M3)
+
+- **Screen:** the example app's **bench** tab (`example/src/screens/Bench.tsx`). "Run full" follows the method above (5 + 20, interleaved, unmount and 2 frames between runs); "Run quick" (2 + 5) checks the harness. It prints the result as one `[bench] {…}` JSON log line (`adb logcat -s ReactNativeJS`); commit SHAs are added when the file is saved to `bench/results/`.
+- **Fixtures:** `bench/fixtures/index.ts` (F1–F3). v0.8.5 comes from npm as the `md-v0` alias in the example app.
+- **Release build:** `yarn example android:release` (or `expo prebuild` + `./gradlew assembleRelease`, then install the APK); `ios:release` for iOS.
+- **Deviations, for now:**
+  - Fixtures have **no images** yet: markdown can't reference local assets without an asset resolver, and remote images would add network time.
+  - `reRenderOneBlock` is measured to the **commit** (a layout effect after the content), not to `onLayout`, because an edit may not change the layout. v1 gets the edited document pre-parsed, so it measures render cost only; v0 can't take a pre-parsed document, so its number includes parsing.
+  - v0 has no separate `parse` / `firstRender` split (it parses during render); only `parse+firstRender` compares both.
+  - `retainedHeap` and `droppedFrames` (F5) are not implemented yet (M7).
+
 ## Pass bars
 
 | Check | Bar |

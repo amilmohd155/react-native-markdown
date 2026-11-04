@@ -104,6 +104,11 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - Render `Superscript` and `Subscript` as smaller text (`fontSize * 0.75`) with no vertical offset by default.
   - Projects that need true raised or lowered text can override them as declared inline views ([D8](../07-roadmap.md#decisions)) that apply a `translateY`.
 - **Consequences:** The default looks slightly different from browsers, in exchange for consistent behaviour across platforms. To be revisited with a device check in M3.
+- **Device check (M3, 2026-11-04, Android only):** Samsung Galaxy S25 FE, Expo Go (SDK 58), example app "v1 preview" with "inline views" on.
+  - The default (smaller text, no offset) is readable: `H<sub>2</sub>O`, `mc<sup>2</sup>`.
+  - The override works as described: `inlineView()` components with `translateY: -fontSize * 0.4` (superscript) and `+fontSize * 0.2` (subscript), sized from the `baseline` prop, render as raised and lowered inline attachments. The line containing them grows slightly taller.
+  - **iOS (2026-11-04):** iPhone 18 Pro simulator, iOS 27, Expo Go 58. The default reads as on Android; the inline-view override renders true raised/lowered text (`mc²`, `H₂O`) and the line height grows less than on Android.
+  - Decision unchanged.
 
 ## P1-6: Peer dependency ranges
 
@@ -227,3 +232,65 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - markdown-it follows CommonMark 0.31, and so does our CommonMark suite. 9 `gfm/spec.txt` examples (398, 426, 434, 435, 436, 473, 474, 475, 477) fail only for this reason. Checked mechanically: each has a CommonMark 0.31 example with the **same input** (389, 417, 425, 426, 427, 464, 465, 466, 468), and our output matches that example's expected HTML.
 - **Decision:** Follow CommonMark 0.31. Allowlist the 9 GFM examples, each entry naming its CommonMark twin.
 - **Consequences:** The GFM suite passes apart from these 9 and the autolink gaps (P1-1). If a newer GFM spec is vendored, these entries should start passing and must be removed (`test.failing` enforces it).
+
+## P1-15: Footnote navigation through an `onFootnotePress` handler
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:**
+  - M3 renders footnote references (`[1]`) and one back-link mark per reference in each definition (`↩ ↩²`). On the web these are anchors that jump between reference and definition.
+  - The renderer can't scroll: `BlockList` is a plain `View` inside the app's own `ScrollView` or `FlatList` (virtualization is off by default, [03 · BlockList](../03-architecture.md#blocklist)), so it has no handle on the scroll position.
+  - Options considered:
+    1. An `onFootnotePress` handler: the renderer reports the press and the app scrolls (or shows a popover, or ignores it).
+    2. A built-in `scrollTo` that measures element positions, which needs the renderer to own the scroll view. Only possible once virtualization (phase 3) does.
+- **Decision:** Option 1, added in M5 with the other events: `onFootnotePress(label, info) => void`, `info = { index, direction: 'reference' | 'definition', reference }`.
+  - Pressing a reference calls it with `direction: 'definition'` (go to the definition) and `reference` = which reference of that footnote was pressed (1-based, matching the back-link marks).
+  - Pressing a back-link calls it with `direction: 'reference'` and `reference` = which back-link was pressed.
+  - Without the handler, references and back-links stay plain text (not pressable), as in M3.
+  - Elements get the information they need to measure positions themselves (`onLayout`); the renderer does not track positions.
+- **Consequences:**
+  - `onFootnotePress` added to the `<Markdown>` props in [04](../04-api.md#markdown) and to M5's events in the [work breakdown](./work-breakdown.md#m5--public-api).
+  - `FootnoteReference` needs to know which reference it is (the converter's `subId`, today an internal attr) to fill `reference`. M5 adds it as a prop (`subId + 1`), updating [element-props](./element-props.md).
+  - Back-link marks become one pressable `<Text>` each when the handler is set (`interactiveFootnotes` render option, like `interactiveTasks`).
+  - A built-in scroll helper can still come in phase 3, built on this handler.
+
+## P1-16: Font faces for custom fonts
+
+- **Status:** Proposed (2026-11-04), to settle in M4
+- **Date:** 2026-11-04
+- **Context:**
+  - The theme styles `Strong` with `fontWeight: '700'` and `Emphasis` with `fontStyle: 'italic'` only ([theme-resolution](./theme-resolution.md#derived-element-styles)), relying on the platform to pick the bold or italic face.
+  - Fonts loaded with `expo-font`'s `useFonts` (the only way in Expo Go, D2) register **one family per face** (`Inter_400Regular`, `Inter_400Regular_Italic`, …). Checked in M3 on devices with Inter (example app, "fonts" tab):
+
+    | `fontFamily: 'Inter_400Regular'` plus | iOS (iPhone 18 Pro sim, iOS 27) | Android (Galaxy S25 FE) |
+    |---|---|---|
+    | `fontStyle: 'italic'` | **upright** | slanted (synthesized) |
+    | `fontWeight: '700'` | **regular weight** | emboldened (synthesized) |
+    | explicit face (`Inter_400Regular_Italic`, `Inter_700Bold`, …) | correct | correct |
+
+  - So with a custom body font, `Strong` and `Emphasis` render as plain text on iOS, and as synthesized faces on Android. The system font works on both (except the S25 FE's system font, which has no italic and isn't synthesized).
+  - Not checked yet: fonts embedded through the `expo-font` config plugin in a dev build, which can register several faces under one family name, so `fontWeight`/`fontStyle` may select real faces there.
+- **Proposed decision:** `fonts.body` and `fonts.heading` accept either a family name (as now) or a face map `{ regular, italic?, bold?, boldItalic? }`.
+  - With a face map, styles switch `fontFamily` instead of setting `fontWeight`/`fontStyle`: `Strong` → `bold`, `Emphasis` → `italic`, headings → `bold`.
+  - Nesting needs the combined face (`***x***`, or `Emphasis` inside a `Heading`), so the inline flattener tracks the bold/italic state it is in and picks `boldItalic` when both apply. That is a renderer change, not only a theme one.
+  - Missing faces fall back to `fontWeight`/`fontStyle` on the nearest face, so partial maps still work where the platform synthesizes.
+- **Consequences (if accepted):** `theme-resolution.md` and 04 · Theme updated in M4; the flattener gains a font-state parameter; a device check on a dev build with config-plugin fonts decides whether the string form needs a note in the docs.
+
+## P1-17: Unicode characters for superscript and subscript by default
+
+- **Status:** Accepted (2026-11-04), amends P1-5
+- **Date:** 2026-11-04
+- **Context:**
+  - P1-5's default (smaller text, no vertical offset) doesn't read as raised or lowered text: on the Galaxy S25 FE and the iOS simulator, `mc<sup>2</sup>` shows as "mc2" with a small 2 on the baseline.
+  - Unicode superscript and subscript characters (`²`, `₂`, `ⁿ⁺¹`, `ᵢ₋₁`) render raised and lowered inside the same text run on both platforms (example app, "fonts" tab), with no layout cost.
+  - Inline views (D8) also look right, but as a default they cost more (seen on both devices with the example's "inline views" switch): the accessibility text of the paragraph becomes `H￼O … mc￼` (an object-replacement placeholder per view) and copy/selection skips their content; text styles don't cross the View, so colour, font and surrounding link/bold styles are lost unless re-applied; the line grows taller on Android; the offset is a font-dependent approximation; and each one adds a native view and a second text layout to the paragraph.
+- **Decision:**
+  - The default `Superscript` and `Subscript` render their content as Unicode superscript/subscript characters when it is plain text and **every** character has a Unicode form (digits, `+ - − = ( )`, space, and most lowercase letters; `src/render/scripts.ts`).
+  - Other content follows the `scriptFallback` option: `'smaller'` (default) keeps P1-5's smaller text; `'raised'` renders an inline view shifted by `0.4` (up) or `0.2` (down) of the block font size, re-applying the block's text colour, font and inherited style inside it. Apps opt in to the inline-view costs for that content only.
+  - The two defaults are declared inline views, so they receive `baseline`; they only render a View for the `'raised'` fallback.
+- **Consequences:**
+  - `scriptFallback` added to the `<Markdown>` props in [04](../04-api.md#markdown) (a render option in M3, `RenderCtxInput.scriptFallback`).
+  - The common cases (exponents, chemical formulas, ordinals like `x<sup>n</sup>`) look right with no inline view.
+  - Copying the text yields the Unicode characters (`mc²`), not `mc2`. Screen readers read them as superscript/subscript digits.
+  - The theme's `fontSize` for these elements applies only to the fallback (the characters are already small).
+  - Uppercase, `q`, most letters in subscripts, brackets and other symbols fall back.

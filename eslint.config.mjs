@@ -1,22 +1,20 @@
 import { fixupConfigRules } from '@eslint/compat';
-import { FlatCompat } from '@eslint/eslintrc';
-import js from '@eslint/js';
+import reactNativeConfig from '@react-native/eslint-config/flat';
+import prettierConfig from 'eslint-config-prettier';
 import prettier from 'eslint-plugin-prettier';
 import { defineConfig } from 'eslint/config';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
+import reactHooks from 'eslint-plugin-react-hooks';
 
 export default defineConfig([
+  ...fixupConfigRules(reactNativeConfig),
   {
-    extends: fixupConfigRules(compat.extends('@react-native', 'prettier')),
+    rules: {
+      ...reactHooks.configs.flat.recommended.rules,
+    },
+  },
+  // Formatting is Prettier's job.
+  prettierConfig,
+  {
     plugins: { prettier },
     rules: {
       'react/react-in-jsx-scope': 'off',
@@ -35,9 +33,7 @@ export default defineConfig([
   {
     // v1 code (Phase 1): no `any`, so internal types can't leak loosely into
     // the public API. The v0.x code is exempt until it is removed in M5/M6.
-    files: [
-      'src/{api,mdast,model,parse,plugins,render,theme}/**/*.{ts,tsx}',
-    ],
+    files: ['src/{api,mdast,model,parse,plugins,render,theme}/**/*.{ts,tsx}'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
       // The node table packs flags into Uint8 bits and hashes blocks (FNV-1a).
@@ -45,9 +41,7 @@ export default defineConfig([
     },
   },
   {
-    ignores: [
-      'node_modules/',
-      'lib/'
-    ],
+    // example/android and example/ios are generated (expo prebuild).
+    ignores: ['node_modules/', 'lib/', 'example/android/', 'example/ios/'],
   },
 ]);

@@ -25,10 +25,12 @@ The reasoning behind this design, including the options rejected, is in [08 · D
 | `onLinkPress` | `(href, info) => boolean \| void` | opens with `Linking` | Called first for every link. Return `false` to cancel the default. The default opens only `http`, `https`, `mailto`, `tel` and relative URLs, so custom-scheme deep links need this handler ([P1-3](./phase-1/decisions.md#p1-3-url-sanitization-layers)). Errors from `openURL` are caught. |
 | `onImagePress` | `(src, info) => void` | none | |
 | `onTaskToggle` | `(checked, info) => void` | none | Makes task list checkboxes interactive |
+| `onFootnotePress` | `(label, info) => void` | none | Makes footnote references and back-links pressable. `info = { index, direction: 'reference' \| 'definition', reference }`: where to go, and which reference (1-based). The app scrolls; the renderer doesn't own the scroll view ([P1-15](./phase-1/decisions.md#p1-15-footnote-navigation-through-an-onfootnotepress-handler)). |
 | `virtualize` | `boolean \| FlashListProps` | `false` | For long standalone documents |
 | `html` | `'safe' \| 'text' \| 'strip' \| { allow: HtmlTag[] }` | `'safe'` | `'safe'` renders an allowlist of tags as elements and shows the rest as text. See [Raw HTML](#raw-html). |
 | `images` | `'allow' \| 'deny' \| { allowHosts: string[] }` | `'allow'` | Use `'deny'` or an allowlist for untrusted content |
 | `softBreak` | `'space' \| 'newline'` | `'space'` | How soft line breaks render. `'space'` matches browsers and GitHub ([P1-2](./phase-1/decisions.md#p1-2-soft-line-breaks)). |
+| `scriptFallback` | `'smaller' \| 'raised'` | `'smaller'` | Superscript/subscript content with no Unicode form (`TM`, `[1]`). Unicode-convertible content (`mc²`, `H₂O`) always renders as Unicode characters. `'raised'` uses inline views, with accessibility and styling costs ([P1-17](./phase-1/decisions.md#p1-17-unicode-characters-for-superscript-and-subscript-by-default)). |
 | `selectable` | `boolean` | `false` | Text selection within each block |
 | `maxFontSizeMultiplier` | `number` | unset | Accessibility |
 | `backend` | `ParserBackend` | JS (markdown-it) | `nativeBackend` from `/native` in phase 4 |

@@ -1,0 +1,900 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`default elements renders the gallery of block and inline elements 1`] = `
+<View>
+  <Text
+    accessibilityRole="header"
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 6,
+          "marginTop": 18,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 40,
+          "fontWeight": "700",
+          "lineHeight": 50,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Title
+  </Text>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Text with 
+    <Text
+      style={
+        {
+          "fontWeight": "700",
+        }
+      }
+    >
+      strong
+    </Text>
+    , 
+    <Text
+      style={
+        {
+          "fontStyle": "italic",
+        }
+      }
+    >
+      em
+    </Text>
+    , 
+    <Text
+      style={
+        {
+          "textDecorationLine": "line-through",
+        }
+      }
+    >
+      del
+    </Text>
+    , 
+    <Text
+      style={
+        {
+          "backgroundColor": "#f6f8fa",
+          "fontFamily": "Menlo",
+          "fontSize": 14.4,
+        }
+      }
+    >
+      code
+    </Text>
+    , 
+    <Text
+      accessibilityRole="link"
+      onPress={[Function]}
+      style={
+        {
+          "color": "#0969da",
+          "textDecorationLine": "underline",
+        }
+      }
+    >
+      link
+    </Text>
+    , H
+    <Text
+      style={
+        [
+          {
+            "fontSize": 12,
+          },
+          {
+            "fontSize": undefined,
+          },
+        ]
+      }
+    >
+      ₂
+    </Text>
+    O, 
+    <Text
+      style={
+        {
+          "backgroundColor": "#f6f8fa",
+          "fontFamily": "Menlo",
+          "fontSize": 14.4,
+        }
+      }
+    >
+      K
+    </Text>
+    , 
+    <Text
+      style={
+        {
+          "textDecorationLine": "underline",
+        }
+      }
+    >
+      u
+    </Text>
+    , 
+    <Text
+      style={
+        {
+          "backgroundColor": "#fff8c5",
+        }
+      }
+    >
+      m
+    </Text>
+    , x
+    <Text
+      style={
+        [
+          {
+            "fontSize": 12,
+          },
+          {
+            "fontSize": undefined,
+          },
+        ]
+      }
+    >
+      ²
+    </Text>
+    , 
+    <Text
+      style={{}}
+    >
+      &lt;span&gt;
+    </Text>
+    raw
+    <Text
+      style={{}}
+    >
+      &lt;/span&gt;
+    </Text>
+    .
+  </Text>
+  <View
+    style={
+      {
+        "borderLeftColor": "#d1d9e0",
+        "borderLeftWidth": 4,
+        "marginBottom": 12,
+        "paddingLeft": 12,
+      }
+    }
+  >
+    <Text
+      selectable={false}
+      style={
+        [
+          {
+            "marginBottom": 12,
+          },
+          {
+            "color": "#1f2328",
+            "fontSize": 16,
+            "lineHeight": 24,
+          },
+          {
+            "color": "#59636e",
+          },
+          undefined,
+        ]
+      }
+    >
+      quote
+    </Text>
+  </View>
+  <View
+    style={
+      {
+        "marginBottom": 12,
+        "paddingLeft": 0,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 26,
+            },
+          ]
+        }
+      >
+        <Text
+          accessible={false}
+          style={
+            [
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              {
+                "textAlign": "right",
+              },
+            ]
+          }
+        >
+          3.
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          three
+        </Text>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 26,
+            },
+          ]
+        }
+      >
+        <Text
+          accessible={false}
+          style={
+            [
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              {
+                "textAlign": "right",
+              },
+            ]
+          }
+        >
+          4.
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          four
+        </Text>
+      </View>
+    </View>
+  </View>
+  <View
+    style={
+      {
+        "marginBottom": 12,
+        "paddingLeft": 0,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 20,
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="checkbox"
+          accessibilityState={
+            {
+              "checked": true,
+              "disabled": true,
+            }
+          }
+          style={
+            [
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+            ]
+          }
+          suppressHighlighting={true}
+        >
+          ☑︎
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          done
+        </Text>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 20,
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="checkbox"
+          accessibilityState={
+            {
+              "checked": false,
+              "disabled": true,
+            }
+          }
+          style={
+            [
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+            ]
+          }
+          suppressHighlighting={true}
+        >
+          ☐︎
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          open
+        </Text>
+      </View>
+    </View>
+  </View>
+  <View
+    style={
+      {
+        "backgroundColor": "#f6f8fa",
+        "borderRadius": 6,
+        "marginBottom": 12,
+        "padding": 12,
+      }
+    }
+  >
+    <RCTScrollView
+      bounces={false}
+      horizontal={true}
+      showsHorizontalScrollIndicator={false}
+    >
+      <View>
+        <Text
+          selectable={false}
+          style={
+            {
+              "color": "#1f2328",
+              "fontFamily": "Menlo",
+              "fontSize": 14,
+              "lineHeight": 20.3,
+            }
+          }
+        >
+          const a = 1;
+        </Text>
+      </View>
+    </RCTScrollView>
+  </View>
+  <View
+    style={
+      {
+        "backgroundColor": "#d1d9e0",
+        "height": 0.5,
+        "marginVertical": 12,
+      }
+    }
+  />
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#59636e",
+          "fontFamily": "Menlo",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    &lt;div&gt;block&lt;/div&gt;
+  </Text>
+  <RCTScrollView
+    bounces={false}
+    horizontal={true}
+    showsHorizontalScrollIndicator={false}
+    style={
+      {
+        "marginBottom": 12,
+      }
+    }
+  >
+    <View>
+      <View
+        style={
+          {
+            "opacity": 0,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "fontWeight": "600",
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              a
+            </Text>
+          </View>
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "fontWeight": "600",
+                    "lineHeight": 24,
+                  },
+                  {
+                    "textAlign": "right",
+                  },
+                ]
+              }
+            >
+              b
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              1
+            </Text>
+          </View>
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "lineHeight": 24,
+                  },
+                  {
+                    "textAlign": "right",
+                  },
+                ]
+              }
+            >
+              2
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+  <View
+    style={
+      {
+        "marginBottom": 12,
+      }
+    }
+  >
+    <View
+      style={
+        [
+          {
+            "width": "100%",
+          },
+          undefined,
+        ]
+      }
+    >
+      <Image
+        accessibilityLabel="img"
+        resizeMode="contain"
+        source={
+          {
+            "uri": "a.png",
+          }
+        }
+        style={
+          [
+            {
+              "width": "100%",
+            },
+            {
+              "aspectRatio": 1.7777777777777777,
+              "backgroundColor": "#f6f8fa",
+            },
+          ]
+        }
+      />
+    </View>
+  </View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    note
+    <Text
+      style={
+        {
+          "color": "#0969da",
+          "fontSize": 12,
+        }
+      }
+    >
+      [
+      1
+      ]
+    </Text>
+  </Text>
+  <View
+    accessibilityLabel="Footnotes"
+    accessibilityRole="summary"
+    style={
+      {
+        "borderTopColor": "#d1d9e0",
+        "borderTopWidth": 0.5,
+        "marginTop": 12,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#59636e",
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "minWidth": 24,
+            },
+          ]
+        }
+      >
+        1.
+      </Text>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 12,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              {
+                "color": "#59636e",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              undefined,
+            ]
+          }
+        >
+          The note.
+        </Text>
+        <Text
+          accessible={false}
+          importantForAccessibility="no"
+          style={
+            [
+              {
+                "color": "#59636e",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "marginBottom": 6,
+                "marginTop": -6,
+              },
+            ]
+          }
+        >
+          ↩︎
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;

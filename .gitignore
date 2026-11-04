@@ -45,6 +45,11 @@ android.iml
 #
 example/ios/Pods
 
+# The example uses Continuous Native Generation: `expo prebuild` and
+# `expo run:*` generate these, so they are never committed.
+example/android/
+example/ios/
+
 # Ruby
 example/vendor/
 
