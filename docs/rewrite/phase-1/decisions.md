@@ -279,6 +279,7 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 - **Consequences:**
   - `theme-resolution.md` and 04 · Theme updated (done with this decision).
   - The flattener gains a font-state parameter (M4 implementation), with a test that equal input gives equal output.
+  - Checked on the Galaxy S25 FE in Expo Go (example app, "theme" tab, Inter face map): italic and bold-italic now render, which the string form did not give there.
   - Open, docs only: a device check on a dev build with config-plugin fonts decides whether the string form needs a note in the docs.
 
 ## P1-17: Unicode characters for superscript and subscript by default
@@ -299,3 +300,19 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - Copying the text yields the Unicode characters (`mc²`), not `mc2`. Screen readers read them as superscript/subscript digits.
   - The theme's `fontSize` for these elements applies only to the fallback (the characters are already small).
   - Uppercase, `q`, most letters in subscripts, brackets and other symbols fall back.
+
+## P1-18: Theme resolve cache semantics
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:** [theme-resolution](./theme-resolution.md#caching) fixed the cache key and left open how deep "shallow per group" goes, how many user themes to keep, and what a theme input merges onto.
+- **Decision:**
+  - Groups are compared shallowly, plus one level where values are objects (face maps, an element's `text` and `container`). Otherwise an inline `fonts: { body: { regular, bold } }` or `elements: { Link: { text: { … } } }` would miss on every render. `Heading` functions and plugin layers compare by identity.
+  - Built-in themes are kept for the app's lifetime. Other themes use a least-recently-used cache of 16 entries.
+  - A theme input merges onto the built-in theme of the current color scheme. `createTheme(input, base)` merges onto an explicit base and keeps that base's colors in every scheme.
+  - `useMarkdownTheme()` returns `{ tokens, styles, headings }`. `styles.Heading` is empty because heading styles depend on the level.
+- **Consequences:**
+  - Inputs must not be mutated after use. `createTheme` returns frozen objects.
+  - An inline `Heading` function re-resolves the theme every render, so it is documented as "hoist it".
+  - Plugin themes (M5) must keep stable layer objects, or they bypass the cache.
+

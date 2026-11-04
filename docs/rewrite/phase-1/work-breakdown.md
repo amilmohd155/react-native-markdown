@@ -105,7 +105,8 @@ M0 Groundwork
 
 - `createTheme`, `lightTheme`, `darkTheme`, `'auto'`.
 - Derivation and merge order ([theme-resolution.md](./theme-resolution.md)).
-- Cache, `StyleSheet.create` once per resolved theme, `useMarkdownTheme()`.
+- Cache, `StyleSheet.create` once per resolved theme, `useMarkdownTheme()` ([P1-18](./decisions.md#p1-18-theme-resolve-cache-semantics)).
+- Font face maps for custom fonts, with the inline flattener's bold/italic state ([P1-16](./decisions.md#p1-16-font-faces-for-custom-fonts)).
 
 **Done when:**
 - Changing one token restyles every element that derives from it.

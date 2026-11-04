@@ -127,11 +127,11 @@ const theme = createTheme(
 );
 ```
 
-- `lightTheme` and `darkTheme` ship with the library. `theme="auto"` switches with `useColorScheme()`.
+- `lightTheme` and `darkTheme` ship with the library. `theme="auto"` switches with `useColorScheme()`. A theme input (no base) merges onto the built-in theme of the current scheme; `createTheme(input, base)` pins its base.
 - **Font faces:** `fonts.body` and `fonts.heading` take a family name or `{ regular, italic?, bold?, boldItalic? }`; `fonts.mono` takes a name or `{ regular }`. Use a face map with fonts loaded by `expo-font`'s `useFonts` (one family per face), where `fontWeight`/`fontStyle` don't select faces on iOS. Missing faces fall back to `fontWeight`/`fontStyle` ([P1-16](./phase-1/decisions.md#p1-16-font-faces-for-custom-fonts)).
 - Element styles are split into `text` and `container`, so view and text styles can't be mixed up.
-- Resolved once per change of the theme value, then shared through context.
-- `useMarkdownTheme()` gives custom components access to the resolved theme and tokens.
+- Resolved once per change of the theme value (equal values, compared shallowly per group, reuse the cached result), then shared through context. Hoist `Heading` functions: they are compared by identity.
+- `useMarkdownTheme()` gives custom components `{ tokens, styles, headings }`: the merged tokens, every element's resolved `{ text, container }`, and the per-level `Heading` styles. It must be called inside `<Markdown>`.
 
 ## Plugins
 

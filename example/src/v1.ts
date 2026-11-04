@@ -20,5 +20,16 @@ export {
   type RenderHandlers,
   type SoftBreak,
 } from '../../src/render';
-export { lightTheme, resolveTheme } from '../../src/theme';
+export {
+  createTheme,
+  darkTheme,
+  lightTheme,
+  resolveTheme,
+  useMarkdownTheme,
+  useResolvedTheme,
+  type FontFaces,
+  type HeadingLevel,
+  type ThemeInput,
+  type ThemeProp,
+} from '../../src/theme';
 export type { NodeTable } from '../../src/model';
