@@ -275,3 +275,22 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - Nesting needs the combined face (`***x***`, or `Emphasis` inside a `Heading`), so the inline flattener tracks the bold/italic state it is in and picks `boldItalic` when both apply. That is a renderer change, not only a theme one.
   - Missing faces fall back to `fontWeight`/`fontStyle` on the nearest face, so partial maps still work where the platform synthesizes.
 - **Consequences (if accepted):** `theme-resolution.md` and 04 · Theme updated in M4; the flattener gains a font-state parameter; a device check on a dev build with config-plugin fonts decides whether the string form needs a note in the docs.
+
+## P1-17: Unicode characters for superscript and subscript by default
+
+- **Status:** Accepted (2026-11-04), amends P1-5
+- **Date:** 2026-11-04
+- **Context:**
+  - P1-5's default (smaller text, no vertical offset) doesn't read as raised or lowered text: on the Galaxy S25 FE and the iOS simulator, `mc<sup>2</sup>` shows as "mc2" with a small 2 on the baseline.
+  - Unicode superscript and subscript characters (`²`, `₂`, `ⁿ⁺¹`, `ᵢ₋₁`) render raised and lowered inside the same text run on both platforms (example app, "fonts" tab), with no layout cost.
+  - Inline views (D8) also look right, but as a default they cost more (seen on both devices with the example's "inline views" switch): the accessibility text of the paragraph becomes `H￼O … mc￼` (an object-replacement placeholder per view) and copy/selection skips their content; text styles don't cross the View, so colour, font and surrounding link/bold styles are lost unless re-applied; the line grows taller on Android; the offset is a font-dependent approximation; and each one adds a native view and a second text layout to the paragraph.
+- **Decision:**
+  - The default `Superscript` and `Subscript` render their content as Unicode superscript/subscript characters when it is plain text and **every** character has a Unicode form (digits, `+ - − = ( )`, space, and most lowercase letters; `src/render/scripts.ts`).
+  - Other content follows the `scriptFallback` option: `'smaller'` (default) keeps P1-5's smaller text; `'raised'` renders an inline view shifted by `0.4` (up) or `0.2` (down) of the block font size, re-applying the block's text colour, font and inherited style inside it. Apps opt in to the inline-view costs for that content only.
+  - The two defaults are declared inline views, so they receive `baseline`; they only render a View for the `'raised'` fallback.
+- **Consequences:**
+  - `scriptFallback` added to the `<Markdown>` props in [04](../04-api.md#markdown) (a render option in M3, `RenderCtxInput.scriptFallback`).
+  - The common cases (exponents, chemical formulas, ordinals like `x<sup>n</sup>`) look right with no inline view.
+  - Copying the text yields the Unicode characters (`mc²`), not `mc2`. Screen readers read them as superscript/subscript digits.
+  - The theme's `fontSize` for these elements applies only to the fallback (the characters are already small).
+  - Uppercase, `q`, most letters in subscripts, brackets and other symbols fall back.

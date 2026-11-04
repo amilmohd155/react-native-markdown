@@ -1145,12 +1145,17 @@ exports[`element snapshots Subscript 1`] = `
     H
     <Text
       style={
-        {
-          "fontSize": 12,
-        }
+        [
+          {
+            "fontSize": 12,
+          },
+          {
+            "fontSize": undefined,
+          },
+        ]
       }
     >
-      2
+      ₂
     </Text>
     O
   </Text>
@@ -1179,12 +1184,17 @@ exports[`element snapshots Superscript 1`] = `
     E = mc
     <Text
       style={
-        {
-          "fontSize": 12,
-        }
+        [
+          {
+            "fontSize": 12,
+          },
+          {
+            "fontSize": undefined,
+          },
+        ]
       }
     >
-      2
+      ²
     </Text>
   </Text>
 </View>

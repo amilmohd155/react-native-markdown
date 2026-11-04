@@ -71,6 +71,7 @@ export {
   columnWidths,
 } from './tableLayout';
 export { isOpenableUrl, pressLink } from './links';
+export { toSubscript, toSuperscript } from './scripts';
 export {
   InheritedTextContext,
   ListMarkerContext,

@@ -5,6 +5,14 @@ import type { Components } from './elements';
 /** How soft line breaks render (P1-2). */
 export type SoftBreak = 'space' | 'newline';
 
+/**
+ * Superscript/subscript content with no Unicode form (P1-17): `'smaller'`
+ * renders smaller text on the baseline; `'raised'` an inline view raised or
+ * lowered from the baseline (accessibility, copy and style inheritance
+ * costs, see P1-17).
+ */
+export type ScriptFallback = 'smaller' | 'raised';
+
 export interface LinkPressInfo {
   readonly title: string | null;
 }
@@ -35,6 +43,7 @@ export interface RenderOptions {
   readonly interactiveTasks: boolean;
   /** True when `onImagePress` is set: block images are pressable. */
   readonly interactiveImages: boolean;
+  readonly scriptFallback: ScriptFallback;
 }
 
 const NO_HANDLERS: RenderHandlers = Object.freeze({});
@@ -45,6 +54,7 @@ export const DEFAULT_RENDER_OPTIONS: RenderOptions = Object.freeze({
   maxFontSizeMultiplier: null,
   interactiveTasks: false,
   interactiveImages: false,
+  scriptFallback: 'smaller',
 });
 
 /**
@@ -80,6 +90,7 @@ export interface RenderCtxInput {
   readonly softBreak?: SoftBreak;
   readonly selectable?: boolean;
   readonly maxFontSizeMultiplier?: number | null;
+  readonly scriptFallback?: ScriptFallback;
 }
 
 function optionsOf(input: RenderCtxInput): RenderOptions {
@@ -91,6 +102,8 @@ function optionsOf(input: RenderCtxInput): RenderOptions {
       DEFAULT_RENDER_OPTIONS.maxFontSizeMultiplier,
     interactiveTasks: input.handlers?.onTaskToggle !== undefined,
     interactiveImages: input.handlers?.onImagePress !== undefined,
+    scriptFallback:
+      input.scriptFallback ?? DEFAULT_RENDER_OPTIONS.scriptFallback,
   });
 }
 
@@ -124,6 +137,8 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
     input.maxFontSizeMultiplier ?? DEFAULT_RENDER_OPTIONS.maxFontSizeMultiplier;
   const interactiveTasks = latest.onTaskToggle !== undefined;
   const interactiveImages = latest.onImagePress !== undefined;
+  const scriptFallback =
+    input.scriptFallback ?? DEFAULT_RENDER_OPTIONS.scriptFallback;
 
   const options = useMemo<RenderOptions>(
     () =>
@@ -133,6 +148,7 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
         maxFontSizeMultiplier,
         interactiveTasks,
         interactiveImages,
+        scriptFallback,
       }),
     [
       softBreak,
@@ -140,6 +156,7 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
       maxFontSizeMultiplier,
       interactiveTasks,
       interactiveImages,
+      scriptFallback,
     ]
   );
 

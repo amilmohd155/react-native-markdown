@@ -99,12 +99,17 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
     , H
     <Text
       style={
-        {
-          "fontSize": 12,
-        }
+        [
+          {
+            "fontSize": 12,
+          },
+          {
+            "fontSize": undefined,
+          },
+        ]
       }
     >
-      2
+      ₂
     </Text>
     O, 
     <Text
@@ -141,12 +146,17 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
     , x
     <Text
       style={
-        {
-          "fontSize": 12,
-        }
+        [
+          {
+            "fontSize": 12,
+          },
+          {
+            "fontSize": undefined,
+          },
+        ]
       }
     >
-      2
+      ²
     </Text>
     , 
     <Text

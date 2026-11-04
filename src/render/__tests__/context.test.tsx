@@ -39,6 +39,7 @@ describe('createRenderCtx', () => {
       maxFontSizeMultiplier: null,
       interactiveTasks: false,
       interactiveImages: false,
+      scriptFallback: 'smaller',
     });
     expect(Object.isFrozen(ctx)).toBe(true);
   });

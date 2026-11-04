@@ -19,7 +19,7 @@ right here.
 
 ## Safe HTML subset
 
-H<sub>2</sub>O and E = mc<sup>2</sup>, <u>underline</u>, <mark>highlight</mark>,
+H<sub>2</sub>O and E = mc<sup>2</sup> (Unicode), Brand<sup>TM</sup> (fallback), <u>underline</u>, <mark>highlight</mark>,
 press <kbd>Ctrl</kbd> + <kbd>C</kbd>, a line<br>break, and <span>unknown tags</span> as text.
 
 <div>

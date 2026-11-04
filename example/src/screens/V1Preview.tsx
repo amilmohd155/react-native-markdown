@@ -38,6 +38,7 @@ export function V1Preview() {
   const [tasks, setTasks] = useState(true);
   const [inter, setInter] = useState(false);
   const [chips, setChips] = useState(false);
+  const [raised, setRaised] = useState(false);
 
   // Declared inline views (D8): link chips and raised/lowered scripts.
   const chipComponents = useMemo(
@@ -74,6 +75,7 @@ export function V1Preview() {
     components: chips ? chipComponents : defaultComponents,
     handlers,
     softBreak: newlines ? 'newline' : 'space',
+    scriptFallback: raised ? 'raised' : 'smaller',
     theme: inter ? interTheme : undefined,
   });
 
@@ -88,6 +90,7 @@ export function V1Preview() {
         <Toggle label="tasks" value={tasks} onChange={setTasks} />
         <Toggle label="Inter" value={inter} onChange={setInter} />
         <Toggle label="inline views" value={chips} onChange={setChips} />
+        <Toggle label="raised fallback" value={raised} onChange={setRaised} />
       </View>
       <BlockList table={table} ctx={ctx} />
     </ScrollView>

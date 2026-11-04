@@ -1,10 +1,11 @@
-import type { ComponentType } from 'react';
-import { Image, Text } from 'react-native';
-import { useRenderContext } from '../contexts';
+import { useContext, type ComponentType } from 'react';
+import { Image, Text, View } from 'react-native';
+import { InheritedTextContext, useRenderContext } from '../contexts';
 import type { ElementProps } from '../elements';
 import { useImageSize } from '../imageSize';
 import { markInlineView, type InlineViewProps } from '../inlineView';
 import { pressLink } from '../links';
+import { toSubscript, toSuperscript } from '../scripts';
 
 /**
  * Default inline elements: nested <Text> inside the block's single <Text>,
@@ -35,15 +36,76 @@ export function Highlight({ style, children }: ElementProps<'Highlight'>) {
   return <Text style={style.text}>{children}</Text>;
 }
 
-/** Smaller text, no vertical offset (P1-5). */
-export function Superscript({ style, children }: ElementProps<'Superscript'>) {
-  return <Text style={style.text}>{children}</Text>;
+/** The glyphs are already small: drop the theme's smaller font size. */
+const UNICODE_SCRIPT = { fontSize: undefined } as const;
+
+/** Shift of the `'raised'` fallback, as a fraction of the block font size. */
+const SHIFT = { sup: -0.4, sub: 0.2 } as const;
+
+/**
+ * Superscript or subscript content (P1-17):
+ * 1. plain text whose every character has a Unicode form renders as those
+ *    characters, in the paragraph's text run (`mc²`, `H₂O`);
+ * 2. otherwise, with `scriptFallback: 'smaller'` (default), smaller text on
+ *    the baseline (P1-5);
+ * 3. with `scriptFallback: 'raised'`, an inline view shifted up or down.
+ *    Text styles don't cross a View, so the block's text colour, font and
+ *    inherited style are re-applied inside it; link or bold styles around
+ *    the element are not.
+ */
+function ScriptRun({
+  kind,
+  style,
+  children,
+  baseline,
+}: InlineViewProps<'Superscript'> & { kind: 'sup' | 'sub' }) {
+  const { theme, options } = useRenderContext();
+  const inherited = useContext(InheritedTextContext);
+  const unicode =
+    typeof children === 'string'
+      ? (kind === 'sup' ? toSuperscript : toSubscript)(children)
+      : null;
+
+  if (unicode !== null) {
+    return <Text style={[style.text, UNICODE_SCRIPT]}>{unicode}</Text>;
+  }
+  if (options.scriptFallback === 'smaller') {
+    return <Text style={style.text}>{children}</Text>;
+  }
+  const { colors, fonts } = theme.tokens;
+  return (
+    <View
+      style={{ transform: [{ translateY: baseline.fontSize * SHIFT[kind] }] }}
+    >
+      <Text
+        style={[
+          { color: colors.text, fontFamily: fonts.body },
+          inherited,
+          style.text,
+          { fontSize: baseline.fontSize * 0.75 },
+        ]}
+      >
+        {children}
+      </Text>
+    </View>
+  );
 }
 
-/** Smaller text, no vertical offset (P1-5). */
-export function Subscript({ style, children }: ElementProps<'Subscript'>) {
-  return <Text style={style.text}>{children}</Text>;
-}
+/**
+ * Declared inline views (they receive `baseline`), though they only render
+ * a View for the `'raised'` fallback.
+ */
+export const Superscript = markInlineView(function DefaultSuperscript(
+  props: InlineViewProps<'Superscript'>
+) {
+  return <ScriptRun kind="sup" {...props} />;
+}) as ComponentType<ElementProps<'Superscript'>>;
+
+export const Subscript = markInlineView(function DefaultSubscript(
+  props: InlineViewProps<'Subscript'>
+) {
+  return <ScriptRun kind="sub" {...props} />;
+}) as ComponentType<ElementProps<'Subscript'>>;
 
 export function Kbd({ style, children }: ElementProps<'Kbd'>) {
   return <Text style={style.text}>{children}</Text>;
