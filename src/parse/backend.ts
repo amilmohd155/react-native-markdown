@@ -27,12 +27,23 @@ export interface ParseOptions {
 }
 
 /**
- * A parser backend turns markdown source into the private node table.
- * The JS backend wraps markdown-it; a native backend (phase 4) must emit
- * the same table layout. Spec: docs/rewrite/03-architecture.md#1-parser-layer
+ * A parser backend, as the public API sees it: an opaque handle for the
+ * `backend` option. Backends are first-party (the JS markdown-it one by
+ * default, `nativeBackend` in phase 4), so users pass one around but never
+ * implement or call it, and the private node table stays out of the public
+ * types. `parse()` rejects objects that aren't real backends.
  */
 export interface ParserBackend {
   readonly name: string;
+}
+
+/**
+ * What a parser backend implements: it turns markdown source into the
+ * private node table. The JS backend wraps markdown-it; a native backend
+ * (phase 4) must emit the same table layout.
+ * Spec: docs/rewrite/03-architecture.md#1-parser-layer
+ */
+export interface ParserBackendImpl extends ParserBackend {
   /** Parse a whole document. */
   parse(source: string, options?: ParseOptions): NodeTable;
   /**

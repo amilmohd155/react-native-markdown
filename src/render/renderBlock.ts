@@ -9,7 +9,15 @@ import {
 } from './contexts';
 import { element } from './element';
 import { BODY_FONT, HEADING_FONT, TABLE_HEAD_FONT } from '../theme';
+import { imageAllowed } from './imagePolicy';
 import { renderInline } from './inline';
+import {
+  createPluginElement,
+  pluginComponentOf,
+  pluginNodeOf,
+  pluginPropsOf,
+  pluginStyleOf,
+} from './pluginNodes';
 import {
   blockImageOf,
   codeBlockProps,
@@ -106,7 +114,10 @@ function renderNode(
 
     case NodeType.Paragraph: {
       const image = blockImageOf(table, id);
-      if (image !== NONE) {
+      if (
+        image !== NONE &&
+        imageAllowed(ctx.options.images, imageProps(table, image).src)
+      ) {
         return element(
           ctx,
           'Image',
@@ -264,9 +275,24 @@ function renderNode(
         renderChildren(table, id, ctx, place)
       );
 
-    default:
-      // Plugin block nodes are rendered from the plugin registry in M5.
-      return null;
+    default: {
+      // Plugin block nodes: a leaf (`math_block`) or a container.
+      const plugin = pluginNodeOf(table, id);
+      if (plugin === undefined) return null;
+      const children =
+        table.firstChild[id] === NONE
+          ? undefined
+          : renderChildren(table, id, ctx, place);
+      const component = pluginComponentOf(ctx, plugin.name);
+      if (component === undefined) return children ?? null;
+      return createPluginElement(
+        component,
+        id,
+        pluginPropsOf(table, id),
+        pluginStyleOf(ctx, plugin.name),
+        children
+      );
+    }
   }
 }
 

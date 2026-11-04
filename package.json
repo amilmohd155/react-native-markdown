@@ -40,7 +40,8 @@
     "prepare": "bob build",
     "release": "release-it --only-version",
     "test:spec": "jest --selectProjects spec",
-    "check:expo-go": "node scripts/check-no-native.mjs"
+    "check:expo-go": "node scripts/check-no-native.mjs",
+    "check:public-types": "node scripts/check-public-types.mjs"
   },
   "keywords": [
     "react-native",
@@ -48,8 +49,7 @@
     "markdown",
     "renderer",
     "react-native-markdown",
-    "commonmark",
-    "mdast"
+    "commonmark"
   ],
   "repository": {
     "type": "git",
@@ -111,8 +111,11 @@
           "<rootDir>/example/node_modules",
           "<rootDir>/lib/"
         ],
+        "moduleNameMapper": {
+          "^@docren/react-native-markdown$": "<rootDir>/src/index.tsx"
+        },
         "transformIgnorePatterns": [
-          "node_modules/(?!((jest-)?react-native|@react-native(-community)?|mdast-util-.*|micromark.*|unist-util-.*|decode-named-character-reference|character-entities|devlop)/)"
+          "node_modules/(?!((jest-)?react-native|@react-native(-community)?)/)"
         ]
       },
       {
@@ -185,7 +188,6 @@
   },
   "dependencies": {
     "markdown-it": "^15.0.3",
-    "markdown-it-footnote": "^4.0.0",
-    "mdast-util-from-markdown": "^2.0.2"
+    "markdown-it-footnote": "^4.0.0"
   }
 }

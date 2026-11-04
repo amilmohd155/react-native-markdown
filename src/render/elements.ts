@@ -1,6 +1,10 @@
 import type { ComponentType, ReactNode } from 'react';
 import type { Align } from '../model';
-import type { ElementName, ElementStyle } from '../theme';
+import type {
+  ElementName,
+  ElementStyle,
+  PluginElementPropsMap,
+} from '../theme';
 
 /**
  * Semantic props of each built-in element.
@@ -72,7 +76,12 @@ export interface ElementPropsMap {
     readonly height: number | null;
   };
   LineBreak: { readonly hard: boolean };
-  FootnoteReference: { readonly label: string; readonly index: number };
+  FootnoteReference: {
+    readonly label: string;
+    readonly index: number;
+    /** Which reference to this footnote this is (1-based, P1-15). */
+    readonly reference: number;
+  };
   Underline: WithChildren;
   Highlight: WithChildren;
   Superscript: WithChildren;
@@ -81,12 +90,19 @@ export interface ElementPropsMap {
   HtmlInline: { readonly html: string };
 }
 
+/** Built-in and plugin element props, by element name. */
+type AllElementProps = ElementPropsMap & PluginElementPropsMap;
+
+/** Every element name: built-in, plus those plugins declare. */
+export type AnyElementName = keyof AllElementProps & string;
+
 /**
  * Props a component receives for element `K`: its semantic props plus
  * `style`, the resolved theme entry. Fails to compile if `ElementPropsMap`
- * misses an element name.
+ * misses an element name. `K` may also be a plugin element
+ * (`PluginElementPropsMap`).
  */
-export type ElementProps<K extends ElementName> = ElementPropsMap[K] & {
+export type ElementProps<K extends AnyElementName> = AllElementProps[K] & {
   readonly style: ElementStyle;
 };
 
@@ -106,6 +122,16 @@ export type InlineElementName =
   | 'Subscript'
   | 'Kbd'
   | 'HtmlInline';
+
+/**
+ * Components for the elements plugins add. Empty until a plugin augments
+ * `PluginElementPropsMap`.
+ */
+export type PluginComponents = {
+  readonly [K in keyof PluginElementPropsMap & string]?: ComponentType<
+    ElementProps<K> & { readonly children?: ReactNode }
+  >;
+};
 
 /** A complete element → component map (defaults → plugins → `components`). */
 export type Components = {

@@ -65,3 +65,11 @@ export const defaultComponents: Components = Object.freeze({
   Kbd,
   HtmlInline,
 });
+
+/**
+ * The public name of `defaultComponents`: the built-in components, so a
+ * custom component can wrap one:
+ * `props.language === 'mermaid' ? <Mermaid /> : <defaults.CodeBlock {...props} />`.
+ * Spec: docs/rewrite/04-api.md#wrapping-a-default
+ */
+export const defaults: Components = defaultComponents;

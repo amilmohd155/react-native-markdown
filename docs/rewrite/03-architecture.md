@@ -391,7 +391,7 @@ src/
   render/       BlockList, Block, inline flattener, table → props, default elements
   theme/        tokens, createTheme, light/dark themes, context
   api/          parse, visit, public types
-  mdast/        toMdast (separate entry point)
+  mdast/        toMdast (separate entry point, Phase 3)
   stream/       useMarkdownStream, tail re-parse
   components/   <Markdown>
   native/       (phase 4) JSI backend

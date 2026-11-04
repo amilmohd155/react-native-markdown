@@ -32,6 +32,10 @@ export {
   type ThemeInput,
   type ThemeTokens,
 } from './types';
+export type {
+  PluginElementName,
+  PluginElementPropsMap,
+} from './pluginElements';
 export { darkTheme, lightTheme } from './tokens';
 export { createTheme, mergeElements, mergeTokens } from './create';
 export {

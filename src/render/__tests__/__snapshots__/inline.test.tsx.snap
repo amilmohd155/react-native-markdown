@@ -73,6 +73,7 @@ exports[`inline flattener renders inline images, footnote references and raw inl
   <FootnoteReference
     index={1}
     label="n"
+    reference={1}
   />,
   " ",
   <HtmlInline

@@ -1,5 +1,5 @@
 import { useContext, type ComponentType } from 'react';
-import { Image, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 import { InheritedTextContext, useRenderContext } from '../contexts';
 import type { ElementProps } from '../elements';
 import { useImageSize } from '../imageSize';
@@ -144,10 +144,12 @@ export function LineBreak({ hard }: ElementProps<'LineBreak'>) {
 export const InlineImage = markInlineView(function DefaultInlineImage({
   src,
   alt,
+  title,
   width,
   height,
   baseline,
 }: InlineViewProps<'InlineImage'>) {
+  const { handlers, options } = useRenderContext();
   const loaded = useImageSize(src);
   const known =
     width !== null && height !== null
@@ -157,7 +159,7 @@ export const InlineImage = markInlineView(function DefaultInlineImage({
         : null;
   const max = baseline.lineHeight;
   const scale = known === null ? 1 : Math.min(1, max / known.height);
-  return (
+  const image = (
     <Image
       source={{ uri: src }}
       accessibilityLabel={alt}
@@ -168,13 +170,44 @@ export const InlineImage = markInlineView(function DefaultInlineImage({
       }
     />
   );
+  return options.interactiveImages ? (
+    <Pressable
+      accessibilityRole="imagebutton"
+      accessibilityLabel={alt}
+      onPress={() => handlers.current.onImagePress?.(src, { alt, title })}
+    >
+      {image}
+    </Pressable>
+  ) : (
+    image
+  );
 }) as ComponentType<ElementProps<'InlineImage'>>;
 
 export function FootnoteReference({
+  label,
   index,
+  reference,
   style,
 }: ElementProps<'FootnoteReference'>) {
-  return <Text style={style.text}>[{index}]</Text>;
+  const { handlers, options } = useRenderContext();
+  if (!options.interactiveFootnotes) {
+    return <Text style={style.text}>[{index}]</Text>;
+  }
+  return (
+    <Text
+      style={style.text}
+      accessibilityRole="link"
+      onPress={() =>
+        handlers.current.onFootnotePress?.(label, {
+          index,
+          direction: 'definition',
+          reference,
+        })
+      }
+    >
+      [{index}]
+    </Text>
+  );
 }
 
 /** HTML outside the safe subset: shown as literal text. */

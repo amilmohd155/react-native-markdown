@@ -9,7 +9,7 @@ Milestones are listed in build order. Each one has its inputs, deliverables and 
 ```
 M0 Groundwork
  ├─► M1 Parser & node table ──► M2 GFM plugins ─┐
- │                     └──────► M3 Renderer ─────┼─► M5 Public API ─► M6 Tests & platforms ─► M7 Benchmark & exit
+ │                     └──────► M3 Renderer ─────┼─► M5 Public API ─► M6 Tests & platforms ─► M7 Benchmark & exit ─► M8 Migration guide
  └─► M4 Theme ───────────────────────┘           │
                                                  └─ (M6 test harness work starts in M0 and grows with each milestone)
 ```
@@ -139,7 +139,7 @@ M0 Groundwork
 
 - Behaviour, memoization, plugin, HTML subset and inline view tests.
 - Web job (react-native-web + jsdom, plus a Playwright smoke test).
-- Expo Go check (no native imports in the main entry graph). The example app migrates to the v1 API and runs in Expo Go.
+- Expo Go check (no native imports in the main entry graph). The example app migrates to the v1 API and runs in Expo Go. Its bench tab keeps its method and fixtures ([benchmark-protocol.md](./benchmark-protocol.md)), so M7 results stay reproducible.
 - Perf CI job with stored baselines.
 
 **Done when:** every job in [testing-harness.md · CI jobs](./testing-harness.md#ci-jobs) is green and required on the `v1` branch.
@@ -156,3 +156,20 @@ M0 Groundwork
 - Exit review: check every exit criterion in [README](./README.md#exit-criteria). Record any waived item in [decisions.md](./decisions.md).
 
 **Done when:** all exit criteria are checked or waived with a recorded reason.
+
+## M8 · Migration guide
+
+**Issue:** [#23](https://github.com/amilmohd155/react-native-markdown/issues/23)
+
+**Goal:** a v0.x user can move to v1 from the docs alone. Decided in [P1-22](./decisions.md#p1-22-the-migration-guide-is-its-own-milestone-m8).
+
+Last in build order, after the exit review in M7: the guide is not an exit criterion, and it reads best once the API and the benchmark results are final.
+
+- Migration guide, from the [migration table](../04-api.md#migration-from-v0x): every row with before/after code, the `extensions` → `plugins` rewrite (no adapter), theme `styles` → tokens and `elements`, `renderRules` → `components`, and the new behaviour to know about (`onLinkPress` schemes, `images` policy, `html` modes).
+- Rewrite the root README for v1 (it still describes v0.x behind a pre-release note) and link the guide from it.
+- Decide whether `fromRenderRules()` ships (deprecated on arrival, simple cases only, see [04](../04-api.md#migration-from-v0x)) or is dropped in favour of the guide. Record it in [decisions.md](./decisions.md).
+
+**Done when:**
+- Every row of the migration table has a section in the guide, and its code samples type-check against the built package.
+- The root README describes v1 and links the guide.
+- The `fromRenderRules()` decision is recorded.

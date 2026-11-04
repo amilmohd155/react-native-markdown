@@ -106,7 +106,9 @@ const note = definePlugin({
     Note: {
       kind: 'block',
       token: 'container_note',
-      from: (token) => ({ kind: String(token.meta?.kind) }),
+      from: (token) => ({
+        kind: String((token.meta as { kind?: string } | null)?.kind),
+      }),
     },
   },
 });
@@ -281,7 +283,7 @@ describe('createRegistry', () => {
     ).toThrow('inlineView is only valid on inline nodes');
     expect(() =>
       createRegistry([
-        // @ts-expect-error: invalid kind on purpose
+        // Invalid kind on purpose (the internal plugin list type is erased).
         { name: 'a', nodes: { X: { ...node, kind: 'span' } } },
       ])
     ).toThrow("kind must be 'block' or 'inline'");

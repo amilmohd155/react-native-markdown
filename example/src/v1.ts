@@ -1,11 +1,11 @@
 /**
- * v1 preview for the example app.
+ * v1 internals for the example app's lab screens.
  *
- * The v1 API isn't exported from the package until M5, so the example
- * imports it from the library sources directly, including internals the
- * future <Markdown> component will hide (tableOf, BlockList, render ctx).
- * Metro watches the monorepo root, so edits under src/ hot-reload here.
- * Delete this file in M5, when the package entry point switches to v1.
+ * The package entry point is the v1 API since M5, but these screens
+ * (bench, theme, fonts) still drive internals the public API hides
+ * (tableOf, BlockList, render ctx), so they import the library sources
+ * directly. Metro watches the monorepo root, so edits under src/ hot-reload
+ * here. M6 migrates the example to the public API and deletes this file.
  */
 
 export * from '../../src/api';

@@ -1,5 +1,5 @@
 import { NodeType, TableBuilder, ROOT } from '../../model';
-import type { ParserBackend } from '../../parse';
+import type { ParserBackend, ParserBackendImpl } from '../../parse';
 import { tableOf } from '../document';
 import * as api from '../index';
 import { parse } from '../parse';
@@ -41,7 +41,7 @@ describe('parse', () => {
   });
 
   it('uses a custom backend', () => {
-    const backend: ParserBackend = {
+    const backend: ParserBackendImpl = {
       name: 'fake',
       parse: jest.fn(() => {
         const b = new TableBuilder();
@@ -56,8 +56,26 @@ describe('parse', () => {
     expect(tableOf(doc).type[1]).toBe(NodeType.Divider);
   });
 
+  it('rejects a backend that is not a real one', () => {
+    const fake: ParserBackend = { name: 'handmade' };
+    expect(() => parse('x', { backend: fake })).toThrow(
+      'Unsupported parser backend "handmade"'
+    );
+  });
+
   it('does not expose internals from the api entry', () => {
-    expect(Object.keys(api).sort()).toEqual(['parse']);
+    expect(Object.keys(api).sort()).toEqual([
+      'Markdown',
+      'createTheme',
+      'darkTheme',
+      'defaults',
+      'definePlugin',
+      'inlineView',
+      'lightTheme',
+      'parse',
+      'useMarkdownTheme',
+      'visit',
+    ]);
   });
 });
 

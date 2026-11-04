@@ -1,7 +1,7 @@
 import type { Env } from 'markdown-it';
 import type { MarkdownPlugin } from '../plugins/definePlugin';
 import { resolvePreset } from '../plugins/presets';
-import type { HtmlMode, ParseOptions, ParserBackend } from './backend';
+import type { HtmlMode, ParseOptions, ParserBackendImpl } from './backend';
 import { convertTokens, type ConvertResult } from './convert';
 import { getParser } from './markdownIt';
 
@@ -42,7 +42,7 @@ function documentContext(
 }
 
 /** The default, pure-JS parser backend. */
-export const markdownItBackend: ParserBackend = {
+export const markdownItBackend: ParserBackendImpl = {
   name: 'markdown-it',
   parse: (source, options) => parseWithMarkdownIt(source, options).table,
 };

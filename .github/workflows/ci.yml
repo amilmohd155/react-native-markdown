@@ -76,6 +76,9 @@ jobs:
       - name: Build package
         run: yarn prepare
 
+      - name: No internal types in the public declarations
+        run: yarn check:public-types
+
   build-web:
     runs-on: ubuntu-latest
     steps:

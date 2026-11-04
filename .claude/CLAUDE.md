@@ -11,18 +11,17 @@ Markdown renderer for React Native (`@docren/react-native-markdown`). Mid-rewrit
 
 - Design: `docs/rewrite/` (start at `README.md`). Plan: `docs/rewrite/phase-1/`.
 - Decisions: D1–D8 in `docs/rewrite/07-roadmap.md`, P1-n in `docs/rewrite/phase-1/decisions.md`. Record new ones there.
-- Tracking: issue #7, with sub-issues #8–#15 (one per milestone M0–M7).
+- Tracking: issue #7, with sub-issues #8–#15 and #23 (one per milestone M0–M8).
 
 ## Layout
 
-- `src/{model,parse,plugins,render,theme,api,mdast}`: v1. Not exported until M5. No `any` (lint error).
-- `src/{components,libs,types,utils}` + `src/index.tsx`: v0, still the public entry. Don't extend it.
+- `src/{model,parse,plugins,render,theme,api}`: v1. No `any` (lint error). Public API is whatever `src/api/index.ts` exports; `src/index.tsx` re-exports it. v0 is gone (P1-19).
 - `test/fixtures/`: vendored spec files. Don't edit by hand (see `SOURCES.md`). `test/spec/`: spec runner.
 - `bench/`: private workspace (benchmarks, evidence scripts).
 
 ## Commands
 
-`yarn lint` · `yarn typecheck` · `yarn test` (unit) · `yarn test:spec` · `yarn check:expo-go` · `yarn prepare` (build)
+`yarn lint` · `yarn typecheck` · `yarn test` (unit) · `yarn test:spec` · `yarn check:expo-go` · `yarn prepare` (build) · `yarn check:public-types` (after a build)
 
 ## Rules
 

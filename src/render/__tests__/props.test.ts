@@ -180,8 +180,8 @@ describe('element props', () => {
         footnoteReferenceProps(table, id)
       )
     ).toEqual([
-      { label: 'n', index: 1 },
-      { label: 'n', index: 1 },
+      { label: 'n', index: 1, reference: 1 },
+      { label: 'n', index: 1, reference: 2 },
     ]);
     const [def] = nodesOfType(table, NodeType.FootnoteDefinition);
     expect(footnoteDefinitionProps(table, def!)).toEqual({

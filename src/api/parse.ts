@@ -4,6 +4,7 @@ import {
   parseWithMarkdownIt,
   type ParseOptions as BackendParseOptions,
   type ParserBackend,
+  type ParserBackendImpl,
 } from '../parse';
 import { createDocument, type MarkdownDocument } from './document';
 
@@ -40,11 +41,21 @@ export function parse(
       for (const message of result.warnings) report(message);
     }
   } else {
-    table = backend.parse(source, parseOptions);
+    table = implOf(backend).parse(source, parseOptions);
   }
 
   if (isDev()) freezeTable(table);
   return createDocument(table);
+}
+
+/** The implementation behind a public backend handle. */
+function implOf(backend: ParserBackend): ParserBackendImpl {
+  if (typeof (backend as Partial<ParserBackendImpl>).parse !== 'function') {
+    throw new TypeError(
+      `Unsupported parser backend "${String(backend.name)}": expected one provided by the library.`
+    );
+  }
+  return backend as ParserBackendImpl;
 }
 
 function defaultWarn(message: string): void {

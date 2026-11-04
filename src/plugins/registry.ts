@@ -5,7 +5,7 @@ import {
   type PluginNodeAttrs,
   type PluginNodeInfo,
 } from '../model';
-import type { MarkdownPlugin } from './definePlugin';
+import type { MarkdownPlugin, PluginNodeSpec } from './definePlugin';
 
 /** A registered plugin node, with its assigned node type id. */
 export interface RegisteredNode extends PluginNodeInfo {
@@ -58,7 +58,9 @@ export function createRegistry(
     }
     pluginNames.add(plugin.name);
 
-    for (const [name, spec] of Object.entries(plugin.nodes ?? {})) {
+    // Typed per plugin for authors; erased here.
+    const specs: Readonly<Record<string, PluginNodeSpec>> = plugin.nodes ?? {};
+    for (const [name, spec] of Object.entries(specs)) {
       const where = `plugin "${plugin.name}", node "${name}"`;
       if (nodeNames.has(name)) {
         throw new Error(`Node "${name}" is registered twice (${where})`);

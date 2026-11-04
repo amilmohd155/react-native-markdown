@@ -1,6 +1,7 @@
 import { useInsertionEffect, useMemo, useRef } from 'react';
 import { getDefaultTheme, type ResolvedTheme } from '../theme';
 import type { Components } from './elements';
+import type { ImagesPolicy } from './imagePolicy';
 
 /** How soft line breaks render (P1-2). */
 export type SoftBreak = 'space' | 'newline';
@@ -24,14 +25,31 @@ export interface TaskToggleInfo {
   /** Position of the item in its list. */
   readonly index: number;
 }
+/**
+ * Where a footnote press should go (P1-15). The app scrolls; the renderer
+ * doesn't own the scroll view.
+ */
+export interface FootnotePressInfo {
+  /** The footnote's number (as shown). */
+  readonly index: number;
+  /**
+   * `'definition'`: a reference was pressed, go to the definition.
+   * `'reference'`: a back-link was pressed, go back to a reference.
+   */
+  readonly direction: 'reference' | 'definition';
+  /** Which reference to the footnote, 1-based (matches the back-link marks). */
+  readonly reference: number;
+}
 
-/** Event handlers. URL policy and the default `Linking` call arrive in M5. */
+/** Event handlers. */
 export interface RenderHandlers {
   /** Return `false` to cancel the default handling. */
   readonly onLinkPress?: (href: string, info: LinkPressInfo) => boolean | void;
   readonly onImagePress?: (src: string, info: ImagePressInfo) => void;
   /** Makes task list checkboxes interactive. */
   readonly onTaskToggle?: (checked: boolean, info: TaskToggleInfo) => void;
+  /** Makes footnote references and back-links pressable. */
+  readonly onFootnotePress?: (label: string, info: FootnotePressInfo) => void;
 }
 
 /** Options that change what blocks render. Part of `ctx` identity. */
@@ -43,7 +61,11 @@ export interface RenderOptions {
   readonly interactiveTasks: boolean;
   /** True when `onImagePress` is set: block images are pressable. */
   readonly interactiveImages: boolean;
+  /** True when `onFootnotePress` is set: references and back-links are pressable. */
+  readonly interactiveFootnotes: boolean;
   readonly scriptFallback: ScriptFallback;
+  /** Which images load; the rest render as their alt text. */
+  readonly images: ImagesPolicy;
 }
 
 const NO_HANDLERS: RenderHandlers = Object.freeze({});
@@ -54,7 +76,9 @@ export const DEFAULT_RENDER_OPTIONS: RenderOptions = Object.freeze({
   maxFontSizeMultiplier: null,
   interactiveTasks: false,
   interactiveImages: false,
+  interactiveFootnotes: false,
   scriptFallback: 'smaller',
+  images: 'allow',
 });
 
 /**
@@ -91,6 +115,8 @@ export interface RenderCtxInput {
   readonly selectable?: boolean;
   readonly maxFontSizeMultiplier?: number | null;
   readonly scriptFallback?: ScriptFallback;
+  /** Default `'allow'`. Keep the reference stable: it is part of `ctx` identity. */
+  readonly images?: ImagesPolicy;
 }
 
 function optionsOf(input: RenderCtxInput): RenderOptions {
@@ -102,8 +128,10 @@ function optionsOf(input: RenderCtxInput): RenderOptions {
       DEFAULT_RENDER_OPTIONS.maxFontSizeMultiplier,
     interactiveTasks: input.handlers?.onTaskToggle !== undefined,
     interactiveImages: input.handlers?.onImagePress !== undefined,
+    interactiveFootnotes: input.handlers?.onFootnotePress !== undefined,
     scriptFallback:
       input.scriptFallback ?? DEFAULT_RENDER_OPTIONS.scriptFallback,
+    images: input.images ?? DEFAULT_RENDER_OPTIONS.images,
   });
 }
 
@@ -137,8 +165,10 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
     input.maxFontSizeMultiplier ?? DEFAULT_RENDER_OPTIONS.maxFontSizeMultiplier;
   const interactiveTasks = latest.onTaskToggle !== undefined;
   const interactiveImages = latest.onImagePress !== undefined;
+  const interactiveFootnotes = latest.onFootnotePress !== undefined;
   const scriptFallback =
     input.scriptFallback ?? DEFAULT_RENDER_OPTIONS.scriptFallback;
+  const images = input.images ?? DEFAULT_RENDER_OPTIONS.images;
 
   const options = useMemo<RenderOptions>(
     () =>
@@ -148,7 +178,9 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
         maxFontSizeMultiplier,
         interactiveTasks,
         interactiveImages,
+        interactiveFootnotes,
         scriptFallback,
+        images,
       }),
     [
       softBreak,
@@ -156,7 +188,9 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
       maxFontSizeMultiplier,
       interactiveTasks,
       interactiveImages,
+      interactiveFootnotes,
       scriptFallback,
+      images,
     ]
   );
 

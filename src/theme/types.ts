@@ -1,4 +1,5 @@
 import type { TextStyle, ViewStyle } from 'react-native';
+import type { PluginElementName } from './pluginElements';
 
 /**
  * Built-in element names: the keys of `components` and `theme.elements`.
@@ -121,6 +122,12 @@ export interface ElementStyle {
 export interface ResolvedTheme {
   readonly tokens: ThemeTokens;
   readonly elements: { readonly [E in ElementName]: ElementStyle };
+  /**
+   * Styles of plugin elements, by name: only what the plugin themes and the
+   * `theme.elements` prop set for them (they have no token-derived style).
+   * Elements with no override are absent; the renderer uses an empty style.
+   */
+  readonly pluginElements: Readonly<Record<string, ElementStyle>>;
   /** `Heading` style by level: index 0 is h1. */
   readonly headings: readonly [
     ElementStyle,
@@ -171,6 +178,8 @@ export interface ElementOverride {
  */
 export type ElementOverrides = {
   readonly [E in Exclude<ElementName, 'Heading'>]?: ElementOverride;
+} & {
+  readonly [E in PluginElementName]?: ElementOverride;
 } & {
   readonly Heading?:
     | ElementOverride

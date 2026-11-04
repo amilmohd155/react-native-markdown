@@ -212,7 +212,7 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 - **Context:**
   - GFM's tagfilter neutralizes 9 tags (`title`, `textarea`, `style`, `xmp`, `iframe`, `noembed`, `noframes`, `script`, `plaintext`) by replacing their leading `<` with `&lt;` in the HTML output.
   - Our renderer never interprets raw HTML (D3): `HtmlBlock` and `HtmlInline` show their source as literal text, and none of the 9 tags is in the safe subset (nor can `{ allow }` add it). So on screen the filter changes nothing.
-  - It does matter for consumers that produce HTML: the spec serializer, and mdast interop (`toMdast`, phase 1 M5), whose `html` nodes someone may render as real HTML.
+  - It does matter for consumers that produce HTML: the spec serializer, and mdast interop (`toMdast`, Phase 3, [P1-20](#p1-20-tomdast-is-deferred-to-phase-3)), whose `html` nodes someone may render as real HTML.
   - Rewriting the node text to `&lt;script>` would make the renderer show the entity literally.
 - **Decision:**
   - The tagfilter plugin is a core rule after `inline` (`src/plugins/tagfilter.ts`). For each `html_block` and `html_inline` token that contains a disallowed tag (opening or closing, any case, name followed by whitespace, `>` or `/>`, as in cmark-gfm), it sets `meta.filteredHtml`: the token's HTML with each such `<` replaced by `&lt;`.
@@ -221,7 +221,7 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 - **Consequences:**
   - No cost for documents without disallowed tags (no attr rows).
   - `gfm` example 652 and `extensions.txt` example 22 pass.
-  - M5's `toMdast` must emit `filteredHtml` for `html` nodes when it is present. token-mapping.md and element-props.md updated.
+  - `toMdast` (Phase 3) must emit `filteredHtml` for `html` nodes when it is present. token-mapping.md and element-props.md updated.
 
 ## P1-14: GFM spec 0.29 vs CommonMark 0.31 emphasis
 
@@ -316,3 +316,59 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - An inline `Heading` function re-resolves the theme every render, so it is documented as "hoist it".
   - Plugin themes (M5) must keep stable layer objects, or they bypass the cache.
 
+
+## P1-19: No legacy entry point; v0 is removed at v1.0
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:** The v0 implementation (`components/`, `libs/`, `types/`, `utils/`) is built on `mdast-util-from-markdown` and `renderRules` that read mdast nodes. v1 never exposes mdast nodes ([08](../08-model-and-api.md)), so v0 and v1 share no code. Keeping v0 reachable (a `/legacy` entry, or a deprecated export) would keep a second parser and dependency tree in the package, and a second implementation in the Expo Go import graph (D2).
+- **Decision:**
+  - No `/legacy` entry and no deprecated v0 export. M5 swaps the entry point to v1 and deletes the v0 sources and `mdast-util-from-markdown`.
+  - v1.0 is a semver major. Users who aren't ready pin `^0.8`; `main` keeps receiving bug fixes through the Release-it workflow.
+  - A migration guide covers the [migration table](../04-api.md#migration-from-v0x). The deprecated `fromRenderRules()` adapter stays optional, for the simple cases only. `extensions` (mdast-util extensions) have no adapter: they become `plugins`.
+- **Consequences:**
+  - Package size and the dependency tree shrink; `check:expo-go` guards a single implementation.
+  - Custom `renderRules` that read mdast `node.*` must be rewritten against element props.
+  - The migration guide is written in its own milestone, M8 ([P1-22](#p1-22-the-migration-guide-is-its-own-milestone-m8)).
+
+## P1-20: `toMdast` is deferred to Phase 3
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:** The roadmap puts the `/mdast` interop entry point in Phase 3, but P1-13 and the `src/mdast` stub's header named M5. M5's done-when (API-contract type tests, no internal type in the public `.d.ts`) doesn't depend on it, and its only users are people who want the unified/remark ecosystem. It needs design that M5 doesn't cover: how plugin nodes map to mdast types, footnotes (our `FootnoteSection` is structural), source positions, and the safe-HTML elements with no mdast equivalent (`Underline`, `Highlight`, `Kbd`). It also adds `@types/mdast` and a public output shape that becomes a compatibility promise.
+- **Decision:**
+  - `toMdast` is not part of Phase 1. The empty `src/mdast` stub is removed; the entry point is created in Phase 3.
+  - Until then the docs mark it as Phase 3 ([04](../04-api.md#lower-level-api), [03](../03-architecture.md)).
+- **Consequences:**
+  - P1-13's requirement moves with it: `toMdast` must emit `filteredHtml` for `html` nodes. The GFM spec serializer already consumes `filteredHtml`, so the data stays tested.
+  - Users who need mdast in v1.0 can walk the tree with `visit()`.
+
+## P1-21: `images` policy semantics
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:** [P1-3](#p1-3-url-sanitization-layers) covers links. Images are the other URL the renderer acts on: a remote image loads without a press, so on untrusted content (LLM output, user comments) it is a tracking beacon and a way to leak the conversation through the URL. The `images` prop (`'allow' | 'deny' | { allowHosts }`) was specified but not its details.
+- **Decision:**
+  - The policy applies at render time, to block and inline images alike, so changing it never re-parses.
+  - A refused image renders as its alt text, plain, in the surrounding text; an empty alt renders nothing. A block image that is refused becomes an ordinary paragraph. Components never see a refused image.
+  - `{ allowHosts }` matches the URL's host, lowercased, without port, userinfo or a trailing dot. An entry is an exact host or `*.example.com` (any subdomain, not the apex).
+  - Under an allowlist only `http(s)` and protocol-relative URLs can match. Relative paths and `data:` images have no host, so they are refused. A URL the check can't read the way a browser would (backslashes, whitespace, control characters) is refused too, rather than guessed.
+  - The default stays `'allow'`: this is a safe-by-opt-in prop, like `html` is safe-by-default only because it cannot execute anything.
+- **Consequences:**
+  - Apps that render untrusted content must set `images`; the docs say so on the prop.
+  - Local images (`require`d assets, `file:`) can't be combined with an allowlist. Use `'allow'`, or render them through `components.Image`.
+  - `images` is part of `ctx` identity, compared shallowly (an inline `{ allowHosts: [...] }` with equal entries keeps the context).
+
+## P1-22: The migration guide is its own milestone (M8)
+
+- **Status:** Accepted (2026-11-05)
+- **Date:** 2026-11-05
+- **Context:** P1-19 removed v0 and promised a migration guide, first as an M5 task. M5's done-when (API-contract type tests, no internal type in the public `.d.ts`) doesn't need it, and a guide reads best once the API and the benchmark results are final. Migrating the example app to the v1 API was already an M6 deliverable, so it needs no milestone of its own.
+- **Decision:**
+  - Add M8 · Migration guide, last in Phase 1 (after M7). It holds the guide, the v1 root README and the `fromRenderRules()` ship-or-drop decision.
+  - The example migration stays in M6, as planned.
+  - M7's exit review doesn't wait for M8. Phase 1 is complete when M8 is too.
+- **Consequences:**
+  - [work-breakdown](./work-breakdown.md#m8--migration-guide) gets the M8 section; the [README](./README.md), [roadmap](../07-roadmap.md) and [04](../04-api.md#migration-from-v0x) point to it. The roadmap's Phase 3 list no longer carries the guide.
+  - Until M8, the root README keeps its "v1 pre-release" note over the v0 text.
+  - M8 is tracked in [#23](https://github.com/amilmohd155/react-native-markdown/issues/23), a sub-issue of #7.

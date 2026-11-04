@@ -348,6 +348,11 @@ const BACK_LINK = '↩\uFE0E';
 
 /** GitHub-style back-link marks, one per reference: "↩ ↩² ↩³". */
 export function backLinks(references: number): string {
+  return backLinkMarks(references).join(' ');
+}
+
+/** The back-link marks, one per reference. */
+function backLinkMarks(references: number): string[] {
   const marks: string[] = [];
   for (let i = 1; i <= references; i++) {
     marks.push(
@@ -360,7 +365,7 @@ export function backLinks(references: number): string {
               .join('')
     );
   }
-  return marks.join(' ');
+  return marks;
 }
 
 /**
@@ -369,12 +374,14 @@ export function backLinks(references: number): string {
  * the host's scroll view (see the footnotes notes in the plan).
  */
 export function FootnoteDefinition({
+  label,
   index,
   references,
   style,
   children,
 }: ElementProps<'FootnoteDefinition'>) {
   const inherited = useContext(InheritedTextContext);
+  const { handlers, options } = useRenderContext();
   return (
     <View style={style.container}>
       <Text style={[inherited, style.text, styles.footnoteLabel]}>
@@ -382,7 +389,28 @@ export function FootnoteDefinition({
       </Text>
       <View style={styles.content}>
         {children}
-        {references > 0 ? (
+        {references > 0 && options.interactiveFootnotes ? (
+          <Text
+            style={[inherited, style.text, styles.backLinks]}
+            importantForAccessibility="no"
+          >
+            {backLinkMarks(references).map((mark, i) => (
+              <Text
+                key={i}
+                accessibilityRole="link"
+                onPress={() =>
+                  handlers.current.onFootnotePress?.(label, {
+                    index,
+                    direction: 'reference',
+                    reference: i + 1,
+                  })
+                }
+              >
+                {i === 0 ? mark : ` ${mark}`}
+              </Text>
+            ))}
+          </Text>
+        ) : references > 0 ? (
           <Text
             style={[inherited, style.text, styles.backLinks]}
             accessible={false}

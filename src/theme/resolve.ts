@@ -306,6 +306,14 @@ export function resolveTheme(
     flat[`${key}.container`] = entry.container ?? {};
   };
   for (const name of ELEMENT_NAMES) add(name, merged[name]);
+  // Plugin elements: overrides for names that aren't built in.
+  const builtIn = new Set<string>(ELEMENT_NAMES);
+  const pluginNames: string[] = [];
+  for (const [name, override] of Object.entries(overrides)) {
+    if (builtIn.has(name) || typeof override !== 'object') continue;
+    pluginNames.push(name);
+    add(`plugin:${name}`, overlay({}, override as ElementOverride));
+  }
   headings.forEach((entry, i) => add(`h${i + 1}`, entry));
   add('tableHeaderCell', tableHeaderCell);
   add('nestedList', nestedList);
@@ -323,6 +331,8 @@ export function resolveTheme(
 
   const elements = {} as Record<ElementName, ElementStyle>;
   for (const name of ELEMENT_NAMES) elements[name] = pick(name);
+  const pluginElements: Record<string, ElementStyle> = {};
+  for (const name of pluginNames) pluginElements[name] = pick(`plugin:${name}`);
 
   const variants = (name: 'Strong' | 'Emphasis'): readonly ElementStyle[] => {
     if (!faceMode) {
@@ -338,6 +348,7 @@ export function resolveTheme(
   return Object.freeze({
     tokens,
     elements: Object.freeze(elements),
+    pluginElements: Object.freeze(pluginElements),
     headings: Object.freeze([
       pick('h1'),
       pick('h2'),

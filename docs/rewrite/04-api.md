@@ -28,7 +28,7 @@ The reasoning behind this design, including the options rejected, is in [08 · D
 | `onFootnotePress` | `(label, info) => void` | none | Makes footnote references and back-links pressable. `info = { index, direction: 'reference' \| 'definition', reference }`: where to go, and which reference (1-based). The app scrolls; the renderer doesn't own the scroll view ([P1-15](./phase-1/decisions.md#p1-15-footnote-navigation-through-an-onfootnotepress-handler)). |
 | `virtualize` | `boolean \| FlashListProps` | `false` | For long standalone documents |
 | `html` | `'safe' \| 'text' \| 'strip' \| { allow: HtmlTag[] }` | `'safe'` | `'safe'` renders an allowlist of tags as elements and shows the rest as text. See [Raw HTML](#raw-html). |
-| `images` | `'allow' \| 'deny' \| { allowHosts: string[] }` | `'allow'` | Use `'deny'` or an allowlist for untrusted content |
+| `images` | `'allow' \| 'deny' \| { allowHosts: string[] }` | `'allow'` | Use `'deny'` or an allowlist for untrusted content. A refused image renders as its alt text. `allowHosts` entries are exact hosts or `*.example.com` (subdomains only); relative and `data:` images don't match. See [P1-21](./phase-1/decisions.md#p1-21-images-policy-semantics). |
 | `softBreak` | `'space' \| 'newline'` | `'space'` | How soft line breaks render. `'space'` matches browsers and GitHub ([P1-2](./phase-1/decisions.md#p1-2-soft-line-breaks)). |
 | `scriptFallback` | `'smaller' \| 'raised'` | `'smaller'` | Superscript/subscript content with no Unicode form (`TM`, `[1]`). Unicode-convertible content (`mc²`, `H₂O`) always renders as Unicode characters. `'raised'` uses inline views, with accessibility and styling costs ([P1-17](./phase-1/decisions.md#p1-17-unicode-characters-for-superscript-and-subscript-by-default)). |
 | `selectable` | `boolean` | `false` | Text selection within each block |
@@ -76,7 +76,7 @@ Returning a `View` from an undeclared inline element triggers a dev-mode warning
 | `Link` | `href`, `title` |
 | `InlineImage` | `src`, `alt`, `title`, `width?`, `height?` |
 | `LineBreak` | `hard: boolean` (no `children`) |
-| `FootnoteReference` | `label`, `index` |
+| `FootnoteReference` | `label`, `index`, `reference` (1-based) |
 | `Underline`, `Highlight` | — (from `<u>`, `<mark>` in the [safe HTML subset](#raw-html)) |
 | `Superscript`, `Subscript` | — (from `<sup>`, `<sub>`) |
 | `Kbd` | — (from `<kbd>`) |
@@ -104,7 +104,15 @@ type Components = {
 // ElementProps<'Heading'> = { level: 1|2|3|4|5|6; id: string; children: ReactNode; style: ElementStyle }
 ```
 
-Plugins extend `ElementName` and `ElementProps` through their `nodes` declaration, so their components are type-checked too.
+Plugins extend `ElementName` and `ElementProps` through their `nodes` declaration, so their components are type-checked too. Inside `definePlugin`, `components` are checked against the props each node's `from` returns. For the `components` and `theme.elements` props of `<Markdown>`, a plugin package declares its elements once, by augmenting `PluginElementPropsMap`:
+
+```ts
+declare module '@docren/react-native-markdown' {
+  interface PluginElementPropsMap {
+    Mention: { userId: string };
+  }
+}
+```
 
 ## Theme
 
@@ -196,7 +204,7 @@ visit(doc, { Heading: ({ level, id }, { text }) => toc.push({ level, id, text })
 ```
 
 ```ts
-import { toMdast } from '@docren/react-native-markdown/mdast'; // opt-in unified interop
+import { toMdast } from '@docren/react-native-markdown/mdast'; // opt-in unified interop (Phase 3)
 ```
 
 ## Streaming
@@ -227,4 +235,4 @@ See [05](./05-streaming.md).
 | `extensions` (mdast-util-from-markdown) | `plugins` (`definePlugin` with `syntax.markdownIt`) |
 | `debug` | removed (use React DevTools) |
 
-A temporary `renderRules` → `components` adapter (`fromRenderRules()`, deprecated on arrival) can ship in v1.0 for the simple cases in this table, plus a migration guide.
+A temporary `renderRules` → `components` adapter (`fromRenderRules()`, deprecated on arrival) can ship in v1.0 for the simple cases in this table. The migration guide is written in Phase 1 M8, which also decides whether the adapter ships ([P1-22](./phase-1/decisions.md#p1-22-the-migration-guide-is-its-own-milestone-m8)).

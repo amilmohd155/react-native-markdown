@@ -1,21 +1,13 @@
 /**
- * Package entry point.
+ * Package entry point: the v1 public API.
  *
- * The `v1` branch is mid-rewrite, and two implementations live side by side
- * until Phase 1 · M5:
+ * Everything public is declared in ./api (see its header); this file only
+ * re-exports it, so the main entry stays pure JS and Expo Go safe (D2,
+ * `yarn check:expo-go`).
  *
- * - v0.x (exported below): components/, libs/, types/, utils/. It stays the
- *   public API so the example app and CI keep working. Removed when M5 swaps
- *   this entry point and M6 migrates the example.
- * - v1 (not exported yet): model/, parse/, plugins/, render/, theme/, api/,
- *   mdast/. Built milestone by milestone.
+ * v0.x (the mdast-based renderer) is gone: see decision P1-19. 0.8.x keeps
+ * receiving bug fixes on the `main` branch.
  *
  * Design: docs/rewrite/ · Plan: docs/rewrite/phase-1/ · Tracking: issue #7
  */
-import './types';
-
-export { default as Markdown } from './components/Markdown';
-export type { MarkdownProps } from './components/Markdown.types';
-
-export type { RenderRules } from './components/ASTRenderer.types';
-export type { StyleMap } from './types/style';
+export * from './api';
