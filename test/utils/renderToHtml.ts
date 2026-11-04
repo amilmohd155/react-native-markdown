@@ -1,5 +1,6 @@
 import { tableOf } from '../../src/api/document';
 import { parse } from '../../src/api/parse';
+import { GFM_PLUGINS, type Preset } from '../../src/plugins';
 import { documentToHtml } from './documentToHtml';
 import type { SpecSuite } from './specReader';
 
@@ -17,7 +18,7 @@ export const IMPLEMENTED_SUITES: ReadonlySet<SuiteName> = new Set<SuiteName>([
 ]);
 
 export interface RenderOptions {
-  preset: 'commonmark' | 'gfm';
+  preset: Preset;
 }
 
 /**
@@ -30,8 +31,38 @@ export function renderToHtml(markdown: string, options: RenderOptions): string {
   return documentToHtml(tableOf(doc));
 }
 
-export const presetFor = (suite: SpecSuite): RenderOptions['preset'] =>
-  suite === 'commonmark' ? 'commonmark' : 'gfm';
+/** Extension names on cmark-gfm's `example <name>` fences → our built-in plugins. */
+const EXTENSION_PLUGINS: Record<string, string> = {
+  table: 'tables',
+  strikethrough: 'strikethrough',
+  autolink: 'autolinks',
+  tagfilter: 'tagfilter',
+  tasklist: 'taskLists',
+};
+
+/**
+ * The preset an example runs with, as cmark-gfm's own spec runner does:
+ * - `commonmark`: the CommonMark preset.
+ * - `gfm` (spec.txt): only the extension named on the example's fence, so
+ *   untagged examples are plain CommonMark (e.g. `http://example.com` is not
+ *   a link there).
+ * - `gfm-extensions`: every extension.
+ * See docs/rewrite/phase-1/decisions.md (P1-12).
+ */
+export function presetFor(
+  suite: SpecSuite,
+  extension: string | null = null
+): RenderOptions['preset'] {
+  if (suite === 'commonmark') return 'commonmark';
+  if (suite === 'gfm-extensions') return 'gfm';
+  if (extension === null) return 'commonmark';
+  const only = EXTENSION_PLUGINS[extension];
+  if (!only) throw new Error(`Unknown GFM spec extension "${extension}"`);
+  return {
+    base: 'gfm',
+    exclude: GFM_PLUGINS.map((p) => p.name).filter((name) => name !== only),
+  };
+}
 
 /**
  * Normalizes line endings only. The serializer matches the spec's HTML

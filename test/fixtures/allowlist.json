@@ -38,5 +38,61 @@
     "section": "pathological",
     "reason": "nesting capped at 100 levels (P1-8); input nests 100,000 blockquotes",
     "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-8-cap-markdown-it-nesting-at-100"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm",
+    "example": 625,
+    "section": "Autolinks (extension)",
+    "reason": "linkify-it ends a URL at an unbalanced ')' inside it; GFM continues to whitespace (P1-1)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm-extensions",
+    "example": 19,
+    "section": "Autolinks",
+    "reason": "bundles 32 cases, 5 of them known gaps (P1-1); the other 27 are enforced case by case in test/spec/autolinkCases.test.ts",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm-extensions",
+    "example": "19/6",
+    "section": "Autolinks",
+    "reason": "email not preceded by a word boundary (after '/'): linkify-it requires one (P1-1)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm-extensions",
+    "example": "19/10",
+    "section": "Autolinks",
+    "reason": "email not preceded by a word boundary ('mmmmailto:'): linkify-it requires one (P1-1)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm-extensions",
+    "example": "19/18",
+    "section": "Autolinks",
+    "reason": "email not preceded by a word boundary ('at:'): linkify-it requires one (P1-1)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm-extensions",
+    "example": "19/23",
+    "section": "Autolinks",
+    "reason": "host label starting with '_' (www._xxx.yyy.zzz): linkify-it doesn't match it (P1-1)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm-extensions",
+    "example": "19/31",
+    "section": "Autolinks",
+    "reason": "IDN host: href is punycode (markdown-it normalizeLink), cmark-gfm percent-encodes; both resolve (P1-1)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps"
   }
 ]

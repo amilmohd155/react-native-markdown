@@ -25,7 +25,8 @@ Checksums and licenses (the spec files are CC-BY-SA 4.0 test data, not shipped i
 - **Implemented suites** (`IMPLEMENTED_SUITES` in `test/utils/renderToHtml.ts`) register one test per example, compared **exactly** with the spec's HTML. Allowlisted examples use `test.failing` instead.
 - **Suites not required yet** (the GFM suites until M2) register a single informational test that reports how many examples already pass. Per-example `test.failing` doesn't work there: once the core parser exists, the CommonMark examples inside the GFM spec pass, and `test.failing` rejects a pass.
 - **Allowlisted examples use `test.failing`.** If an allowlisted example starts passing, the test fails, which forces the allowlist entry to be removed so the list only shrinks.
-- **Presets:** the CommonMark suite runs with `preset: 'commonmark'`. The GFM suites run with `preset: 'gfm'`.
+- **Presets:** the CommonMark suite runs with `preset: 'commonmark'`. `gfm/spec.txt` examples run like cmark-gfm's runner: untagged ones with `'commonmark'`, tagged ones (`example autolink`) with only that extension's plugin ([P1-12](./decisions.md#p1-12-gfm-spec-examples-run-with-the-extension-on-their-fence-only)). `gfm/extensions.txt` runs with `preset: 'gfm'`.
+- **Case-level tests:** `test/spec/autolinkCases.test.ts` splits `extensions.txt` example 19 (32 autolink cases) into one test per case; cases are allowlisted as `"example": "19/<case>"`.
 - **HTML option:** the spec expects raw HTML passed through. The suites run with the public `html: 'text'` mode, where every tag stays a literal node, and the serializer prints literal HTML nodes unescaped. No test-only parse mode is needed. The other `html` modes are covered by the D3 unit tests.
 - **Pathological cases** are matched by name in the allowlist (`"suite": "pathological"`, `"example": "<case name>"`).
 

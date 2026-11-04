@@ -5,6 +5,8 @@ import {
   EMPTY_REGISTRY,
   type PluginRegistry,
 } from '../plugins/registry';
+import type { FootnoteRefMeta } from '../plugins/footnotes';
+import { filteredHtmlOf } from '../plugins/tagfilter';
 import type { HtmlMode } from './backend';
 import {
   allowedTags,
@@ -44,7 +46,9 @@ export class InlineConverter {
     private readonly builder: TableBuilder,
     html: HtmlMode,
     private readonly warn: (tokenType: string) => void,
-    private readonly registry: PluginRegistry = EMPTY_REGISTRY
+    private readonly registry: PluginRegistry = EMPTY_REGISTRY,
+    /** Adds a value to the current top-level block's context (P1-9). */
+    private readonly context: (value: string) => void = () => {}
   ) {
     this.allowed = allowedTags(html);
   }
@@ -95,7 +99,10 @@ export class InlineConverter {
           const title = token.attrGet('title');
           this.open(
             NodeType.Link,
-            token.markup === 'autolink' ? Flag.AUTOLINK : 0,
+            // `<…>` (CommonMark) or a GFM autolink (autolinks plugin).
+            token.markup === 'autolink' || token.markup === 'linkify'
+              ? Flag.AUTOLINK
+              : 0,
             {
               href: String(token.attrGet('href') ?? ''),
               title: title === null ? null : String(title),
@@ -120,6 +127,19 @@ export class InlineConverter {
           break;
         }
 
+        case 'footnote_ref': {
+          // footnotes plugin. Its number depends on references in earlier
+          // blocks, so it is part of the block's identity (P1-9).
+          const { id, subId, label } = token.meta as unknown as FootnoteRefMeta;
+          builder.add(NodeType.FootnoteReference, this.current(), 0, null, {
+            label,
+            index: id + 1,
+            subId,
+          });
+          this.context(`fn${id}.${subId}`);
+          break;
+        }
+
         case 'html_inline': {
           if (!allowed) break; // strip: drop the tag, keep surrounding text
           const tag = parseSimpleTag(token.content);
@@ -137,7 +157,14 @@ export class InlineConverter {
             }
           } else {
             // Any other tag (or one with attributes): literal HtmlInline node.
-            builder.add(NodeType.HtmlInline, this.current(), 0, token.content);
+            const filteredHtml = filteredHtmlOf(token); // tagfilter plugin
+            builder.add(
+              NodeType.HtmlInline,
+              this.current(),
+              0,
+              token.content,
+              filteredHtml === null ? null : { filteredHtml }
+            );
           }
           break;
         }

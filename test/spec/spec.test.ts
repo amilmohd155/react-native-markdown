@@ -50,7 +50,9 @@ for (const { suite, file, expected } of SUITES) {
     // Not registered at all, as cmark-gfm's own runner does.
     const active = examples.filter((ex) => ex.extension !== DISABLED);
     const matches = (ex: SpecExample): boolean => {
-      const actual = renderToHtml(ex.markdown, { preset: presetFor(suite) });
+      const actual = renderToHtml(ex.markdown, {
+        preset: presetFor(suite, ex.extension),
+      });
       return (
         ex.html === IGNORE_OUTPUT ||
         normalizeHtml(actual) === normalizeHtml(ex.html)
@@ -78,7 +80,9 @@ for (const { suite, file, expected } of SUITES) {
     for (const ex of active) {
       const title = `#${ex.example} ${ex.section} (line ${ex.line})`;
       const run = () => {
-        const actual = renderToHtml(ex.markdown, { preset: presetFor(suite) });
+        const actual = renderToHtml(ex.markdown, {
+          preset: presetFor(suite, ex.extension),
+        });
         if (ex.html !== IGNORE_OUTPUT) {
           expect(normalizeHtml(actual)).toBe(normalizeHtml(ex.html));
         }

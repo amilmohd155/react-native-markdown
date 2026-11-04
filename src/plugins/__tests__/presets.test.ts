@@ -1,4 +1,4 @@
-import { NodeType, type NodeTable } from '../../model';
+import { Flag, hasFlag, NodeType, type NodeTable } from '../../model';
 import type { Preset } from '../../parse';
 import { getMarkdownIt } from '../../parse/markdownIt';
 import { parseWithMarkdownIt } from '../../parse/markdownItBackend';
@@ -20,9 +20,29 @@ const SAMPLES: Record<
     src: '| a |\n|---|\n| b |\n',
     parsed: (t) => has(t, NodeType.Table),
   },
+  taskLists: {
+    src: '- [x] done\n',
+    parsed: (t) =>
+      Array.from(t.flags.subarray(0, t.count)).some((f) =>
+        hasFlag(f, Flag.TASK)
+      ),
+  },
   strikethrough: {
     src: '~~gone~~\n',
     parsed: (t) => has(t, NodeType.Strikethrough),
+  },
+  autolinks: {
+    src: 'see www.example.com\n',
+    parsed: (t) => has(t, NodeType.Link),
+  },
+  footnotes: {
+    src: 'a[^1]\n\n[^1]: note\n',
+    parsed: (t) =>
+      has(t, NodeType.FootnoteReference) && has(t, NodeType.FootnoteSection),
+  },
+  tagfilter: {
+    src: 'a <script> b\n',
+    parsed: (t) => t.attrs.some((a) => 'filteredHtml' in a),
   },
 };
 
@@ -37,7 +57,11 @@ describe('resolvePreset', () => {
     expect(resolvePreset('gfm')).toBe(GFM_PLUGINS);
     expect(resolvePreset('gfm').map((p) => p.name)).toEqual([
       'tables',
+      'taskLists',
       'strikethrough',
+      'autolinks',
+      'footnotes',
+      'tagfilter',
     ]);
     expect(resolvePreset('commonmark')).toEqual([]);
   });

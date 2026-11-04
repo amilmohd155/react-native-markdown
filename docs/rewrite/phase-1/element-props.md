@@ -41,8 +41,8 @@ This is how the renderer turns node table rows ([token-mapping.md](./token-mappi
 | `InlineCode` | `code` | row text |
 | `LineBreak` | `hard` | flag `HARD` |
 | `FootnoteReference` | `label`, `index` | attrs |
-| `FootnoteDefinition` | `label`, `index` | attrs |
-| `HtmlBlock` / `HtmlInline` | `html` | row text |
+| `FootnoteDefinition` | `label`, `index`, `references` (how many references point here; one back-link each) | attrs |
+| `HtmlBlock` / `HtmlInline` | `html` | row text (the source; what the default element shows). Internal attr `filteredHtml` (tagfilter, [P1-13](./decisions.md#p1-13-tagfilter-records-filtered-html-instead-of-rewriting-the-text)) is for HTML output, not an element prop |
 | `Strong`, `Emphasis`, `Strikethrough`, `Underline`, `Highlight`, `Superscript`, `Subscript`, `Kbd`, `Paragraph`, `Blockquote` | — | |
 | plugin elements | the plugin's `from(token)` result | sparse attrs |
 

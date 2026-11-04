@@ -114,7 +114,19 @@ export interface NodeAttrsMap {
   [NodeType.TableCell]: { align: Align; column: number };
   [NodeType.Link]: { href: string; title: string | null };
   [NodeType.Image]: { src: string; alt: string; title: string | null };
-  [NodeType.FootnoteDefinition]: { label: string; index: number };
+  /**
+   * Only when the tagfilter plugin filtered a tag: the HTML with GFM's
+   * disallowed tags neutralized, for consumers that output HTML. The row
+   * text stays the source, which is what the renderer shows (P1-13).
+   */
+  [NodeType.HtmlBlock]: { filteredHtml: string };
+  [NodeType.HtmlInline]: { filteredHtml: string };
+  [NodeType.FootnoteDefinition]: {
+    label: string;
+    index: number;
+    /** How many references point here: one back-link each. */
+    references: number;
+  };
   [NodeType.FootnoteReference]: { label: string; index: number; subId: number };
 }
 

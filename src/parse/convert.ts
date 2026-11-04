@@ -3,6 +3,7 @@ import {
   BlockIndexBuilder,
   computeLineOffsets,
   Flag,
+  lineToOffset,
   NodeType,
   ROOT,
   TableBuilder,
@@ -16,6 +17,9 @@ import {
   EMPTY_REGISTRY,
   type PluginRegistry,
 } from '../plugins/registry';
+import type { TaskMeta } from '../plugins/taskLists';
+import type { FootnoteMeta } from '../plugins/footnotes';
+import { filteredHtmlOf } from '../plugins/tagfilter';
 import type { HtmlMode } from './backend';
 import { InlineConverter } from './convertInline';
 import { Slugger } from './slug';
@@ -35,6 +39,19 @@ export interface ConvertResult {
 }
 
 type ListMarker = NodeAttrsMap[typeof NodeType.List]['marker'];
+
+/** A footnote definition while its tokens are converted. */
+interface OpenFootnote {
+  readonly node: number;
+  readonly attrs: {
+    label: string;
+    index: number;
+    references: number;
+  };
+  /** Source lines covered by its content, from the tokens' `map`. */
+  startLine: number;
+  endLine: number;
+}
 
 /** One open container on the conversion stack. */
 interface Frame {
@@ -61,7 +78,8 @@ export function convertTokens(
   options: ConvertOptions
 ): ConvertResult {
   const builder = new TableBuilder(Math.max(64, tokens.length));
-  const blocks = new BlockIndexBuilder(source, computeLineOffsets(source));
+  const lineOffsets = computeLineOffsets(source);
+  const blocks = new BlockIndexBuilder(source, lineOffsets);
   const slugger = new Slugger();
   const warned = new Set<string>();
   const warnings: string[] = [];
@@ -78,6 +96,9 @@ export function convertTokens(
 
   // Heading text, collected for its slug.
   let headingText: string[] | null = null;
+
+  // The footnote definition being converted (footnotes plugin, P1-4).
+  let footnote: OpenFootnote | null = null;
 
   const top = (): Frame => stack[stack.length - 1]!;
   /** Nearest enclosing node that isn't a dropped wrapper. */
@@ -101,7 +122,13 @@ export function convertTokens(
       `Unknown markdown-it token "${tokenType}": rendered as text. Register it with a plugin's \`nodes\` to render it properly.`
     );
   };
-  const inline = new InlineConverter(builder, options.html, warn, registry);
+  const inline = new InlineConverter(
+    builder,
+    options.html,
+    warn,
+    registry,
+    (value) => blocks.appendContext(value)
+  );
   const indexBlock = (token: Token, node: number) => {
     if (token.level - droppedDepth === 0 && token.map) {
       blocks.addLines(node, token.map[0], token.map[1]);
@@ -137,6 +164,12 @@ export function convertTokens(
   };
 
   for (const token of tokens) {
+    if (footnote && token.map) {
+      // The definition's source lines: part of the section's context.
+      footnote.startLine = Math.min(footnote.startLine, token.map[0]);
+      footnote.endLine = Math.max(footnote.endLine, token.map[1]);
+    }
+
     switch (token.type) {
       // ── Containers ──────────────────────────────────────────────
       case 'heading_open': {
@@ -193,9 +226,12 @@ export function convertTokens(
           token.markup !== '-' &&
           token.markup !== '*' &&
           token.markup !== '+';
-        open(token, NodeType.ListItem, ordered ? Flag.ORDERED : 0, {
-          index: list.childCount,
-        });
+        // `meta.task` comes from the taskLists plugin.
+        const task = (token.meta as { task?: TaskMeta } | null)?.task;
+        const flags =
+          (ordered ? Flag.ORDERED : 0) |
+          (task ? Flag.TASK | (task.checked ? Flag.CHECKED : 0) : 0);
+        open(token, NodeType.ListItem, flags, { index: list.childCount });
         break;
       }
 
@@ -235,6 +271,49 @@ export function convertTokens(
         break;
       }
 
+      // ── Footnotes (footnotes plugin) ────────────────────────────
+      case 'footnote_block_open': {
+        // Appended after every other block, with no source range (`map` is
+        // null): a synthesized block entry at the end of the source whose
+        // context carries the definitions (P1-4, P1-9).
+        const node = open(token, NodeType.FootnoteSection);
+        blocks.addRange(node, source.length, source.length);
+        break;
+      }
+      case 'footnote_open': {
+        const { id, label } = token.meta as unknown as FootnoteMeta;
+        const attrs = { label, index: id + 1, references: 0 };
+        const node = open(token, NodeType.FootnoteDefinition, 0, attrs);
+        footnote = { node, attrs, startLine: Infinity, endLine: -1 };
+        break;
+      }
+      case 'footnote_anchor':
+        // One per reference. The back-links are rendered by the definition.
+        if (footnote) footnote.attrs.references++;
+        break;
+      case 'footnote_close': {
+        if (footnote) {
+          const { attrs, startLine, endLine } = footnote;
+          builder.setAttrs(footnote.node, attrs);
+          const text =
+            endLine < 0
+              ? ''
+              : source.slice(
+                  lineToOffset(lineOffsets, startLine),
+                  lineToOffset(lineOffsets, endLine)
+                );
+          blocks.appendContext(
+            `${attrs.index}\u0001${attrs.label}\u0001${attrs.references}\u0001${text}`
+          );
+          footnote = null;
+        }
+        close();
+        break;
+      }
+      case 'footnote_block_close':
+        close();
+        break;
+
       // ── Leaves ──────────────────────────────────────────────────
       case 'fence': {
         const info = md.utils.unescapeAll(token.info).trim();
@@ -256,7 +335,13 @@ export function convertTokens(
       case 'html_block':
         // Block HTML is never interpreted (D3): text, or dropped when stripping.
         if (options.html !== 'strip') {
-          leaf(token, NodeType.HtmlBlock, token.content);
+          const filteredHtml = filteredHtmlOf(token); // tagfilter plugin
+          leaf(
+            token,
+            NodeType.HtmlBlock,
+            token.content,
+            filteredHtml === null ? null : { filteredHtml }
+          );
         }
         break;
 

@@ -76,7 +76,7 @@ The `NodeType` enum (`Uint8`). Plugin types are registered from 128 upward.
 | `fence` | `CodeBlock` | `language` = first word of `info`, `meta` = rest of `info` (trimmed), or `null` | `text` = `content`. markdown-it leaves `info` raw, so the converter decodes escapes and entities with `md.utils.unescapeAll` first (CommonMark requires it). |
 | `code_block` | `CodeBlock` | `language = null`, `meta = null` | Indented code. `text` = `content`. |
 | `hr` | `Divider` | — | |
-| `html_block` | `HtmlBlock` | — | `text` = `content`. Never interpreted ([D3](../07-roadmap.md#decisions)). `tagfilter` applies first. |
+| `html_block` | `HtmlBlock` | `filteredHtml` = `meta.filteredHtml`, only when the tagfilter plugin filtered a tag | `text` = `content`. Never interpreted ([D3](../07-roadmap.md#decisions)). HTML output uses `filteredHtml` when present ([P1-13](./decisions.md#p1-13-tagfilter-records-filtered-html-instead-of-rewriting-the-text)). Same for `HtmlInline`. |
 | `table_open` / `_close` | `Table` | `align[]` collected from the first row's `th` | |
 | `thead_open` / `_close` | `TableHead` | — | Sets `HEADER` on descendant rows and cells. |
 | `tbody_open` / `_close` | `TableBody` | — | |
@@ -146,11 +146,13 @@ An unclosed `<sup>x` therefore comes out as the literal text `<sup>x`, the same 
 
 markdown-it core has no task lists. The in-house `taskLists` plugin is a markdown-it **core rule** that runs after `inline`:
 
-1. For each `list_item_open`, look at the first `inline` token of the item's first paragraph.
-2. If its first child is `text` whose content starts with `[ ] `, `[x] ` or `[X] `, set `meta.task = { checked }` on the `list_item_open` token and strip the 4-character prefix from the text.
+1. For each `list_item_open` whose first block is a paragraph, look at the paragraph's `inline` token.
+2. If its first child is `text` that starts with `[ ]`, `[x]` or `[X]` (a tab also counts as blank) followed by a space or tab, strip the marker and that one whitespace character. If the marker is the whole text and a `softbreak` follows (`- [ ]` then content on the next line), drop both. Then set `meta.task = { checked }` on the `list_item_open` token.
 3. The converter maps `meta.task` to `TASK` and, if checked, `CHECKED`.
 
-This follows the GFM spec's task list rules: only at the start of the item's first paragraph, followed by whitespace.
+This follows the GFM spec's task list rules: only at the start of the item's first paragraph, followed by whitespace. Not tasks: `- [ ]` with nothing after it (as on GitHub), `[@]`, `[x]a`. The rule runs before `text_join`, so an escaped `\[x]` (a `text_special` token) is never a marker. Implementation: `src/plugins/taskLists.ts`.
+
+Known difference: cmark-gfm detects the marker before inline parsing, so `- [x] a` stays a task even if `[x]` is a defined link reference. Here the reference link wins. No spec example covers it.
 
 ## Footnotes
 
@@ -160,15 +162,21 @@ This follows the GFM spec's task list rules: only at the start of the item's fir
 |---|---|---|
 | `footnote_ref` (inline) | `FootnoteReference` | See the inline table |
 | `footnote_block_open` / `_close` | `FootnoteSection` | **Has `map === null`**, appended after all other blocks |
-| `footnote_open` / `_close` | `FootnoteDefinition` | `label` = `meta.label`, `index` = `meta.id + 1` |
-| `footnote_anchor` | — (dropped) | The back-reference is rendered by `FootnoteDefinition` itself |
+| `footnote_open` / `_close` | `FootnoteDefinition` | `label` = `meta.label`, `index` = `meta.id + 1`, `references` = number of `footnote_anchor` tokens inside it |
+| `footnote_anchor` | — (dropped) | One per reference to the definition. Counted into `references`; the back-links are rendered by `FootnoteDefinition` itself |
+
+- Definitions come in order of first reference; unused definitions are not emitted. An unresolved `[^x]` stays text.
+- markdown-it-footnote's inline footnotes (`^[text]`) are disabled (`footnote_inline`): GitHub doesn't have them.
+- The plugin's `footnote_open` tokens have `level === 0` and no `map`, so they never start a block of their own.
 
 Because the footnote section has no `map`, its block index entry is synthesized:
 - `blockStart` = `blockEnd` = `source.length`;
 - key: its index, like every block;
-- block context: the definitions' text, since its source range is empty (P1-9).
+- block context: per definition, its `index`, `label`, `references` and source text (the lines its tokens' `map`s cover), since the section's own range is empty (P1-9).
 
-See [P1-4](./decisions.md#p1-4-footnote-section-identity).
+A block containing a `footnote_ref` adds `fn<id>.<subId>` to its block context: its number depends on references in earlier blocks.
+
+See [P1-4](./decisions.md#p1-4-footnote-section-identity). Implementation: `src/plugins/footnotes.ts`, `src/parse/convert.ts`, `convertInline.ts`.
 
 ## Plugin tokens
 
@@ -194,4 +202,4 @@ Content is never silently dropped.
 ## Not emitted / ignored
 
 - `text_special`: already merged into `text` by markdown-it's `text_join` core rule.
-- **`linkify` is enabled, behind the GFM wrapper** ([P1-1](./decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps)). Raw linkify-it matches never reach the converter unfiltered. The wrapper has already unwrapped non-GFM matches (e.g. `README.md`) back into text and trimmed trailing punctuation.
+- **Linkify runs only through the `autolinks` plugin** ([P1-1](./decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps)), which replaces markdown-it's `linkify` rules with GFM ones; the `linkify` option itself stays off. Raw linkify-it matches never reach the converter: non-GFM matches (e.g. `README.md`) stay text and trailing punctuation is already trimmed.

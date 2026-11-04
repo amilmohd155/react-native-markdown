@@ -55,7 +55,7 @@ Every component receives the props below, plus `children` (except where noted) a
 | `Divider` | — (no `children`) | Hairline `<View>` |
 | `Image` (block) | `src`, `alt`, `title` (no `children`) | `<Image>` with a cached aspect ratio and a placeholder |
 | `HtmlBlock` | `html: string` (no `children`) | Literal text (block HTML is never in the safe subset) |
-| `FootnoteDefinition` | `label`, `index` | Collected into a footer section |
+| `FootnoteDefinition` | `label`, `index`, `references` | Collected into a footer section. `references`: how many back-links to render |
 
 ### Inline elements
 

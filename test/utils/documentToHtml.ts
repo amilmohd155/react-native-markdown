@@ -23,6 +23,7 @@ export function documentToHtml(table: NodeTable): string {
   const stack: number[] = [];
   /** markdown-it/cmark rule: a block opening right after a tight paragraph starts on a new line. */
   let afterTightParagraph = false;
+  pendingCheckbox.clear();
 
   const children = (id: number): number[] => {
     const ids: number[] = [];
@@ -96,8 +97,11 @@ function leafHtml(table: NodeTable, id: number, type: number): string | null {
     case NodeType.InlineCode:
       return `<code>${escapeHtml(getText(table, id) ?? '')}</code>`;
     case NodeType.HtmlInline:
-    case NodeType.HtmlBlock:
-      return getText(table, id) ?? '';
+    case NodeType.HtmlBlock: {
+      // tagfilter: HTML output uses the filtered HTML when there is one (P1-13).
+      const attrs = getAttrs(table, id) as { filteredHtml?: string } | null;
+      return attrs?.filteredHtml ?? getText(table, id) ?? '';
+    }
     case NodeType.Divider:
       return '<hr />\n';
     case NodeType.CodeBlock: {
@@ -107,6 +111,14 @@ function leafHtml(table: NodeTable, id: number, type: number): string | null {
       ) as NodeAttrsMap[typeof NodeType.CodeBlock];
       const cls = language ? ` class="language-${escapeHtml(language)}"` : '';
       return `<pre><code${cls}>${escapeHtml(getText(table, id) ?? '')}</code></pre>\n`;
+    }
+    case NodeType.FootnoteReference: {
+      const { label, index, subId } = getAttrs(
+        table,
+        id
+      ) as NodeAttrsMap[typeof NodeType.FootnoteReference];
+      const ref = footnoteId(label) + (subId > 0 ? `-${subId + 1}` : '');
+      return `<sup class="footnote-ref"><a href="#fn-${footnoteId(label)}" id="fnref-${ref}" data-footnote-ref>${index}</a></sup>`;
     }
     case NodeType.Image: {
       const { src, alt, title } = getAttrs(
@@ -131,7 +143,7 @@ function openTag(
   switch (type) {
     case NodeType.Paragraph:
       if (isTightParagraph(id)) return '';
-      blockOpen('<p>');
+      blockOpen(`<p>${pendingCheckbox.get(id) ?? ''}`);
       return '';
     case NodeType.Heading: {
       const { level } = getAttrs(
@@ -167,7 +179,13 @@ function openTag(
       const inline =
         first === -1 ||
         (table.type[first] === NodeType.Paragraph && isTightParagraph(first));
-      blockOpen(inline ? '<li>' : '<li>\n');
+      // Task items: cmark-gfm's checkbox, then a space, before the content.
+      const box = taskCheckbox(table.flags[id]!);
+      blockOpen(inline ? `<li>${box}` : '<li>\n');
+      if (!inline && box) {
+        // Loose item: the checkbox opens its first paragraph (`<p><input … /> `).
+        pendingCheckbox.set(first, box);
+      }
       return '';
     }
     case NodeType.Table:
@@ -186,6 +204,17 @@ function openTag(
       ) as NodeAttrsMap[typeof NodeType.TableCell];
       const tag = hasFlag(table.flags[id]!, Flag.HEADER) ? 'th' : 'td';
       return `<${tag}${align ? ` align="${align}"` : ''}>`;
+    }
+    case NodeType.FootnoteSection:
+      blockOpen('<section class="footnotes" data-footnotes>\n<ol>\n');
+      return '';
+    case NodeType.FootnoteDefinition: {
+      const { label } = getAttrs(
+        table,
+        id
+      ) as NodeAttrsMap[typeof NodeType.FootnoteDefinition];
+      blockOpen(`<li id="fn-${footnoteId(label)}">\n`);
+      return '';
     }
     case NodeType.Strong:
       return '<strong>';
@@ -216,6 +245,39 @@ function openTag(
   }
 }
 
+/** cmark-gfm's footnote ids: the label, href-escaped. */
+function footnoteId(label: string): string {
+  return escapeHtml(encodeURI(label));
+}
+
+/** cmark-gfm's back-links of a definition: one per reference. */
+function backLinks(table: NodeTable, id: number): string {
+  const { label, index, references } = getAttrs(
+    table,
+    id
+  ) as NodeAttrsMap[typeof NodeType.FootnoteDefinition];
+  const links: string[] = [];
+  for (let n = 1; n <= references; n++) {
+    const ref = footnoteId(label) + (n > 1 ? `-${n}` : '');
+    const idx = n > 1 ? `${index}-${n}` : `${index}`;
+    const sup = n > 1 ? `<sup class="footnote-ref">${n}</sup>` : '';
+    links.push(
+      `<a href="#fnref-${ref}" class="footnote-backref" data-footnote-backref data-footnote-backref-idx="${idx}" aria-label="Back to reference ${idx}">↩${sup}</a>`
+    );
+  }
+  return links.join(' ');
+}
+
+/** Checkboxes owed to the first paragraph of a loose task item, by paragraph id. */
+const pendingCheckbox = new Map<number, string>();
+
+function taskCheckbox(flags: number): string {
+  if (!hasFlag(flags, Flag.TASK)) return '';
+  return hasFlag(flags, Flag.CHECKED)
+    ? '<input type="checkbox" checked="" disabled="" /> '
+    : '<input type="checkbox" disabled="" /> ';
+}
+
 function closeTag(
   table: NodeTable,
   id: number,
@@ -223,8 +285,27 @@ function closeTag(
   isTightParagraph: (id: number) => boolean
 ): string {
   switch (type) {
-    case NodeType.Paragraph:
-      return isTightParagraph(id) ? '' : '</p>\n';
+    case NodeType.Paragraph: {
+      if (isTightParagraph(id)) return '';
+      // cmark-gfm puts a definition's back-links inside its last paragraph.
+      const parent = table.parent[id]!;
+      const lastInFootnote =
+        table.type[parent] === NodeType.FootnoteDefinition &&
+        table.nextSibling[id] === -1;
+      return lastInFootnote ? ` ${backLinks(table, parent)}</p>\n` : '</p>\n';
+    }
+    case NodeType.FootnoteSection:
+      return '</ol>\n</section>\n';
+    case NodeType.FootnoteDefinition: {
+      // Otherwise the back-links follow the last block.
+      let child = table.firstChild[id]!;
+      while (child !== -1 && table.nextSibling[child] !== -1) {
+        child = table.nextSibling[child]!;
+      }
+      const inParagraph =
+        child !== -1 && table.type[child] === NodeType.Paragraph;
+      return inParagraph ? '</li>\n' : `${backLinks(table, id)}\n</li>\n`;
+    }
     case NodeType.Heading: {
       const { level } = getAttrs(
         table,

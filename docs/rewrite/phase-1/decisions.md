@@ -55,6 +55,12 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - A small wrapper instead of a full autolink matcher. Spec coverage is 49/55 cases, with 6 documented allowlist entries ([testing-harness](./testing-harness.md#allowlist-format)).
   - [token-mapping](./token-mapping.md) is updated: `linkify` is **enabled** with the wrapper, and links from it carry `markup === 'linkify'` → `AUTOLINK` flag.
   - If phase 1 transcripts or user reports hit an allowlisted gap, the follow-up is a targeted scanner for that case only, not a rewrite of the wrapper.
+- **Implementation (M2, 2026-11-04):** `src/plugins/autolinks.ts`. The wrapper rules are the prototype's, but they run **inside** replacements for markdown-it's two `linkify` rules (same names, `ruler.at`) instead of a post-pass, because the post-pass couldn't fix two interop failures (`extensions.txt` example 26):
+  - markdown-it's core rule pre-tests the raw paragraph text, and linkify-it rejects `~` right before `www.`, so `~~www.google.com~~` was never linked. Ours tests each text token.
+  - markdown-it's inline rule (`scheme://` during inline parsing) consumed trailing `~~`, so the strikethrough never closed. Ours trims with the GFM rules before consuming, and only for `http`, `https` and `ftp`.
+  - The `href` of a trimmed link is rebuilt from linkify-it's `url` minus the trimmed characters (`normalizeLink`), not by slicing the old `href`.
+  - Result: the predicted 49/55 cases (`yarn workspace @docren/react-native-markdown-bench autolink`). The 6 gaps are allowlisted: `gfm` 625, and `gfm-extensions` 19 as a whole plus cases `19/6`, `19/10`, `19/18`, `19/23`, `19/31` in the case-level test `test/spec/autolinkCases.test.ts`.
+  - Cost: fuzzy linkify adds about 18% to markdown-it's parse of the 97 KB fixture in Node `--jitless` (56.1 → 66.4 ms), the same as markdown-it's own linkify with fuzzy matching (66.6 ms). It's parse time, not conversion, so the P1-10 budget is unaffected; `preset: { base: 'gfm', exclude: ['autolinks'] }` removes it.
 
 ## P1-2: Soft line breaks
 
@@ -180,3 +186,34 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 - **Consequences:**
   - Both examples pass; no allowlist entry needed. The token mapping is unchanged.
   - About 100 lines we maintain instead of markdown-it's. Interaction with emphasis delimiters follows markdown-it (pairs are found per marker), not cmark's single delimiter stack; no spec example depends on the difference.
+
+## P1-12: GFM spec examples run with the extension on their fence only
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:**
+  - The harness ran every `gfm/spec.txt` example with the full `gfm` preset ([testing-harness](./testing-harness.md)). With autolinks on, 4 examples in the core "Autolinks" section failed, e.g. example 619 expects `http://example.com` to stay **text** and example 620 the same for an email.
+  - Those expectations only hold without the autolink extension. cmark-gfm's spec runner enables, per example, only the extension named on its fence (`example autolink`, `example table`, …); untagged examples run as plain CommonMark. `extensions.txt` runs with every extension.
+- **Decision:** `presetFor(suite, extension)` in `test/utils/renderToHtml.ts`:
+  - `commonmark` suite: `'commonmark'`.
+  - `gfm` suite: untagged examples run with `'commonmark'`; a tagged example runs with `{ base: 'gfm', exclude: [every other built-in plugin] }`. Fence names map to plugins: `table` → `tables`, `strikethrough`, `autolink` → `autolinks`, `tagfilter`, `tasklist` → `taskLists`.
+  - `gfm-extensions` suite: `'gfm'`.
+- **Consequences:** The GFM spec tests each plugin on its own, which also covers "excluding a plugin removes exactly its syntax" from the spec side. testing-harness.md updated.
+
+## P1-13: tagfilter records filtered HTML instead of rewriting the text
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:**
+  - GFM's tagfilter neutralizes 9 tags (`title`, `textarea`, `style`, `xmp`, `iframe`, `noembed`, `noframes`, `script`, `plaintext`) by replacing their leading `<` with `&lt;` in the HTML output.
+  - Our renderer never interprets raw HTML (D3): `HtmlBlock` and `HtmlInline` show their source as literal text, and none of the 9 tags is in the safe subset (nor can `{ allow }` add it). So on screen the filter changes nothing.
+  - It does matter for consumers that produce HTML: the spec serializer, and mdast interop (`toMdast`, phase 1 M5), whose `html` nodes someone may render as real HTML.
+  - Rewriting the node text to `&lt;script>` would make the renderer show the entity literally.
+- **Decision:**
+  - The tagfilter plugin is a core rule after `inline` (`src/plugins/tagfilter.ts`). For each `html_block` and `html_inline` token that contains a disallowed tag (opening or closing, any case, name followed by whitespace, `>` or `/>`, as in cmark-gfm), it sets `meta.filteredHtml`: the token's HTML with each such `<` replaced by `&lt;`.
+  - The converter stores it as a sparse `filteredHtml` attr on the `HtmlBlock` / `HtmlInline` node. The row text stays the source.
+  - Anything that outputs HTML uses `filteredHtml ?? text`; the renderer uses `text`.
+- **Consequences:**
+  - No cost for documents without disallowed tags (no attr rows).
+  - `gfm` example 652 and `extensions.txt` example 22 pass.
+  - M5's `toMdast` must emit `filteredHtml` for `html` nodes when it is present. token-mapping.md and element-props.md updated.

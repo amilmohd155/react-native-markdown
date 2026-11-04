@@ -65,8 +65,9 @@ export function getMarkdownIt(preset: Preset): MarkdownIt {
  *
  * - `html: true`: raw HTML is always tokenized; the converter applies the
  *   `html` option (safe subset, text, strip) afterwards (D3).
- * - `linkify: false`: GFM autolinks come from the `autolinks` plugin's
- *   wrapper (P1-1), never from raw linkify.
+ * - `linkify: false`: GFM autolinks come from the `autolinks` plugin, which
+ *   replaces markdown-it's linkify rules with GFM ones (P1-1). Raw linkify
+ *   (which links `README.md`) never runs.
  * - `typographer: false`: no smart quotes or replacements (not CommonMark).
  * - Default `validateLink` is kept: first layer of URL sanitization (P1-3).
  */

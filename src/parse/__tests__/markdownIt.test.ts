@@ -12,7 +12,8 @@ describe('getMarkdownIt', () => {
   });
 
   it.each(['commonmark', 'gfm'] as const)(
-    '%s: tokenizes HTML, no linkify or typographer, capped nesting',
+    // `linkify` stays off: the autolinks plugin replaces markdown-it's linkify rules.
+    '%s: tokenizes HTML, no linkify option or typographer, capped nesting',
     (preset) => {
       const { options } = getMarkdownIt(preset);
       expect(options).toMatchObject({
@@ -42,11 +43,13 @@ describe('getMarkdownIt', () => {
     expect(inline).toContain('s_open');
   });
 
-  it('does not autolink bare URLs (GFM autolinks come from a plugin in M2)', () => {
-    const inline = getMarkdownIt('gfm')
-      .parseInline('see https://example.com', {})[0]!
-      .children!.map((t: Token) => t.type);
-    expect(inline).not.toContain('link_open');
+  it('autolinks bare URLs only through the autolinks plugin (gfm)', () => {
+    const types = (preset: 'gfm' | 'commonmark') =>
+      getMarkdownIt(preset)
+        .parseInline('see https://example.com', {})[0]!
+        .children!.map((t: Token) => t.type);
+    expect(types('commonmark')).not.toContain('link_open');
+    expect(types('gfm')).toContain('link_open');
   });
 
   it('survives very deep nesting instead of overflowing the stack', () => {
