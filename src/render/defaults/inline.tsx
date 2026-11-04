@@ -6,6 +6,7 @@ import { useImageSize } from '../imageSize';
 import { markInlineView, type InlineViewProps } from '../inlineView';
 import { pressLink } from '../links';
 import { toSubscript, toSuperscript } from '../scripts';
+import { regularFamily } from '../../theme';
 
 /**
  * Default inline elements: nested <Text> inside the block's single <Text>,
@@ -79,7 +80,7 @@ function ScriptRun({
     >
       <Text
         style={[
-          { color: colors.text, fontFamily: fonts.body },
+          { color: colors.text, fontFamily: regularFamily(fonts.body) },
           inherited,
           style.text,
           { fontSize: baseline.fontSize * 0.75 },

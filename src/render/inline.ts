@@ -1,7 +1,14 @@
 import type { ReactNode } from 'react';
 import type { TextStyle } from 'react-native';
 import { getText, NodeType, NONE, type NodeTable } from '../model';
-import type { ElementName, ElementStyle } from '../theme';
+import {
+  BODY_FONT,
+  fontStateIndex,
+  withFont,
+  type ElementName,
+  type ElementStyle,
+  type FontState,
+} from '../theme';
 import type { RenderCtx } from './context';
 import { checkedInline, isDev } from './devInline';
 import { componentOf, createElementOf } from './element';
@@ -31,13 +38,20 @@ import {
  *
  * Soft breaks are stored as '\n' inside text runs and rendered according
  * to `softBreak` (P1-2), so changing the option never re-parses.
+ *
+ * `font` is the bold/italic state the content sits in (a heading starts
+ * bold). `Strong` and `Emphasis` take their style from it, so nesting
+ * (`***x***`) picks the combined face when the theme uses face maps (P1-16).
+ * It is a pure function of the document and theme, so equal input renders
+ * equal output.
  */
 export function renderInline(
   table: NodeTable,
   id: number,
   ctx: RenderCtx,
   /** The block's text style: declared inline views get its metrics. */
-  blockText?: TextStyle
+  blockText?: TextStyle,
+  font: FontState = BODY_FONT
 ): ReactNode {
   const softBreakAsSpace = ctx.options.softBreak === 'space';
   const dev = isDev();
@@ -53,7 +67,7 @@ export function renderInline(
           : text;
       continue;
     }
-    const node = renderInlineNode(table, c, ctx, dev, blockText);
+    const node = renderInlineNode(table, c, ctx, dev, blockText, font);
     if (node === null) continue;
     if (run !== '') {
       out.push(run);
@@ -98,8 +112,6 @@ function inline<K extends ElementName>(
 /** Inline elements whose only props are `children` and `style`. */
 const WRAPPERS: ReadonlyMap<number, ElementName> = new Map<number, ElementName>(
   [
-    [NodeType.Strong, 'Strong'],
-    [NodeType.Emphasis, 'Emphasis'],
     [NodeType.Strikethrough, 'Strikethrough'],
     [NodeType.Underline, 'Underline'],
     [NodeType.Highlight, 'Highlight'],
@@ -114,10 +126,29 @@ function renderInlineNode(
   id: number,
   ctx: RenderCtx,
   dev: boolean,
-  blockText: TextStyle | undefined
+  blockText: TextStyle | undefined,
+  font: FontState
 ): ReactNode {
-  const { elements } = ctx.theme;
+  const { elements, fontVariants } = ctx.theme;
   const type = table.type[id]!;
+
+  if (type === NodeType.Strong || type === NodeType.Emphasis) {
+    const name = type === NodeType.Strong ? 'Strong' : 'Emphasis';
+    const inner = withFont(
+      font,
+      name === 'Strong' ? { bold: true } : { italic: true }
+    );
+    return inline(
+      ctx,
+      dev,
+      blockText,
+      name,
+      id,
+      {},
+      fontVariants[name][fontStateIndex(font)]!,
+      renderInline(table, id, ctx, blockText, inner)
+    );
+  }
 
   const wrapper = WRAPPERS.get(type);
   if (wrapper !== undefined) {
@@ -129,7 +160,7 @@ function renderInlineNode(
       id,
       {},
       elements[wrapper],
-      renderInline(table, id, ctx, blockText)
+      renderInline(table, id, ctx, blockText, font)
     );
   }
 
@@ -143,7 +174,7 @@ function renderInlineNode(
         id,
         linkProps(table, id),
         elements.Link,
-        renderInline(table, id, ctx, blockText)
+        renderInline(table, id, ctx, blockText, font)
       );
     case NodeType.InlineCode:
       return inline(

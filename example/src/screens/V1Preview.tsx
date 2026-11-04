@@ -16,7 +16,7 @@ import { gallery } from '../gallery';
 import {
   BlockList,
   defaultComponents,
-  lightTokens,
+  lightTheme,
   parse,
   resolveTheme,
   tableOf,
@@ -55,8 +55,8 @@ export function V1Preview() {
   const interTheme = useMemo(
     () =>
       resolveTheme({
-        ...lightTokens,
-        fonts: { ...lightTokens.fonts, body: 'Inter_400Regular' },
+        ...lightTheme,
+        fonts: { ...lightTheme.fonts, body: 'Inter_400Regular' },
       }),
     []
   );

@@ -48,6 +48,20 @@ Values are shown for the default tokens (`fontSize.base = 16`, `fontSize.scale =
 
 Only portable font weights are used (`'400'`, `'600'`, `'700'`).
 
+## Font faces
+
+With a family name (`fonts.body: 'Inter'`), the table above applies as written. With a face map ([P1-16](./decisions.md#p1-16-font-faces-for-custom-fonts)):
+
+| Context | `fontFamily` | `fontWeight` / `fontStyle` |
+|---|---|---|
+| plain body text | `regular` | — |
+| `Strong` | `bold` | not set if `bold` exists, else `'700'` |
+| `Emphasis` | `italic` | not set if `italic` exists, else `'italic'` |
+| both (`***x***`, `Emphasis` in `Heading`) | `boldItalic` | not set if it exists, else fall back per axis |
+| `Heading` (all levels) | heading map's `bold` | as above |
+
+The flattener passes a `{ bold, italic }` state down, seeded by the container (`Heading` starts bold). An element emits `fontFamily` only when it differs from its parent's.
+
 ## List markers
 
 - **Bullets by depth:** `•`, `◦`, `▪`, then repeat. Overridable with the `listBullets: string[]` token.
@@ -55,13 +69,16 @@ Only portable font weights are used (`'400'`, `'600'`, `'700'`).
 
 ## Caching
 
-- **Resolve cache key:** `[colorScheme, themeInput]`.
-  - `themeInput` is compared **shallowly per group** (`colors`, `fonts`, …, `elements`), so an inline object literal with equal values hits the cache.
-  - Built-in themes are resolved once per color scheme at first use and kept for the app's lifetime.
-- **One `StyleSheet.create` call per resolved theme**, covering all elements and heading levels.
-- **The resolved theme is shared through `MarkdownThemeContext`.** `useMarkdownTheme()` returns `{ tokens, styles }`.
-- **The plugin set is part of the key**, because plugins add elements and theme layers.
+- **Resolve cache key:** `[colorScheme, themeInput, plugin layers]` (`resolveThemeProp`).
+  - `themeInput` is compared **shallowly per group** (`colors`, `fonts`, …, `elements`), one level deeper where values are objects (face maps, an element's `text` and `container`), so an inline object literal with equal values hits the cache. A `Heading` function is compared by identity, so hoist it or build the theme with `createTheme`.
+  - Plugin layers are compared by identity and order.
+  - Built-in themes (`'light'`, `'dark'`, `'auto'`, no plugins) are resolved once per color scheme at first use and kept for the app's lifetime. Other themes sit in a least-recently-used cache of 16 entries, so a theme that changes often cannot grow it without bound. Inputs are treated as immutable.
+- **One `StyleSheet.create` call per resolved theme**, covering all elements, heading levels and variants.
+- **The resolved theme is shared through `MarkdownThemeContext`**, provided by the block list apart from the render context so a component that reads the theme does not re-render when only handlers or options change. `useMarkdownTheme()` returns `{ tokens, styles, headings }`: `styles` holds every element's `{ text, container }`, and `headings` the per-level `Heading` styles (`styles.Heading` is empty because it depends on the level).
+- **Variants derive from the merged elements** (`tightParagraph` from `Paragraph`, `nestedList` from `List`, `tableHeaderCell` from `TableCell`), so an override of the base element reaches them.
 
 ## Dark mode
 
-`theme="auto"` subscribes to `useColorScheme()`. A change of scheme swaps to the other cached resolved theme. That changes `ctx`, so all blocks re-render once, which is expected and cheap compared with a re-parse.
+`theme="auto"` subscribes to `useColorScheme()` (`useResolvedTheme`; an unknown scheme counts as light). A change of scheme swaps to the other cached resolved theme. That changes `ctx`, so all blocks re-render once, which is expected and cheap compared with a re-parse. A fixed `'light'` or `'dark'` theme ignores the scheme, and re-resolving an equal theme changes nothing.
+
+A theme **input** (tokens and overrides without a base) merges onto the built-in theme of the current scheme, so it follows dark mode. A `createTheme(input, base)` result carries its base's colors for every scheme: pass `darkTheme` as the base to pin dark.

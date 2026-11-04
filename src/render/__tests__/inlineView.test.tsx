@@ -1,7 +1,7 @@
 import { memo, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
-import { getDefaultTheme, lightTokens } from '../../theme';
+import { getDefaultTheme, lightTheme } from '../../theme';
 import { BlockList } from '../Block';
 import { createRenderCtx, type RenderCtx } from '../context';
 import { defaultComponents } from '../defaults';
@@ -139,19 +139,19 @@ describe('inlineView()', () => {
 describe('baselineOf', () => {
   it('reads fontSize and lineHeight from the block text style, cached', () => {
     const text = { fontSize: 20, lineHeight: 30 };
-    expect(baselineOf(text, lightTokens)).toEqual({
+    expect(baselineOf(text, lightTheme)).toEqual({
       fontSize: 20,
       lineHeight: 30,
     });
-    expect(baselineOf(text, lightTokens)).toBe(baselineOf(text, lightTokens));
+    expect(baselineOf(text, lightTheme)).toBe(baselineOf(text, lightTheme));
   });
 
   it('falls back to the tokens', () => {
-    expect(baselineOf(undefined, lightTokens)).toEqual({
+    expect(baselineOf(undefined, lightTheme)).toEqual({
       fontSize: 16,
       lineHeight: 24,
     });
-    expect(baselineOf({ fontSize: 20 }, lightTokens)).toEqual({
+    expect(baselineOf({ fontSize: 20 }, lightTheme)).toEqual({
       fontSize: 20,
       lineHeight: 30,
     });

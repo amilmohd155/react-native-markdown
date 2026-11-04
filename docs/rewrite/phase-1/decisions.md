@@ -256,7 +256,7 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 
 ## P1-16: Font faces for custom fonts
 
-- **Status:** Proposed (2026-11-04), to settle in M4
+- **Status:** Accepted (2026-11-04), with the refinements below
 - **Date:** 2026-11-04
 - **Context:**
   - The theme styles `Strong` with `fontWeight: '700'` and `Emphasis` with `fontStyle: 'italic'` only ([theme-resolution](./theme-resolution.md#derived-element-styles)), relying on the platform to pick the bold or italic face.
@@ -270,11 +270,17 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 
   - So with a custom body font, `Strong` and `Emphasis` render as plain text on iOS, and as synthesized faces on Android. The system font works on both (except the S25 FE's system font, which has no italic and isn't synthesized).
   - Not checked yet: fonts embedded through the `expo-font` config plugin in a dev build, which can register several faces under one family name, so `fontWeight`/`fontStyle` may select real faces there.
-- **Proposed decision:** `fonts.body` and `fonts.heading` accept either a family name (as now) or a face map `{ regular, italic?, bold?, boldItalic? }`.
-  - With a face map, styles switch `fontFamily` instead of setting `fontWeight`/`fontStyle`: `Strong` → `bold`, `Emphasis` → `italic`, headings → `bold`.
-  - Nesting needs the combined face (`***x***`, or `Emphasis` inside a `Heading`), so the inline flattener tracks the bold/italic state it is in and picks `boldItalic` when both apply. That is a renderer change, not only a theme one.
-  - Missing faces fall back to `fontWeight`/`fontStyle` on the nearest face, so partial maps still work where the platform synthesizes.
-- **Consequences (if accepted):** `theme-resolution.md` and 04 · Theme updated in M4; the flattener gains a font-state parameter; a device check on a dev build with config-plugin fonts decides whether the string form needs a note in the docs.
+- **Decision:** `fonts.body` and `fonts.heading` accept either a family name (as now) or a face map `{ regular, italic?, bold?, boldItalic? }`. `fonts.mono` accepts a family name or `{ regular }`.
+  - The string form stays the default and behaves as before: `fontWeight`/`fontStyle` select the face. It is right for the system font and, probably, for config-plugin fonts that register several faces under one family.
+  - With a face map, styles switch `fontFamily` instead of setting `fontWeight`/`fontStyle`: `Strong` → `bold`, `Emphasis` → `italic`, all headings → `bold`. The map has no semibold slot, so `h3`–`h6` use `bold` rather than `'600'`.
+  - When the needed face exists, `fontWeight`/`fontStyle` are **not** also set, because Android would synthesize bold or italic on top of a real face. When it is missing, the style falls back to `fontWeight`/`fontStyle` on the nearest face, so partial maps work where the platform synthesizes.
+  - Nesting needs the combined face (`***x***`, or `Emphasis` inside a `Heading`). The inline flattener tracks a `{ bold, italic }` state, seeded by the container (`Heading` starts bold), and picks `boldItalic` when both apply. The rule lives in one function that every inline element uses, and its output is a pure function of its input so block memoization is unaffected.
+  - An element emits `fontFamily` only when it differs from its parent's, which keeps "inline styles carry only what they change" from [theme-resolution](./theme-resolution.md#derived-element-styles).
+- **Consequences:**
+  - `theme-resolution.md` and 04 · Theme updated (done with this decision).
+  - The flattener gains a font-state parameter (M4 implementation), with a test that equal input gives equal output.
+  - Checked on the Galaxy S25 FE in Expo Go (example app, "theme" tab, Inter face map): italic and bold-italic now render, which the string form did not give there.
+  - Open, docs only: a device check on a dev build with config-plugin fonts decides whether the string form needs a note in the docs.
 
 ## P1-17: Unicode characters for superscript and subscript by default
 
@@ -294,3 +300,19 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - Copying the text yields the Unicode characters (`mc²`), not `mc2`. Screen readers read them as superscript/subscript digits.
   - The theme's `fontSize` for these elements applies only to the fallback (the characters are already small).
   - Uppercase, `q`, most letters in subscripts, brackets and other symbols fall back.
+
+## P1-18: Theme resolve cache semantics
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:** [theme-resolution](./theme-resolution.md#caching) fixed the cache key and left open how deep "shallow per group" goes, how many user themes to keep, and what a theme input merges onto.
+- **Decision:**
+  - Groups are compared shallowly, plus one level where values are objects (face maps, an element's `text` and `container`). Otherwise an inline `fonts: { body: { regular, bold } }` or `elements: { Link: { text: { … } } }` would miss on every render. `Heading` functions and plugin layers compare by identity.
+  - Built-in themes are kept for the app's lifetime. Other themes use a least-recently-used cache of 16 entries.
+  - A theme input merges onto the built-in theme of the current color scheme. `createTheme(input, base)` merges onto an explicit base and keeps that base's colors in every scheme.
+  - `useMarkdownTheme()` returns `{ tokens, styles, headings }`. `styles.Heading` is empty because heading styles depend on the level.
+- **Consequences:**
+  - Inputs must not be mutated after use. `createTheme` returns frozen objects.
+  - An inline `Heading` function re-resolves the theme every render, so it is documented as "hoist it".
+  - Plugin themes (M5) must keep stable layer objects, or they bypass the cache.
+

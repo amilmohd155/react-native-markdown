@@ -4,10 +4,10 @@ import type { ThemeTokens } from './types';
 const mono = Platform.select({ ios: 'Menlo', default: 'monospace' });
 
 /**
- * Default light tokens (GitHub-like palette).
- * M4 adds `darkTheme`, `createTheme` and `'auto'`.
+ * Built-in light theme (GitHub-like palette). The base `createTheme` merges
+ * onto by default, and what `theme="light"` resolves.
  */
-export const lightTokens: ThemeTokens = Object.freeze({
+export const lightTheme: ThemeTokens = Object.freeze({
   colors: Object.freeze({
     text: '#1f2328',
     muted: '#59636e',
@@ -23,5 +23,22 @@ export const lightTokens: ThemeTokens = Object.freeze({
   spacing: Object.freeze({ block: 12, listIndent: 20 }),
   radius: Object.freeze({ code: 6 }),
   // U+FE0E (text presentation): iOS draws ▪ as an emoji square without it.
-  listBullets: Object.freeze(['•', '◦', '▪\uFE0E']),
+  listBullets: Object.freeze(['•', '◦', '▪︎']),
+});
+
+/**
+ * Built-in dark theme (GitHub-dark-like palette). Only colors differ from
+ * `lightTheme`, so switching scheme never changes layout.
+ */
+export const darkTheme: ThemeTokens = Object.freeze({
+  ...lightTheme,
+  colors: Object.freeze({
+    text: '#e6edf3',
+    muted: '#9198a1',
+    link: '#4493f8',
+    codeBg: '#151b23',
+    border: '#3d444d',
+    quoteBar: '#3d444d',
+    highlight: '#5a4a00',
+  }),
 });
