@@ -316,3 +316,17 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - An inline `Heading` function re-resolves the theme every render, so it is documented as "hoist it".
   - Plugin themes (M5) must keep stable layer objects, or they bypass the cache.
 
+
+## P1-19: No legacy entry point; v0 is removed at v1.0
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:** The v0 implementation (`components/`, `libs/`, `types/`, `utils/`) is built on `mdast-util-from-markdown` and `renderRules` that read mdast nodes. v1 never exposes mdast nodes ([08](../08-model-and-api.md)), so v0 and v1 share no code. Keeping v0 reachable (a `/legacy` entry, or a deprecated export) would keep a second parser and dependency tree in the package, and a second implementation in the Expo Go import graph (D2).
+- **Decision:**
+  - No `/legacy` entry and no deprecated v0 export. M5 swaps the entry point to v1 and deletes the v0 sources and `mdast-util-from-markdown`.
+  - v1.0 is a semver major. Users who aren't ready pin `^0.8`; `main` keeps receiving bug fixes through the Release-it workflow.
+  - A migration guide covers the [migration table](../04-api.md#migration-from-v0x). The deprecated `fromRenderRules()` adapter stays optional, for the simple cases only. `extensions` (mdast-util extensions) have no adapter: they become `plugins`.
+- **Consequences:**
+  - Package size and the dependency tree shrink; `check:expo-go` guards a single implementation.
+  - Custom `renderRules` that read mdast `node.*` must be rewritten against element props.
+  - M5 gets a migration-guide task (the guide itself is not part of M5's done-when).
