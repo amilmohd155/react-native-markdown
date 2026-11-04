@@ -1,10 +1,8 @@
 /**
  * Private document model (Phase 1 · M1).
  *
- * Planned contents:
- * - Flat struct-of-arrays node table and its builder
- * - NodeType enum and flag bits
- * - Block index (blockStart/blockEnd) and FNV-1a block hashing
+ * Contents:
+ * - Node types, flag bits and per-type attributes (./types)
  *
  * Design:
  * - docs/rewrite/03-architecture.md#2-document-model
@@ -13,4 +11,4 @@
  * Never exported from the public entry point.
  */
 
-export {};
+export * from './types';
