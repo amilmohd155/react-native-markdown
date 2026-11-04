@@ -18,11 +18,11 @@ markdown ──► Parser backend (pluggable)
               └─ Native: md4c / cmark-gfm via JSI  (optional, later)
                      │
                      ▼
-         Private flat node table + block index  {type[], parent[], …, blockHash[]}
+         Private flat node table + block index  {type[], parent[], …, blockStart[]}
                      │                                  (same layout from both backends)
            BlockList  (plain View, or FlashList when `virtualize`)
                      │
-     memo(Block) per top-level block (skipped when its hash is unchanged)
+     memo(Block) per top-level block (skipped when its source and context are unchanged)
                      │
      Inline content → ONE <Text> per block: raw strings, nested <Text> only for styled spans
                      │

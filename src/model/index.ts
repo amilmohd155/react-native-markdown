@@ -1,10 +1,11 @@
 /**
  * Private document model (Phase 1 · M1).
  *
- * Planned contents:
- * - Flat struct-of-arrays node table and its builder
- * - NodeType enum and flag bits
- * - Block index (blockStart/blockEnd) and FNV-1a block hashing
+ * Contents:
+ * - Node types, flag bits and per-type attributes (./types)
+ * - NodeTable shape (./nodeTable), TableBuilder (./tableBuilder)
+ * - Allocation-free readers (./read)
+ * - Line offsets, block index, block identity and keys (./blockIndex)
  *
  * Design:
  * - docs/rewrite/03-architecture.md#2-document-model
@@ -13,4 +14,20 @@
  * Never exported from the public entry point.
  */
 
-export {};
+export * from './types';
+export type { NodeTable } from './nodeTable';
+export {
+  EMPTY_BLOCK_INDEX,
+  NONE,
+  ROOT,
+  TableBuilder,
+  type BlockIndex,
+} from './tableBuilder';
+export { childIds, forEachChild, getAttrs, getText } from './read';
+export {
+  BlockIndexBuilder,
+  blockKey,
+  computeLineOffsets,
+  isSameBlock,
+  lineToOffset,
+} from './blockIndex';

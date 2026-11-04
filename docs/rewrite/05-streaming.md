@@ -38,7 +38,7 @@ Partial syntax such as `**bold` or `[link](htt` looks broken while it streams in
 
 ## Rendering
 
-- Frozen blocks keep their `hash`, so their `memo(Block)` bails out.
+- Frozen blocks keep their source text and context, so `isSameBlock` lets their `memo(Block)` bail out (P1-9).
 - Only the last block re-renders.
 - Updates are batched to **at most one per animation frame** (`requestAnimationFrame`). Tokens that arrive within a frame are combined into one append.
 

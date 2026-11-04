@@ -2,18 +2,14 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "@docren/react-native-markdown": [
-        "./src/index"
-      ]
+      "@docren/react-native-markdown": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "jsx": "react-jsx",
-    "lib": [
-      "ESNext"
-    ],
+    "lib": ["ESNext"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmit": true,
@@ -28,6 +24,7 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "ESNext",
-    "verbatimModuleSyntax": true
-  },
+    "verbatimModuleSyntax": true,
+    "types": ["jest", "node"]
+  }
 }

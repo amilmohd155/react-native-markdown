@@ -12,7 +12,9 @@
     "model:memory": "for m in mdast tokens tree table; do node --expose-gc model.mjs 60 $m; done",
     "autolink": "node autolink.cjs",
     "autolink:detail": "node autolink.cjs --detail",
-    "check:src": "tsx src-check.mjs"
+    "check:src": "tsx src-check.mjs",
+    "convert": "node --import tsx convert.mjs",
+    "convert:jitless": "node --jitless --import tsx convert.mjs"
   },
   "dependencies": {
     "commonmark": "0.31.2",

@@ -10,7 +10,7 @@ This folder holds the **implementation detail** for Phase 1 of the rewrite: how 
 Phase 1 delivers everything needed to ship a usable v1 core, except streaming (phase 2), virtualization and polish (phase 3), and the native backend (phase 4). The full list is in [07 · Phase 1](../07-roadmap.md#phase-1-core-pure-js). In summary:
 
 - markdown-it backend, with CommonMark and the full GFM set as built-in plugins
-- Private flat node table, token → table conversion, block index and hashing
+- Private flat node table, token → table conversion, block index and block identity (P1-9)
 - Renderer: `BlockList`, memoized `Block`, inline flattener, all default elements, declared inline views
 - Public API: `<Markdown>`, `components`, `definePlugin`, theme tokens, `parse`/`visit`, events, URL and image policy, safe HTML subset
 - Spec suites, renderer and API-contract tests, platform CI (iOS, Android, web, Expo Go check), perf CI job
@@ -36,7 +36,7 @@ Defined in [07](../07-roadmap.md#phase-1-core-pure-js). Restated here only as a 
 | [theme-resolution.md](./theme-resolution.md) | How tokens become element styles, merge order, caching |
 | [testing-harness.md](./testing-harness.md) | Spec runner, HTML serializer, allowlist format, platform CI jobs |
 | [benchmark-protocol.md](./benchmark-protocol.md) | Devices, fixtures, metrics, method and pass bars |
-| [decisions.md](./decisions.md) | Implementation-level decisions P1-1 to P1-7 (all accepted), separate from the design decisions D1–D8 |
+| [decisions.md](./decisions.md) | Implementation-level decisions P1-1 to P1-10 (all accepted), separate from the design decisions D1–D8 |
 
 ## Reading order
 

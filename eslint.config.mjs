@@ -40,6 +40,8 @@ export default defineConfig([
     ],
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
+      // The node table packs flags into Uint8 bits and hashes blocks (FNV-1a).
+      'no-bitwise': 'off',
     },
   },
   {
