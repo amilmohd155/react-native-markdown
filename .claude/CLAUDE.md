@@ -15,7 +15,7 @@ Markdown renderer for React Native (`@docren/react-native-markdown`). Mid-rewrit
 
 ## Layout
 
-- `src/{model,parse,plugins,render,theme,api,mdast}`: v1. Not exported until M5. No `any` (lint error).
+- `src/{model,parse,plugins,render,theme,api}`: v1. Not exported until M5. No `any` (lint error).
 - `src/{components,libs,types,utils}` + `src/index.tsx`: v0, still the public entry. Don't extend it.
 - `test/fixtures/`: vendored spec files. Don't edit by hand (see `SOURCES.md`). `test/spec/`: spec runner.
 - `bench/`: private workspace (benchmarks, evidence scripts).

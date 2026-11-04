@@ -212,7 +212,7 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 - **Context:**
   - GFM's tagfilter neutralizes 9 tags (`title`, `textarea`, `style`, `xmp`, `iframe`, `noembed`, `noframes`, `script`, `plaintext`) by replacing their leading `<` with `&lt;` in the HTML output.
   - Our renderer never interprets raw HTML (D3): `HtmlBlock` and `HtmlInline` show their source as literal text, and none of the 9 tags is in the safe subset (nor can `{ allow }` add it). So on screen the filter changes nothing.
-  - It does matter for consumers that produce HTML: the spec serializer, and mdast interop (`toMdast`, phase 1 M5), whose `html` nodes someone may render as real HTML.
+  - It does matter for consumers that produce HTML: the spec serializer, and mdast interop (`toMdast`, Phase 3, [P1-20](#p1-20-tomdast-is-deferred-to-phase-3)), whose `html` nodes someone may render as real HTML.
   - Rewriting the node text to `&lt;script>` would make the renderer show the entity literally.
 - **Decision:**
   - The tagfilter plugin is a core rule after `inline` (`src/plugins/tagfilter.ts`). For each `html_block` and `html_inline` token that contains a disallowed tag (opening or closing, any case, name followed by whitespace, `>` or `/>`, as in cmark-gfm), it sets `meta.filteredHtml`: the token's HTML with each such `<` replaced by `&lt;`.
@@ -221,7 +221,7 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 - **Consequences:**
   - No cost for documents without disallowed tags (no attr rows).
   - `gfm` example 652 and `extensions.txt` example 22 pass.
-  - M5's `toMdast` must emit `filteredHtml` for `html` nodes when it is present. token-mapping.md and element-props.md updated.
+  - `toMdast` (Phase 3) must emit `filteredHtml` for `html` nodes when it is present. token-mapping.md and element-props.md updated.
 
 ## P1-14: GFM spec 0.29 vs CommonMark 0.31 emphasis
 
@@ -330,6 +330,18 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - Package size and the dependency tree shrink; `check:expo-go` guards a single implementation.
   - Custom `renderRules` that read mdast `node.*` must be rewritten against element props.
   - M5 gets a migration-guide task (the guide itself is not part of M5's done-when).
+
+## P1-20: `toMdast` is deferred to Phase 3
+
+- **Status:** Accepted (2026-11-04)
+- **Date:** 2026-11-04
+- **Context:** The roadmap puts the `/mdast` interop entry point in Phase 3, but P1-13 and the `src/mdast` stub's header named M5. M5's done-when (API-contract type tests, no internal type in the public `.d.ts`) doesn't depend on it, and its only users are people who want the unified/remark ecosystem. It needs design that M5 doesn't cover: how plugin nodes map to mdast types, footnotes (our `FootnoteSection` is structural), source positions, and the safe-HTML elements with no mdast equivalent (`Underline`, `Highlight`, `Kbd`). It also adds `@types/mdast` and a public output shape that becomes a compatibility promise.
+- **Decision:**
+  - `toMdast` is not part of Phase 1. The empty `src/mdast` stub is removed; the entry point is created in Phase 3.
+  - Until then the docs mark it as Phase 3 ([04](../04-api.md#lower-level-api), [03](../03-architecture.md)).
+- **Consequences:**
+  - P1-13's requirement moves with it: `toMdast` must emit `filteredHtml` for `html` nodes. The GFM spec serializer already consumes `filteredHtml`, so the data stays tested.
+  - Users who need mdast in v1.0 can walk the tree with `visit()`.
 
 ## P1-21: `images` policy semantics
 

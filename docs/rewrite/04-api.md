@@ -204,7 +204,7 @@ visit(doc, { Heading: ({ level, id }, { text }) => toc.push({ level, id, text })
 ```
 
 ```ts
-import { toMdast } from '@docren/react-native-markdown/mdast'; // opt-in unified interop
+import { toMdast } from '@docren/react-native-markdown/mdast'; // opt-in unified interop (Phase 3)
 ```
 
 ## Streaming
