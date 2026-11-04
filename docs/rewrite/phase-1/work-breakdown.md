@@ -66,10 +66,11 @@ M0 Groundwork
 
 - Internal `definePlugin` with `syntax.markdownIt`, `nodes` and token registration. The public typing comes in M5.
 - Built-in plugins:
-  - `tables` (markdown-it core) and `strikethrough` (markdown-it core): mapping only.
+  - `tables` (markdown-it core): mapping only.
+  - `strikethrough`: in-house rule with cmark-gfm semantics (single `~`, same-length pairs), replacing markdown-it's ([P1-11](./decisions.md#p1-11-in-house-strikethrough-with-cmark-gfm-semantics)).
   - `taskLists`: an in-house core rule ([token-mapping.md](./token-mapping.md#task-lists)).
   - `autolinks`: linkify-it with fuzzy matching, plus the thin GFM wrapper (filter, reject, trim) from [P1-1](./decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps). Start by porting the prototype in [`bench/autolink.cjs`](../../../bench/autolink.cjs). Write custom matching only for a gap the spec or real transcripts prove matters.
-  - `tagfilter`: in-house.
+  - `tagfilter`: in-house; records the filtered HTML as an attr instead of rewriting the text ([P1-13](./decisions.md#p1-13-tagfilter-records-filtered-html-instead-of-rewriting-the-text)).
   - `footnotes`: `markdown-it-footnote`, plus mapping ([token-mapping.md](./token-mapping.md#footnotes)).
 - `preset: 'gfm' | 'commonmark' | { base, exclude }`.
 

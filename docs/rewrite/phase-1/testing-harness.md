@@ -23,9 +23,10 @@ Checksums and licenses (the spec files are CC-BY-SA 4.0 test data, not shipped i
 `test/spec/spec.test.ts` (as built in M1):
 
 - **Implemented suites** (`IMPLEMENTED_SUITES` in `test/utils/renderToHtml.ts`) register one test per example, compared **exactly** with the spec's HTML. Allowlisted examples use `test.failing` instead.
-- **Suites not required yet** (the GFM suites until M2) register a single informational test that reports how many examples already pass. Per-example `test.failing` doesn't work there: once the core parser exists, the CommonMark examples inside the GFM spec pass, and `test.failing` rejects a pass.
+- **Suites not required yet** (none since M2; the GFM suites until then) register a single informational test that reports how many examples already pass. Per-example `test.failing` doesn't work there: once the core parser exists, the CommonMark examples inside the GFM spec pass, and `test.failing` rejects a pass.
 - **Allowlisted examples use `test.failing`.** If an allowlisted example starts passing, the test fails, which forces the allowlist entry to be removed so the list only shrinks.
-- **Presets:** the CommonMark suite runs with `preset: 'commonmark'`. The GFM suites run with `preset: 'gfm'`.
+- **Presets:** the CommonMark suite runs with `preset: 'commonmark'`. `gfm/spec.txt` examples run like cmark-gfm's runner: untagged ones with `'commonmark'`, tagged ones (`example autolink`) with only that extension's plugin ([P1-12](./decisions.md#p1-12-gfm-spec-examples-run-with-the-extension-on-their-fence-only)). `gfm/extensions.txt` runs with `preset: 'gfm'`.
+- **Case-level tests:** `test/spec/autolinkCases.test.ts` splits `extensions.txt` example 19 (32 autolink cases) into one test per case; cases are allowlisted as `"example": "19/<case>"`.
 - **HTML option:** the spec expects raw HTML passed through. The suites run with the public `html: 'text'` mode, where every tag stays a literal node, and the serializer prints literal HTML nodes unescaped. No test-only parse mode is needed. The other `html` modes are covered by the D3 unit tests.
 - **Pathological cases** are matched by name in the allowlist (`"suite": "pathological"`, `"example": "<case name>"`).
 
@@ -40,7 +41,12 @@ Checksums and licenses (the spec files are CC-BY-SA 4.0 test data, not shipped i
 ]
 ```
 
-Entries after M1: the 5 pathological cases that nest deeper than markdown-it's cap of 100 levels ([P1-8](./decisions.md#p1-8-cap-markdown-it-nesting-at-100)). Expected in M2: the 6 GFM autolink cases listed in [P1-1](./decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps). Because one `extensions.txt` example bundles 32 cases (5 of the 6 gaps are in it), that example is allowlisted as a whole, and a **case-level** test split from it keeps the other 27 cases enforced.
+Entries after M2 (21):
+- **5 pathological** cases that nest deeper than markdown-it's cap of 100 levels ([P1-8](./decisions.md#p1-8-cap-markdown-it-nesting-at-100)).
+- **9 `gfm` emphasis examples** (398, 426, 434–436, 473–475, 477) where GFM spec 0.29 predates CommonMark 0.31. Each has an identical-input CommonMark example whose 0.31 output we match ([P1-14](./decisions.md#p1-14-gfm-spec-029-vs-commonmark-031-emphasis)).
+- **The 6 GFM autolink gaps** from [P1-1](./decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps): `gfm` 625, and 5 cases of `gfm-extensions` 19. That example bundles 32 cases, so it is allowlisted as a whole (one more entry), and the case-level test `test/spec/autolinkCases.test.ts` keeps the other 27 enforced; its 5 gaps are entries `"19/6"`, `"19/10"`, `"19/18"`, `"19/23"`, `"19/31"`.
+
+A test fails if an entry names an example or case that doesn't exist or doesn't run (disabled), and an allowlisted example that starts passing fails through `test.failing`, so stale entries can't accumulate.
 
 Every entry needs a reason and a link: an issue, or the decision that accepted the divergence. Reviewing the allowlist is part of the M1 and M2 done checks ([work-breakdown](./work-breakdown.md)).
 

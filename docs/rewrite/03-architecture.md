@@ -62,8 +62,9 @@ Why markdown-it:
 
 | GFM feature | Source |
 |---|---|
-| Tables, strikethrough | built in |
-| Task list items | `markdown-it-task-lists` or a small in-house rule |
+| Tables | built in |
+| Strikethrough | in-house rule replacing the built-in one, which needs `~~` ([phase-1 P1-11](./phase-1/decisions.md#p1-11-in-house-strikethrough-with-cmark-gfm-semantics)) |
+| Task list items | a small in-house core rule ([phase-1 token mapping](./phase-1/token-mapping.md#task-lists)) |
 | Autolinks (extended) | linkify-it with fuzzy matching, plus a thin GFM wrapper (filter, reject, trim). It passes 49/55 GFM autolink cases; the 6 edge cases are allowlisted ([phase-1 P1-1](./phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps)). |
 | Disallowed raw HTML (tagfilter) | in-house post-processing (small) |
 | Footnotes (GitHub feature, not in the GFM spec; **on by default**) | `markdown-it-footnote` |
@@ -202,8 +203,9 @@ This is **the same layout as the JS backend's node table** ([§2](#2-document-mo
 
 ```ts
 interface ParseOptions {
-  preset?: 'gfm' | 'commonmark';   // default 'gfm': tables, task lists, strikethrough,
-                                   // autolinks, tagfilter, footnotes (each a built-in plugin)
+  preset?: 'gfm' | 'commonmark' | { base: 'gfm'; exclude?: GfmPluginName[] };
+                                   // default 'gfm': tables, task lists, strikethrough,
+                                   // autolinks, footnotes, tagfilter (each a built-in plugin)
   plugins?: MarkdownPlugin[];      // added on top of the preset
   html?: 'safe' | 'text' | 'strip' | { allow: HtmlTag[] }; // default 'safe' (see Raw HTML below)
   maxInputLength?: number;         // guard against pathological input

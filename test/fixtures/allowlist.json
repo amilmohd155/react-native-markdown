@@ -38,5 +38,133 @@
     "section": "pathological",
     "reason": "nesting capped at 100 levels (P1-8); input nests 100,000 blockquotes",
     "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-8-cap-markdown-it-nesting-at-100"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm",
+    "example": 398,
+    "section": "Emphasis and strong emphasis",
+    "reason": "GFM spec 0.29 predates CommonMark 0.31; same input as CommonMark example 389, whose 0.31 output we match (P1-14)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-14-gfm-spec-029-vs-commonmark-031-emphasis"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm",
+    "example": 426,
+    "section": "Emphasis and strong emphasis",
+    "reason": "GFM spec 0.29 predates CommonMark 0.31; same input as CommonMark example 417, whose 0.31 output we match (P1-14)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-14-gfm-spec-029-vs-commonmark-031-emphasis"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm",
+    "example": 434,
+    "section": "Emphasis and strong emphasis",
+    "reason": "GFM spec 0.29 predates CommonMark 0.31; same input as CommonMark example 425, whose 0.31 output we match (P1-14)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-14-gfm-spec-029-vs-commonmark-031-emphasis"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm",
+    "example": 435,
+    "section": "Emphasis and strong emphasis",
+    "reason": "GFM spec 0.29 predates CommonMark 0.31; same input as CommonMark example 426, whose 0.31 output we match (P1-14)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-14-gfm-spec-029-vs-commonmark-031-emphasis"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm",
+    "example": 436,
+    "section": "Emphasis and strong emphasis",
+    "reason": "GFM spec 0.29 predates CommonMark 0.31; same input as CommonMark example 427, whose 0.31 output we match (P1-14)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-14-gfm-spec-029-vs-commonmark-031-emphasis"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm",
+    "example": 473,
+    "section": "Emphasis and strong emphasis",
+    "reason": "GFM spec 0.29 predates CommonMark 0.31; same input as CommonMark example 464, whose 0.31 output we match (P1-14)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-14-gfm-spec-029-vs-commonmark-031-emphasis"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm",
+    "example": 474,
+    "section": "Emphasis and strong emphasis",
+    "reason": "GFM spec 0.29 predates CommonMark 0.31; same input as CommonMark example 465, whose 0.31 output we match (P1-14)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-14-gfm-spec-029-vs-commonmark-031-emphasis"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm",
+    "example": 475,
+    "section": "Emphasis and strong emphasis",
+    "reason": "GFM spec 0.29 predates CommonMark 0.31; same input as CommonMark example 466, whose 0.31 output we match (P1-14)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-14-gfm-spec-029-vs-commonmark-031-emphasis"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm",
+    "example": 477,
+    "section": "Emphasis and strong emphasis",
+    "reason": "GFM spec 0.29 predates CommonMark 0.31; same input as CommonMark example 468, whose 0.31 output we match (P1-14)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-14-gfm-spec-029-vs-commonmark-031-emphasis"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm",
+    "example": 625,
+    "section": "Autolinks (extension)",
+    "reason": "linkify-it ends a URL at an unbalanced ')' inside it; GFM continues to whitespace (P1-1)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm-extensions",
+    "example": 19,
+    "section": "Autolinks",
+    "reason": "bundles 32 cases, 5 of them known gaps (P1-1); the other 27 are enforced case by case in test/spec/autolinkCases.test.ts",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm-extensions",
+    "example": "19/6",
+    "section": "Autolinks",
+    "reason": "email not preceded by a word boundary (after '/'): linkify-it requires one (P1-1)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm-extensions",
+    "example": "19/10",
+    "section": "Autolinks",
+    "reason": "email not preceded by a word boundary ('mmmmailto:'): linkify-it requires one (P1-1)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm-extensions",
+    "example": "19/18",
+    "section": "Autolinks",
+    "reason": "email not preceded by a word boundary ('at:'): linkify-it requires one (P1-1)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm-extensions",
+    "example": "19/23",
+    "section": "Autolinks",
+    "reason": "host label starting with '_' (www._xxx.yyy.zzz): linkify-it doesn't match it (P1-1)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps"
+  },
+  {
+    "backend": "markdown-it",
+    "suite": "gfm-extensions",
+    "example": "19/31",
+    "section": "Autolinks",
+    "reason": "IDN host: href is punycode (markdown-it normalizeLink), cmark-gfm percent-encodes; both resolve (P1-1)",
+    "issue": "https://github.com/amilmohd155/react-native-markdown/blob/v1/docs/rewrite/phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps"
   }
 ]
