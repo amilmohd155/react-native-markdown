@@ -1,4 +1,5 @@
 import type { TextStyle, ViewStyle } from 'react-native';
+import type { PluginElementName } from './pluginElements';
 
 /**
  * Built-in element names: the keys of `components` and `theme.elements`.
@@ -39,27 +40,6 @@ export const ELEMENT_NAMES = [
 ] as const;
 
 export type ElementName = (typeof ELEMENT_NAMES)[number];
-
-/**
- * Props of the elements plugins add, by element name (without `children` and
- * `style`). Empty here: a plugin package augments it so `components` and
- * `theme.elements` type-check its elements:
- *
- * ```ts
- * declare module '@docren/react-native-markdown' {
- *   interface PluginElementPropsMap {
- *     Mention: { userId: string };
- *   }
- * }
- * ```
- *
- * Lives with the theme types because `theme.elements` is keyed by it.
- */
-
-export interface PluginElementPropsMap {}
-
-/** Names of the elements plugins add (those declared in the map above). */
-export type PluginElementName = keyof PluginElementPropsMap & string;
 
 /**
  * One font family per face, for fonts loaded with `expo-font`'s `useFonts`

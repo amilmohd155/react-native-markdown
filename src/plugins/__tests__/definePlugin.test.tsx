@@ -91,9 +91,8 @@ const host =
     createElement(name, props, children);
 
 // A plugin package declares its elements like this, so `components` and
-// `theme.elements` accept them. (Relative path here; a package augments
-// '@docren/react-native-markdown'.)
-declare module '../../theme/types' {
+// `theme.elements` accept them.
+declare module '@docren/react-native-markdown' {
   interface PluginElementPropsMap {
     Mention: { userId: string };
   }

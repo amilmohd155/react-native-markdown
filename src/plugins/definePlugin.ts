@@ -1,8 +1,39 @@
-import type { MarkdownIt, Token } from 'markdown-it';
+import type { MarkdownIt } from 'markdown-it';
 import type { ComponentType, ReactNode } from 'react';
 import type { PluginNodeAttrs } from '../model';
 import type { Components } from '../render/elements';
 import type { ElementOverride, ElementOverrides, ElementStyle } from '../theme';
+
+/**
+ * A markdown-it token, as a plugin's `from` reads it. A read-only subset of
+ * markdown-it's `Token` that its tokens satisfy structurally, declared here
+ * so our public types don't depend on markdown-it's (and a native backend
+ * can build the same shape). Spec: docs/rewrite/phase-1/token-mapping.md
+ */
+export interface PluginToken {
+  /** Token type: `math_inline`, `container_note_open`, `fence`... */
+  readonly type: string;
+  readonly tag: string;
+  /** Attributes as `[name, value]` pairs. */
+  readonly attrs: readonly (readonly [string, string | number])[] | null;
+  /** Source lines `[start, end)` of a block token. */
+  readonly map: readonly [number, number] | null;
+  /** `1` opening, `0` self-contained, `-1` closing. */
+  readonly nesting: 1 | 0 | -1;
+  readonly level: number;
+  readonly children: readonly PluginToken[] | null;
+  /** Inner text of the token (the source for leaf tokens). */
+  readonly content: string;
+  /** Opening markup (`**`, a fence, `:::`...). */
+  readonly markup: string;
+  /** Extra info: a fence's info string. */
+  readonly info: string;
+  /** What the syntax rule stored for the plugin. Narrow it before use. */
+  readonly meta: unknown;
+  readonly block: boolean;
+  readonly hidden: boolean;
+  attrGet(name: string): string | number | null;
+}
 
 /**
  * How a plugin maps one markdown-it token to a node.
@@ -27,7 +58,7 @@ export interface PluginNodeSpec<
    * Stored in the node table, so values must be plain and serializable
    * (`string | number | boolean | null`).
    */
-  readonly from: (token: Token) => Attrs;
+  readonly from: (token: PluginToken) => Attrs;
 }
 
 /** What a plugin component receives for node `Attrs`. */

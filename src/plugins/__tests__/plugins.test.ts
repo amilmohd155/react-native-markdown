@@ -106,7 +106,9 @@ const note = definePlugin({
     Note: {
       kind: 'block',
       token: 'container_note',
-      from: (token) => ({ kind: String(token.meta?.kind) }),
+      from: (token) => ({
+        kind: String((token.meta as { kind?: string } | null)?.kind),
+      }),
     },
   },
 });

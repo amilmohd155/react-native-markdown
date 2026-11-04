@@ -1,7 +1,7 @@
 import { createElement, type ReactNode } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { definePlugin } from '../../plugins/definePlugin';
-import { markdownItBackend, type ParserBackend } from '../../parse';
+import { markdownItBackend, type ParserBackendImpl } from '../../parse';
 import { defaultComponents } from '../../render/defaults';
 import { Markdown, type MarkdownProps } from '../Markdown';
 import { mergeComponents } from '../mergeComponents';
@@ -113,7 +113,7 @@ describe('<Markdown>', () => {
     });
 
     it('reparses only when the source changes', () => {
-      const backend: ParserBackend = {
+      const backend: ParserBackendImpl = {
         name: 'counting',
         parse: jest.fn((source, options) =>
           markdownItBackend.parse(source, options)

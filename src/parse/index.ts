@@ -15,7 +15,13 @@
  * Backends are private; only `parse()` (see ../api) is public.
  */
 
-export type { HtmlMode, ParseOptions, ParserBackend, Preset } from './backend';
+export type {
+  HtmlMode,
+  ParseOptions,
+  ParserBackend,
+  ParserBackendImpl,
+  Preset,
+} from './backend';
 export { getMarkdownIt, MAX_NESTING } from './markdownIt';
 export { convertTokens, type ConvertResult } from './convert';
 export { markdownItBackend, parseWithMarkdownIt } from './markdownItBackend';

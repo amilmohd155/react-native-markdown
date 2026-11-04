@@ -3092,7 +3092,6 @@ __metadata:
     jest: ^29.7.0
     markdown-it: ^15.0.3
     markdown-it-footnote: ^4.0.0
-    mdast-util-from-markdown: ^2.0.2
     prettier: ^3.0.3
     react: 19.0.0
     react-native: 0.79.4

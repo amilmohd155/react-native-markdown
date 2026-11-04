@@ -20,7 +20,7 @@ function mentionSyntax(md: MarkdownIt): void {
   });
 }
 
-declare module '../../theme/types' {
+declare module '@docren/react-native-markdown' {
   interface PluginElementPropsMap {
     VisitMention: { userId: string };
   }

@@ -5,6 +5,8 @@
 ![runs with expo](https://img.shields.io/badge/Runs%20with%20Expo-4630EB.svg?style=flat-square&logo=EXPO&labelColor=f3f3f3&logoColor=000)
 ![npm](https://img.shields.io/badge/types-included-blue?style=flat-square)
 
+> **v1 pre-release.** This branch is the v1 rewrite: a new API (`source`, `components`, `plugins`, `theme` tokens) that replaces the v0.x `renderRules` and `styles` props. The sections below still describe v0.x and will be rewritten before v1.0. v0.x stays on the `main` branch (`^0.8`). Design and migration notes: [`docs/rewrite`](docs/rewrite/README.md).
+
 A flexible and performant Markdown renderer for React Native, powered by MDAST. Supports custom styling, nested elements, and extendable render rules for full control over output.
 
 https://github.com/user-attachments/assets/7e07a865-bccd-4961-b696-0b17935bbcc9

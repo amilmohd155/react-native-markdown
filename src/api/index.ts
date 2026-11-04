@@ -13,10 +13,10 @@
  * Design:
  * - docs/rewrite/04-api.md
  *
- * Becomes the package entry point in M5 (task: swap the entry); until then
- * the v0 API in ../index.tsx stays exported. `tableOf` (./document) and
- * every internal type (NodeTable, markdown-it `Token`) must never be
- * re-exported from here.
+ * This is the package entry point (src/index.tsx re-exports it). `tableOf`
+ * (./document) and every internal type (NodeTable, markdown-it `Token`)
+ * must never be exported or reachable from here: `yarn check:public-types`
+ * walks the built declarations and fails if one is.
  */
 
 export type { MarkdownDocument } from './document';
@@ -60,6 +60,8 @@ export type {
 } from '../plugins';
 
 // Theme
+// `export *` on purpose: see ../theme/pluginElements (by-name augmentation).
+export * from '../theme/pluginElements';
 export { createTheme, darkTheme, lightTheme, useMarkdownTheme } from '../theme';
 export type {
   ElementName,
@@ -69,7 +71,6 @@ export type {
   FontFaces,
   FontFamily,
   MarkdownTheme,
-  PluginElementPropsMap,
   Theme,
   ThemeInput,
   ThemeProp,
