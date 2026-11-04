@@ -1,15 +1,7 @@
-import {
-  createElement,
-  Fragment,
-  type Attributes,
-  type ComponentType,
-  type ReactElement,
-  type ReactNode,
-} from 'react';
+import { createElement, Fragment, type ReactNode } from 'react';
 import { NodeType, NONE, type NodeTable } from '../model';
-import type { ElementName, ElementStyle } from '../theme';
 import type { RenderCtx } from './context';
-import type { ElementProps } from './elements';
+import { element } from './element';
 import { renderInline } from './inline';
 import {
   blockImageOf,
@@ -23,7 +15,6 @@ import {
   tableCellProps,
   tableProps,
   tableRowProps,
-  type SemanticProps,
 } from './props';
 
 /**
@@ -38,29 +29,6 @@ interface Place {
 }
 
 const TOP: Place = Object.freeze({ depth: 0, tight: false });
-
-/** Calls the element's component from the merged map, keyed by node id. */
-function element<K extends ElementName>(
-  ctx: RenderCtx,
-  name: K,
-  key: number,
-  props: SemanticProps<K>,
-  style: ElementStyle,
-  children?: ReactNode
-): ReactElement {
-  const component = ctx.components[name] as ComponentType<ElementProps<K>>;
-  // Leaf elements (no `children` in the catalog) get no `children` key.
-  const full =
-    children === undefined
-      ? { ...props, style, key }
-      : { ...props, style, key, children };
-  // TypeScript can't relate `SemanticProps<K>` (an Omit over a generic
-  // key) back to `ElementProps<K>`; the shapes match by construction.
-  return createElement(
-    component,
-    full as unknown as ElementProps<K> & Attributes
-  );
-}
 
 function renderChildren(
   table: NodeTable,

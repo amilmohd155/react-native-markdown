@@ -9,7 +9,11 @@ exports[`BlockList renders every block through the component map 1`] = `
     Title
   </Heading>
   <Paragraph>
-    Some text.
+    Some 
+    <Emphasis>
+      text
+    </Emphasis>
+    .
   </Paragraph>
   <List
     ordered={false}

@@ -7,9 +7,11 @@
  * - Node table → semantic element props (./props)
  * - Block-level rendering (./renderBlock), BlockList and memoized Block
  *   (./Block)
+ * - Inline flattener: merged text runs, one component call per inline
+ *   element (./inline), and the dev check for undeclared inline Views
+ *   (./devInline)
  *
  * Planned contents:
- * - Inline flattener (one <Text> per block), replacing ./inline
  * - Default elements
  *
  * Design:
@@ -45,4 +47,5 @@ export {
   type BlockProps,
 } from './Block';
 export { renderBlock } from './renderBlock';
+export { renderInline } from './inline';
 export * from './props';

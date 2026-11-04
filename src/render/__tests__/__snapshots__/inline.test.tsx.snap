@@ -1,0 +1,111 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`inline flattener merges text around inline elements into one run per gap 1`] = `
+[
+  "a ",
+  <Emphasis>
+    b
+  </Emphasis>,
+  " c ",
+  <Strong>
+    d
+  </Strong>,
+  " e",
+]
+`;
+
+exports[`inline flattener nests inline elements and their props 1`] = `
+[
+  <Strong>
+    bold 
+    <Link
+      href="https://x"
+      title="T"
+    >
+      link 
+      <Emphasis>
+        em
+      </Emphasis>
+    </Link>
+     
+    <InlineCode
+      code="code"
+    />
+  </Strong>,
+  " ",
+  <Strikethrough>
+    gone
+  </Strikethrough>,
+]
+`;
+
+exports[`inline flattener renders hard breaks as LineBreak elements 1`] = `
+[
+  "a",
+  <LineBreak
+    hard={true}
+  />,
+  "b",
+]
+`;
+
+exports[`inline flattener renders hard breaks as LineBreak elements 2`] = `
+[
+  "a",
+  <LineBreak
+    hard={true}
+  />,
+  "b",
+]
+`;
+
+exports[`inline flattener renders inline images, footnote references and raw inline HTML 1`] = `
+[
+  "see ",
+  <InlineImage
+    alt="i"
+    height={null}
+    src="i.png"
+    title="T"
+    width={null}
+  />,
+  " ref",
+  <FootnoteReference
+    index={1}
+    label="n"
+  />,
+  " ",
+  <HtmlInline
+    html="<span>"
+  />,
+  "x",
+  <HtmlInline
+    html="</span>"
+  />,
+]
+`;
+
+exports[`inline flattener renders the safe HTML subset as elements 1`] = `
+[
+  "x",
+  <Superscript>
+    2
+  </Superscript>,
+  " H",
+  <Subscript>
+    2
+  </Subscript>,
+  "O ",
+  <Underline>
+    u
+  </Underline>,
+  " ",
+  <Highlight>
+    m
+  </Highlight>,
+  " ",
+  <Kbd>
+    K
+  </Kbd>,
+]
+`;
