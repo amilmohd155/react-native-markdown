@@ -1,10 +1,18 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { inlineView, inlineViewOffset } from '../v1';
+import { inlineView } from '@docren/react-native-markdown';
 
 /**
  * Example declared inline views (D8): Views laid out as inline attachments
  * inside a paragraph's <Text>, aligned with the `baseline` metrics.
  */
+
+/**
+ * Moves a view of `height` down so it is centred on the cap height of the
+ * text. Inline attachments sit on the baseline; positive is down. (Cap
+ * height ≈ 0.7 em for typical UI fonts.)
+ */
+const centreOnCaps = (fontSize: number, height: number) =>
+  (height - fontSize * 0.7) / 2;
 
 /** Links as pill-shaped chips, centred on the text. */
 export const LinkChip = inlineView<'Link'>(({ children, baseline }) => {
@@ -16,7 +24,7 @@ export const LinkChip = inlineView<'Link'>(({ children, baseline }) => {
         {
           height,
           borderRadius: height / 2,
-          transform: [{ translateY: inlineViewOffset(baseline, height) }],
+          transform: [{ translateY: centreOnCaps(baseline.fontSize, height) }],
         },
       ]}
     >

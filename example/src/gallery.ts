@@ -1,100 +1,113 @@
 /**
- * Gallery fixture: every v1 element at least once, for visual QA on
- * devices. Grows with each M3 element task.
+ * The Playground's default document: a tour of what the library renders.
+ * It uses every element and every built-in plugin at least once, in the
+ * order a reader would meet them, and points at the Options that change it.
+ * Inline images load from picsum.photos; the broken one is on purpose.
  */
-export const gallery = `# Heading 1
-## Heading 2
-### Heading 3
-#### Heading 4
-##### Heading 5
-###### Heading 6
+export const gallery = `# Feature tour
 
-A paragraph with **strong**, *emphasis*, ***both***, ~~strikethrough~~, \`inline code\`,
-a [link](https://github.com "GitHub") and an autolink https://expo.dev. A soft
-line break joins lines with a space; a hard break (backslash) ends the line\\
+CommonMark and GitHub Flavored Markdown, rendered as native \`Text\` and \`View\`. Everything below is one document: open **Options** to restyle it, or **Edit** to try your own.
+
+## Text
+
+Plain text takes **strong**, *emphasis*, ***both***, ~~strikethrough~~ and \`inline code\`. Inline styles change only what they set, so **strong text keeps the paragraph's size**.
+
+Links open in the system: [a titled link](https://github.com "GitHub"), an autolink like https://expo.dev, and a bare www.example.com.
+
+Soft breaks follow the *Soft line breaks* option:
+this line continues
+on the next two.
+
+A hard break ends the line\\
 right here.
 
-**A heading-sized run? No:** inline styles only change what they set, so this
-**strong text keeps the paragraph's size**.
+### Heading levels
 
-## Safe HTML subset
+Levels 1 and 2 are above. Then:
 
-H<sub>2</sub>O and E = mc<sup>2</sup> (Unicode), Brand<sup>TM</sup> (fallback), <u>underline</u>, <mark>highlight</mark>,
-press <kbd>Ctrl</kbd> + <kbd>C</kbd>, a line<br>break, and <span>unknown tags</span> as text.
-
-<div>
-Block HTML is never interpreted.
-</div>
+### Level 3
+#### Level 4
+##### Level 5
+###### Level 6
 
 ## Lists
 
-- Bullet one
-- Bullet two
-  - Nested ◦
-    - Deeper ▪
+- Bullets nest, and the marker follows the depth
+  - Second level ◦
+    - Third level ▪
       - Back to •
-- Bullet three
+- Back at the top
 
-8. Eight
-9. Nine
-10. Ten (markers stay aligned)
-11. Eleven
+8. Numbers keep their start
+9. and stay aligned
+10. as they grow to two digits
+11. like this
 
-- [x] Done task
-- [ ] Open task
-- Plain item in a task list
+- [x] Task lists render checkboxes
+- [ ] Turn on *Interactive tasks* and tap one
+- Plain items can sit between them
 
-1. Loose list item
+1. A loose list gets paragraph spacing
 
-   with a second paragraph.
+   so an item can hold several paragraphs.
 
-2. Second loose item
+2. Like this second item.
 
-## Blockquote
+## Quotes and rules
 
-> A quote's text is muted, and it **cascades** into its paragraphs.
+> A quote mutes its text, and the style **cascades** into everything inside it.
 >
-> > Nested quote.
-
-## Code
-
-\`\`\`ts title="example.ts"
-function greet(name: string): string {
-  return \`Hello, \${name}! This line is long enough to scroll horizontally.\`;
-}
-\`\`\`
-
-    indented code block
+> > Quotes nest.
 
 ---
 
-## Table
+## Code
+
+\`\`\`ts title="greet.ts"
+function greet(name: string): string {
+  return \`Hello, \${name}! Long lines scroll sideways instead of wrapping.\`;
+}
+\`\`\`
+
+    an indented code block
+
+## Tables
 
 | Left | Center | Right |
 |:-----|:------:|------:|
-| a | b | c |
-| longer cell content | **bold** | \`code\` |
+| aligned | per | column |
+| **bold** | \`code\` | [link](https://expo.dev) |
 
 ## Images
 
-![Block image](https://picsum.photos/id/1015/800/450)
+![A block image](https://picsum.photos/id/1015/800/450)
 
-A portrait image keeps its own aspect ratio, never wider than its natural size:
+Block images keep their aspect ratio and never grow past their natural size:
 
-![Portrait image](https://picsum.photos/id/1011/240/320)
+![A portrait image](https://picsum.photos/id/1011/240/320)
 
-A broken image shows its alt text:
+An inline image ![icon](https://picsum.photos/id/1025/64/64) scales to the line height. A broken one shows its alt text:
 
 ![This image failed to load](https://example.invalid/missing.png)
 
-Inline image ![icon](https://picsum.photos/id/1025/64/64) inside text.
-
 ## Footnotes
 
-A claim with a footnote[^1] and another[^note]. The first one again[^1].
+Footnotes link both ways[^1], and a named one works too[^note]. The first again[^1].
 
-[^1]: The first footnote, referenced twice: two back-links.
-[^note]: A named footnote, referenced once.
+[^1]: Referenced twice, so it has two back-links.
+[^note]: A named footnote.
 
-    It has a second paragraph, indented under the definition.
+    It can hold a second paragraph.
+
+## Inline HTML
+
+A safe subset of tags becomes real formatting: H<sub>2</sub>O and E = mc<sup>2</sup>, <u>underline</u>, <mark>highlight</mark>, press <kbd>Ctrl</kbd> + <kbd>C</kbd>, a line<br>break. Scripts with no Unicode form fall back to smaller text, as in Brand<sup>TM</sup>; the *Superscript fallback* option raises it.
+
+## Safe by default
+
+Anything else stays visible as text, never as markup: an <span>unknown tag</span>, a <script>alert(1)</script> tag, and a [dangerous link](javascript:alert(1)).
+
+<div>
+Block-level HTML is never interpreted either.
+</div>
 `;
