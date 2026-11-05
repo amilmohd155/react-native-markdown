@@ -5,382 +5,233 @@
 ![runs with expo](https://img.shields.io/badge/Runs%20with%20Expo-4630EB.svg?style=flat-square&logo=EXPO&labelColor=f3f3f3&logoColor=000)
 ![npm](https://img.shields.io/badge/types-included-blue?style=flat-square)
 
-> **v1 pre-release.** This branch is the v1 rewrite: a new API (`source`, `components`, `plugins`, `theme` tokens) that replaces the v0.x `renderRules` and `styles` props. The sections below still describe v0.x and will be rewritten before v1.0. v0.x stays on the `main` branch (`^0.8`). Design and migration notes: [`docs/rewrite`](docs/rewrite/README.md).
+A Markdown renderer for React Native. CommonMark and GitHub Flavored Markdown render as native `Text` and `View` elements that you can restyle, replace or extend, in pure JavaScript, so it runs in Expo Go and on the web.
 
-A flexible and performant Markdown renderer for React Native, powered by MDAST. Supports custom styling, nested elements, and extendable render rules for full control over output.
-
-https://github.com/user-attachments/assets/7e07a865-bccd-4961-b696-0b17935bbcc9
+> **v1 pre-release.** This is the documentation for v1, which isn't published to npm yet; `npm install` still gives v0.x. Coming from v0.x? Read the [migration guide](docs/migration-from-v0.md). v0.x keeps getting bug fixes on the `main` branch (`^0.8`).
 
 ## Features
 
-- 📄 CommonMark-Compliant – Parses and renders Markdown based on the CommonMark spec
-- 🧩 GFM Support – Extend Markdown with GitHub Flavored Markdown features via pluggable extensions.
-- ⚛️ React Native First – Designed specifically for rendering Markdown in React Native environments
-- 🎯 AST-Based Rendering – Fine-grained control using custom render rules powered by MDAST nodes
-- 🛠️ Fully Customizable – Customize how each Markdown element is rendered with flexible render rules
-- 🧠 Lightweight & Tree-Shakeable – Minimal footprint with no bundled syntax highlighters
-- 🔐 TypeScript First – Strong typing throughout for safer and more predictable code
-
-**_Markdown_** – Render Markdown with customizable components, AST access, and full control over rendering behavior.
-
-## Acknowledgements
-
-This package is inspired by [react-native-markdown-display](https://github.com/iamacup/react-native-markdown-display) — many thanks to the original author for laying the groundwork for Markdown rendering in React Native.
-
-We’ve built on this foundation with a fully type-safe architecture, swapped in the lighter and more modern mdast-util-from-markdown parser for better performance and maintainability, and added extended support for more Markdown elements, custom rendering, and advanced features.
+- 📄 **CommonMark and GFM.** Parsed with markdown-it. Tables, task lists, strikethrough, autolinks and footnotes are on by default; choose `commonmark` or exclude single features with `preset`.
+- 🎨 **Theme tokens.** Colors, fonts, sizes and spacing, with built-in light and dark themes (`theme="auto"` follows the system), plus per-element overrides.
+- 🧱 **Replaceable elements.** Swap any element for your own component with `components`. Components get semantic props (`level`, `href`, `code`) and a resolved `style`, never a parser node.
+- 🧩 **Plugins.** Add syntax with `definePlugin`: a markdown-it rule, the element it produces, how it renders and how it is themed, all type-checked.
+- 🔐 **Safe by default.** Links open only `http`, `https`, `mailto` and `tel`; `images` can be denied or limited to hosts; raw HTML is a small allowlist of inline tags, everything else is shown as text.
+- 📦 **Pure JS.** No native module, so Expo Go, the web and any React Native app work unchanged.
+- 🔤 **TypeScript first.** Types are included, and plugin elements are typed through `components` and `theme`.
 
 ## Installation
 
-NPM
-
 ```sh
 npm install @docren/react-native-markdown
-```
-
-Yarn
-
-```sh
+# or
 yarn add @docren/react-native-markdown
-```
-
-PNPM
-
-```sh
+# or
 pnpm add @docren/react-native-markdown
 ```
 
-## Base Usage
+Peer dependencies: `react >= 18.2` and `react-native >= 0.76`.
 
-```jsx
-import { View, StyleSheet, ScrollView } from 'react-native';
+## Usage
 
+```tsx
+import { ScrollView } from 'react-native';
 import { Markdown } from '@docren/react-native-markdown';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Markdown
-          markdown={`#Hello world`}
-          }
-        />
-      </ScrollView>
-    </View>
-  );
-}
-
-export default App;
-```
-
-For more detailed usage ⬇️
-
-### Props and Methods
-
-The `<Markdown>` component takes the following props.
-
-| Prop                | Type                  | Default                              | Description                                                                                                                                                                                                            |
-| ------------------- | --------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| markdon             | string \| Uint8Array  | N/A                                  | `required` The Markdown content to render. Accepts plain strings or .md file contents as Uint8Array.                                                                                                                   |
-| style               | StyleMap \| null      | [source](./src/libs/styles.ts)       | Styles applied to Markdown elements. Pass a map of styles keyed by Markdown element types.                                                                                                                             |
-| mergeStyle          | boolean               | true                                 | Whether to merge default styles with the user-provided style map. If `false`, only your styles are used.                                                                                                               |
-| renderRules         | RenderRules           | [source](./src/libs/renderRules.tsx) | Customize how specific Markdown elements are rendered using an object of render functions. Merged by default.                                                                                                          |
-| listBulletStyle     | 'disc' \| 'dash'      | 'disc'                               | Defines the default bullet style for unordered lists (• or –).                                                                                                                                                         |
-| customBulletElement | ReactElement \| null  | N/A                                  | Override the default list bullet with a custom React element. Applies to all unordered list items.                                                                                                                     |
-| onLinkPress         | (url: string) => void | N/A                                  | Callback invoked when a link is pressed. When provided, it replaces the default `Linking.openURL` behaviour.                                                                                                           |
-| extensions          | Extension[]           | []                                   | Extend or modify Markdown parsing by providing custom MDAST extensions. Useful for GFM or custom syntax. [To know more](https://github.com/syntax-tree/mdast-util-from-markdown?tab=readme-ov-file#list-of-extensions) |
-| debug               | boolean               | false                                | Enable debug logs during parsing and rendering for development purposes.                                                                                                                                               |
-
-## Syntax Support
-
-- [x] blockquote
-- [x] break
-- [x] code
-- [x] emphasis
-- [x] definition
-- [x] heading
-  - [x] heading1
-  - [x] heading3
-  - [x] heading4
-  - [x] heading2
-  - [x] heading5
-  - [x] heading6
-- [x] image
-- [x] imageReference
-- [x] inlineCode
-- [x] link
-- [x] linkReference
-- [x] list
-- [x] listItem
-- [x] paragraph
-- [x] root
-- [x] strong
-- [x] text
-- [x] thematicBreak
-- [ ] strikethrough (Planned)
-- [ ] table (Planned)
-  - [ ] tableCell
-  - [ ] tableRow
-- [ ] html (Not planned)
-- [ ] yaml (Not planned)
-
-## Rules and Styles
-
-### Styling Elements
-
-Text styles follow a cascading approach, similar to how CSS works. Global styles can be set using the root style, which will apply across most Markdown elements, while still allowing you to override specific styles on individual elements when needed.
-
-Keep in mind: the text style does not affect all text nodes—especially things like list bullets. If you want to apply a consistent style (e.g. color or font) to all text, it’s better to define it in the root style instead.
-
-#### Styles
-
-Styles allow you to customize the appearance of specific Markdown elements, overriding the default styling behavior,
-[Default styling](./src/libs/styles.ts).
-
-> By default, your styles are merged with the built-in styles. To override them completely, refer to the mergeStyle prop.
-
-<details>
-
-<summary>Styling example</summary>
-
-<p>
-
-```jsx
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Markdown
-          markdown={mdxString}
-          styles={{
-            blockquote: {
-              backgroundColor: '#cad8ee',
-              borderRadius: 12,
-            },
-          }}
-        />
-      </ScrollView>
-    </View>
+    <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <Markdown source={'# Hello world\n\nSome **bold** text and a [link](https://example.com).'} />
+    </ScrollView>
   );
 }
 ```
 
-</p>
+`<Markdown>` doesn't scroll by itself; put it in the scroll view you already have.
 
-</details>
+### Props
 
-#### Rules
+| Prop | Type | Default | Notes |
+|---|---|---|---|
+| `source` | `string` | — | The Markdown to render. Pass either `source` or `document`. |
+| `document` | `MarkdownDocument` | — | Pre-parsed with `parse()`, so nothing is parsed during render. |
+| `preset` | `'gfm' \| 'commonmark' \| { base: 'gfm', exclude: GfmPluginName[] }` | `'gfm'` | Which built-in syntax is on. |
+| `plugins` | `MarkdownPlugin[]` | `[]` | Added on top of the preset. |
+| `components` | `Partial<Components>` | built-in | Replace any element. See [Components](#components). |
+| `theme` | `ThemeInput \| 'light' \| 'dark' \| 'auto'` | `'auto'` | See [Theme](#theme). |
+| `onLinkPress` | `(href, info) => boolean \| void` | opens with `Linking` | Called first for every link. Return `false` to skip the default. |
+| `onImagePress` | `(src, info) => void` | none | Makes images pressable. |
+| `onTaskToggle` | `(checked, info) => void` | none | Makes task list checkboxes interactive. |
+| `onFootnotePress` | `(label, info) => void` | none | Makes footnote references and back-links pressable. You do the scrolling. |
+| `html` | `'safe' \| 'text' \| 'strip' \| { allow: HtmlTag[] }` | `'safe'` | What happens to raw HTML. |
+| `images` | `'allow' \| 'deny' \| { allowHosts: string[] }` | `'allow'` | Which images load. A refused image renders as its alt text. |
+| `softBreak` | `'space' \| 'newline'` | `'space'` | How a single newline inside a paragraph renders. |
+| `scriptFallback` | `'smaller' \| 'raised'` | `'smaller'` | `<sup>` / `<sub>` content with no Unicode form. |
+| `selectable` | `boolean` | `false` | Text selection within each block. |
+| `maxFontSizeMultiplier` | `number` | unset | Caps font scaling for accessibility. |
 
-Rules let you define how specific Markdown elements should be rendered. You can find the default implementation [here](./src/libs/renderRules.tsx).
+The full reference, including every element and its props, is in [`docs/rewrite/04-api.md`](docs/rewrite/04-api.md).
 
-Note: When defining rules, make sure to assign a unique key to each component. You can use a custom value or the key provided in the node property.
+### Links
 
-> ℹ️ You don’t need to define rules for definition, linkReference, or imageReference, as these are internally resolved to link and image. You can still use them in your Markdown content. If you need customization, override the render rules for link and image.
-
-> If you’re using this package with Expo, it’s recommended to use expo-image for rendering images.
-
-<details>
-
-<summary>Render rule example</summary>
-
-<p>
-
-```jsx
-import {Image} from 'expo-image'
-
-export default function App() {
-
-  const mdxString = `
-          ![Alt text](https://fastly.picsum.photos/id/70/200/200.jpg?hmac=hRU7tEHltyLUTf0bCrAWFXlPRXOBTsvCcvL-dIUG2CE "Image title")
-          `
-
-  return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Markdown
-          markdown={mdxString}
-          renderRules={{
-            image: ({ node }) => (
-              <Image
-                key={(node as any).key}
-                source={{ uri: node.url }}
-                alt={node.alt ?? ""}
-                style={{ width: "100%", height: 300, borderRadius: 8 }}
-              />
-            ),
-          }}
-        />
-      </ScrollView>
-    </View>
-  );
-}
-```
-
-</p>
-
-</details>
-
-#### Syntax Highlighing
-
-This package does not include built-in syntax highlighting, as it aims to remain lightweight. However, you can integrate external libraries like [react-native-syntax-highlighter](https://www.npmjs.com/package/react-native-syntax-highlighter) or [react-native-code-highlighter](https://github.com/gmsgowtham/react-native-code-highlighter) for that functionality.
-
-Once integrated, you can apply syntax highlighting by overriding the `renderRule.code` function.
-
-An example implementation can be found in the included example app.
-
-<details><summary>Syntax highlighting render rule</summary>
-
-<p>
-
-```jsx
-
-import CodeHighlighter from 'some-syntax-highlighting-package'
-
-<Markdown
-  markdown={mdxString}
-  renderRules={{
-    code: ({ node }) => (
-      <CodeHighlighter
-        key={(node as any).key}
-        hljsStyle={atomOneDarkReasonable} //highlight.js theme
-        language={node.lang || 'plaintext'}
-        scrollViewProps={{
-          bounces: false,
-          contentContainerStyle: styles.codeContentContainer,
-        }}
-        textStyle={styles.codeTextStyle}
-      >
-        {node.value}
-      </CodeHighlighter>
-    ),
-  }}
-/>
-```
-
-</p>
-
-</details>
-
-#### Handling Link
-
-By default, links are handled by `Linking` from react-native. ie,
+The default opens `http`, `https`, `mailto` and `tel` links with `Linking`. Relative URLs and custom schemes (deep links) are only reported to `onLinkPress`, so handle them there:
 
 ```tsx
-import { Linking } from 'react-native';
+import { useRouter, type Href } from 'expo-router';
+import { Markdown } from '@docren/react-native-markdown';
 
-Linking.openURL(url);
-```
-
-You can override this behavior in one of two ways:
-
-<details>
-<summary>
-Using the onLinkPress callback
-</summary>
-
-<p>
-
-```jsx
-
-export default function App() {
-    const mdxString = `[Link to Google](https://www.google.com)`
-
-    const onLinkPress = (url: string) => {
-        // Handle link press, e.g., open in a web browser or navigate to a screen
-        console.log('Link pressed:', url);
-    };
-
-  return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Markdown markdown={mdxString} onLinkPress={onLinkPress} />
-      </ScrollView>
-    </View>
-  );
-}
-```
-
-</p>
-
-</details>
-
-<details>
-<summary>
-Providing a custom renderRule.link implementation
-</summary>
-
-<p>
-
-To override the default link behavior, you can use a custom renderRule.link. If you’re using Expo, it’s recommended to use expo-router for internal links and expo-linking for external links.
-
-```tsx
-export default function Screen() {
-  const markdown = `
-[Explore](/explore)
-        
-[Google](https://google.com)
-  `;
-
+export function Doc({ text }: { text: string }) {
   const router = useRouter();
 
-  const handleLinkPress = (url: string) => {
-    if (!url.startsWith('/')) {
-      // If the URL does not start with '/', treat it as an external link
-      // and open it in the default browser.
-      return Linking.openURL(url);
-    }
-
-    router.push(url as Href);
-  };
-
-  const rules: RenderRules = {
-    link: ({ node, children }) => {
-      return (
-        <Text
-          key={(node as any).key}
-          style={{ color: 'blue', textDecorationLine: 'underline' }}
-          onPress={() => handleLinkPress(node.url)}
-        >
-          {children}
-        </Text>
-      );
-    },
-  };
-
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Markdown markdown={markdown} renderRules={rules} />
-      </ScrollView>
-    </View>
+    <Markdown
+      source={text}
+      onLinkPress={(href) => {
+        if (href.startsWith('/')) {
+          router.push(href as Href);
+          return false; // handled: skip the default
+        }
+        return true;
+      }}
+    />
   );
 }
 ```
 
-</p>
+### Theme
 
-</details>
+A theme is a set of tokens, from which every element's style is derived, plus overrides for single elements. It always merges onto a built-in theme.
 
-#### All rules and their associated styles
+```tsx
+import { Markdown, createTheme } from '@docren/react-native-markdown';
 
-Most rules and styles share the same names, so refer to the [Syntax Support](#syntax-support) section for the complete list of available rules. Any exceptions with different naming are listed below.
+const theme = createTheme({
+  colors: { link: 'tomato' },
+  fontSize: { base: 16, scale: 1.25 },
+  listBullets: ['•', '–'],
+  elements: {
+    Blockquote: { container: { backgroundColor: '#cad8ee', borderRadius: 12 } },
+    Heading: (level) => ({ text: { fontWeight: level <= 2 ? '700' : '600' } }),
+  },
+});
 
-When in doubt check the [default styling](./src/libs/styles.ts) and [default render rules](./src/libs/renderRules.tsx)
+export function Styled({ text }: { text: string }) {
+  return <Markdown source={text} theme={theme} />;
+}
+```
 
-> No rules or styles are provided for definition, linkReference, and imageReference, as they are handled internally as link and image, as mentioned above.
+`lightTheme` and `darkTheme` are exported, and `useMarkdownTheme()` gives custom components the resolved styles. Custom fonts take a family name or a face map (`{ regular, italic, bold, boldItalic }`).
 
-| Render Rule | Style                                                                | Note                                                                                                                                                                                                                                                                    |
-| ----------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| heading     | heading1 \| heading2 \| heading3 \| heading4 \| heading5 \| heading6 | For a single heading render rule, there are six style variations corresponding to the different heading levels (h1 through h6).                                                                                                                                         |
-| listItem    | listItem, listBullet, listItemContent                                | listItem – Style for the container that wraps both the bullet and the content. listBullet – Style for the default bullet used in unordered lists ( • or –). [Not applicablefor custom bullet element] listItemContent – Style for the content portion of the list item. |
+### Components
+
+Every element is a component you can replace. It receives semantic props, `children` where it has them, and `style`: `{ text, container }`, resolved from the theme. To wrap a built-in instead of replacing it, use `defaults`.
+
+```tsx
+import { Text } from 'react-native';
+import {
+  Markdown,
+  defaults,
+  type ElementProps,
+} from '@docren/react-native-markdown';
+
+function CodeBlock(props: ElementProps<'CodeBlock'>) {
+  return props.language === 'mermaid' ? (
+    <Text>{props.code.split('\n').length}-line diagram</Text>
+  ) : (
+    <defaults.CodeBlock {...props} />
+  );
+}
+
+const components = { CodeBlock };
+
+export function Doc({ text }: { text: string }) {
+  return <Markdown source={text} components={components} />;
+}
+```
+
+Block elements: `Heading`, `Paragraph`, `Blockquote`, `List`, `ListItem`, `CodeBlock`, `Table`, `TableRow`, `TableCell`, `Divider`, `Image`, `HtmlBlock`, `FootnoteDefinition`. Inline elements: `Strong`, `Emphasis`, `Strikethrough`, `InlineCode`, `Link`, `InlineImage`, `LineBreak`, `FootnoteReference`, `Underline`, `Highlight`, `Superscript`, `Subscript`, `Kbd`, `HtmlInline`.
+
+Inline elements normally return text. To return a `View` (a chip, a badge), wrap the component in `inlineView()`.
+
+There is no built-in syntax highlighter. Bring your own in a `CodeBlock` component, as above.
+
+### Plugins
+
+A plugin adds syntax, maps it to an element, and renders it:
+
+```tsx
+import { Text } from 'react-native';
+import { Markdown, definePlugin } from '@docren/react-native-markdown';
+
+const mentions = definePlugin({
+  name: 'mentions',
+  syntax: {
+    markdownIt: (md) => {
+      md.inline.ruler.before('emphasis', 'mention', (state, silent) => {
+        const match = /^@(\w+)/.exec(state.src.slice(state.pos));
+        if (!match) return false;
+        if (!silent) {
+          const token = state.push('mention', 'span', 0);
+          token.content = match[1]!;
+        }
+        state.pos += match[0].length;
+        return true;
+      });
+    },
+  },
+  nodes: {
+    Mention: {
+      kind: 'inline',
+      token: 'mention',
+      from: (token) => ({ userId: token.content }),
+    },
+  },
+  components: {
+    Mention: ({ userId, style }) => <Text style={style.text}>@{userId}</Text>,
+  },
+});
+
+const plugins = [mentions];
+
+export function Chat({ text }: { text: string }) {
+  return <Markdown source={text} plugins={plugins} />;
+}
+```
+
+### Raw HTML
+
+With the default `html="safe"`, these inline tags become elements: `<br>`, `<b>`, `<strong>`, `<i>`, `<em>`, `<s>`, `<del>`, `<u>`, `<mark>`, `<sup>`, `<sub>`, `<kbd>`. Attributes are ignored. Everything else, including block-level HTML, is shown as text. Use `html="text"` to show all HTML as text, `html="strip"` to remove tags, or `html={{ allow: [...] }}` for your own subset.
+
+### Parsing ahead of time
+
+```tsx
+import { Markdown, parse, visit } from '@docren/react-native-markdown';
+
+const source = '# Intro\n\n## Setup';
+const doc = parse(source); // opaque, immutable, cacheable
+
+const toc: { level: number; id: string; text: string }[] = [];
+visit(doc, { Heading: ({ level, id }, { text }) => toc.push({ level, id, text }) });
+
+export const Rendered = () => <Markdown document={doc} />;
+```
+
+## Migrating from v0.x
+
+The props changed (`markdown` → `source`, `styles` → `theme`, `renderRules` → `components`, `extensions` → `plugins`), and a few defaults did too: links, images, raw HTML and GFM. The [migration guide](docs/migration-from-v0.md) covers every v0.x prop and render rule with before/after code.
+
+## Compatibility
+
+- React Native 0.76+, React 18.2+.
+- Expo Go: no native code, no config plugin. (`yarn check:expo-go` in this repo keeps the main entry free of native imports.)
+- Web, through `react-native-web`.
 
 ## Roadmap
 
-- Themed Styling (Dark / light Mode)
-- Table Support
+Planned after v1.0, in order: streaming for LLM output, `virtualize` for long documents, a lazy syntax-highlighting entry point, and an optional native parser backend. Details and the design documents are in [`docs/rewrite`](docs/rewrite/README.md).
 
-## Related
+## Acknowledgements
 
-- [react-native-markdown-display](https://github.com/iamacup/react-native-markdown-display)
+Inspired by [react-native-markdown-display](https://github.com/iamacup/react-native-markdown-display), whose author laid the groundwork for Markdown rendering in React Native. Parsing is done by [markdown-it](https://github.com/markdown-it/markdown-it).
 
 ## Contributing
 
@@ -388,15 +239,8 @@ See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the 
 
 ## License
 
-This project is licensed under the MIT License.
-
 [MIT](./LICENSE)
 
 ## Authors
 
 - [amilmohd155](https://www.github.com/amilmohd155)
-
-## Built with ❤️
-
-- [mdast-util-from-markdown](https://github.com/syntax-tree/mdast-util-from-markdown)
-- [css-to-react-native](https://github.com/styled-components/css-to-react-native)

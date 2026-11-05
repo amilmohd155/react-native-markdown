@@ -167,7 +167,8 @@ Last in build order, after the exit review in M7: the guide is not an exit crite
 
 - Migration guide, from the [migration table](../04-api.md#migration-from-v0x): every row with before/after code, the `extensions` → `plugins` rewrite (no adapter), theme `styles` → tokens and `elements`, `renderRules` → `components`, and the new behaviour to know about (`onLinkPress` schemes, `images` policy, `html` modes).
 - Rewrite the root README for v1 (it still describes v0.x behind a pre-release note) and link the guide from it.
-- Decide whether `fromRenderRules()` ships (deprecated on arrival, simple cases only, see [04](../04-api.md#migration-from-v0x)) or is dropped in favour of the guide. Record it in [decisions.md](./decisions.md).
+- Decide whether `fromRenderRules()` ships (deprecated on arrival, simple cases only) or is dropped in favour of the guide. Record it in [decisions.md](./decisions.md). **Decided: dropped**, [P1-26](./decisions.md#p1-26-no-fromrenderrules-adapter).
+- Check the guide's samples with `yarn prepare && yarn check:migration-samples`.
 
 **Done when:**
 - Every row of the migration table has a section in the guide, and its code samples type-check against the built package.
