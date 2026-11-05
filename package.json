@@ -44,7 +44,9 @@
     "check:public-types": "node scripts/check-public-types.mjs",
     "test:web": "jest --selectProjects web",
     "build:web-example": "yarn workspace @docren/react-native-markdown-example expo export --platform web --output-dir dist-web",
-    "test:e2e:web": "playwright test"
+    "test:e2e:web": "playwright test",
+    "perf": "PERF_WARM=1 node node_modules/jest/bin/jest.js --selectProjects perf --runInBand && node --jitless node_modules/jest/bin/jest.js --selectProjects perf --runInBand",
+    "perf:update": "PERF_UPDATE=1 yarn perf"
   },
   "keywords": [
     "react-native",
@@ -108,60 +110,6 @@
     "bench"
   ],
   "packageManager": "yarn@3.6.1",
-  "jest": {
-    "projects": [
-      {
-        "displayName": "unit",
-        "preset": "react-native",
-        "testMatch": [
-          "<rootDir>/src/**/__tests__/**/*.test.[jt]s?(x)"
-        ],
-        "modulePathIgnorePatterns": [
-          "<rootDir>/example/node_modules",
-          "<rootDir>/lib/"
-        ],
-        "moduleNameMapper": {
-          "^@docren/react-native-markdown$": "<rootDir>/src/index.tsx"
-        },
-        "transformIgnorePatterns": [
-          "node_modules/(?!((jest-)?react-native|@react-native(-community)?)/)"
-        ],
-        "testPathIgnorePatterns": [
-          "/node_modules/",
-          "\\.web\\.test\\.[jt]sx?$"
-        ]
-      },
-      {
-        "displayName": "web",
-        "testEnvironment": "jsdom",
-        "testMatch": [
-          "<rootDir>/src/**/__tests__/**/*.web.test.[jt]s?(x)"
-        ],
-        "modulePathIgnorePatterns": [
-          "<rootDir>/example/node_modules",
-          "<rootDir>/lib/"
-        ],
-        "moduleNameMapper": {
-          "^@docren/react-native-markdown$": "<rootDir>/src/index.tsx",
-          "^react-native$": "react-native-web"
-        },
-        "transform": {
-          "^.+\\.[jt]sx?$": "babel-jest"
-        }
-      },
-      {
-        "displayName": "spec",
-        "testEnvironment": "node",
-        "testMatch": [
-          "<rootDir>/test/spec/**/*.test.ts"
-        ],
-        "modulePathIgnorePatterns": [
-          "<rootDir>/example/node_modules",
-          "<rootDir>/lib/"
-        ]
-      }
-    ]
-  },
   "commitlint": {
     "extends": [
       "@commitlint/config-conventional"

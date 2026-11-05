@@ -25,10 +25,19 @@ jobs:
       - name: Lint files
         run: yarn lint
 
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
       - name: Typecheck files
         run: yarn typecheck
 
-  test:
+  unit:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -73,6 +82,18 @@ jobs:
       - name: Web smoke test (Playwright)
         run: yarn test:e2e:web
 
+  perf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Parse and render time against the stored baselines (node --jitless)
+        run: yarn perf
+
   expo-go-check:
     runs-on: ubuntu-latest
     steps:
@@ -85,7 +106,7 @@ jobs:
       - name: No native code reachable from the main entry (D2)
         run: yarn check:expo-go
 
-  build-library:
+  dts-leak:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -100,15 +121,5 @@ jobs:
       - name: No internal types in the public declarations
         run: yarn check:public-types
 
-  build-web:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Build example for Web
-        run: |
-          yarn example expo export --platform web
+      - name: No native code reachable from the built entry (D2)
+        run: yarn check:expo-go lib/module/index.js
