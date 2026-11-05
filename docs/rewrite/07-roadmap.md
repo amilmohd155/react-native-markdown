@@ -17,6 +17,7 @@ Implementation detail: [`phase-1/`](./phase-1/README.md).
 **Exit criteria:** passes the spec suites (allowlisting documented exceptions only). Runs unchanged in Expo Go and on the web. Parse plus first render of a 100 KB document is at least 5× faster than v0.8.5 on the device.
 
 ### Phase 2: Streaming
+Implementation detail: [`phase-2/`](./phase-2/README.md).
 - `useMarkdownStream` (feeding `<Markdown document>`), tail re-parse with node-table splicing, frame batching, optional smoothing.
 - Randomized-chunking equivalence tests.
 
