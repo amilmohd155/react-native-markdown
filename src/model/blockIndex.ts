@@ -71,6 +71,18 @@ export function isSameBlock(
   b: NodeTable,
   j: number
 ): boolean {
+  // Stream fast path: both blocks sit in the stable prefix of the same
+  // stream (prefixId changes on every full re-parse), so they are the same
+  // by construction (phase 2, table-splicing.md).
+  if (
+    a.prefixId !== undefined &&
+    a.prefixId === b.prefixId &&
+    i < a.stableCount! &&
+    j < b.stableCount! &&
+    i === j
+  ) {
+    return true;
+  }
   if (a.context !== b.context) return false;
   if (a.blockContext[i] !== b.blockContext[j]) return false;
 
