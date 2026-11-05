@@ -52,4 +52,4 @@ As in Phase 1: 5 warm-up runs, then 20 measured runs, median and p90, raw JSON s
 ## Harness
 
 - **S0 / CI proxy:** `bench/stream.mjs`, Node `--jitless`, no React.
-- **Device:** the example app's bench tab gets a **Stream** run next to the existing ones (`Bench.tsx`), logging one `[bench] {…}` JSON line.
+- **Device:** the example app's **Stream** tab (`example/src/screens/StreamBench.tsx`), a permanent screen separate from the Bench tab. It streams F2 (`F4a`, `F4b`, a 1-character drip) or the code-heavy `F4d` text through the public `useMarkdownStream`, with the options in a sheet, and logs one `[streamBench i/n] {…}` JSON line per run (read with `adb logcat -d -s ReactNativeJS -v raw | grep '^\[streamBench'`). Per run: commits, frame gaps, append-to-commit latency, total time and whether the final document equals `parse(full)`. Because it uses only the public API it cannot flip the fence fast path or read per-flush cost; the S2 runs that did are in `bench/results/scheduler-device-s25fe-release-*.json`.
