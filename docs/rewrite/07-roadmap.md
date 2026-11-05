@@ -27,7 +27,7 @@ Implementation detail: [`phase-1/`](./phase-1/README.md).
 - Image aspect-ratio cache and placeholder, table column measurement cache.
 - `/highlight` entry point (lazy-loaded tokenizer).
 - Footnotes UI, task toggling, accessibility pass.
-- `fromRenderRules()` migration adapter (deprecated on arrival; M8 decides whether it ships earlier), the `/mdast` interop entry point ([P1-20](./phase-1/decisions.md#p1-20-tomdast-is-deferred-to-phase-3)), and official plugins (`math`, `mentions`, `emoji`).
+- The `/mdast` interop entry point ([P1-20](./phase-1/decisions.md#p1-20-tomdast-is-deferred-to-phase-3)), and official plugins (`math`, `mentions`, `emoji`).
 
 ### Phase 4: Native backend (only if profiling justifies it)
 - md4c or cmark-gfm in C++ behind a JSI or Nitro module, with a binary node buffer (no JSON).
@@ -62,7 +62,7 @@ Two current libraries already take the native route:
 |---|---|
 | markdown-it plugins diverge from the GFM spec | In-house rules for autolinks and tagfilter, plus a per-backend allowlist in the spec suite |
 | Tail re-parse heuristics produce wrong intermediate output | `done()` always does a full parse, and randomized equivalence tests |
-| Breaking API change for current users | migration table ([04](./04-api.md#migration-from-v0x)) and guide (Phase 1 M8), optional `fromRenderRules()` adapter, and v1.0 semver |
+| Breaking API change for current users | migration table ([04](./04-api.md#migration-from-v0x)) and [guide](../migration-from-v0.md) (Phase 1 M8, no adapter: [P1-26](./phase-1/decisions.md#p1-26-no-fromrenderrules-adapter)), and v1.0 semver |
 | The flat table's indirection costs too much at render time on a device | Measure in phase 1. The table is private, so it can fall back to an object tree without an API change. |
 | Benchmarks so far are Node proxies, not devices | The phase 1 exit criteria require on-device numbers |
 

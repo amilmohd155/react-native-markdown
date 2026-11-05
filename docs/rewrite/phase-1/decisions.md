@@ -427,3 +427,20 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - First steps for Phase 2: a CommonMark-only baseline where v0 does the same work; profile `firstRender` against element count (tables and their measuring pass, the `ScrollView` per code block, prop and element creation); profile parse on Hermes (markdown-it against the node builder); then re-measure on a low-end Android if one becomes available.
   - The F5 `retainedHeap` bar and its method (pre-parsed documents against a windowed v0) also stay open for Phase 2. This waiver doesn't cover it, because it isn't an exit criterion.
   - M7 is complete once the "Device results" section ([02](../02-benchmarks.md#device-results-m7)) records these numbers.
+
+## P1-26: No `fromRenderRules()` adapter
+
+- **Status:** Accepted (2026-11-05)
+- **Date:** 2026-11-05
+- **Context:** [04](../04-api.md#migration-from-v0x) floated a temporary `renderRules` → `components` adapter, deprecated on arrival, for the simple cases; [P1-22](#p1-22-the-migration-guide-is-its-own-milestone-m8) left the ship-or-drop decision to M8. Writing the [migration guide](../../migration-from-v0.md) shows what the adapter would have to do:
+  - A v0 rule receives `{ node, styles, children, parentStack, extras }`: an mdast node, a `StyleMap`, children that are already rendered, and the ancestor nodes. v1 has none of these: the model is a flat node table, `toMdast` is deferred to Phase 3 ([P1-20](#p1-20-tomdast-is-deferred-to-phase-3)), and elements get semantic props and a resolved `style`.
+  - The rules an adapter could translate are the ones that read one or two node fields (`node.depth` → `level`, `node.url` → `href`, `node.lang` / `node.value` → `language` / `code`). Those are one-line renames, and the guide shows each as before/after code.
+  - Any rule that uses `styles`, `parentStack`, `extras` or the rendered `children` needs a manual rewrite either way.
+- **Decision:**
+  - Drop `fromRenderRules()`. The migration guide is the migration path.
+  - Users who aren't ready stay on v0.x (`^0.8`, bug fixes on `main`).
+- **Consequences:**
+  - No fake mdast nodes, no compatibility promise for a deprecated shim, and nothing extra in the Expo Go pure-JS entry ([D2](../07-roadmap.md#decisions)) or in `check:public-types`.
+  - The guide has a "no adapter" section that says what replaces `node`, `styles`, `children` and `parentStack`, and points to `visit()` for tree walks.
+  - [04](../04-api.md#migration-from-v0x), the [roadmap](../07-roadmap.md) (Phase 3 list) and [work-breakdown M8](./work-breakdown.md#m8--migration-guide) no longer mention the adapter as an open item.
+  - Reversible: if migration demand shows up after v1.0, an adapter can be added in a minor release without breaking anything.
