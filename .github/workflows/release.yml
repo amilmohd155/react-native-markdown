@@ -24,16 +24,20 @@ jobs:
                   git config --global user.name "github-actions[bot]"
                   git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-            - name: Verify (lint, types, tests, spec suites, Expo Go check)
+            - name: Verify (lint, types, tests, spec suites, Expo Go check, perf)
               run: |
                   yarn lint
                   yarn typecheck
                   yarn test --maxWorkers=2
                   yarn test:spec --maxWorkers=2
                   yarn check:expo-go
+                  yarn perf
 
             - name: Build package
               run: yarn prepare
+
+            - name: No native code in the built entry (D2)
+              run: yarn check:expo-go lib/module/index.js
 
             - name: Create Release
               env:

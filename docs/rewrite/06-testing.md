@@ -21,7 +21,7 @@ Every backend (markdown-it, native) runs the same suite. A documented, per-backe
 
 ## Renderer tests
 
-- **Snapshot tests** of the React element tree, with `react-test-renderer` or `@testing-library/react-native`, for every element in light and dark themes, plus each built-in plugin.
+- **Snapshot tests** of the React element tree, rendered with `@testing-library/react-native` v14 (its `test-renderer`), for every element in light and dark themes, plus each built-in plugin.
 - **Behaviour tests:**
   - `onLinkPress` returning `false` cancels the default.
   - Task toggle.
@@ -34,7 +34,7 @@ Every backend (markdown-it, native) runs the same suite. A documented, per-backe
 
 ## Platform tests
 
-- **iOS and Android:** Jest with the `react-native` preset, plus the example app built in CI.
+- **iOS and Android:** Jest with the `react-native` preset. The example app is exported for web in CI (the `web` job) and run by hand on devices; there is no native build job ([P1-23](./phase-1/decisions.md#p1-23-no-scheduled-native-build-of-the-example-app-in-ci)).
 - **Web (decision D1):** run the renderer tests again under `react-native-web` with jsdom. A smoke test in a real browser (Playwright) renders the spec fixtures and checks text and links.
 - **Expo Go (decision D2):** a CI check fails if the main entry point's dependency graph imports a native module (`TurboModuleRegistry`, `requireNativeComponent`, `NativeModules`, Nitro). The example app also runs in Expo Go before each release.
 - **Raw HTML safe subset (D3):** each allowlisted tag, nesting, unmatched tags, unknown tags (must stay as literal text), and `'text'`/`'strip'`/`{ allow }` modes.
@@ -42,11 +42,13 @@ Every backend (markdown-it, native) runs the same suite. A documented, per-backe
 
 ## Performance regression tests
 
-- Port [`bench/bench.mjs`](../../bench/bench.mjs) into a CI job that runs:
-  - parse time for 1 KB / 100 KB / 1 MB fixtures,
-  - render time (element creation) for the same fixtures, and
-  - streaming time for a 10 KB message in 500 chunks.
-- Run with `node --jitless`, the closest CI proxy for Hermes. Fail on more than a 20% regression from the baseline stored in the repo.
+- `yarn perf` (`perf/perf.test.tsx`, a Jest project) is the CI job. It measures:
+  - parse time for 1 KB / 10 KB / 100 KB / 1 MB fixtures,
+  - first render (`<Markdown document>` mounted with the test renderer) for the same fixtures,
+  - the re-render after editing the last block of the 100 KB fixture, and
+  - streaming time for a 10 KB message in 500 chunks: phase 2, nothing to measure yet.
+- Run with `node --jitless`, the closest CI proxy for Hermes. Fail on more than a 20% regression from the baseline stored in the repo (`perf/baseline.json`).
+- Runners differ in speed, so each metric is stored as a ratio to markdown-it parsing the same text, sampled alternately in the same run (best of N each); a failing metric is retried twice, so only a regression that repeats fails. After an intended change, run `yarn perf:update` and commit the new baseline. `bench/` stays the research workspace (parser comparisons, evidence scripts).
 - Manual, per release: a Hermes profile on a low-end Android device using the example app's benchmark screen.
 
 ## Release gating

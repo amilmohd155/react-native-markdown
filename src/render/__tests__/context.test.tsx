@@ -1,4 +1,4 @@
-import { act, create } from 'react-test-renderer';
+import { renderTree } from '../../__tests__/tree';
 import { getDefaultTheme, lightTheme, resolveTheme } from '../../theme';
 import {
   createRenderCtx,
@@ -11,20 +11,17 @@ import type { Components } from '../elements';
 // The default element map arrives in later M3 tasks; ctx only stores it.
 const components = Object.freeze({}) as Components;
 
-function renderCtx(initial: RenderCtxInput) {
+async function renderCtx(initial: RenderCtxInput) {
   const seen: RenderCtx[] = [];
   function Probe(props: RenderCtxInput) {
     seen.push(useRenderCtx(props));
     return null;
   }
-  let root!: ReturnType<typeof create>;
-  act(() => {
-    root = create(<Probe {...initial} />);
-  });
+  const tree = await renderTree(<Probe {...initial} />);
   return {
     seen,
     update(next: RenderCtxInput) {
-      act(() => root.update(<Probe {...next} />));
+      return tree.rerender(<Probe {...next} />);
     },
   };
 }
@@ -56,14 +53,14 @@ describe('createRenderCtx', () => {
 });
 
 describe('useRenderCtx', () => {
-  it('keeps ctx identity across re-renders with new inline handlers', () => {
+  it('keeps ctx identity across re-renders with new inline handlers', async () => {
     const first = jest.fn();
     const second = jest.fn();
-    const { seen, update } = renderCtx({
+    const { seen, update } = await renderCtx({
       components,
       handlers: { onLinkPress: first },
     });
-    update({ components, handlers: { onLinkPress: second } });
+    await update({ components, handlers: { onLinkPress: second } });
 
     expect(seen).toHaveLength(2);
     expect(seen[1]).toBe(seen[0]);
@@ -73,23 +70,23 @@ describe('useRenderCtx', () => {
     expect(first).not.toHaveBeenCalled();
   });
 
-  it('changes ctx when an option changes', () => {
-    const { seen, update } = renderCtx({ components });
-    update({ components, softBreak: 'newline' });
+  it('changes ctx when an option changes', async () => {
+    const { seen, update } = await renderCtx({ components });
+    await update({ components, softBreak: 'newline' });
     expect(seen[1]).not.toBe(seen[0]);
     expect(seen[1]!.options.softBreak).toBe('newline');
   });
 
-  it('changes ctx when the theme or the component map changes', () => {
-    const { seen, update } = renderCtx({ components });
-    update({ components, theme: resolveTheme(lightTheme) });
-    update({ components: Object.freeze({}) as Components });
+  it('changes ctx when the theme or the component map changes', async () => {
+    const { seen, update } = await renderCtx({ components });
+    await update({ components, theme: resolveTheme(lightTheme) });
+    await update({ components: Object.freeze({}) as Components });
     expect(new Set(seen).size).toBe(3);
   });
 
-  it('changes ctx when onTaskToggle is added', () => {
-    const { seen, update } = renderCtx({ components });
-    update({ components, handlers: { onTaskToggle: () => {} } });
+  it('changes ctx when onTaskToggle is added', async () => {
+    const { seen, update } = await renderCtx({ components });
+    await update({ components, handlers: { onTaskToggle: () => {} } });
     expect(seen[1]).not.toBe(seen[0]);
     expect(seen[1]!.options.interactiveTasks).toBe(true);
   });

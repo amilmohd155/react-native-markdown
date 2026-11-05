@@ -41,7 +41,12 @@
     "release": "release-it --only-version",
     "test:spec": "jest --selectProjects spec",
     "check:expo-go": "node scripts/check-no-native.mjs",
-    "check:public-types": "node scripts/check-public-types.mjs"
+    "check:public-types": "node scripts/check-public-types.mjs",
+    "test:web": "jest --selectProjects web",
+    "build:web-example": "yarn workspace @docren/react-native-markdown-example expo export --platform web --output-dir dist-web",
+    "test:e2e:web": "playwright test",
+    "perf": "PERF_WARM=1 node node_modules/jest/bin/jest.js --selectProjects perf --runInBand && node --jitless node_modules/jest/bin/jest.js --selectProjects perf --runInBand",
+    "perf:update": "PERF_UPDATE=1 yarn perf"
   },
   "keywords": [
     "react-native",
@@ -69,12 +74,15 @@
     "@commitlint/config-conventional": "^19.6.0",
     "@eslint/compat": "^1.2.7",
     "@evilmartians/lefthook": "^1.5.0",
+    "@playwright/test": "^1.49",
     "@react-native/babel-preset": "0.78.2",
     "@react-native/eslint-config": "0.88.1",
     "@release-it/conventional-changelog": "^9.0.2",
+    "@testing-library/dom": "^10",
+    "@testing-library/react": "^16",
+    "@testing-library/react-native": "14.1.0",
     "@types/jest": "^29.5.14",
     "@types/react": "^19.0.12",
-    "@types/react-test-renderer": "^19.0.0",
     "commitlint": "^19.6.1",
     "del-cli": "^5.1.0",
     "eslint": "^9.22.0",
@@ -82,12 +90,15 @@
     "eslint-plugin-prettier": "^5.2.3",
     "eslint-plugin-react-hooks": "^7.1.1",
     "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "prettier": "^3.0.3",
     "react": "19.0.0",
+    "react-dom": "19.0.0",
     "react-native": "0.79.4",
     "react-native-builder-bob": "^0.40.12",
-    "react-test-renderer": "19.0.0",
+    "react-native-web": "^0.21.4",
     "release-it": "19.2.2",
+    "test-renderer": "1.0.0",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
@@ -99,38 +110,6 @@
     "bench"
   ],
   "packageManager": "yarn@3.6.1",
-  "jest": {
-    "projects": [
-      {
-        "displayName": "unit",
-        "preset": "react-native",
-        "testMatch": [
-          "<rootDir>/src/**/__tests__/**/*.test.[jt]s?(x)"
-        ],
-        "modulePathIgnorePatterns": [
-          "<rootDir>/example/node_modules",
-          "<rootDir>/lib/"
-        ],
-        "moduleNameMapper": {
-          "^@docren/react-native-markdown$": "<rootDir>/src/index.tsx"
-        },
-        "transformIgnorePatterns": [
-          "node_modules/(?!((jest-)?react-native|@react-native(-community)?)/)"
-        ]
-      },
-      {
-        "displayName": "spec",
-        "testEnvironment": "node",
-        "testMatch": [
-          "<rootDir>/test/spec/**/*.test.ts"
-        ],
-        "modulePathIgnorePatterns": [
-          "<rootDir>/example/node_modules",
-          "<rootDir>/lib/"
-        ]
-      }
-    ]
-  },
   "commitlint": {
     "extends": [
       "@commitlint/config-conventional"

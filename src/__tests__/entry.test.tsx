@@ -1,4 +1,4 @@
-import { act, create } from 'react-test-renderer';
+import { render, screen } from '@testing-library/react-native';
 import * as entry from '..';
 
 /**
@@ -22,12 +22,9 @@ describe('package entry', () => {
     ]);
   });
 
-  it('renders markdown from the entry point', () => {
-    let root!: ReturnType<typeof create>;
-    act(() => {
-      root = create(<entry.Markdown source={'# Hi\n\n**there**'} />);
-    });
-    expect(JSON.stringify(root.toJSON())).toContain('there');
+  it('renders markdown from the entry point', async () => {
+    await render(<entry.Markdown source={'# Hi\n\n**there**'} />);
+    expect(JSON.stringify(screen.toJSON())).toContain('there');
   });
 
   it('parses and visits through the entry point', () => {

@@ -1,0 +1,29 @@
+{
+  "note": "Ratios to markdown-it parsing the same text, per platform (render cost relative to parsing differs between machines). Regenerate with `yarn perf:update`; for linux-x64, take the perf-baseline artifact of a failed CI run.",
+  "platforms": {
+    "darwin-arm64": {
+      "node": "v24.22.1",
+      "parse:1KB": 1.55,
+      "render:1KB": 3.72,
+      "parse:10KB": 1.73,
+      "render:10KB": 4.43,
+      "parse:100KB": 1.71,
+      "render:100KB": 4.7,
+      "parse:1MB": 1.76,
+      "render:1MB": 4.83,
+      "rerender-one-block:100KB": 0.0968
+    },
+    "linux-x64": {
+      "node": "v24.22.2",
+      "parse:1KB": 1.72,
+      "render:1KB": 4.53,
+      "parse:10KB": 1.92,
+      "render:10KB": 6.03,
+      "parse:100KB": 1.92,
+      "render:100KB": 6.44,
+      "parse:1MB": 1.9,
+      "render:1MB": 6.5,
+      "rerender-one-block:100KB": 0.117
+    }
+  }
+}

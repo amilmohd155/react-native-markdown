@@ -25,10 +25,19 @@ jobs:
       - name: Lint files
         run: yarn lint
 
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
       - name: Typecheck files
         run: yarn typecheck
 
-  test:
+  unit:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -52,6 +61,53 @@ jobs:
       - name: Run CommonMark + GFM spec suites
         run: yarn test:spec --maxWorkers=2
 
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Run renderer tests on react-native-web (jsdom)
+        run: yarn test:web --maxWorkers=2
+
+      - name: Build the example app for web
+        run: yarn build:web-example
+
+      - name: Install Playwright browser
+        run: yarn playwright install --with-deps chromium
+
+      - name: Web smoke test (Playwright)
+        run: yarn test:e2e:web
+
+  perf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Parse and render time against the stored baselines (node --jitless)
+        run: yarn perf
+
+      # Baselines are per platform. If this job fails because the slowdown is
+      # intended, or because linux-x64 has no baseline yet, take the
+      # `linux-x64` section of this artifact and commit it to perf/baseline.json.
+      - name: Record a baseline for this runner
+        if: failure()
+        run: yarn perf:update
+
+      - name: Upload the recorded baseline
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-baseline
+          path: perf/baseline.json
+
   expo-go-check:
     runs-on: ubuntu-latest
     steps:
@@ -64,7 +120,7 @@ jobs:
       - name: No native code reachable from the main entry (D2)
         run: yarn check:expo-go
 
-  build-library:
+  dts-leak:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -79,15 +135,5 @@ jobs:
       - name: No internal types in the public declarations
         run: yarn check:public-types
 
-  build-web:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Build example for Web
-        run: |
-          yarn example expo export --platform web
+      - name: No native code reachable from the built entry (D2)
+        run: yarn check:expo-go lib/module/index.js

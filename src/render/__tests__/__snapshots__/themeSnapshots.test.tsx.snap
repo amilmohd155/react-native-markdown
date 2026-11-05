@@ -1,0 +1,4529 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`theme snapshots dark element Blockquote 1`] = `
+<View>
+  <View
+    style={
+      {
+        "borderLeftColor": "#3d444d",
+        "borderLeftWidth": 4,
+        "marginBottom": 12,
+        "paddingLeft": 12,
+      }
+    }
+  >
+    <Text
+      selectable={false}
+      style={
+        [
+          {
+            "marginBottom": 12,
+          },
+          {
+            "color": "#e6edf3",
+            "fontSize": 16,
+            "lineHeight": 24,
+          },
+          {
+            "color": "#9198a1",
+          },
+          undefined,
+        ]
+      }
+    >
+      A quote.
+    </Text>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots dark element CodeBlock 1`] = `
+<View>
+  <View
+    style={
+      {
+        "backgroundColor": "#151b23",
+        "borderRadius": 6,
+        "marginBottom": 12,
+        "padding": 12,
+      }
+    }
+  >
+    <RCTScrollView
+      bounces={false}
+      horizontal={true}
+      showsHorizontalScrollIndicator={false}
+    >
+      <View>
+        <Text
+          selectable={false}
+          style={
+            {
+              "color": "#e6edf3",
+              "fontFamily": "Menlo",
+              "fontSize": 14,
+              "lineHeight": 20.3,
+            }
+          }
+        >
+          const a = 1;
+        </Text>
+      </View>
+    </RCTScrollView>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots dark element Divider 1`] = `
+<View>
+  <View
+    style={
+      {
+        "backgroundColor": "#3d444d",
+        "height": 0.5,
+        "marginVertical": 12,
+      }
+    }
+  />
+</View>
+`;
+
+exports[`theme snapshots dark element Emphasis 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Some 
+    <Text
+      style={
+        {
+          "fontStyle": "italic",
+        }
+      }
+    >
+      emphasis
+    </Text>
+    .
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark element FootnoteDefinition 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Text
+    <Text
+      style={
+        {
+          "color": "#4493f8",
+          "fontSize": 12,
+        }
+      }
+    >
+      [
+      1
+      ]
+    </Text>
+    .
+  </Text>
+  <View
+    accessibilityLabel="Footnotes"
+    accessibilityRole="summary"
+    style={
+      {
+        "borderTopColor": "#3d444d",
+        "borderTopWidth": 0.5,
+        "marginTop": 12,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#9198a1",
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "minWidth": 24,
+            },
+          ]
+        }
+      >
+        1.
+      </Text>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 12,
+              },
+              {
+                "color": "#e6edf3",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              {
+                "color": "#9198a1",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              undefined,
+            ]
+          }
+        >
+          The note.
+        </Text>
+        <Text
+          accessible={false}
+          importantForAccessibility="no"
+          style={
+            [
+              {
+                "color": "#9198a1",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "marginBottom": 6,
+                "marginTop": -6,
+              },
+            ]
+          }
+        >
+          ↩︎
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots dark element FootnoteReference 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    A reference
+    <Text
+      style={
+        {
+          "color": "#4493f8",
+          "fontSize": 12,
+        }
+      }
+    >
+      [
+      1
+      ]
+    </Text>
+    .
+  </Text>
+  <View
+    accessibilityLabel="Footnotes"
+    accessibilityRole="summary"
+    style={
+      {
+        "borderTopColor": "#3d444d",
+        "borderTopWidth": 0.5,
+        "marginTop": 12,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#9198a1",
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "minWidth": 24,
+            },
+          ]
+        }
+      >
+        1.
+      </Text>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 12,
+              },
+              {
+                "color": "#e6edf3",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              {
+                "color": "#9198a1",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              undefined,
+            ]
+          }
+        >
+          Note.
+        </Text>
+        <Text
+          accessible={false}
+          importantForAccessibility="no"
+          style={
+            [
+              {
+                "color": "#9198a1",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "marginBottom": 6,
+                "marginTop": -6,
+              },
+            ]
+          }
+        >
+          ↩︎
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots dark element Heading 1`] = `
+<View>
+  <Text
+    accessibilityRole="header"
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 6,
+          "marginTop": 18,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 33,
+          "fontWeight": "700",
+          "lineHeight": 41,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    A heading
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark element Highlight 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Some 
+    <Text
+      style={
+        {
+          "backgroundColor": "#5a4a00",
+        }
+      }
+    >
+      highlighted
+    </Text>
+     text.
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark element HtmlBlock 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#9198a1",
+          "fontFamily": "Menlo",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    &lt;div&gt;
+Block HTML
+&lt;/div&gt;
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark element HtmlInline 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    An 
+    <Text
+      style={{}}
+    >
+      &lt;span&gt;
+    </Text>
+    unknown
+    <Text
+      style={{}}
+    >
+      &lt;/span&gt;
+    </Text>
+     tag.
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark element Image 1`] = `
+<View>
+  <View
+    style={
+      {
+        "marginBottom": 12,
+      }
+    }
+  >
+    <View
+      style={
+        [
+          {
+            "width": "100%",
+          },
+          undefined,
+        ]
+      }
+    >
+      <Image
+        accessibilityHint="Title"
+        accessibilityLabel="An image"
+        resizeMode="contain"
+        source={
+          {
+            "uri": "https://example.com/a.png",
+          }
+        }
+        style={
+          [
+            {
+              "width": "100%",
+            },
+            {
+              "aspectRatio": 1.7777777777777777,
+              "backgroundColor": "#151b23",
+            },
+          ]
+        }
+      />
+    </View>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots dark element InlineCode 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Some 
+    <Text
+      style={
+        {
+          "backgroundColor": "#151b23",
+          "fontFamily": "Menlo",
+          "fontSize": 14.4,
+        }
+      }
+    >
+      code
+    </Text>
+    .
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark element InlineImage 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    An 
+    <Image
+      accessibilityLabel="icon"
+      source={
+        {
+          "uri": "https://example.com/i.png",
+        }
+      }
+      style={
+        {
+          "height": 24,
+          "width": 24,
+        }
+      }
+    />
+     inline.
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark element Kbd 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Press 
+    <Text
+      style={
+        {
+          "backgroundColor": "#151b23",
+          "fontFamily": "Menlo",
+          "fontSize": 14.4,
+        }
+      }
+    >
+      Ctrl
+    </Text>
+    .
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark element LineBreak 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Line one
+    
+
+    line two
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark element Link 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    A 
+    <Text
+      accessibilityHint="Title"
+      accessibilityRole="link"
+      onPress={[Function]}
+      style={
+        {
+          "color": "#4493f8",
+          "textDecorationLine": "underline",
+        }
+      }
+    >
+      link
+    </Text>
+    .
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark element List 1`] = `
+<View>
+  <View
+    style={
+      {
+        "marginBottom": 12,
+        "paddingLeft": 0,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 26,
+            },
+          ]
+        }
+      >
+        <Text
+          accessible={false}
+          style={
+            [
+              {
+                "color": "#e6edf3",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              {
+                "textAlign": "right",
+              },
+            ]
+          }
+        >
+          1.
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#e6edf3",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          one
+        </Text>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 26,
+            },
+          ]
+        }
+      >
+        <Text
+          accessible={false}
+          style={
+            [
+              {
+                "color": "#e6edf3",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              {
+                "textAlign": "right",
+              },
+            ]
+          }
+        >
+          2.
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#e6edf3",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          two
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots dark element ListItem 1`] = `
+<View>
+  <View
+    style={
+      {
+        "marginBottom": 12,
+        "paddingLeft": 0,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 20,
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="checkbox"
+          accessibilityState={
+            {
+              "checked": true,
+              "disabled": true,
+            }
+          }
+          style={
+            [
+              {
+                "color": "#e6edf3",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+            ]
+          }
+          suppressHighlighting={true}
+        >
+          ☑︎
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#e6edf3",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          done
+        </Text>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 20,
+            },
+          ]
+        }
+      >
+        <Text
+          accessible={false}
+          style={
+            [
+              {
+                "color": "#e6edf3",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              false,
+            ]
+          }
+        >
+          •
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#e6edf3",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          plain
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots dark element Paragraph 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    A paragraph.
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark element Strikethrough 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Some 
+    <Text
+      style={
+        {
+          "textDecorationLine": "line-through",
+        }
+      }
+    >
+      deleted
+    </Text>
+     text.
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark element Strong 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Some 
+    <Text
+      style={
+        {
+          "fontWeight": "700",
+        }
+      }
+    >
+      strong
+    </Text>
+     text.
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark element Subscript 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    H
+    <Text
+      style={
+        [
+          {
+            "fontSize": 12,
+          },
+          {
+            "fontSize": undefined,
+          },
+        ]
+      }
+    >
+      ₂
+    </Text>
+    O
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark element Superscript 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    E = mc
+    <Text
+      style={
+        [
+          {
+            "fontSize": 12,
+          },
+          {
+            "fontSize": undefined,
+          },
+        ]
+      }
+    >
+      ²
+    </Text>
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark element Table 1`] = `
+<View>
+  <RCTScrollView
+    bounces={false}
+    horizontal={true}
+    showsHorizontalScrollIndicator={false}
+    style={
+      {
+        "marginBottom": 12,
+      }
+    }
+  >
+    <View>
+      <View
+        style={
+          {
+            "opacity": 0,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#3d444d",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#e6edf3",
+                    "fontSize": 16,
+                    "fontWeight": "600",
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              a
+            </Text>
+          </View>
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#3d444d",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#e6edf3",
+                    "fontSize": 16,
+                    "fontWeight": "600",
+                    "lineHeight": 24,
+                  },
+                  {
+                    "textAlign": "right",
+                  },
+                ]
+              }
+            >
+              b
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#3d444d",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#e6edf3",
+                    "fontSize": 16,
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              1
+            </Text>
+          </View>
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#3d444d",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#e6edf3",
+                    "fontSize": 16,
+                    "lineHeight": 24,
+                  },
+                  {
+                    "textAlign": "right",
+                  },
+                ]
+              }
+            >
+              2
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</View>
+`;
+
+exports[`theme snapshots dark element TableCell 1`] = `
+<View>
+  <RCTScrollView
+    bounces={false}
+    horizontal={true}
+    showsHorizontalScrollIndicator={false}
+    style={
+      {
+        "marginBottom": 12,
+      }
+    }
+  >
+    <View>
+      <View
+        style={
+          {
+            "opacity": 0,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#3d444d",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#e6edf3",
+                    "fontSize": 16,
+                    "fontWeight": "600",
+                    "lineHeight": 24,
+                  },
+                  {
+                    "textAlign": "center",
+                  },
+                ]
+              }
+            >
+              a
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#3d444d",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#e6edf3",
+                    "fontSize": 16,
+                    "lineHeight": 24,
+                  },
+                  {
+                    "textAlign": "center",
+                  },
+                ]
+              }
+            >
+              1
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</View>
+`;
+
+exports[`theme snapshots dark element TableRow 1`] = `
+<View>
+  <RCTScrollView
+    bounces={false}
+    horizontal={true}
+    showsHorizontalScrollIndicator={false}
+    style={
+      {
+        "marginBottom": 12,
+      }
+    }
+  >
+    <View>
+      <View
+        style={
+          {
+            "opacity": 0,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#3d444d",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#e6edf3",
+                    "fontSize": 16,
+                    "fontWeight": "600",
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              a
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#3d444d",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#e6edf3",
+                    "fontSize": 16,
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              1
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</View>
+`;
+
+exports[`theme snapshots dark element Underline 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Some 
+    <Text
+      style={
+        {
+          "textDecorationLine": "underline",
+        }
+      }
+    >
+      underlined
+    </Text>
+     text.
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark plugin autolinks 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    See 
+    <Text
+      accessibilityRole="link"
+      onPress={[Function]}
+      style={
+        {
+          "color": "#4493f8",
+          "textDecorationLine": "underline",
+        }
+      }
+    >
+      www.example.com
+    </Text>
+    , 
+    <Text
+      accessibilityRole="link"
+      onPress={[Function]}
+      style={
+        {
+          "color": "#4493f8",
+          "textDecorationLine": "underline",
+        }
+      }
+    >
+      https://example.com/a
+    </Text>
+     and 
+    <Text
+      accessibilityRole="link"
+      onPress={[Function]}
+      style={
+        {
+          "color": "#4493f8",
+          "textDecorationLine": "underline",
+        }
+      }
+    >
+      a@b.co
+    </Text>
+    .
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark plugin footnotes 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Text
+    <Text
+      style={
+        {
+          "color": "#4493f8",
+          "fontSize": 12,
+        }
+      }
+    >
+      [
+      1
+      ]
+    </Text>
+     and more
+    <Text
+      style={
+        {
+          "color": "#4493f8",
+          "fontSize": 12,
+        }
+      }
+    >
+      [
+      1
+      ]
+    </Text>
+    .
+  </Text>
+  <View
+    accessibilityLabel="Footnotes"
+    accessibilityRole="summary"
+    style={
+      {
+        "borderTopColor": "#3d444d",
+        "borderTopWidth": 0.5,
+        "marginTop": 12,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#9198a1",
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "minWidth": 24,
+            },
+          ]
+        }
+      >
+        1.
+      </Text>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 12,
+              },
+              {
+                "color": "#e6edf3",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              {
+                "color": "#9198a1",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              undefined,
+            ]
+          }
+        >
+          The note.
+        </Text>
+        <Text
+          accessible={false}
+          importantForAccessibility="no"
+          style={
+            [
+              {
+                "color": "#9198a1",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "marginBottom": 6,
+                "marginTop": -6,
+              },
+            ]
+          }
+        >
+          ↩︎ ↩︎²
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots dark plugin strikethrough 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    a 
+    <Text
+      style={
+        {
+          "textDecorationLine": "line-through",
+        }
+      }
+    >
+      b
+    </Text>
+     c 
+    <Text
+      style={
+        {
+          "textDecorationLine": "line-through",
+        }
+      }
+    >
+      d
+    </Text>
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark plugin tables 1`] = `
+<View>
+  <RCTScrollView
+    bounces={false}
+    horizontal={true}
+    showsHorizontalScrollIndicator={false}
+    style={
+      {
+        "marginBottom": 12,
+      }
+    }
+  >
+    <View>
+      <View
+        style={
+          {
+            "opacity": 0,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#3d444d",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#e6edf3",
+                    "fontSize": 16,
+                    "fontWeight": "600",
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              a
+            </Text>
+          </View>
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#3d444d",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#e6edf3",
+                    "fontSize": 16,
+                    "fontWeight": "600",
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              b
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#3d444d",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#e6edf3",
+                    "fontSize": 16,
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              1
+            </Text>
+          </View>
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#3d444d",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#e6edf3",
+                    "fontSize": 16,
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              2
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</View>
+`;
+
+exports[`theme snapshots dark plugin tagfilter 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#9198a1",
+          "fontFamily": "Menlo",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    &lt;title&gt;no&lt;/title&gt;
+  </Text>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#e6edf3",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    a 
+    <Text
+      style={{}}
+    >
+      &lt;script&gt;
+    </Text>
+    x
+    <Text
+      style={{}}
+    >
+      &lt;/script&gt;
+    </Text>
+     b
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots dark plugin taskLists 1`] = `
+<View>
+  <View
+    style={
+      {
+        "marginBottom": 12,
+        "paddingLeft": 0,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 20,
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="checkbox"
+          accessibilityState={
+            {
+              "checked": false,
+              "disabled": true,
+            }
+          }
+          style={
+            [
+              {
+                "color": "#e6edf3",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+            ]
+          }
+          suppressHighlighting={true}
+        >
+          ☐︎
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#e6edf3",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          open
+        </Text>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 20,
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="checkbox"
+          accessibilityState={
+            {
+              "checked": true,
+              "disabled": true,
+            }
+          }
+          style={
+            [
+              {
+                "color": "#e6edf3",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+            ]
+          }
+          suppressHighlighting={true}
+        >
+          ☑︎
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#e6edf3",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          done
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots light element Blockquote 1`] = `
+<View>
+  <View
+    style={
+      {
+        "borderLeftColor": "#d1d9e0",
+        "borderLeftWidth": 4,
+        "marginBottom": 12,
+        "paddingLeft": 12,
+      }
+    }
+  >
+    <Text
+      selectable={false}
+      style={
+        [
+          {
+            "marginBottom": 12,
+          },
+          {
+            "color": "#1f2328",
+            "fontSize": 16,
+            "lineHeight": 24,
+          },
+          {
+            "color": "#59636e",
+          },
+          undefined,
+        ]
+      }
+    >
+      A quote.
+    </Text>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots light element CodeBlock 1`] = `
+<View>
+  <View
+    style={
+      {
+        "backgroundColor": "#f6f8fa",
+        "borderRadius": 6,
+        "marginBottom": 12,
+        "padding": 12,
+      }
+    }
+  >
+    <RCTScrollView
+      bounces={false}
+      horizontal={true}
+      showsHorizontalScrollIndicator={false}
+    >
+      <View>
+        <Text
+          selectable={false}
+          style={
+            {
+              "color": "#1f2328",
+              "fontFamily": "Menlo",
+              "fontSize": 14,
+              "lineHeight": 20.3,
+            }
+          }
+        >
+          const a = 1;
+        </Text>
+      </View>
+    </RCTScrollView>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots light element Divider 1`] = `
+<View>
+  <View
+    style={
+      {
+        "backgroundColor": "#d1d9e0",
+        "height": 0.5,
+        "marginVertical": 12,
+      }
+    }
+  />
+</View>
+`;
+
+exports[`theme snapshots light element Emphasis 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Some 
+    <Text
+      style={
+        {
+          "fontStyle": "italic",
+        }
+      }
+    >
+      emphasis
+    </Text>
+    .
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light element FootnoteDefinition 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Text
+    <Text
+      style={
+        {
+          "color": "#0969da",
+          "fontSize": 12,
+        }
+      }
+    >
+      [
+      1
+      ]
+    </Text>
+    .
+  </Text>
+  <View
+    accessibilityLabel="Footnotes"
+    accessibilityRole="summary"
+    style={
+      {
+        "borderTopColor": "#d1d9e0",
+        "borderTopWidth": 0.5,
+        "marginTop": 12,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#59636e",
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "minWidth": 24,
+            },
+          ]
+        }
+      >
+        1.
+      </Text>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 12,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              {
+                "color": "#59636e",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              undefined,
+            ]
+          }
+        >
+          The note.
+        </Text>
+        <Text
+          accessible={false}
+          importantForAccessibility="no"
+          style={
+            [
+              {
+                "color": "#59636e",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "marginBottom": 6,
+                "marginTop": -6,
+              },
+            ]
+          }
+        >
+          ↩︎
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots light element FootnoteReference 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    A reference
+    <Text
+      style={
+        {
+          "color": "#0969da",
+          "fontSize": 12,
+        }
+      }
+    >
+      [
+      1
+      ]
+    </Text>
+    .
+  </Text>
+  <View
+    accessibilityLabel="Footnotes"
+    accessibilityRole="summary"
+    style={
+      {
+        "borderTopColor": "#d1d9e0",
+        "borderTopWidth": 0.5,
+        "marginTop": 12,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#59636e",
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "minWidth": 24,
+            },
+          ]
+        }
+      >
+        1.
+      </Text>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 12,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              {
+                "color": "#59636e",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              undefined,
+            ]
+          }
+        >
+          Note.
+        </Text>
+        <Text
+          accessible={false}
+          importantForAccessibility="no"
+          style={
+            [
+              {
+                "color": "#59636e",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "marginBottom": 6,
+                "marginTop": -6,
+              },
+            ]
+          }
+        >
+          ↩︎
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots light element Heading 1`] = `
+<View>
+  <Text
+    accessibilityRole="header"
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 6,
+          "marginTop": 18,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 33,
+          "fontWeight": "700",
+          "lineHeight": 41,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    A heading
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light element Highlight 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Some 
+    <Text
+      style={
+        {
+          "backgroundColor": "#fff8c5",
+        }
+      }
+    >
+      highlighted
+    </Text>
+     text.
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light element HtmlBlock 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#59636e",
+          "fontFamily": "Menlo",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    &lt;div&gt;
+Block HTML
+&lt;/div&gt;
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light element HtmlInline 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    An 
+    <Text
+      style={{}}
+    >
+      &lt;span&gt;
+    </Text>
+    unknown
+    <Text
+      style={{}}
+    >
+      &lt;/span&gt;
+    </Text>
+     tag.
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light element Image 1`] = `
+<View>
+  <View
+    style={
+      {
+        "marginBottom": 12,
+      }
+    }
+  >
+    <View
+      style={
+        [
+          {
+            "width": "100%",
+          },
+          undefined,
+        ]
+      }
+    >
+      <Image
+        accessibilityHint="Title"
+        accessibilityLabel="An image"
+        resizeMode="contain"
+        source={
+          {
+            "uri": "https://example.com/a.png",
+          }
+        }
+        style={
+          [
+            {
+              "width": "100%",
+            },
+            {
+              "aspectRatio": 1.7777777777777777,
+              "backgroundColor": "#f6f8fa",
+            },
+          ]
+        }
+      />
+    </View>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots light element InlineCode 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Some 
+    <Text
+      style={
+        {
+          "backgroundColor": "#f6f8fa",
+          "fontFamily": "Menlo",
+          "fontSize": 14.4,
+        }
+      }
+    >
+      code
+    </Text>
+    .
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light element InlineImage 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    An 
+    <Image
+      accessibilityLabel="icon"
+      source={
+        {
+          "uri": "https://example.com/i.png",
+        }
+      }
+      style={
+        {
+          "height": 24,
+          "width": 24,
+        }
+      }
+    />
+     inline.
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light element Kbd 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Press 
+    <Text
+      style={
+        {
+          "backgroundColor": "#f6f8fa",
+          "fontFamily": "Menlo",
+          "fontSize": 14.4,
+        }
+      }
+    >
+      Ctrl
+    </Text>
+    .
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light element LineBreak 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Line one
+    
+
+    line two
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light element Link 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    A 
+    <Text
+      accessibilityHint="Title"
+      accessibilityRole="link"
+      onPress={[Function]}
+      style={
+        {
+          "color": "#0969da",
+          "textDecorationLine": "underline",
+        }
+      }
+    >
+      link
+    </Text>
+    .
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light element List 1`] = `
+<View>
+  <View
+    style={
+      {
+        "marginBottom": 12,
+        "paddingLeft": 0,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 26,
+            },
+          ]
+        }
+      >
+        <Text
+          accessible={false}
+          style={
+            [
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              {
+                "textAlign": "right",
+              },
+            ]
+          }
+        >
+          1.
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          one
+        </Text>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 26,
+            },
+          ]
+        }
+      >
+        <Text
+          accessible={false}
+          style={
+            [
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              {
+                "textAlign": "right",
+              },
+            ]
+          }
+        >
+          2.
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          two
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots light element ListItem 1`] = `
+<View>
+  <View
+    style={
+      {
+        "marginBottom": 12,
+        "paddingLeft": 0,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 20,
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="checkbox"
+          accessibilityState={
+            {
+              "checked": true,
+              "disabled": true,
+            }
+          }
+          style={
+            [
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+            ]
+          }
+          suppressHighlighting={true}
+        >
+          ☑︎
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          done
+        </Text>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 20,
+            },
+          ]
+        }
+      >
+        <Text
+          accessible={false}
+          style={
+            [
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              false,
+            ]
+          }
+        >
+          •
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          plain
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots light element Paragraph 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    A paragraph.
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light element Strikethrough 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Some 
+    <Text
+      style={
+        {
+          "textDecorationLine": "line-through",
+        }
+      }
+    >
+      deleted
+    </Text>
+     text.
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light element Strong 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Some 
+    <Text
+      style={
+        {
+          "fontWeight": "700",
+        }
+      }
+    >
+      strong
+    </Text>
+     text.
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light element Subscript 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    H
+    <Text
+      style={
+        [
+          {
+            "fontSize": 12,
+          },
+          {
+            "fontSize": undefined,
+          },
+        ]
+      }
+    >
+      ₂
+    </Text>
+    O
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light element Superscript 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    E = mc
+    <Text
+      style={
+        [
+          {
+            "fontSize": 12,
+          },
+          {
+            "fontSize": undefined,
+          },
+        ]
+      }
+    >
+      ²
+    </Text>
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light element Table 1`] = `
+<View>
+  <RCTScrollView
+    bounces={false}
+    horizontal={true}
+    showsHorizontalScrollIndicator={false}
+    style={
+      {
+        "marginBottom": 12,
+      }
+    }
+  >
+    <View>
+      <View
+        style={
+          {
+            "opacity": 0,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "fontWeight": "600",
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              a
+            </Text>
+          </View>
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "fontWeight": "600",
+                    "lineHeight": 24,
+                  },
+                  {
+                    "textAlign": "right",
+                  },
+                ]
+              }
+            >
+              b
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              1
+            </Text>
+          </View>
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "lineHeight": 24,
+                  },
+                  {
+                    "textAlign": "right",
+                  },
+                ]
+              }
+            >
+              2
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</View>
+`;
+
+exports[`theme snapshots light element TableCell 1`] = `
+<View>
+  <RCTScrollView
+    bounces={false}
+    horizontal={true}
+    showsHorizontalScrollIndicator={false}
+    style={
+      {
+        "marginBottom": 12,
+      }
+    }
+  >
+    <View>
+      <View
+        style={
+          {
+            "opacity": 0,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "fontWeight": "600",
+                    "lineHeight": 24,
+                  },
+                  {
+                    "textAlign": "center",
+                  },
+                ]
+              }
+            >
+              a
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "lineHeight": 24,
+                  },
+                  {
+                    "textAlign": "center",
+                  },
+                ]
+              }
+            >
+              1
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</View>
+`;
+
+exports[`theme snapshots light element TableRow 1`] = `
+<View>
+  <RCTScrollView
+    bounces={false}
+    horizontal={true}
+    showsHorizontalScrollIndicator={false}
+    style={
+      {
+        "marginBottom": 12,
+      }
+    }
+  >
+    <View>
+      <View
+        style={
+          {
+            "opacity": 0,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "fontWeight": "600",
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              a
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              1
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</View>
+`;
+
+exports[`theme snapshots light element Underline 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Some 
+    <Text
+      style={
+        {
+          "textDecorationLine": "underline",
+        }
+      }
+    >
+      underlined
+    </Text>
+     text.
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light plugin autolinks 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    See 
+    <Text
+      accessibilityRole="link"
+      onPress={[Function]}
+      style={
+        {
+          "color": "#0969da",
+          "textDecorationLine": "underline",
+        }
+      }
+    >
+      www.example.com
+    </Text>
+    , 
+    <Text
+      accessibilityRole="link"
+      onPress={[Function]}
+      style={
+        {
+          "color": "#0969da",
+          "textDecorationLine": "underline",
+        }
+      }
+    >
+      https://example.com/a
+    </Text>
+     and 
+    <Text
+      accessibilityRole="link"
+      onPress={[Function]}
+      style={
+        {
+          "color": "#0969da",
+          "textDecorationLine": "underline",
+        }
+      }
+    >
+      a@b.co
+    </Text>
+    .
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light plugin footnotes 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    Text
+    <Text
+      style={
+        {
+          "color": "#0969da",
+          "fontSize": 12,
+        }
+      }
+    >
+      [
+      1
+      ]
+    </Text>
+     and more
+    <Text
+      style={
+        {
+          "color": "#0969da",
+          "fontSize": 12,
+        }
+      }
+    >
+      [
+      1
+      ]
+    </Text>
+    .
+  </Text>
+  <View
+    accessibilityLabel="Footnotes"
+    accessibilityRole="summary"
+    style={
+      {
+        "borderTopColor": "#d1d9e0",
+        "borderTopWidth": 0.5,
+        "marginTop": 12,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#59636e",
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "minWidth": 24,
+            },
+          ]
+        }
+      >
+        1.
+      </Text>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 12,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              {
+                "color": "#59636e",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              undefined,
+            ]
+          }
+        >
+          The note.
+        </Text>
+        <Text
+          accessible={false}
+          importantForAccessibility="no"
+          style={
+            [
+              {
+                "color": "#59636e",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              {
+                "marginBottom": 6,
+                "marginTop": -6,
+              },
+            ]
+          }
+        >
+          ↩︎ ↩︎²
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots light plugin strikethrough 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    a 
+    <Text
+      style={
+        {
+          "textDecorationLine": "line-through",
+        }
+      }
+    >
+      b
+    </Text>
+     c 
+    <Text
+      style={
+        {
+          "textDecorationLine": "line-through",
+        }
+      }
+    >
+      d
+    </Text>
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light plugin tables 1`] = `
+<View>
+  <RCTScrollView
+    bounces={false}
+    horizontal={true}
+    showsHorizontalScrollIndicator={false}
+    style={
+      {
+        "marginBottom": 12,
+      }
+    }
+  >
+    <View>
+      <View
+        style={
+          {
+            "opacity": 0,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "fontWeight": "600",
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              a
+            </Text>
+          </View>
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "fontWeight": "600",
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              b
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "flexDirection": "row",
+            }
+          }
+        >
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              1
+            </Text>
+          </View>
+          <View
+            onLayout={[Function]}
+            style={
+              [
+                {
+                  "borderColor": "#d1d9e0",
+                  "borderWidth": 0.5,
+                  "padding": 6,
+                },
+                {
+                  "maxWidth": 280,
+                  "minWidth": 48,
+                },
+              ]
+            }
+          >
+            <Text
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#1f2328",
+                    "fontSize": 16,
+                    "lineHeight": 24,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              2
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</View>
+`;
+
+exports[`theme snapshots light plugin tagfilter 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#59636e",
+          "fontFamily": "Menlo",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    &lt;title&gt;no&lt;/title&gt;
+  </Text>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    a 
+    <Text
+      style={{}}
+    >
+      &lt;script&gt;
+    </Text>
+    x
+    <Text
+      style={{}}
+    >
+      &lt;/script&gt;
+    </Text>
+     b
+  </Text>
+</View>
+`;
+
+exports[`theme snapshots light plugin taskLists 1`] = `
+<View>
+  <View
+    style={
+      {
+        "marginBottom": 12,
+        "paddingLeft": 0,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 20,
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="checkbox"
+          accessibilityState={
+            {
+              "checked": false,
+              "disabled": true,
+            }
+          }
+          style={
+            [
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+            ]
+          }
+          suppressHighlighting={true}
+        >
+          ☐︎
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          open
+        </Text>
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "paddingRight": 6,
+            },
+            {
+              "width": 20,
+            },
+          ]
+        }
+      >
+        <Text
+          accessibilityRole="checkbox"
+          accessibilityState={
+            {
+              "checked": true,
+              "disabled": true,
+            }
+          }
+          style={
+            [
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+            ]
+          }
+          suppressHighlighting={true}
+        >
+          ☑︎
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 0,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              null,
+              undefined,
+            ]
+          }
+        >
+          done
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;

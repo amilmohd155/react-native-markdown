@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import { StyleSheet } from 'react-native';
+import { renderTree } from '../../__tests__/tree';
 import { getDefaultTheme } from '../../theme';
 import { BlockList } from '../Block';
 import { createRenderCtx, type RenderCtx } from '../context';
@@ -13,15 +13,14 @@ const B = '↩\uFE0E';
 
 const DOC = 'a[^1] b[^n] c[^1]\n\nmore\n\n[^1]: First.\n[^n]: Named.\n';
 
-function mount(source: string, ctx: RenderCtx) {
-  let root!: ReactTestRenderer;
-  act(() => {
-    root = create(<BlockList table={tableFor(source)} ctx={ctx} />);
-  });
+async function mount(source: string, ctx: RenderCtx) {
+  const root = await renderTree(
+    <BlockList table={tableFor(source)} ctx={ctx} />
+  );
   return {
     root,
     update(next: string) {
-      act(() => root.update(<BlockList table={tableFor(next)} ctx={ctx} />));
+      return root.rerender(<BlockList table={tableFor(next)} ctx={ctx} />);
     },
   };
 }
@@ -35,17 +34,17 @@ const flat = (style: unknown) =>
   StyleSheet.flatten(style as never) as Record<string, unknown>;
 
 describe('footnote section', () => {
-  it('renders the definitions in a footer after the document, in reference order', () => {
-    const { root } = mount(DOC, defaultsCtx());
-    const section = root.root.find(
-      (n) => n.type === View && n.props.accessibilityLabel === 'Footnotes'
+  it('renders the definitions in a footer after the document, in reference order', async () => {
+    const { root } = await mount(DOC, defaultsCtx());
+    const section = root.find(
+      (n) => n.type === 'View' && n.props.accessibilityLabel === 'Footnotes'
     );
     expect(flat(section.props.style)).toMatchObject(
       getDefaultTheme().footnoteSection.container
     );
 
     const texts = section
-      .findAll((n) => n.type === Text)
+      .queryAll((n) => n.type === 'Text')
       .map((n) => n.props.children);
     expect(texts).toEqual(['1.', 'First.', `${B} ${B}²`, '2.', 'Named.', B]);
 
@@ -56,10 +55,10 @@ describe('footnote section', () => {
     });
   });
 
-  it('cascades the section text style into definition paragraphs', () => {
-    const { root } = mount(DOC, defaultsCtx());
-    const paragraph = root.root.find(
-      (n) => n.type === Text && n.props.children === 'First.'
+  it('cascades the section text style into definition paragraphs', async () => {
+    const { root } = await mount(DOC, defaultsCtx());
+    const paragraph = root.find(
+      (n) => n.type === 'Text' && n.props.children === 'First.'
     );
     const { colors, fontSize } = getDefaultTheme().tokens;
     expect(flat(paragraph.props.style)).toMatchObject({
@@ -68,10 +67,10 @@ describe('footnote section', () => {
     });
   });
 
-  it('renders references with their number', () => {
-    const { root } = mount(DOC, defaultsCtx());
-    const refs = root.root
-      .findAll((n) => n.type === Text && Array.isArray(n.props.children))
+  it('renders references with their number', async () => {
+    const { root } = await mount(DOC, defaultsCtx());
+    const refs = root
+      .findAll((n) => n.type === 'Text' && Array.isArray(n.props.children))
       .filter((n) => n.props.children[0] === '[');
     expect(refs.map((n) => n.props.children.join(''))).toEqual([
       '[1]',
@@ -80,22 +79,22 @@ describe('footnote section', () => {
     ]);
   });
 
-  it('re-renders only when a definition or the numbering changes', () => {
+  it('re-renders only when a definition or the numbering changes', async () => {
     const labels: string[] = [];
     const FootnoteDefinition = ({ label }: { label: string }) => {
       labels.push(label);
       return null;
     };
-    const view = mount(DOC, defaultsCtx({ FootnoteDefinition }));
+    const view = await mount(DOC, defaultsCtx({ FootnoteDefinition }));
     expect(labels).toEqual(['1', 'n']);
 
     // An unrelated edit: the section bails out.
     labels.length = 0;
-    view.update(DOC.replace('more', 'more, edited'));
+    await view.update(DOC.replace('more', 'more, edited'));
     expect(labels).toEqual([]);
 
     // A definition's text changed: the section re-renders.
-    view.update(DOC.replace('Named.', 'Renamed.'));
+    await view.update(DOC.replace('Named.', 'Renamed.'));
     expect(labels).toEqual(['1', 'n']);
   });
 });

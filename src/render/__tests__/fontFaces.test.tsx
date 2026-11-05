@@ -1,6 +1,6 @@
 import { createElement, type ReactNode } from 'react';
 import type { TextStyle } from 'react-native';
-import { act, create, type ReactTestRendererJSON } from 'react-test-renderer';
+import { renderTree, type JsonElement, type Tree } from '../../__tests__/tree';
 import {
   createTheme,
   resolveTheme,
@@ -52,17 +52,13 @@ function render(source: string, input: ThemeInput) {
     components: components(),
     theme: resolveTheme(createTheme(input)),
   });
-  let root!: ReturnType<typeof create>;
-  act(() => {
-    root = create(<BlockList table={tableFor(source)} ctx={ctx} />);
-  });
-  return root;
+  return renderTree(<BlockList table={tableFor(source)} ctx={ctx} />);
 }
 
 /** The `family` of each Strong/Emphasis in document order, depth first. */
-function faces(root: ReturnType<typeof create>): string[] {
+function faces(root: Tree): string[] {
   const out: string[] = [];
-  const walk = (node: ReactTestRendererJSON | string) => {
+  const walk = (node: JsonElement | string) => {
     if (typeof node === 'string') return;
     if (node.type === 'Strong' || node.type === 'Emphasis') {
       out.push(
@@ -83,68 +79,67 @@ function faces(root: ReturnType<typeof create>): string[] {
 describe('inline flattener with font faces (P1-16)', () => {
   const theme: ThemeInput = { fonts: { body: inter } };
 
-  it('picks the bold or italic face for Strong and Emphasis', () => {
-    expect(faces(render('a **b** *c*', theme))).toEqual([
+  it('picks the bold or italic face for Strong and Emphasis', async () => {
+    expect(faces(await render('a **b** *c*', theme))).toEqual([
       'Strong:Inter_700Bold/-/-',
       'Emphasis:Inter_400Regular_Italic/-/-',
     ]);
   });
 
-  it('picks the combined face for nesting, either way round', () => {
-    expect(faces(render('***x***', theme))).toEqual([
+  it('picks the combined face for nesting, either way round', async () => {
+    expect(faces(await render('***x***', theme))).toEqual([
       'Emphasis:Inter_400Regular_Italic/-/-',
       'Strong:Inter_700Bold_Italic/-/-',
     ]);
-    expect(faces(render('**a *b* c**', theme))).toEqual([
+    expect(faces(await render('**a *b* c**', theme))).toEqual([
       'Strong:Inter_700Bold/-/-',
       'Emphasis:Inter_700Bold_Italic/-/-',
     ]);
-    expect(faces(render('*a **b** c*', theme))).toEqual([
+    expect(faces(await render('*a **b** c*', theme))).toEqual([
       'Emphasis:Inter_400Regular_Italic/-/-',
       'Strong:Inter_700Bold_Italic/-/-',
     ]);
   });
 
-  it('starts headings bold: Strong adds nothing, Emphasis picks boldItalic', () => {
-    expect(faces(render('# a **b** *c*', theme))).toEqual([
+  it('starts headings bold: Strong adds nothing, Emphasis picks boldItalic', async () => {
+    expect(faces(await render('# a **b** *c*', theme))).toEqual([
       'Strong:-/-/-',
       'Emphasis:Inter_700Bold_Italic/-/-',
     ]);
   });
 
-  it('uses the heading faces inside a heading and the body faces elsewhere', () => {
+  it('uses the heading faces inside a heading and the body faces elsewhere', async () => {
     const both: ThemeInput = { fonts: { body: inter, heading: display } };
-    expect(faces(render('# *a*\n\n*b*', both))).toEqual([
+    expect(faces(await render('# *a*\n\n*b*', both))).toEqual([
       'Emphasis:Display_700_Italic/-/-',
       'Emphasis:Inter_400Regular_Italic/-/-',
     ]);
   });
 
-  it('starts table head cells bold', () => {
-    expect(faces(render('| *a* |\n| --- |\n| *b* |\n', theme))).toEqual([
+  it('starts table head cells bold', async () => {
+    expect(faces(await render('| *a* |\n| --- |\n| *b* |\n', theme))).toEqual([
       'Emphasis:Inter_700Bold_Italic/-/-',
       'Emphasis:Inter_400Regular_Italic/-/-',
     ]);
   });
 
-  it('falls back to fontWeight/fontStyle when a face is missing', () => {
+  it('falls back to fontWeight/fontStyle when a face is missing', async () => {
     // No bold or italic face: the regular face stays (inherited, so no
     // family is repeated) and the missing axes come from the style props.
     expect(
-      faces(render('***x***', { fonts: { body: { regular: 'R' } } }))
+      faces(await render('***x***', { fonts: { body: { regular: 'R' } } }))
     ).toEqual(['Emphasis:-/-/italic', 'Strong:-/700/italic']);
   });
 
-  it('keeps the family-name behaviour: weight and style props only', () => {
-    expect(faces(render('# ***x***', { fonts: { body: 'Inter' } }))).toEqual([
-      'Emphasis:-/-/italic',
-      'Strong:-/700/-',
-    ]);
+  it('keeps the family-name behaviour: weight and style props only', async () => {
+    expect(
+      faces(await render('# ***x***', { fonts: { body: 'Inter' } }))
+    ).toEqual(['Emphasis:-/-/italic', 'Strong:-/700/-']);
   });
 
-  it('renders equal output for equal input (blocks stay memoizable)', () => {
-    const a = render('a ***b*** **c**', theme).toJSON();
-    const b = render('a ***b*** **c**', theme).toJSON();
+  it('renders equal output for equal input (blocks stay memoizable)', async () => {
+    const a = (await render('a ***b*** **c**', theme)).toJSON();
+    const b = (await render('a ***b*** **c**', theme)).toJSON();
     expect(a).toEqual(b);
   });
 });

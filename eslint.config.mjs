@@ -42,6 +42,14 @@ export default defineConfig([
   },
   {
     // example/android and example/ios are generated (expo prebuild).
-    ignores: ['node_modules/', 'lib/', 'example/android/', 'example/ios/'],
+    ignores: [
+      'node_modules/',
+      'lib/',
+      'example/android/',
+      'example/ios/',
+      'example/dist-web/',
+      'playwright-report/',
+      'test-results/',
+    ],
   },
 ]);

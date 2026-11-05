@@ -94,13 +94,8 @@ function isTypeOnly(name, importer) {
   return packageDir(typesName, importer) !== null;
 }
 
-function shipsNativeCode(name, importer) {
-  const dir = packageDir(name, importer);
-  if (!dir) {
-    // Type-only imports (e.g. `mdast` → @types/mdast) have no runtime module.
-    if (isTypeOnly(name, importer)) return false;
-    return 'cannot be resolved, so it cannot be checked';
-  }
+/** Why the package in `dir` counts as native, or false. */
+function nativeMarker(dir) {
   const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
   if (pkg.codegenConfig) return 'codegenConfig in package.json';
   const entries = readdirSync(dir);
@@ -111,19 +106,61 @@ function shipsNativeCode(name, importer) {
   return false;
 }
 
+/**
+ * Checks a package and, below it, everything it depends on at runtime:
+ * a pure-JS package can still pull a native one in. Returns the first
+ * problem as `[reason, chain]`, or false.
+ */
+function shipsNativeCode(name, importer, seen = new Set(), chain = [name]) {
+  const dir = packageDir(name, importer);
+  if (!dir) {
+    // Type-only imports (e.g. `mdast` → @types/mdast) have no runtime module.
+    if (chain.length === 1 && isTypeOnly(name, importer)) return false;
+    return ['cannot be resolved, so it cannot be checked', chain];
+  }
+  if (seen.has(dir)) return false;
+  seen.add(dir);
+
+  const marker = nativeMarker(dir);
+  if (marker) return [marker, chain];
+
+  const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
+  const from = join(dir, 'package.json');
+  const optional = new Set(Object.keys(pkg.optionalDependencies ?? {}));
+  const deps = [...Object.keys(pkg.dependencies ?? {}), ...optional];
+  for (const dep of deps) {
+    if (PLATFORM.has(dep)) continue;
+    // An optional dependency that isn't installed isn't part of the graph.
+    if (optional.has(dep) && packageDir(dep, from) === null) continue;
+    const found = shipsNativeCode(dep, from, seen, [...chain, dep]);
+    if (found) return found;
+  }
+  return false;
+}
+
 walk(entry);
+const checked = new Set();
 for (const [name, importer] of packages) {
-  const reason = shipsNativeCode(name, importer);
-  if (reason) {
-    problems.push(`${relative(root, importer)}: imports "${name}" (${reason})`);
+  const found = shipsNativeCode(name, importer, checked);
+  if (found) {
+    const [reason, chain] = found;
+    problems.push(
+      `${relative(root, importer)}: imports "${name}", ${
+        chain.length > 1
+          ? `which depends on ${chain.slice(1).join(' → ')}: `
+          : ''
+      }${reason}`
+    );
   }
 }
 
 console.log(
-  `Checked ${visited.size} modules and ${packages.size} third-party packages reachable from ${relative(root, entry)}.`
+  `Checked ${visited.size} modules and ${packages.size} third-party packages (and their dependencies) reachable from ${relative(root, entry)}.`
 );
 if (problems.length) {
-  console.error('Native code is reachable from the main entry point (breaks Expo Go, decision D2):');
+  console.error(
+    'Native code is reachable from the main entry point (breaks Expo Go, decision D2):'
+  );
   for (const p of problems) console.error(`  - ${p}`);
   process.exit(1);
 }

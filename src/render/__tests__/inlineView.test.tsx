@@ -1,6 +1,6 @@
 import { memo, type ReactNode } from 'react';
 import { View } from 'react-native';
-import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import { renderTree } from '../../__tests__/tree';
 import { getDefaultTheme, lightTheme } from '../../theme';
 import { BlockList } from '../Block';
 import { createRenderCtx, type RenderCtx } from '../context';
@@ -16,17 +16,14 @@ import {
 } from '../inlineView';
 import { tableFor } from './helpers';
 
-function mount(source: string, ctx: RenderCtx) {
-  let root!: ReactTestRenderer;
-  act(() => {
-    root = create(<BlockList table={tableFor(source)} ctx={ctx} />);
-  });
+async function mount(source: string, ctx: RenderCtx) {
+  const tree = await renderTree(
+    <BlockList table={tableFor(source)} ctx={ctx} />
+  );
   return {
-    root,
+    tree,
     update(next: string, nextCtx = ctx) {
-      act(() =>
-        root.update(<BlockList table={tableFor(next)} ctx={nextCtx} />)
-      );
+      return tree.rerender(<BlockList table={tableFor(next)} ctx={nextCtx} />);
     },
   };
 }
@@ -45,40 +42,40 @@ describe('inlineView()', () => {
   });
   afterEach(() => warn.mockRestore());
 
-  it('marks the component as a declared inline view', () => {
+  it('marks the component as a declared inline view', async () => {
     const Chip = () => <View />;
     expect(isInlineView(Chip)).toBe(false);
     expect(inlineView<'Link'>(Chip)).toBe(Chip);
     expect(isInlineView(Chip)).toBe(true);
   });
 
-  it('lets a declared element render a View without a dev warning', () => {
+  it('lets a declared element render a View without a dev warning', async () => {
     const LinkChip = inlineView<'Link'>(({ children }) => (
       <View testID="chip">{children}</View>
     ));
-    const { root } = mount(
+    const { tree } = await mount(
       'see [docs](https://x)\n',
       withComponents({ Link: LinkChip })
     );
-    expect(root.root.findByProps({ testID: 'chip' })).toBeTruthy();
+    expect(tree.find((n) => n.props.testID === 'chip')).toBeTruthy();
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it('still warns for an undeclared View', () => {
+  it('still warns for an undeclared View', async () => {
     const Chip = ({ children }: { children: ReactNode }) => (
       <View>{children}</View>
     );
-    mount('see [docs](https://x)\n', withComponents({ Link: Chip }));
+    await mount('see [docs](https://x)\n', withComponents({ Link: Chip }));
     expect(warn).toHaveBeenCalledTimes(1);
   });
 
-  it('passes the block’s font metrics as baseline', () => {
+  it('passes the block’s font metrics as baseline', async () => {
     const seen: InlineBaseline[] = [];
     const Code = inlineView<'InlineCode'>(({ baseline }) => {
       seen.push(baseline);
       return null;
     });
-    mount(
+    await mount(
       '# `a`\n\nx `b`\n\n| h |\n|---|\n| `c` |\n',
       withComponents({ InlineCode: Code })
     );
@@ -90,17 +87,20 @@ describe('inlineView()', () => {
     ]);
   });
 
-  it('passes baseline inside nested inline elements too', () => {
+  it('passes baseline inside nested inline elements too', async () => {
     const seen: InlineBaseline[] = [];
     const Code = inlineView<'InlineCode'>(({ baseline }) => {
       seen.push(baseline);
       return null;
     });
-    mount('## **[`a`](https://x)**\n', withComponents({ InlineCode: Code }));
+    await mount(
+      '## **[`a`](https://x)**\n',
+      withComponents({ InlineCode: Code })
+    );
     expect(seen).toEqual([expect.objectContaining({ fontSize: 33 })]);
   });
 
-  it('does not pass baseline to undeclared components', () => {
+  it('does not pass baseline to undeclared components', async () => {
     const props: object[] = [];
     const Code = ({ code }: { code: string }) => {
       props.push({ code });
@@ -110,11 +110,14 @@ describe('inlineView()', () => {
       props.push(p);
       return null;
     };
-    mount('`a` **b**\n', withComponents({ InlineCode: Code, Strong: Spy }));
+    await mount(
+      '`a` **b**\n',
+      withComponents({ InlineCode: Code, Strong: Spy })
+    );
     expect(props.some((p) => 'baseline' in p)).toBe(false);
   });
 
-  it('gives a declared memo component the same baseline object, so it bails out', () => {
+  it('gives a declared memo component the same baseline object, so it bails out', async () => {
     const renders: string[] = [];
     const Code = inlineView<'InlineCode'>(
       memo(({ code }) => {
@@ -126,18 +129,21 @@ describe('inlineView()', () => {
       ...defaultComponents,
       InlineCode: Code,
     });
-    const view = mount('x `a`\n', createRenderCtx({ components }));
+    const view = await mount('x `a`\n', createRenderCtx({ components }));
     expect(renders).toEqual(['a']);
 
     // A new ctx (same theme) re-renders the block; equal props → no render.
     renders.length = 0;
-    view.update('x `a`\n', createRenderCtx({ components, selectable: true }));
+    await view.update(
+      'x `a`\n',
+      createRenderCtx({ components, selectable: true })
+    );
     expect(renders).toEqual([]);
   });
 });
 
 describe('baselineOf', () => {
-  it('reads fontSize and lineHeight from the block text style, cached', () => {
+  it('reads fontSize and lineHeight from the block text style, cached', async () => {
     const text = { fontSize: 20, lineHeight: 30 };
     expect(baselineOf(text, lightTheme)).toEqual({
       fontSize: 20,
@@ -146,7 +152,7 @@ describe('baselineOf', () => {
     expect(baselineOf(text, lightTheme)).toBe(baselineOf(text, lightTheme));
   });
 
-  it('falls back to the tokens', () => {
+  it('falls back to the tokens', async () => {
     expect(baselineOf(undefined, lightTheme)).toEqual({
       fontSize: 16,
       lineHeight: 24,
@@ -159,7 +165,7 @@ describe('baselineOf', () => {
 });
 
 describe('inlineViewOffset', () => {
-  it('centres a view on the cap height of the text', () => {
+  it('centres a view on the cap height of the text', async () => {
     const baseline = { fontSize: 20, lineHeight: 30 };
     // Cap height 14: a 14-high view needs no shift; taller views move down.
     expect(inlineViewOffset(baseline, 14)).toBe(0);

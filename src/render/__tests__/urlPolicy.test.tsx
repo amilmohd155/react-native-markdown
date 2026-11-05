@@ -1,32 +1,16 @@
 /* eslint-disable no-script-url -- dangerous URLs are the test inputs */
-import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import { Text } from 'react-native';
+import { render, screen } from '@testing-library/react-native';
+import { textOf } from '../../__tests__/tree';
 import { Markdown, type MarkdownProps } from '../../api/Markdown';
 import { hostOf, imageAllowed, type ImagesPolicy } from '../imagePolicy';
 import { isOpenableUrl } from '../links';
 
-function mount(props: MarkdownProps): ReactTestRenderer {
-  let root!: ReactTestRenderer;
-  act(() => {
-    root = create(<Markdown {...props} />);
-  });
-  return root;
-}
+const mount = (props: MarkdownProps) => render(<Markdown {...props} />);
 
-function text(root: ReactTestRenderer): string {
-  const collect = (node: unknown): string => {
-    if (typeof node === 'string') return node;
-    if (node && typeof node === 'object' && 'children' in node) {
-      return ((node as { children: unknown[] | null }).children ?? [])
-        .map(collect)
-        .join('');
-    }
-    return '';
-  };
-  return collect(root.toJSON());
-}
+const text = () => textOf(screen.container);
 
-const images = (root: ReactTestRenderer) =>
-  root.root.findAll((n) => (n.type as unknown) === 'Image');
+const images = () => screen.container.queryAll((n) => n.type === 'Image');
 
 describe('hostOf', () => {
   it.each([
@@ -111,80 +95,82 @@ describe('<Markdown images>', () => {
   const block = '![A cat](https://cdn.example.com/cat.png)';
   const inline = 'Look ![A cat](https://cdn.example.com/cat.png) here';
 
-  it('renders images by default', () => {
-    expect(images(mount({ source: block }))).toHaveLength(1);
-    expect(images(mount({ source: inline }))).toHaveLength(1);
+  it('renders images by default', async () => {
+    await mount({ source: block });
+    expect(images()).toHaveLength(1);
+    await screen.unmount();
+    await mount({ source: inline });
+    expect(images()).toHaveLength(1);
   });
 
-  it('shows the alt text instead of a denied block image', () => {
-    const root = mount({ source: block, images: 'deny' });
-    expect(images(root)).toHaveLength(0);
-    expect(text(root)).toBe('A cat');
+  it('shows the alt text instead of a denied block image', async () => {
+    await mount({ source: block, images: 'deny' });
+    expect(images()).toHaveLength(0);
+    expect(text()).toBe('A cat');
   });
 
-  it('shows the alt text instead of a denied inline image', () => {
-    const root = mount({ source: inline, images: 'deny' });
-    expect(images(root)).toHaveLength(0);
-    expect(text(root)).toBe('Look A cat here');
+  it('shows the alt text instead of a denied inline image', async () => {
+    await mount({ source: inline, images: 'deny' });
+    expect(images()).toHaveLength(0);
+    expect(text()).toBe('Look A cat here');
   });
 
-  it('renders nothing for a denied image without alt text', () => {
-    const root = mount({
+  it('renders nothing for a denied image without alt text', async () => {
+    await mount({
       source: 'a ![](https://cdn.example.com/cat.png) b',
       images: 'deny',
     });
-    expect(text(root)).toBe('a  b');
+    expect(text()).toBe('a  b');
   });
 
-  it('keeps images from allowed hosts and denies the rest', () => {
+  it('keeps images from allowed hosts and denies the rest', async () => {
     const source = `${block}\n\n![Dog](https://tracker.test/dog.png)\n\nx ![Bird](/bird.png) y`;
-    const root = mount({
+    await mount({
       source,
       images: { allowHosts: ['*.example.com'] },
     });
-    expect(images(root)).toHaveLength(1);
-    expect(text(root)).toContain('Dog');
-    expect(text(root)).toContain('x Bird y');
+    expect(images()).toHaveLength(1);
+    expect(text()).toContain('Dog');
+    expect(text()).toContain('x Bird y');
   });
 
-  it('keeps the render context for an equal inline allowlist', () => {
+  it('keeps the render context for an equal inline allowlist', async () => {
     let renders = 0;
     const Counting = ({ children }: { children?: unknown }) => {
       renders++;
-      return <>{children as never}</>;
+      return <Text>{children as never}</Text>;
     };
     const props = (): MarkdownProps => ({
       source: 'one\n\ntwo',
       components: { Paragraph: Counting as never },
       images: { allowHosts: ['a.example.com'] },
     });
-    const root = mount(props());
+    const view = await mount(props());
     const first = renders;
-    act(() => root.update(<Markdown {...props()} />));
+    await view.rerender(<Markdown {...props()} />);
     expect(renders).toBe(first);
-    act(() =>
-      root.update(
-        <Markdown {...props()} images={{ allowHosts: ['b.example.com'] }} />
-      )
+    await view.rerender(
+      <Markdown {...props()} images={{ allowHosts: ['b.example.com'] }} />
     );
     expect(renders).toBeGreaterThan(first);
   });
 });
 
 describe('link URL layers', () => {
-  it('keeps links with dangerous schemes as text at parse time', () => {
+  it('keeps links with dangerous schemes as text at parse time', async () => {
     for (const href of [
       'javascript:alert(1)',
       'vbscript:x',
       'file:///etc/passwd',
       'data:text/html;base64,AAAA',
     ]) {
-      const root = mount({ source: `[click](${href})` });
-      const links = root.root.findAll(
+      await mount({ source: `[click](${href})` });
+      const links = screen.container.queryAll(
         (n) => typeof n.props?.href === 'string' && n.props.href === href
       );
       expect(links).toHaveLength(0);
-      expect(text(root)).toContain('click');
+      expect(text()).toContain('click');
+      await screen.unmount();
     }
   });
 

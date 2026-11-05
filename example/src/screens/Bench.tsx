@@ -1,12 +1,5 @@
 import { useLayoutEffect, useState } from 'react';
-import {
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { Markdown as MarkdownV0 } from 'md-v0';
 import {
   editLastParagraph,
@@ -14,13 +7,11 @@ import {
   type Fixture,
 } from '../../../bench/fixtures';
 import {
-  BlockList,
-  createRenderCtx,
-  defaultComponents,
+  Markdown,
   parse,
-  tableOf,
-  type NodeTable,
-} from '../v1';
+  type MarkdownDocument,
+} from '@docren/react-native-markdown';
+import { Button, Card, UIText, useChrome } from '../ui';
 
 /**
  * Device benchmark: v1 vs v0.8.5 in one binary.
@@ -35,6 +26,9 @@ import {
  *   the setState to the commit (a layout effect after the content). v1 parses
  *   the edit before timing (render cost only); v0 can't, it parses in render.
  *
+ * v1 runs go through the public `<Markdown document>` (parse() first, so the
+ * parse and render costs stay separate), as an app would use it.
+ *
  * Runs alternate v0 and v1 (A, B, B, A, …) after warm-up runs, and the
  * document is unmounted with 2 frames' wait between runs. Only meaningful
  * in a release build; Expo Go numbers are dev-mode.
@@ -48,7 +42,11 @@ type Metric =
   | 'reRenderOneBlock';
 
 type Job =
-  | { readonly key: number; readonly impl: 'v1'; readonly table: NodeTable }
+  | {
+      readonly key: number;
+      readonly impl: 'v1';
+      readonly document: MarkdownDocument;
+    }
   | { readonly key: number; readonly impl: 'v0'; readonly source: string };
 
 interface Sample {
@@ -71,9 +69,6 @@ const MODES = {
   quick: { warmup: 2, runs: 5 },
   full: { warmup: 5, runs: 20 },
 } as const;
-
-// One render context for every v1 run, as <Markdown> would keep.
-const ctx = createRenderCtx({ components: defaultComponents });
 
 const frames = (n: number) =>
   new Promise<void>((resolve) => {
@@ -168,9 +163,9 @@ async function mount(io: BenchIO, impl: Impl, source: string) {
   let parsed = t0;
   let next: Job;
   if (impl === 'v1') {
-    const table = tableOf(parse(source));
+    const document = parse(source);
     parsed = performance.now();
-    next = { key, impl, table };
+    next = { key, impl, document };
   } else {
     next = { key, impl, source };
   }
@@ -193,7 +188,7 @@ async function runBench(io: BenchIO, mode: keyof typeof MODES) {
 
   for (const fixture of FIXTURES) {
     const edited = editLastParagraph(fixture.source);
-    const editedTable = tableOf(parse(edited));
+    const editedDocument = parse(edited);
     for (let i = 0; i < warmup + runs; i++) {
       const measured = i >= warmup;
       // Alternate which implementation goes first (A B, B A, …).
@@ -221,7 +216,7 @@ async function runBench(io: BenchIO, mode: keyof typeof MODES) {
         const t0 = performance.now();
         io.setJob(
           impl === 'v1'
-            ? { key: first.key, impl, table: editedTable }
+            ? { key: first.key, impl, document: editedDocument }
             : { key: first.key, impl, source: edited }
         );
         io.bumpVersion();
@@ -268,6 +263,7 @@ function logChunked(tag: string, value: unknown) {
 }
 
 export function Bench() {
+  const { p } = useChrome();
   const [job, setJob] = useState<Job | null>(null);
   const [version, setVersion] = useState(0);
   const [status, setStatus] = useState('idle');
@@ -281,46 +277,73 @@ export function Bench() {
   };
 
   const busy = status !== 'idle' && status !== 'done';
+  const dotColor = busy ? '#d29922' : status === 'done' ? '#2da44e' : p.muted;
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
-      <Text style={styles.meta}>
-        {__DEV__ ? 'DEV build: numbers are not meaningful' : 'release build'} ·{' '}
-        {status}
-      </Text>
-      <View style={styles.buttons}>
-        {(['quick', 'full'] as const).map((mode) => (
-          <Pressable
-            key={mode}
-            accessibilityRole="button"
-            disabled={busy}
-            onPress={() => runBench(io, mode)}
-            style={[styles.button, busy && styles.buttonBusy]}
-          >
-            <Text style={styles.buttonText}>
-              Run {mode} ({MODES[mode].warmup}+{MODES[mode].runs})
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+    <ScrollView
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.column}>
+        <UIText variant="body" muted>
+          v1 against v0.8.5 in one binary: parse, first render and a one-block
+          edit on the same fixtures.
+        </UIText>
 
-      {rows.length > 0 ? <Results rows={rows} /> : null}
+        <Card style={styles.runCard}>
+          <View style={styles.statusRow}>
+            <View style={[styles.dot, { backgroundColor: dotColor }]} />
+            <UIText variant="label" numberOfLines={1} style={styles.flex}>
+              {busy
+                ? `Running · ${status}`
+                : status === 'done'
+                  ? 'Done'
+                  : 'Ready'}
+            </UIText>
+            <UIText variant="caption" muted>
+              {__DEV__ ? 'dev build' : 'release build'}
+            </UIText>
+          </View>
+          {__DEV__ ? (
+            <UIText variant="caption" muted>
+              Dev numbers are not meaningful; measure a release build.
+            </UIText>
+          ) : null}
+          <View style={styles.buttons}>
+            {(['quick', 'full'] as const).map((mode) => (
+              <Button
+                key={mode}
+                label={`${mode === 'quick' ? 'Quick' : 'Full'} · ${MODES[mode].warmup}+${MODES[mode].runs}`}
+                tone={mode === 'quick' ? 'primary' : 'quiet'}
+                disabled={busy}
+                onPress={() => runBench(io, mode)}
+                style={styles.flex}
+              />
+            ))}
+          </View>
+        </Card>
 
-      {/* The document under test. */}
-      <View
-        style={styles.subject}
-        onLayout={() => settle('layout')}
-        key={job?.key ?? 'none'}
-      >
-        {job?.impl === 'v1' ? <BlockList table={job.table} ctx={ctx} /> : null}
-        {job?.impl === 'v0' ? <MarkdownV0 markdown={job.source} /> : null}
-        <CommitProbe version={version} onCommit={() => settle('commit')} />
+        {rows.length > 0 ? <Results rows={rows} /> : null}
+
+        {/* The document under test, on white for both libraries. */}
+        <View
+          style={job ? [styles.subject, { borderColor: p.border }] : undefined}
+          onLayout={() => settle('layout')}
+          key={job?.key ?? 'none'}
+        >
+          {job?.impl === 'v1' ? (
+            <Markdown document={job.document} theme="light" />
+          ) : null}
+          {job?.impl === 'v0' ? <MarkdownV0 markdown={job.source} /> : null}
+          <CommitProbe version={version} onCommit={() => settle('commit')} />
+        </View>
       </View>
     </ScrollView>
   );
 }
 
 function Results({ rows }: { rows: readonly Row[] }) {
+  const { p } = useChrome();
   const get = (fixture: string, metric: Metric, impl: Impl) =>
     rows.find(
       (r) => r.fixture === fixture && r.metric === metric && r.impl === impl
@@ -331,56 +354,82 @@ function Results({ rows }: { rows: readonly Row[] }) {
     'parse+firstRender',
     'reRenderOneBlock',
   ];
+  const ms = (row: Row | undefined) => (row ? `${row.median.toFixed(1)}` : '—');
   return (
     <View style={styles.results}>
       {FIXTURES.map(({ id }) => (
-        <View key={id} style={styles.fixture}>
-          <Text style={styles.fixtureTitle}>{id}</Text>
+        <Card key={id} style={styles.fixture}>
+          <View style={styles.gridRow}>
+            <UIText variant="heading" style={styles.metricCol}>
+              {id}
+            </UIText>
+            <UIText variant="caption" muted style={styles.numCol}>
+              v1 ms
+            </UIText>
+            <UIText variant="caption" muted style={styles.numCol}>
+              v0 ms
+            </UIText>
+            <UIText variant="caption" muted style={styles.numCol}>
+              speed-up
+            </UIText>
+          </View>
           {metrics.map((metric) => {
             const v1 = get(id, metric, 'v1');
             const v0 = get(id, metric, 'v0');
             const ratio = v0 && v1 ? v0.median / v1.median : null;
             return (
-              <Text key={metric} style={styles.row}>
-                {metric}: v1{' '}
-                {v1
-                  ? `${v1.median.toFixed(1)} (p90 ${v1.p90.toFixed(1)})`
-                  : '—'}
-                {' · '}v0{' '}
-                {v0
-                  ? `${v0.median.toFixed(1)} (p90 ${v0.p90.toFixed(1)})`
-                  : '—'}
-                {ratio !== null ? ` · ${ratio.toFixed(1)}×` : ''}
-              </Text>
+              <View
+                key={metric}
+                style={[
+                  styles.gridRow,
+                  { borderTopColor: p.border },
+                  styles.ruled,
+                ]}
+              >
+                <UIText variant="mono" style={styles.metricCol}>
+                  {metric}
+                </UIText>
+                <UIText variant="mono" style={styles.numCol}>
+                  {ms(v1)}
+                </UIText>
+                <UIText variant="mono" muted style={styles.numCol}>
+                  {ms(v0)}
+                </UIText>
+                <UIText
+                  variant="mono"
+                  color={ratio !== null && ratio >= 1 ? '#2da44e' : undefined}
+                  muted={ratio === null}
+                  style={styles.numCol}
+                >
+                  {ratio !== null ? `${ratio.toFixed(1)}×` : '—'}
+                </UIText>
+              </View>
             );
           })}
-        </View>
+        </Card>
       ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 16, paddingBottom: 48 },
-  meta: { fontSize: 12, color: '#59636e', marginBottom: 8 },
-  buttons: { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  button: {
-    backgroundColor: '#0969da',
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  buttonBusy: { opacity: 0.4 },
-  buttonText: { color: '#ffffff', fontWeight: '600' },
-  results: { marginBottom: 16 },
-  fixture: { marginBottom: 8 },
-  fixtureTitle: { fontWeight: '700', marginBottom: 2 },
-  row: {
-    fontSize: 12,
-    fontFamily: Platform.select({ ios: 'Menlo', default: 'monospace' }),
-  },
+  content: { paddingHorizontal: 16, paddingBottom: 32 },
+  column: { width: '100%', maxWidth: 720, alignSelf: 'center', gap: 14 },
+  flex: { flex: 1 },
+  runCard: { gap: 12 },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dot: { width: 8, height: 8, borderRadius: 4 },
+  buttons: { flexDirection: 'row', gap: 10 },
+  results: { gap: 10 },
+  fixture: { gap: 6 },
+  gridRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  ruled: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 6 },
+  metricCol: { flex: 1.6 },
+  numCol: { flex: 1, textAlign: 'right' },
   subject: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#d1d9e0',
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 16,
   },
 });

@@ -67,6 +67,7 @@ This tests **parser + conversion** (where compliance bugs come from) without inv
 The test list is in [06 · Renderer tests](../06-testing.md#renderer-tests). Harness specifics:
 
 - `@testing-library/react-native` for behaviour (press links, toggle tasks).
+- `react-test-renderer` is deprecated in React 19 ([react.dev](https://react.dev/warnings/react-test-renderer)), so tests use `@testing-library/react-native` v14, which runs on `test-renderer` (needs Node 22.13+; `.nvmrc` is 24). Everything is async (`await render`, `await rerender`, `await act`). It queries host elements only and throws on text outside `<Text>`, so tests that inspect the tree or use made-up host names (`hostComponents()`) use `renderTree` from `src/__tests__/tree.tsx`, a thin helper on `test-renderer`'s `createRoot` that has no text rule. `fireEvent` works only on trees rendered by RNTL's own `render`.
 - **Render counting:** wrap each default element in a spy component through `components` and count renders per block key. The memo test asserts the count after a one-block edit.
 - **Type tests:** `expect-type` files in `test/types/`, run by `tsc --noEmit`.
 - **Public `.d.ts` leak check:** after `bob build`, a script scans `lib/typescript/**/*.d.ts` for `NodeTable`, `TableBuilder` or `markdown-it`, and fails if any of them is reachable from the public entry points.
@@ -76,7 +77,7 @@ The test list is in [06 · Renderer tests](../06-testing.md#renderer-tests). Har
 Details are in [06 · Platform tests](../06-testing.md#platform-tests). Harness specifics:
 
 - **Web:** a separate Jest project with `testEnvironment: 'jsdom'` and the `react-native` → `react-native-web` module mapper. It runs the renderer tests again. The Playwright smoke test serves the example app's web build and checks rendered text for a fixed set of fixtures.
-- **Expo Go check:** run `madge` (or esbuild's metafile) over `src/index.ts` and fail if the graph includes any module that references `TurboModuleRegistry`, `requireNativeComponent`, `NativeModules` or `react-native-nitro-modules`.
+- **Expo Go check:** `scripts/check-no-native.mjs` (`yarn check:expo-go`) walks the import graph from the main entry and fails if any module references `TurboModuleRegistry`, `requireNativeComponent`, `codegenNativeComponent`, `NativeModules` or `react-native-nitro-modules`, or if a third-party package it imports, or any package that one depends on, ships native code (an `android/` or `ios/` directory, a podspec, or a codegen config). It runs on `src/index.tsx` (`expo-go-check` job and the release workflow) and, with `yarn check:expo-go lib/module/index.js`, on the built entry that apps load (`dts-leak` job, after the build). `src/__tests__/expoGoCheck.test.ts` runs the script against throwaway projects, so the check itself is known to fail when it should.
 
 ## CI jobs
 
@@ -89,5 +90,6 @@ Details are in [06 · Platform tests](../06-testing.md#platform-tests). Harness 
 | `web` | Jest (jsdom + RN web) + Playwright smoke | ✅ |
 | `expo-go-check` | Native-import scan of the main entry | ✅ |
 | `dts-leak` | Build, then public `.d.ts` scan | ✅ |
-| `perf` | `bench` with `node --jitless` against stored baselines (fail on > 20% regression) | ✅ (after M6) |
-| `example-build` | Example app iOS/Android build | Nightly |
+| `perf` | `yarn perf`: parse and render time under `node --jitless` against `perf/baseline.json` (fail on > 20% regression) | ✅ (after M6) |
+
+The example app's native build is not a CI job ([P1-23](./decisions.md#p1-23-no-scheduled-native-build-of-the-example-app-in-ci)).

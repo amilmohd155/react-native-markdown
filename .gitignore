@@ -92,3 +92,8 @@ nitrogen/
 
 # Jest coverage output
 coverage/
+
+# Web smoke test output
+example/dist-web/
+playwright-report/
+test-results/

@@ -1,6 +1,6 @@
 import { createElement, memo, type ComponentType, type ReactNode } from 'react';
 import { Image } from 'react-native';
-import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import { renderTree } from '../../__tests__/tree';
 import { ELEMENT_NAMES, type ElementName } from '../../theme';
 import { BlockList } from '../Block';
 import { createRenderCtx, type RenderCtx } from '../context';
@@ -63,17 +63,14 @@ function spied(name: ElementName, seen: ElementName[]): Components {
   return Object.freeze({ ...defaultComponents, [name]: Spy }) as Components;
 }
 
-function mount(source: string, ctx: RenderCtx) {
-  let root!: ReactTestRenderer;
-  act(() => {
-    root = create(<BlockList table={tableFor(source)} ctx={ctx} />);
-  });
+async function mount(source: string, ctx: RenderCtx) {
+  const root = await renderTree(
+    <BlockList table={tableFor(source)} ctx={ctx} />
+  );
   return {
     root,
     update(next: string, nextCtx = ctx) {
-      act(() =>
-        root.update(<BlockList table={tableFor(next)} ctx={nextCtx} />)
-      );
+      return root.rerender(<BlockList table={tableFor(next)} ctx={nextCtx} />);
     },
   };
 }
@@ -91,9 +88,9 @@ describe('element snapshots', () => {
     expect(Object.keys(FIXTURES).sort()).toEqual([...ELEMENT_NAMES].sort());
   });
 
-  it.each(ELEMENT_NAMES)('%s', (name) => {
+  it.each(ELEMENT_NAMES)('%s', async (name) => {
     const seen: ElementName[] = [];
-    const { root } = mount(
+    const { root } = await mount(
       FIXTURES[name],
       createRenderCtx({ components: spied(name, seen) })
     );
@@ -126,39 +123,41 @@ describe('memoization with the default elements', () => {
     return { renders, components: Object.freeze(map) as Components };
   }
 
-  it('editing one block re-renders only that block', () => {
+  it('editing one block re-renders only that block', async () => {
     const { renders, components } = counting();
-    const view = mount(DOC, createRenderCtx({ components }));
+    const view = await mount(DOC, createRenderCtx({ components }));
     expect(renders.length).toBeGreaterThan(10);
 
     renders.length = 0;
-    view.update(DOC.replace('Last paragraph.', 'Last paragraph, edited.'));
+    await view.update(
+      DOC.replace('Last paragraph.', 'Last paragraph, edited.')
+    );
     expect(renders).toEqual(['Paragraph']);
   });
 
-  it('re-rendering with the same document renders nothing', () => {
+  it('re-rendering with the same document renders nothing', async () => {
     const { renders, components } = counting();
     const ctx = createRenderCtx({ components });
-    const view = mount(DOC, ctx);
+    const view = await mount(DOC, ctx);
     renders.length = 0;
-    view.update(DOC);
+    await view.update(DOC);
     expect(renders).toEqual([]);
   });
 
-  it('a user memo component bails out when its block is unchanged', () => {
+  it('a user memo component bails out when its block is unchanged', async () => {
     const renders: ReactNode[] = [];
     const Heading = memo(({ children }: { children: ReactNode }) => {
       renders.push(children);
       return null;
     });
     const components = Object.freeze({ ...defaultComponents, Heading });
-    const view = mount(DOC, createRenderCtx({ components }));
+    const view = await mount(DOC, createRenderCtx({ components }));
     expect(renders).toEqual(['Title']);
 
     // A new ctx makes every Block re-render; the heading's props are plain
     // values, equal to last time, so the user's memo bails out.
     renders.length = 0;
-    view.update(DOC, createRenderCtx({ components, selectable: true }));
+    await view.update(DOC, createRenderCtx({ components, selectable: true }));
     expect(renders).toEqual([]);
   });
 });

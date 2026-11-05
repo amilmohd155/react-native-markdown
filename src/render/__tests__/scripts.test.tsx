@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import { StyleSheet } from 'react-native';
+import { find, renderTree, type Tree } from '../../__tests__/tree';
 import { BlockList } from '../Block';
 import { createRenderCtx } from '../context';
 import { defaultComponents } from '../defaults';
@@ -26,68 +26,64 @@ describe('Unicode scripts (P1-17)', () => {
 });
 
 describe('default Superscript and Subscript', () => {
-  function texts(source: string) {
-    let root!: ReactTestRenderer;
-    act(() => {
-      root = create(
-        <BlockList
-          table={tableFor(source)}
-          ctx={createRenderCtx({ components: defaultComponents })}
-        />
-      );
-    });
+  async function texts(source: string) {
+    const tree = await renderTree(
+      <BlockList
+        table={tableFor(source)}
+        ctx={createRenderCtx({ components: defaultComponents })}
+      />
+    );
     // The block's Text, then the inline element's Text.
-    return root.root.findAll((n) => n.type === Text);
+    return tree.findAll('Text');
   }
 
-  it('renders convertible text as Unicode characters at the block size', () => {
-    const [, sup] = texts('E = mc<sup>2</sup>\n');
+  it('renders convertible text as Unicode characters at the block size', async () => {
+    const [, sup] = await texts('E = mc<sup>2</sup>\n');
     expect(sup!.props.children).toBe('²');
     expect(StyleSheet.flatten(sup!.props.style).fontSize).toBeUndefined();
 
-    const [, sub] = texts('H<sub>2</sub>O\n');
+    const [, sub] = await texts('H<sub>2</sub>O\n');
     expect(sub!.props.children).toBe('₂');
   });
 
-  it('falls back to smaller text otherwise (P1-5)', () => {
-    const [, sup] = texts('Brand<sup>TM</sup>\n');
+  it('falls back to smaller text otherwise (P1-5)', async () => {
+    const [, sup] = await texts('Brand<sup>TM</sup>\n');
     expect(sup!.props.children).toBe('TM');
     expect(StyleSheet.flatten(sup!.props.style).fontSize).toBe(12);
   });
 
-  it('falls back when the content is not plain text', () => {
-    const [, sup] = texts('x<sup>**2**</sup>\n');
+  it('falls back when the content is not plain text', async () => {
+    const [, sup] = await texts('x<sup>**2**</sup>\n');
     expect(sup!.props.children).not.toBe('²');
   });
 });
 
 describe("scriptFallback: 'raised'", () => {
   function render(source: string, scriptFallback?: 'smaller' | 'raised') {
-    let root!: ReactTestRenderer;
-    act(() => {
-      root = create(
-        <BlockList
-          table={tableFor(source)}
-          ctx={createRenderCtx({
-            components: defaultComponents,
-            scriptFallback,
-          })}
-        />
-      );
-    });
-    return root;
+    return renderTree(
+      <BlockList
+        table={tableFor(source)}
+        ctx={createRenderCtx({
+          components: defaultComponents,
+          scriptFallback,
+        })}
+      />
+    );
   }
 
-  const views = (root: ReactTestRenderer) =>
-    root.root.findAll((n) => n.type === View && n.props.style?.transform);
+  const views = (root: Tree) =>
+    root.findAll((n) => n.type === 'View' && n.props.style?.transform);
 
-  it('shifts non-Unicode content in an inline view, sized from the block', () => {
-    const root = render('## Brand<sup>TM</sup> and H<sub>Ab</sub>\n', 'raised');
+  it('shifts non-Unicode content in an inline view, sized from the block', async () => {
+    const root = await render(
+      '## Brand<sup>TM</sup> and H<sub>Ab</sub>\n',
+      'raised'
+    );
     const [sup, sub] = views(root);
     // h2 is 33: up by 0.4, down by 0.2 of the block size.
     expect(sup!.props.style.transform).toEqual([{ translateY: -33 * 0.4 }]);
     expect(sub!.props.style.transform).toEqual([{ translateY: 33 * 0.2 }]);
-    const inner = sup!.findByType(Text);
+    const inner = find(sup!, 'Text');
     expect(inner.props.children).toBe('TM');
     expect(StyleSheet.flatten(inner.props.style)).toMatchObject({
       fontSize: 33 * 0.75,
@@ -95,13 +91,13 @@ describe("scriptFallback: 'raised'", () => {
     });
   });
 
-  it('still uses Unicode characters where they exist', () => {
-    const root = render('mc<sup>2</sup>\n', 'raised');
+  it('still uses Unicode characters where they exist', async () => {
+    const root = await render('mc<sup>2</sup>\n', 'raised');
     expect(views(root)).toHaveLength(0);
     expect(JSON.stringify(root.toJSON())).toContain('²');
   });
 
-  it('keeps smaller text by default', () => {
-    expect(views(render('Brand<sup>TM</sup>\n'))).toHaveLength(0);
+  it('keeps smaller text by default', async () => {
+    expect(views(await render('Brand<sup>TM</sup>\n'))).toHaveLength(0);
   });
 });

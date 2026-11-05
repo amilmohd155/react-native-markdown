@@ -1,7 +1,7 @@
 import type { MarkdownIt } from 'markdown-it';
 import { createElement } from 'react';
-import { act, create } from 'react-test-renderer';
 import { definePlugin } from '../../plugins/definePlugin';
+import { renderTree } from '../../__tests__/tree';
 import { Markdown } from '../Markdown';
 import { parse } from '../parse';
 import { visit, type VisitInfo } from '../visit';
@@ -174,12 +174,11 @@ describe('visit', () => {
 });
 
 describe('<Markdown document> with plugins', () => {
-  it('renders a document parsed with plugins', () => {
+  it('renders a document parsed with plugins', async () => {
     const document = parse('hi @ada', { plugins: [mentions] });
-    let root!: ReturnType<typeof create>;
-    act(() => {
-      root = create(<Markdown document={document} plugins={[mentions]} />);
-    });
-    expect(root.root.findAllByType('VisitMention' as never)).toHaveLength(1);
+    const tree = await renderTree(
+      <Markdown document={document} plugins={[mentions]} />
+    );
+    expect(tree.findAll('VisitMention')).toHaveLength(1);
   });
 });

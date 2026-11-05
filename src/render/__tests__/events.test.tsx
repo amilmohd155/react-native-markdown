@@ -1,11 +1,7 @@
-import { Linking, Pressable, Text } from 'react-native';
-import {
-  act,
-  create,
-  type ReactTestInstance,
-  type ReactTestRenderer,
-} from 'react-test-renderer';
+import { Linking, Text } from 'react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { Markdown } from '../../api/Markdown';
+import { textOf } from '../../__tests__/tree';
 import { BlockList } from '../Block';
 import {
   createRenderCtx,
@@ -16,24 +12,19 @@ import { defaultComponents } from '../defaults';
 import { cachedImageSize, loadImageSize } from '../imageSize';
 import { tableFor } from './helpers';
 
-function mount(source: string, handlers: RenderHandlers = {}) {
+async function mount(source: string, handlers: RenderHandlers = {}) {
   const ctx: RenderCtx = createRenderCtx({
     components: defaultComponents,
     handlers,
   });
-  let root!: ReactTestRenderer;
-  act(() => {
-    root = create(<BlockList table={tableFor(source)} ctx={ctx} />);
-  });
-  return root;
+  return render(<BlockList table={tableFor(source)} ctx={ctx} />);
 }
 
-const links = (root: ReactTestRenderer) =>
-  root.root.findAll(
-    (n) => n.type === Text && n.props.accessibilityRole === 'link'
-  );
+const links = () => screen.queryAllByRole('link');
 
-const press = (node: ReactTestInstance) => act(() => node.props.onPress());
+type Node = ReturnType<typeof links>[number];
+
+const press = (node: Node) => fireEvent.press(node);
 
 describe('onLinkPress', () => {
   let openURL: jest.SpyInstance;
@@ -42,13 +33,13 @@ describe('onLinkPress', () => {
   });
   afterEach(() => openURL.mockRestore());
 
-  it('is called for every link, including ones the default refuses', () => {
+  it('is called for every link, including ones the default refuses', async () => {
     const onLinkPress = jest.fn();
-    const root = mount(
+    await mount(
       '[a](https://x.dev) [b](myapp://open) [c](/docs/page) [d](#top)',
       { onLinkPress }
     );
-    for (const link of links(root)) press(link);
+    for (const link of links()) await press(link);
     expect(onLinkPress.mock.calls.map((c) => c[0])).toEqual([
       'https://x.dev',
       'myapp://open',
@@ -57,11 +48,11 @@ describe('onLinkPress', () => {
     ]);
   });
 
-  it('opens http, https, mailto and tel only; never custom schemes or relative URLs', () => {
-    const root = mount(
+  it('opens http, https, mailto and tel only; never custom schemes or relative URLs', async () => {
+    await mount(
       '[a](https://x.dev) [b](http://x.dev) [c](mailto:a@b.dev) [d](tel:+123) [e](myapp://open) [f](/rel) [g](#frag)'
     );
-    for (const link of links(root)) press(link);
+    for (const link of links()) await press(link);
     expect(openURL.mock.calls.map((c) => c[0])).toEqual([
       'https://x.dev',
       'http://x.dev',
@@ -70,32 +61,32 @@ describe('onLinkPress', () => {
     ]);
   });
 
-  it('cancels the default when the handler returns false', () => {
-    const root = mount('[a](https://x.dev)', { onLinkPress: () => false });
-    press(links(root)[0]!);
+  it('cancels the default when the handler returns false', async () => {
+    await mount('[a](https://x.dev)', { onLinkPress: () => false });
+    await press(links()[0]!);
     expect(openURL).not.toHaveBeenCalled();
   });
 
-  it('keeps the default for undefined, true and other returns', () => {
-    const root = mount('[a](https://x.dev)', { onLinkPress: () => undefined });
-    press(links(root)[0]!);
+  it('keeps the default for undefined, true and other returns', async () => {
+    await mount('[a](https://x.dev)', { onLinkPress: () => undefined });
+    await press(links()[0]!);
     expect(openURL).toHaveBeenCalledTimes(1);
   });
 
   it('catches a rejected openURL', async () => {
     openURL.mockRejectedValue(new Error('no handler'));
-    const root = mount('[a](https://x.dev)');
-    press(links(root)[0]!);
+    await mount('[a](https://x.dev)');
+    await press(links()[0]!);
     await act(async () => {});
     expect(openURL).toHaveBeenCalledTimes(1);
   });
 
-  it('catches a synchronous throw from openURL', () => {
+  it('catches a synchronous throw from openURL', async () => {
     openURL.mockImplementation(() => {
       throw new Error('sync');
     });
-    const root = mount('[a](https://x.dev)');
-    expect(() => press(links(root)[0]!)).not.toThrow();
+    await mount('[a](https://x.dev)');
+    await expect(press(links()[0]!)).resolves.not.toThrow();
   });
 });
 
@@ -106,13 +97,13 @@ describe('onImagePress', () => {
     await loadImageSize('icon.png');
     expect(cachedImageSize('icon.png')).not.toBeNull();
 
-    expect(
-      mount('a ![i](icon.png) b').root.findAllByType(Pressable)
-    ).toHaveLength(0);
+    await mount('a ![i](icon.png) b');
+    expect(screen.queryAllByRole('imagebutton')).toHaveLength(0);
+    await screen.unmount();
 
     const onImagePress = jest.fn();
-    const root = mount('a ![i](icon.png "T") b', { onImagePress });
-    press(root.root.findByType(Pressable));
+    await mount('a ![i](icon.png "T") b', { onImagePress });
+    await press(screen.getByRole('imagebutton'));
     expect(onImagePress).toHaveBeenCalledWith('icon.png', {
       alt: 'i',
       title: 'T',
@@ -121,14 +112,12 @@ describe('onImagePress', () => {
 });
 
 describe('onTaskToggle', () => {
-  it('reports the new state of a pressed checkbox', () => {
+  it('reports the new state of a pressed checkbox', async () => {
     const onTaskToggle = jest.fn();
-    const root = mount('- [ ] a\n- [x] b\n', { onTaskToggle });
-    const boxes = root.root.findAll(
-      (n) => n.type === Text && n.props.accessibilityRole === 'checkbox'
-    );
-    press(boxes[0]!);
-    press(boxes[1]!);
+    await mount('- [ ] a\n- [x] b\n', { onTaskToggle });
+    const boxes = screen.getAllByRole('checkbox');
+    await press(boxes[0]!);
+    await press(boxes[1]!);
     expect(onTaskToggle.mock.calls).toEqual([
       [true, { index: 0 }],
       [false, { index: 1 }],
@@ -139,17 +128,17 @@ describe('onTaskToggle', () => {
 describe('onFootnotePress', () => {
   const DOC = 'a[^1] b[^n] c[^1]\n\n[^1]: First.\n[^n]: Named.\n';
 
-  it('leaves references and back-links as plain text without the handler', () => {
-    const root = mount(DOC);
-    expect(links(root)).toHaveLength(0);
+  it('leaves references and back-links as plain text without the handler', async () => {
+    await mount(DOC);
+    expect(links()).toHaveLength(0);
   });
 
-  it('sends references to their definition, with the 1-based reference', () => {
+  it('sends references to their definition, with the 1-based reference', async () => {
     const onFootnotePress = jest.fn();
-    const root = mount(DOC, { onFootnotePress });
-    const refs = links(root).filter((n) => /^\[\d\]$/.test(text(n)));
+    await mount(DOC, { onFootnotePress });
+    const refs = links().filter((n) => /^\[\d\]$/.test(textOf(n)));
     expect(refs).toHaveLength(3);
-    refs.forEach((r) => press(r));
+    for (const r of refs) await press(r);
     expect(onFootnotePress.mock.calls).toEqual([
       ['1', { index: 1, direction: 'definition', reference: 1 }],
       ['n', { index: 2, direction: 'definition', reference: 1 }],
@@ -157,13 +146,13 @@ describe('onFootnotePress', () => {
     ]);
   });
 
-  it('sends each back-link to its reference', () => {
+  it('sends each back-link to its reference', async () => {
     const onFootnotePress = jest.fn();
-    const root = mount(DOC, { onFootnotePress });
-    const back = links(root).filter((n) => text(n).trim().startsWith('↩'));
+    await mount(DOC, { onFootnotePress });
+    const back = links().filter((n) => textOf(n).trim().startsWith('↩'));
     // Footnote 1 has two references, footnote n has one.
     expect(back).toHaveLength(3);
-    back.forEach((b) => press(b));
+    for (const b of back) await press(b);
     expect(onFootnotePress.mock.calls).toEqual([
       ['1', { index: 1, direction: 'reference', reference: 1 }],
       ['1', { index: 1, direction: 'reference', reference: 2 }],
@@ -172,14 +161,8 @@ describe('onFootnotePress', () => {
   });
 });
 
-function text(node: ReactTestInstance): string {
-  return node.children
-    .map((c) => (typeof c === 'string' ? c : text(c)))
-    .join('');
-}
-
 describe('handlers stay behind the ref', () => {
-  it('a new inline handler neither re-renders blocks nor changes ctx', () => {
+  it('a new inline handler neither re-renders blocks nor changes ctx', async () => {
     let renders = 0;
     const Counting = ({ children }: { children?: React.ReactNode }) => {
       renders++;
@@ -187,7 +170,6 @@ describe('handlers stay behind the ref', () => {
     };
     const first = jest.fn();
     const second = jest.fn();
-    let root!: ReactTestRenderer;
     const element = (cb: () => void) => (
       <Markdown
         source={'one\n\n[^1]\n\n[^1]: n'}
@@ -198,28 +180,23 @@ describe('handlers stay behind the ref', () => {
         onImagePress={cb}
       />
     );
-    act(() => {
-      root = create(element(first));
-    });
+    const view = await render(element(first));
     const before = renders;
-    act(() => root.update(element(second)));
-    act(() => root.update(element(() => {})));
+    await view.rerender(element(second));
+    await view.rerender(element(() => {}));
     expect(renders).toBe(before);
   });
 
-  it('calls the latest handler', () => {
+  it('calls the latest handler', async () => {
     const first = jest.fn();
     const second = jest.fn();
-    let root!: ReactTestRenderer;
     const element = (cb: () => void) => (
       <Markdown source="[a](https://x.dev)" onLinkPress={cb} />
     );
-    act(() => {
-      root = create(element(first));
-    });
-    act(() => root.update(element(second)));
+    const view = await render(element(first));
+    await view.rerender(element(second));
     jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
-    press(links(root)[0]!);
+    await press(links()[0]!);
     expect(first).not.toHaveBeenCalled();
     expect(second).toHaveBeenCalledTimes(1);
   });
