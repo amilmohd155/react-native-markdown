@@ -101,8 +101,61 @@ What this shows:
   - **v1's render dominates.** On F3, `firstRender` (254 ms) is more than its parse (195 ms). The M1 estimate of 12.6× (parse only, against a GFM-capable parse) doesn't carry over to parse + render.
 - **The exit criterion needs a fair baseline before M7.** Options: compare on CommonMark-only content (where v0 does the same work), and/or measure v1's render cost against element count, and profile it (tables, the per-code-block `ScrollView`, prop and element creation). To decide in M7 planning; recorded as an open item, not a decision.
 
-## Not measured yet
+## Device results (M7)
 
-- `retainedHeap` and `droppedFrames` (F5), and images in the fixtures (M7).
-- A low-end Android (Snapdragon 6xx class) and a recent iPhone (M7).
-- Memory: AST size per KB of input, on device (M7).
+The [benchmark protocol](./phase-1/benchmark-protocol.md) run on the hardware available. The pass/fail device (a low-end Android) and an iPhone were **not** available, so the Phase 1 exit criterion was not measured as specified; see [P1-25](./phase-1/decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1).
+
+- **Android:** Samsung Galaxy S25 FE (SM-S731B), Android 37, release build (Hermes, bytecode, `__DEV__ = false`, New Architecture). Not the pass/fail device. Raw data: [`bench/results/sm-s731b-2026-11-05.json`](../../bench/results/sm-s731b-2026-11-05.json).
+- **Web:** Chrome 156 headless on a Mac, 4× CPU throttle (CDP), production export of the example. A sanity check, not pass/fail. Raw data: [`bench/results/web-chrome156-4x-2026-11-05.json`](../../bench/results/web-chrome156-4x-2026-11-05.json).
+- **Method:** bench tab, "full" mode (5 warm-up + 20 measured, v0 and v1 alternating), fresh launch and 10 s idle. Heap runs: one library per app launch, `gc()` forced. Date: 2026-11-05.
+- **Conditions (S25 FE):** battery 100%, charging over USB (needed for adb), 35.0 °C, no call. Airplane mode was **off** (the protocol asks for on).
+
+### `parse+firstRender` and re-render (medians, ms)
+
+| Metric | F1 v1 / v0 | F2 v1 / v0 | F3 v1 / v0 |
+|---|---|---|---|
+| S25 FE `parse` (v1) | 3.7 | 19.6 | 215.8 |
+| S25 FE `firstRender` (v1) | 21.4 | 87.4 | 242.7 |
+| S25 FE `parse+firstRender` | 25.2 / 24.6 (**1.0×**) | 107.3 / 75.1 (**0.7×**) | 458.6 / 447.5 (**1.0×**) |
+| S25 FE `reRenderOneBlock` | 6.0 / 12.8 (**2.1×**) | 4.0 / 33.7 (**8.5×**) | 15.9 / 437.5 (**27.5×**) |
+| Web 4× `parse+firstRender` | 19.5 / 19.5 (**1.0×**) | 39.4 / 41.7 (**1.06×**) | 384.2 / 416.6 (**1.08×**) |
+| Web 4× `reRenderOneBlock` | 2.4 / 5.1 (**2.1×**) | 2.4 / 22.0 (**9.2×**) | 4.1 / 221 (**54×**) |
+
+- **Exit criterion (≥ 5× on `parse+firstRender`, F3): not met.** 1.0× on the S25 FE and 1.08× on web. The M3 explanation holds: v0.8.5 has no GFM (so v1 does more work on F2/F3), and v1's render dominates its total (243 ms against 216 ms of parse on device; about 90% on web). Parse on Hermes is about 2.8× the Node `--jitless` figure above (216 against 78 ms on F3). Waived for Phase 1, carried into Phase 2: [P1-25](./phase-1/decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1).
+- **Memoization bar (`reRenderOneBlock` ≤ 1/10 of v1's `firstRender`, F3): met.** 15.9 ms against 242.7 ms is 6.6% on device (M3: 13%) and 1.2% on web.
+
+### F5: chat list, 200 messages (S25 FE)
+
+160 KB of F1-style messages in a `FlatList`. `retainedHeap` is the growth of Hermes `js_allocatedBytes` after a forced GC, from an empty list to the rendered one. v1 and the tree keep **all 200** parsed documents (parsed ahead, as a chat app would); v0 keeps only the mounted window, since it parses in render. Dropped frames: JS-side count while scrolling 5 s at 1500 px/s (a proxy), and `dumpsys gfxinfo` for v0 and v1.
+
+| | v0.8.5 | v1 (table) | v1 (object tree) |
+|---|---|---|---|
+| `retainedHeap` | 0.57 MB | 1.87 MB | 2.16 MB |
+| Dropped frames (JS-side) | 77 / 522 | 47 / 551 | 44 / 560 |
+| gfxinfo janky frames | 25 / 548 (4.6%) | 21 / 577 (3.6%) | not taken |
+| gfxinfo p99 frame time | 15 ms | 10 ms | not taken |
+
+- **`retainedHeap` bar (v1 ≤ v0 / 3): not met with this method.** The two sides don't hold the same things (all parsed documents against the mounted window), so the number isn't an apples-to-apples memory comparison. The method stays as it is for now; the bar carries into Phase 2 with the other open items. `droppedFrames` is reported only, and v1 is not worse than v0.
+
+### Table vs. object tree (S25 FE, 5 + 20, medians)
+
+| | Table | Object tree |
+|---|---|---|
+| F2 `firstRender` | 74.2 ms | 77.8 ms (+5%) |
+| F3 `firstRender` | 260.5 ms | 263.0 ms (+1%) |
+| F3 `reRenderOneBlock` | 17.6 ms | 17.9 ms |
+| F3 `retainedHeap` | 11.64 MB | 12.14 MB (+4%) |
+| F5 `retainedHeap` | 1.87 MB | 2.16 MB (+16%) |
+
+Web (4× throttle): F3 `firstRender` 262.2 ms (table) against 255.3 ms (tree), a tie within the p90 spread. The table is not slower and uses less memory, so the flat table stays: [P1-24](./phase-1/decisions.md#p1-24-keep-the-flat-table-render-ab-against-an-object-tree).
+
+### Not re-measured in M7
+
+- `isSameBlock` against hashing every block ([P1-9](./phase-1/decisions.md)) and the node builder's share of parse time ([02 · Device results](#device-results-preliminary-m1)), on a low-end device: there is no such device, and the S25 FE results above are the M1 ones.
+
+## Not measured
+
+- A low-end Android (Snapdragon 6xx class) and a recent iPhone (not available for M7; see [P1-25](./phase-1/decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1)).
+- Images in the fixtures (no asset resolver in the example, and remote images would add network time).
+- Memory: AST size per KB of input, on device.
+- `retainedHeap` and `droppedFrames` on web (no Hermes), and iOS Animation Hitches.
