@@ -1,5 +1,5 @@
 import { Image } from 'react-native';
-import { act, create } from 'react-test-renderer';
+import { renderTree } from '../../__tests__/tree';
 import { GFM_PLUGINS, type GfmPluginName } from '../../plugins/gfm';
 import {
   darkTheme,
@@ -63,16 +63,15 @@ const PLUGINS: Record<GfmPluginName, string> = {
   tagfilter: '<title>no</title>\n\na <script>x</script> b',
 };
 
-function render(source: string, theme: keyof typeof THEMES) {
+async function render(source: string, theme: keyof typeof THEMES) {
   const ctx = createRenderCtx({
     components: defaultComponents,
     theme: THEMES[theme],
   });
-  let root!: ReturnType<typeof create>;
-  act(() => {
-    root = create(<BlockList table={tableFor(source)} ctx={ctx} />);
-  });
-  return root.toJSON();
+  const tree = await renderTree(
+    <BlockList table={tableFor(source)} ctx={ctx} />
+  );
+  return tree.toJSON();
 }
 
 // Image sizes stay unknown: snapshots don't depend on network timing.
@@ -92,18 +91,21 @@ describe('theme snapshots', () => {
   });
 
   describe.each(['light', 'dark'] as const)('%s', (theme) => {
-    it.each(ELEMENT_NAMES)('element %s', (name) => {
-      expect(render(ELEMENTS[name], theme)).toMatchSnapshot();
+    it.each(ELEMENT_NAMES)('element %s', async (name) => {
+      expect(await render(ELEMENTS[name], theme)).toMatchSnapshot();
     });
 
-    it.each(Object.keys(PLUGINS) as GfmPluginName[])('plugin %s', (name) => {
-      expect(render(PLUGINS[name], theme)).toMatchSnapshot();
-    });
+    it.each(Object.keys(PLUGINS) as GfmPluginName[])(
+      'plugin %s',
+      async (name) => {
+        expect(await render(PLUGINS[name], theme)).toMatchSnapshot();
+      }
+    );
   });
 
-  it('the dark theme changes the output', () => {
-    expect(render(ELEMENTS.Link, 'dark')).not.toEqual(
-      render(ELEMENTS.Link, 'light')
+  it('the dark theme changes the output', async () => {
+    expect(await render(ELEMENTS.Link, 'dark')).not.toEqual(
+      await render(ELEMENTS.Link, 'light')
     );
   });
 });

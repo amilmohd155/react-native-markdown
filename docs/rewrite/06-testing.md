@@ -21,7 +21,7 @@ Every backend (markdown-it, native) runs the same suite. A documented, per-backe
 
 ## Renderer tests
 
-- **Snapshot tests** of the React element tree, with `react-test-renderer` or `@testing-library/react-native`, for every element in light and dark themes, plus each built-in plugin.
+- **Snapshot tests** of the React element tree, rendered with `@testing-library/react-native` v14 (its `test-renderer`), for every element in light and dark themes, plus each built-in plugin.
 - **Behaviour tests:**
   - `onLinkPress` returning `false` cancels the default.
   - Task toggle.

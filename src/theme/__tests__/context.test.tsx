@@ -1,6 +1,6 @@
 import { createElement, useEffect, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
-import { act, create } from 'react-test-renderer';
+import { renderTree } from '../../__tests__/tree';
 import { BlockList } from '../../render/Block';
 import { createRenderCtx, useRenderCtx } from '../../render/context';
 import type { Components } from '../../render/elements';
@@ -50,60 +50,59 @@ function Probe({
 }
 
 /** Mounts a `Probe`; `setScheme` flips the device scheme and re-renders. */
-function mountProbe(theme?: ThemeProp, components = hostComponents()) {
+async function mountProbe(theme?: ThemeProp, components = hostComponents()) {
   const seen: ResolvedTheme[] = [];
   const element = (t = theme) => (
     <Probe theme={t} components={components} onTheme={(r) => seen.push(r)} />
   );
-  let root!: ReturnType<typeof create>;
-  act(() => {
-    root = create(element());
-  });
+  const root = await renderTree(element());
   return {
     seen,
     root,
-    rerender: (t?: ThemeProp) => act(() => root.update(element(t ?? theme))),
-    setScheme(scheme: 'light' | 'dark') {
+    rerender: (t?: ThemeProp) => root.rerender(element(t ?? theme)),
+    async setScheme(scheme: 'light' | 'dark') {
       schemeMock.mockReturnValue(scheme);
-      act(() => root.update(element()));
+      await root.rerender(element());
     },
   };
 }
 
 describe('useResolvedTheme', () => {
-  it("defaults to 'auto' and follows the color scheme", () => {
-    const { seen, setScheme } = mountProbe();
+  it("defaults to 'auto' and follows the color scheme", async () => {
+    const { seen, setScheme } = await mountProbe();
     expect(seen.at(-1)).toBe(resolveThemeProp('light', 'light'));
     expect(seen.at(-1)!.tokens.colors).toEqual(lightTheme.colors);
 
-    setScheme('dark');
+    await setScheme('dark');
     expect(seen.at(-1)).toBe(resolveThemeProp('dark', 'light'));
     expect(seen.at(-1)!.tokens.colors).toEqual(darkTheme.colors);
 
-    setScheme('light');
+    await setScheme('light');
     expect(seen.at(-1)).toBe(resolveThemeProp('light', 'dark'));
   });
 
-  it("'light' and 'dark' ignore the color scheme", () => {
+  it("'light' and 'dark' ignore the color scheme", async () => {
     schemeMock.mockReturnValue('dark');
-    expect(mountProbe('light').seen.at(-1)!.tokens.colors).toEqual(
+    expect((await mountProbe('light')).seen.at(-1)!.tokens.colors).toEqual(
       lightTheme.colors
     );
     schemeMock.mockReturnValue('light');
-    expect(mountProbe('dark').seen.at(-1)!.tokens.colors).toEqual(
+    expect((await mountProbe('dark')).seen.at(-1)!.tokens.colors).toEqual(
       darkTheme.colors
     );
   });
 
-  it('treats an unknown scheme (null) as light', () => {
+  it('treats an unknown scheme (null) as light', async () => {
     schemeMock.mockReturnValue(null);
-    expect(mountProbe().seen.at(-1)).toBe(resolveThemeProp('light', 'light'));
+    expect((await mountProbe()).seen.at(-1)).toBe(
+      resolveThemeProp('light', 'light')
+    );
   });
 
-  it('merges a theme input onto the base of the current scheme', () => {
-    const { seen, setScheme } = mountProbe({ colors: { link: 'red' } });
+  it('merges a theme input onto the base of the current scheme', async () => {
+    const { seen, setScheme } = await mountProbe({ colors: { link: 'red' } });
     expect(seen.at(-1)!.tokens.colors.text).toBe(lightTheme.colors.text);
-    setScheme('dark');
+    await setScheme('dark');
     const dark = seen.at(-1)!;
     expect(dark.tokens.colors.text).toBe(darkTheme.colors.text);
     expect(dark.tokens.colors.link).toBe('red');
@@ -130,34 +129,37 @@ describe('dark mode re-renders', () => {
     };
   }
 
-  it('re-renders every block once when the scheme changes', () => {
+  it('re-renders every block once when the scheme changes', async () => {
     const { renders, components } = counted();
-    const { setScheme } = mountProbe(undefined, components);
+    const { setScheme } = await mountProbe(undefined, components);
     expect(renders).toEqual({ Paragraph: 1, Heading: 1 });
-    setScheme('dark');
+    await setScheme('dark');
     expect(renders).toEqual({ Paragraph: 2, Heading: 2 });
-    setScheme('light');
+    await setScheme('light');
     expect(renders).toEqual({ Paragraph: 3, Heading: 3 });
   });
 
-  it('does not re-render blocks for an equal inline theme object', () => {
+  it('does not re-render blocks for an equal inline theme object', async () => {
     const { renders, components } = counted();
-    const { rerender } = mountProbe({ colors: { link: 'red' } }, components);
+    const { rerender } = await mountProbe(
+      { colors: { link: 'red' } },
+      components
+    );
     expect(renders).toEqual({ Paragraph: 1, Heading: 1 });
 
     // A new object literal with equal values: cache hit, same ctx, no work.
-    rerender({ colors: { link: 'red' } });
+    await rerender({ colors: { link: 'red' } });
     expect(renders).toEqual({ Paragraph: 1, Heading: 1 });
 
     // A real change re-renders.
-    rerender({ colors: { link: 'blue' } });
+    await rerender({ colors: { link: 'blue' } });
     expect(renders).toEqual({ Paragraph: 2, Heading: 2 });
   });
 
-  it('does not re-render blocks when a fixed theme sees the scheme change', () => {
+  it('does not re-render blocks when a fixed theme sees the scheme change', async () => {
     const { renders, components } = counted();
-    const { setScheme } = mountProbe('light', components);
-    setScheme('dark');
+    const { setScheme } = await mountProbe('light', components);
+    await setScheme('dark');
     expect(renders).toEqual({ Paragraph: 1, Heading: 1 });
   });
 });
@@ -175,13 +177,11 @@ describe('useMarkdownTheme', () => {
     };
   }
 
-  it('gives custom components the tokens and resolved styles', () => {
+  it('gives custom components the tokens and resolved styles', async () => {
     const { seen, components } = capture();
     const theme = resolveThemeProp('light', 'light');
     const ctx = createRenderCtx({ components, theme });
-    act(() => {
-      create(<BlockList table={TABLE} ctx={ctx} />);
-    });
+    await renderTree(<BlockList table={TABLE} ctx={ctx} />);
     const got = seen.at(-1)!;
     expect(got.tokens).toBe(theme.tokens);
     expect(got.styles).toBe(theme.elements);
@@ -190,16 +190,13 @@ describe('useMarkdownTheme', () => {
     expect(got.headings[0]!.text.fontSize).toBe(40);
   });
 
-  it('keeps the same reference until the theme changes', () => {
+  it('keeps the same reference until the theme changes', async () => {
     const { seen, components } = capture();
     const light = createRenderCtx({
       components,
       theme: resolveThemeProp('light', 'light'),
     });
-    let root!: ReturnType<typeof create>;
-    act(() => {
-      root = create(<BlockList table={TABLE} ctx={light} />);
-    });
+    const root = await renderTree(<BlockList table={TABLE} ctx={light} />);
     const first = seen.at(-1)!;
 
     // New ctx, same theme (e.g. an option changed): same hook result.
@@ -208,29 +205,27 @@ describe('useMarkdownTheme', () => {
       theme: light.theme,
       softBreak: 'newline',
     });
-    act(() => root.update(<BlockList table={TABLE} ctx={sameTheme} />));
+    await root.rerender(<BlockList table={TABLE} ctx={sameTheme} />);
     expect(seen.at(-1)).toBe(first);
 
     const dark = createRenderCtx({
       components,
       theme: resolveThemeProp('dark', 'light'),
     });
-    act(() => root.update(<BlockList table={TABLE} ctx={dark} />));
+    await root.rerender(<BlockList table={TABLE} ctx={dark} />);
     expect(seen.at(-1)).not.toBe(first);
     expect(seen.at(-1)!.tokens.colors).toEqual(darkTheme.colors);
   });
 
-  it('throws outside <Markdown>', () => {
+  it('throws outside <Markdown>', async () => {
     function Bare() {
       useMarkdownTheme();
       return null;
     }
     const error = jest.spyOn(console, 'error').mockImplementation(() => {});
-    expect(() =>
-      act(() => {
-        create(<Bare />);
-      })
-    ).toThrow(/useMarkdownTheme\(\) must be called/);
+    await expect(renderTree(<Bare />)).rejects.toThrow(
+      /useMarkdownTheme\(\) must be called/
+    );
     error.mockRestore();
   });
 });

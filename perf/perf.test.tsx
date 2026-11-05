@@ -1,7 +1,8 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import MarkdownIt from 'markdown-it';
-import { act, create } from 'react-test-renderer';
+import { act } from 'react';
+import { createRoot } from 'test-renderer';
 import { editLastParagraph, F1, F2, F3 } from '../bench/fixtures';
 import type { MarkdownDocument } from '../src/api/document';
 import { Markdown } from '../src/api/Markdown';
@@ -37,6 +38,11 @@ const TOLERANCE = 1.2;
 const UPDATE = process.env.PERF_UPDATE === '1';
 const WARM = process.env.PERF_WARM === '1';
 
+// React's `act` needs this flag; the renderer is `test-renderer`, as under RNTL.
+(
+  globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true;
+
 /**
  * Milliseconds, with sub-millisecond resolution. Not `performance.now()`:
  * React Native's Jest setup replaces it with `Date.now`.
@@ -44,7 +50,7 @@ const WARM = process.env.PERF_WARM === '1';
 const now = () => Number(process.hrtime.bigint()) / 1e6;
 
 /** One timed run: does its own setup and cleanup outside the timing. */
-type Sample = () => number;
+type Sample = () => number | Promise<number>;
 
 const timed =
   (fn: () => void): Sample =>
@@ -59,18 +65,16 @@ function mounted(
   document: MarkdownDocument,
   edited?: MarkdownDocument
 ): Sample {
-  return () => {
-    let root!: ReturnType<typeof create>;
+  return async () => {
+    const root = createRoot();
     let start = now();
-    act(() => {
-      root = create(<Markdown document={document} />);
-    });
+    await act(async () => root.render(<Markdown document={document} />));
     if (edited) {
       start = now();
-      act(() => root.update(<Markdown document={edited} />));
+      await act(async () => root.render(<Markdown document={edited} />));
     }
     const elapsed = now() - start;
-    act(() => root.unmount());
+    await act(async () => root.unmount());
     return elapsed;
   };
 }
@@ -96,21 +100,21 @@ const measured: Record<string, number> = {};
 const lines: string[] = [];
 
 /** Best metric time over best markdown-it time, sampled alternately. */
-function ratioOf(
+async function ratioOf(
   key: string,
   metric: Sample,
   reference: Sample,
   { warmup, runs }: Size
 ) {
   for (let i = 0; i < warmup; i++) {
-    metric();
-    reference();
+    await metric();
+    await reference();
   }
   let bestMetric = Infinity;
   let bestReference = Infinity;
   for (let i = 0; i < runs; i++) {
-    bestReference = Math.min(bestReference, reference());
-    bestMetric = Math.min(bestMetric, metric());
+    bestReference = Math.min(bestReference, await reference());
+    bestMetric = Math.min(bestMetric, await metric());
   }
   const ratio = bestMetric / bestReference;
   measured[key] = ratio;
@@ -134,12 +138,15 @@ jest.setTimeout(10 * 60 * 1000);
 // repeats, a noisy neighbour on a shared runner doesn't.
 jest.retryTimes(2);
 
-(WARM ? it : it.skip)('warms the transform cache (no measurements)', () => {
-  // One of each thing the measured run does, so every module it needs is
-  // compiled: parse, mount, update, unmount.
-  mounted(parse(F1), parse(editLastParagraph(F1)))();
-  md.parse(F1, {});
-});
+(WARM ? it : it.skip)(
+  'warms the transform cache (no measurements)',
+  async () => {
+    // One of each thing the measured run does, so every module it needs is
+    // compiled: parse, mount, update, unmount.
+    await mounted(parse(F1), parse(editLastParagraph(F1)))();
+    md.parse(F1, {});
+  }
+);
 
 (WARM ? describe.skip : describe)(
   'perf (ratio to markdown-it, node --jitless)',
@@ -162,8 +169,8 @@ jest.retryTimes(2);
     });
 
     describe.each(SIZES)('$name', (size) => {
-      it('parse', () => {
-        ratioOf(
+      it('parse', async () => {
+        await ratioOf(
           `parse:${size.name}`,
           timed(() => parse(size.source)),
           yardstick(size.source),
@@ -171,8 +178,8 @@ jest.retryTimes(2);
         );
       });
 
-      it('render', () => {
-        ratioOf(
+      it('render', async () => {
+        await ratioOf(
           `render:${size.name}`,
           mounted(parse(size.source)),
           yardstick(size.source),
@@ -181,9 +188,9 @@ jest.retryTimes(2);
       });
     });
 
-    it('re-renders one edited block (100KB)', () => {
+    it('re-renders one edited block (100KB)', async () => {
       const size = SIZES[2]!;
-      ratioOf(
+      await ratioOf(
         'rerender-one-block:100KB',
         mounted(parse(size.source), parse(editLastParagraph(size.source))),
         yardstick(size.source),

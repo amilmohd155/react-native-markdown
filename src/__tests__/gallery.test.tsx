@@ -1,6 +1,6 @@
 import { createElement, type ComponentType } from 'react';
 import { Image } from 'react-native';
-import { act, create } from 'react-test-renderer';
+import { render } from '@testing-library/react-native';
 import { gallery } from '../../example/src/gallery';
 import { Markdown } from '../api/Markdown';
 import { defaultComponents } from '../render/defaults';
@@ -22,7 +22,7 @@ describe('example gallery', () => {
   });
   afterEach(() => getSize.mockRestore());
 
-  it('renders every element', () => {
+  it('renders every element', async () => {
     const seen = new Set<ElementName>();
     const spies: Record<string, unknown> = {};
     for (const name of ELEMENT_NAMES) {
@@ -33,16 +33,14 @@ describe('example gallery', () => {
       };
       spies[name] = isInlineView(Default) ? markInlineView(Spy) : Spy;
     }
-    act(() => {
-      create(
-        <Markdown
-          source={gallery}
-          components={spies as Partial<Components>}
-          onTaskToggle={() => {}}
-          onFootnotePress={() => {}}
-        />
-      );
-    });
+    await render(
+      <Markdown
+        source={gallery}
+        components={spies as Partial<Components>}
+        onTaskToggle={() => {}}
+        onFootnotePress={() => {}}
+      />
+    );
     expect(ELEMENT_NAMES.filter((name) => !seen.has(name))).toEqual([]);
   });
 });

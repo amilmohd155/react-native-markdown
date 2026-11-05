@@ -80,9 +80,9 @@
     "@release-it/conventional-changelog": "^9.0.2",
     "@testing-library/dom": "^10",
     "@testing-library/react": "^16",
+    "@testing-library/react-native": "14.1.0",
     "@types/jest": "^29.5.14",
     "@types/react": "^19.0.12",
-    "@types/react-test-renderer": "^19.0.0",
     "commitlint": "^19.6.1",
     "del-cli": "^5.1.0",
     "eslint": "^9.22.0",
@@ -97,8 +97,8 @@
     "react-native": "0.79.4",
     "react-native-builder-bob": "^0.40.12",
     "react-native-web": "^0.21.4",
-    "react-test-renderer": "19.0.0",
     "release-it": "19.2.2",
+    "test-renderer": "1.0.0",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {

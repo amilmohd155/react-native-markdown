@@ -1,7 +1,7 @@
 import type { MarkdownIt } from 'markdown-it';
 import { createElement, type ReactNode } from 'react';
-import { act, create } from 'react-test-renderer';
 import { Markdown, type MarkdownProps } from '../../api/Markdown';
+import { renderTree } from '../../__tests__/tree';
 import { resetPluginWarnings } from '../../render/pluginNodes';
 import type { ElementStyle } from '../../theme';
 import { definePlugin, type MarkdownPlugin } from '../definePlugin';
@@ -189,7 +189,7 @@ it('keeps the plugin name as a literal type', () => {
 
 // ── Rendering ────────────────────────────────────────────────────────────
 
-function render(
+async function render(
   source: string,
   plugins: readonly MarkdownPlugin[] = [mentions, blocks],
   extra: {
@@ -197,55 +197,49 @@ function render(
     theme?: MarkdownProps['theme'];
   } = {}
 ) {
-  let root!: ReturnType<typeof create>;
-  act(() => {
-    root = create(<Markdown source={source} plugins={plugins} {...extra} />);
-  });
-  return root;
+  return renderTree(<Markdown source={source} plugins={plugins} {...extra} />);
 }
 
 describe('plugin nodes', () => {
   beforeEach(resetPluginWarnings);
 
-  it('renders a leaf inline node with its props', () => {
-    const root = render('hi @ada!');
-    const mention = root.root.findByType('Mention' as never);
+  it('renders a leaf inline node with its props', async () => {
+    const root = await render('hi @ada!');
+    const mention = root.find('Mention');
     expect(mention.props.id).toBe('ADA');
   });
 
-  it('gives declared inline views a baseline, and others none', () => {
-    const root = render('@ada and [[chip]]');
-    expect(root.root.findByType('Mention' as never).props.baseline).toEqual({
+  it('gives declared inline views a baseline, and others none', async () => {
+    const root = await render('@ada and [[chip]]');
+    expect(root.find('Mention').props.baseline).toEqual({
       fontSize: expect.any(Number),
       lineHeight: expect.any(Number),
     });
-    expect(root.root.findByType('Chip' as never).props).not.toHaveProperty(
-      'baseline'
-    );
+    expect(root.find('Chip').props).not.toHaveProperty('baseline');
   });
 
-  it('renders inline containers with children', () => {
-    const root = render('a [[**b**]] c');
-    const chip = root.root.findByType('Chip' as never);
+  it('renders inline containers with children', async () => {
+    const root = await render('a [[**b**]] c');
+    const chip = root.find('Chip');
     expect(chip.props.tone).toBe('info');
     expect(JSON.stringify(root.toJSON())).toContain('"b"');
   });
 
-  it('renders a leaf block node', () => {
-    const root = render('$$x^2$$');
-    const math = root.root.findByType('MathBlock' as never);
+  it('renders a leaf block node', async () => {
+    const root = await render('$$x^2$$');
+    const math = root.find('MathBlock');
     expect(math.props.tex).toBe('x^2');
     expect(math.props.children).toBeUndefined();
   });
 
-  it('renders block containers with their blocks as children', () => {
-    const root = render(':::tip\nhello\n:::');
-    const note = root.root.findByType('Note' as never);
+  it('renders block containers with their blocks as children', async () => {
+    const root = await render(':::tip\nhello\n:::');
+    const note = root.find('Note');
     expect(note.props.kind).toBe('tip');
     expect(JSON.stringify(root.toJSON())).toContain('hello');
   });
 
-  it('passes the plugin theme as style', () => {
+  it('passes the plugin theme as style', async () => {
     let style: unknown;
     const probe = definePlugin({
       name: 'probe',
@@ -265,11 +259,11 @@ describe('plugin nodes', () => {
       },
       theme: { Mention: { text: { color: '#112233' } } },
     });
-    render('@ada', [probe]);
+    await render('@ada', [probe]);
     expect(style).toEqual({ text: { color: '#112233' }, container: {} });
   });
 
-  it('lets the theme prop override the plugin theme', () => {
+  it('lets the theme prop override the plugin theme', async () => {
     let style: ElementStyle | undefined;
     const probe = definePlugin({
       name: 'probe',
@@ -289,21 +283,21 @@ describe('plugin nodes', () => {
       },
       theme: { Mention: { text: { color: '#112233' } } },
     });
-    render('@ada', [probe], {
+    await render('@ada', [probe], {
       theme: { elements: { Mention: { text: { color: '#ffffff' } } } },
     });
     expect(style?.text.color).toBe('#ffffff');
   });
 
-  it('lets the components prop override a plugin component', () => {
-    const root = render('@ada', [mentions], {
+  it('lets the components prop override a plugin component', async () => {
+    const root = await render('@ada', [mentions], {
       components: { Mention: host('Replaced') },
     });
-    expect(root.root.findAllByType('Replaced' as never)).toHaveLength(1);
-    expect(root.root.findAllByType('Mention' as never)).toHaveLength(0);
+    expect(root.findAll('Replaced')).toHaveLength(1);
+    expect(root.findAll('Mention')).toHaveLength(0);
   });
 
-  it('renders children and warns once when a component is missing', () => {
+  it('renders children and warns once when a component is missing', async () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const bare = definePlugin({
       name: 'bare',
@@ -312,7 +306,7 @@ describe('plugin nodes', () => {
         Chip: { kind: 'inline', token: 'chip', from: () => ({}) },
       },
     });
-    const root = render('[[a]] and [[b]]', [bare]);
+    const root = await render('[[a]] and [[b]]', [bare]);
     expect(JSON.stringify(root.toJSON())).toContain('a');
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0]![0]).toContain('"Chip"');

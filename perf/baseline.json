@@ -1,13 +1,13 @@
 {
   "note": "Ratios to markdown-it parsing the same text. Regenerate with `yarn perf:update`.",
   "node": "v24.22.1",
-  "parse:1KB": 1.57,
-  "render:1KB": 3.09,
+  "parse:1KB": 1.55,
+  "render:1KB": 3.72,
   "parse:10KB": 1.73,
-  "render:10KB": 3.68,
+  "render:10KB": 4.43,
   "parse:100KB": 1.71,
-  "render:100KB": 3.94,
-  "parse:1MB": 1.73,
-  "render:1MB": 4.08,
-  "rerender-one-block:100KB": 0.1
+  "render:100KB": 4.7,
+  "parse:1MB": 1.76,
+  "render:1MB": 4.83,
+  "rerender-one-block:100KB": 0.0968
 }

@@ -67,6 +67,7 @@ This tests **parser + conversion** (where compliance bugs come from) without inv
 The test list is in [06 · Renderer tests](../06-testing.md#renderer-tests). Harness specifics:
 
 - `@testing-library/react-native` for behaviour (press links, toggle tasks).
+- `react-test-renderer` is deprecated in React 19 ([react.dev](https://react.dev/warnings/react-test-renderer)), so tests use `@testing-library/react-native` v14, which runs on `test-renderer` (needs Node 22.13+; `.nvmrc` is 24). Everything is async (`await render`, `await rerender`, `await act`). It queries host elements only and throws on text outside `<Text>`, so tests that inspect the tree or use made-up host names (`hostComponents()`) use `renderTree` from `src/__tests__/tree.tsx`, a thin helper on `test-renderer`'s `createRoot` that has no text rule. `fireEvent` works only on trees rendered by RNTL's own `render`.
 - **Render counting:** wrap each default element in a spy component through `components` and count renders per block key. The memo test asserts the count after a one-block edit.
 - **Type tests:** `expect-type` files in `test/types/`, run by `tsc --noEmit`.
 - **Public `.d.ts` leak check:** after `bob build`, a script scans `lib/typescript/**/*.d.ts` for `NodeTable`, `TableBuilder` or `markdown-it`, and fails if any of them is reachable from the public entry points.
