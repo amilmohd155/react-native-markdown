@@ -16,7 +16,9 @@
     "convert": "node --import tsx convert.mjs",
     "convert:jitless": "node --jitless --import tsx convert.mjs",
     "stream": "node --import tsx stream.mjs",
-    "stream:jitless": "node --jitless --import tsx stream.mjs"
+    "stream:jitless": "node --jitless --import tsx stream.mjs",
+    "scheduler": "node --import tsx scheduler.mjs",
+    "scheduler:jitless": "node --jitless --import tsx scheduler.mjs"
   },
   "dependencies": {
     "commonmark": "0.31.2",

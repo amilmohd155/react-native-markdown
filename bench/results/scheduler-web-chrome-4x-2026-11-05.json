@@ -1,0 +1,880 @@
+{
+ "env": {
+  "browser": "headless Chromium (Playwright) 156.0.8078.4 for the 4x foreground runs; headed Chromium same version for background-tab runs",
+  "version": "156.0.8078.4",
+  "throttle": "CDP Emulation.setCPUThrottlingRate rate=4 (page under test only)",
+  "build": "export"
+ },
+ "note": "TEMP S2.9b stream bench, F4a preset, smoothing none, fence fast path on, minified expo export (web) served by scripts/serve-static.mjs. Macbook host. foreground runs: 3 each, interleaved (50,raf x3 then 16,33,100 x3). background runs: headed, a second tab brought to front 1.5 s after Run; headless Chromium never hides tabs (visibilityState stays visible) so those were run headed.",
+ "runs": [
+  {
+   "mode": "foreground",
+   "wallMs": 8080,
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7799.5,
+   "flushCount": 147,
+   "flushSpacingMs": {
+    "n": 146,
+    "p50": 51.20000001788139,
+    "p90": 58,
+    "max": 60
+   },
+   "flushCostMs": {
+    "n": 147,
+    "p50": 0.4000000059604645,
+    "p90": 1,
+    "max": 7.399999976158142
+   },
+   "flushSumMs": 80.30000001192093,
+   "frames": {
+    "n": 468,
+    "p50": 16.69999998807907,
+    "p90": 18.900000005960464,
+    "max": 25.599999994039536,
+    "dropped": 11
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 23,
+    "p90": 45.19999998807907,
+    "max": 53.30000001192093
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "foreground",
+   "wallMs": 7970,
+   "config": {
+    "scheduler": "raf",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7802.4000000059605,
+   "flushCount": 467,
+   "flushSpacingMs": {
+    "n": 466,
+    "p50": 16.69999998807907,
+    "p90": 17.799999982118607,
+    "max": 30.099999994039536
+   },
+   "flushCostMs": {
+    "n": 467,
+    "p50": 0.5,
+    "p90": 1,
+    "max": 6.5
+   },
+   "flushSumMs": 266.3000001311302,
+   "frames": {
+    "n": 467,
+    "p50": 16.600000023841858,
+    "p90": 17.799999982118607,
+    "max": 22.099999994039536,
+    "dropped": 2
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 12.599999994039536,
+    "p90": 17.400000005960464,
+    "max": 23
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "foreground",
+   "wallMs": 7966,
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7800.9000000059605,
+   "flushCount": 149,
+   "flushSpacingMs": {
+    "n": 148,
+    "p50": 50.70000001788139,
+    "p90": 57.900000005960464,
+    "max": 58.89999997615814
+   },
+   "flushCostMs": {
+    "n": 149,
+    "p50": 0.20000001788139343,
+    "p90": 0.6000000238418579,
+    "max": 6.199999988079071
+   },
+   "flushSumMs": 52.00000008940697,
+   "frames": {
+    "n": 467,
+    "p50": 16.69999998807907,
+    "p90": 18.5,
+    "max": 22.400000005960464,
+    "dropped": 4
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 22.19999998807907,
+    "p90": 41,
+    "max": 55.39999997615814
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "foreground",
+   "wallMs": 7970,
+   "config": {
+    "scheduler": "raf",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7805.5,
+   "flushCount": 463,
+   "flushSpacingMs": {
+    "n": 462,
+    "p50": 16.69999998807907,
+    "p90": 17.80000001192093,
+    "max": 31.599999994039536
+   },
+   "flushCostMs": {
+    "n": 463,
+    "p50": 0.5999999940395355,
+    "p90": 1,
+    "max": 6.0999999940395355
+   },
+   "flushSumMs": 268.4999998807907,
+   "frames": {
+    "n": 467,
+    "p50": 16.600000023841858,
+    "p90": 17.799999982118607,
+    "max": 19.80000001192093,
+    "dropped": 0
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 13,
+    "p90": 17.19999998807907,
+    "max": 20.69999998807907
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "foreground",
+   "wallMs": 8007,
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7799.9000000059605,
+   "flushCount": 147,
+   "flushSpacingMs": {
+    "n": 146,
+    "p50": 51.099999994039536,
+    "p90": 58.400000005960464,
+    "max": 59.400000005960464
+   },
+   "flushCostMs": {
+    "n": 147,
+    "p50": 0.4000000059604645,
+    "p90": 0.800000011920929,
+    "max": 6.200000017881393
+   },
+   "flushSumMs": 66.99999997019768,
+   "frames": {
+    "n": 468,
+    "p50": 16.69999998807907,
+    "p90": 19,
+    "max": 27.400000005960464,
+    "dropped": 12
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 23.099999994039536,
+    "p90": 42.400000005960464,
+    "max": 53.30000001192093
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "foreground",
+   "wallMs": 7972,
+   "config": {
+    "scheduler": "raf",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7798.800000011921,
+   "flushCount": 465,
+   "flushSpacingMs": {
+    "n": 464,
+    "p50": 16.69999998807907,
+    "p90": 17.5,
+    "max": 32.79999998211861
+   },
+   "flushCostMs": {
+    "n": 465,
+    "p50": 0.3999999761581421,
+    "p90": 0.800000011920929,
+    "max": 6.199999988079071
+   },
+   "flushSumMs": 203.200000166893,
+   "frames": {
+    "n": 467,
+    "p50": 16.69999998807907,
+    "p90": 17.5,
+    "max": 19.400000005960464,
+    "dropped": 0
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 11.900000005960464,
+    "p90": 17.099999994039536,
+    "max": 21.5
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "foreground",
+   "wallMs": 7972,
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 16,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7798,
+   "flushCount": 466,
+   "flushSpacingMs": {
+    "n": 465,
+    "p50": 16.599999994039536,
+    "p90": 17.299999982118607,
+    "max": 24.599999994039536
+   },
+   "flushCostMs": {
+    "n": 466,
+    "p50": 0.10000002384185791,
+    "p90": 0.5999999940395355,
+    "max": 5.5
+   },
+   "flushSumMs": 124.1999998986721,
+   "frames": {
+    "n": 467,
+    "p50": 16.69999998807907,
+    "p90": 17.69999998807907,
+    "max": 25,
+    "dropped": 3
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.099999994039536,
+    "p90": 16.19999998807907,
+    "max": 25.5
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "foreground",
+   "wallMs": 7973,
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 33,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7797.4000000059605,
+   "flushCount": 223,
+   "flushSpacingMs": {
+    "n": 222,
+    "p50": 33.69999998807907,
+    "p90": 40.599999994039536,
+    "max": 41.900000005960464
+   },
+   "flushCostMs": {
+    "n": 223,
+    "p50": 0.19999998807907104,
+    "p90": 0.5,
+    "max": 5.4000000059604645
+   },
+   "flushSumMs": 58.70000013709068,
+   "frames": {
+    "n": 467,
+    "p50": 16.5,
+    "p90": 18.700000017881393,
+    "max": 21,
+    "dropped": 10
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 17.19999998807907,
+    "p90": 25.900000005960464,
+    "max": 39.89999997615814
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "foreground",
+   "wallMs": 7970,
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 100,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7799.800000011921,
+   "flushCount": 75,
+   "flushSpacingMs": {
+    "n": 74,
+    "p50": 101.40000000596046,
+    "p90": 107.7999999821186,
+    "max": 108.5
+   },
+   "flushCostMs": {
+    "n": 75,
+    "p50": 0.30000001192092896,
+    "p90": 0.699999988079071,
+    "max": 0.8999999761581421
+   },
+   "flushSumMs": 25.699999898672104,
+   "frames": {
+    "n": 467,
+    "p50": 16.600000023841858,
+    "p90": 18.400000005960464,
+    "max": 28.69999998807907,
+    "dropped": 3
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 49.900000005960464,
+    "p90": 87.10000002384186,
+    "max": 100.19999998807907
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "foreground",
+   "wallMs": 7974,
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 16,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7796.5,
+   "flushCount": 468,
+   "flushSpacingMs": {
+    "n": 467,
+    "p50": 16.599999994039536,
+    "p90": 17.100000023841858,
+    "max": 22.19999998807907
+   },
+   "flushCostMs": {
+    "n": 468,
+    "p50": 0.09999999403953552,
+    "p90": 0.5,
+    "max": 5.199999988079071
+   },
+   "flushSumMs": 100.59999984502792,
+   "frames": {
+    "n": 467,
+    "p50": 16.69999998807907,
+    "p90": 17.599999994039536,
+    "max": 21.799999982118607,
+    "dropped": 1
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.400000005960464,
+    "p90": 16.19999998807907,
+    "max": 21.099999994039536
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "foreground",
+   "wallMs": 7971,
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 33,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7798,
+   "flushCount": 224,
+   "flushSpacingMs": {
+    "n": 223,
+    "p50": 33.60000002384186,
+    "p90": 40.20000001788139,
+    "max": 43.5
+   },
+   "flushCostMs": {
+    "n": 224,
+    "p50": 0.19999998807907104,
+    "p90": 0.5,
+    "max": 5.600000023841858
+   },
+   "flushSumMs": 54.69999998807907,
+   "frames": {
+    "n": 467,
+    "p50": 16.700000017881393,
+    "p90": 18.799999982118607,
+    "max": 20.799999982118607,
+    "dropped": 3
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 17.100000023841858,
+    "p90": 25.299999982118607,
+    "max": 39.10000002384186
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "foreground",
+   "wallMs": 7972,
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 100,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7804.9000000059605,
+   "flushCount": 75,
+   "flushSpacingMs": {
+    "n": 74,
+    "p50": 101.5,
+    "p90": 107.7999999821186,
+    "max": 108.69999998807907
+   },
+   "flushCostMs": {
+    "n": 75,
+    "p50": 0.30000001192092896,
+    "p90": 0.699999988079071,
+    "max": 1.699999988079071
+   },
+   "flushSumMs": 27.80000016093254,
+   "frames": {
+    "n": 467,
+    "p50": 16.600000023841858,
+    "p90": 18.5,
+    "max": 29.099999994039536,
+    "dropped": 5
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 50,
+    "p90": 87.2000000178814,
+    "max": 100.2999999821186
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "foreground",
+   "wallMs": 7976,
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 16,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7799.600000023842,
+   "flushCount": 468,
+   "flushSpacingMs": {
+    "n": 467,
+    "p50": 16.599999994039536,
+    "p90": 17.100000023841858,
+    "max": 22.599999994039536
+   },
+   "flushCostMs": {
+    "n": 468,
+    "p50": 0.10000002384185791,
+    "p90": 0.5999999940395355,
+    "max": 5.699999988079071
+   },
+   "flushSumMs": 117.10000005364418,
+   "frames": {
+    "n": 467,
+    "p50": 16.69999998807907,
+    "p90": 17.5,
+    "max": 22.5,
+    "dropped": 1
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.5,
+    "p90": 16.200000017881393,
+    "max": 21.700000017881393
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "foreground",
+   "wallMs": 7973,
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 33,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7799.200000017881,
+   "flushCount": 223,
+   "flushSpacingMs": {
+    "n": 222,
+    "p50": 33.69999998807907,
+    "p90": 41,
+    "max": 42.70000001788139
+   },
+   "flushCostMs": {
+    "n": 223,
+    "p50": 0.19999998807907104,
+    "p90": 0.5,
+    "max": 5.9000000059604645
+   },
+   "flushSumMs": 60.99999985098839,
+   "frames": {
+    "n": 467,
+    "p50": 16.69999998807907,
+    "p90": 18.900000005960464,
+    "max": 21.200000017881393,
+    "dropped": 3
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 17.19999998807907,
+    "p90": 25.19999998807907,
+    "max": 38.5
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "foreground",
+   "wallMs": 7976,
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 100,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7800.200000017881,
+   "flushCount": 75,
+   "flushSpacingMs": {
+    "n": 74,
+    "p50": 101.60000002384186,
+    "p90": 107.7999999821186,
+    "max": 108.5
+   },
+   "flushCostMs": {
+    "n": 75,
+    "p50": 0.4000000059604645,
+    "p90": 0.7000000178813934,
+    "max": 0.9000000059604645
+   },
+   "flushSumMs": 28.399999976158142,
+   "frames": {
+    "n": 468,
+    "p50": 16.600000023841858,
+    "p90": 18.69999998807907,
+    "max": 21.400000005960464,
+    "dropped": 1
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 49.900000005960464,
+    "p90": 86.69999998807907,
+    "max": 100.59999999403954
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "background-tab",
+   "wallMs": 27816,
+   "completedWhileBackground": true,
+   "config": {
+    "scheduler": "raf",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 27118.09999999404,
+   "flushCount": 354,
+   "flushSpacingMs": {
+    "n": 353,
+    "p50": 18.400000005960464,
+    "p90": 67,
+    "max": 6470.700000017881
+   },
+   "flushCostMs": {
+    "n": 354,
+    "p50": 0.5999999940395355,
+    "p90": 5.799999982118607,
+    "max": 883.4000000059605
+   },
+   "flushSumMs": 2914.099999934435,
+   "frames": {
+    "n": 384,
+    "p50": 18.100000023841858,
+    "p90": 78.69999998807907,
+    "max": 6466.699999988079,
+    "dropped": 145
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 18,
+    "p90": 54.69999998807907,
+    "max": 7649.699999988079
+   },
+   "finalEqual": true
+  },
+  {
+   "mode": "background-tab",
+   "wallMs": 8010,
+   "completedWhileBackground": true,
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "web",
+    "osVersion": "0.0.0",
+    "model": null,
+    "brand": null,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+    "hermes": false,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7818.299999982119,
+   "flushCount": 133,
+   "flushSpacingMs": {
+    "n": 132,
+    "p50": 57,
+    "p90": 65.19999998807907,
+    "max": 102.40000000596046
+   },
+   "flushCostMs": {
+    "n": 133,
+    "p50": 0.5,
+    "p90": 3,
+    "max": 12.199999988079071
+   },
+   "flushSumMs": 134.9999998509884,
+   "frames": {
+    "n": 433,
+    "p50": 16.799999982118607,
+    "p90": 28,
+    "max": 106,
+    "dropped": 112
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 26.400000005960464,
+    "p90": 53.20000001788139,
+    "max": 115.5
+   },
+   "finalEqual": true
+  }
+ ]
+}
