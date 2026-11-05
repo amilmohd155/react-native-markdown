@@ -3,15 +3,16 @@
   "platforms": {
     "darwin-arm64": {
       "node": "v24.22.1",
-      "parse:1KB": 1.55,
-      "render:1KB": 3.72,
+      "parse:1KB": 1.57,
+      "render:1KB": 3.68,
       "parse:10KB": 1.73,
-      "render:10KB": 4.43,
-      "parse:100KB": 1.71,
-      "render:100KB": 4.7,
-      "parse:1MB": 1.76,
-      "render:1MB": 4.83,
-      "rerender-one-block:100KB": 0.0968
+      "render:10KB": 4.69,
+      "parse:100KB": 1.75,
+      "render:100KB": 4.62,
+      "parse:1MB": 1.77,
+      "render:1MB": 4.65,
+      "rerender-one-block:100KB": 0.0962,
+      "stream:F4a": 19.1
     },
     "linux-x64": {
       "node": "v24.22.2",

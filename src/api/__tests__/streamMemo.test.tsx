@@ -184,6 +184,11 @@ describe.each(['timeout', 'raf'] as const)(
         await advance(100);
         expect({ step: n, ...renders }).toEqual({ step: n, ...step.expect });
       }
+      // The wrapper around the real `isSameBlock` is live (so the `it.failing`
+      // below fails for its documented reason, not because the spy is dead)
+      // and closed blocks were compared and found equal.
+      expect(mockCalls.length).toBeGreaterThan(0);
+      expect(mockCalls.some((c) => c.result)).toBe(true);
     });
 
     // KNOWN GAP (found in S2.5): the `isSameBlock` prefix fast path never fires

@@ -88,9 +88,8 @@ export function diffDocuments(
 // --- work counter ------------------------------------------------------
 
 /**
- * Whether the work-counter assertions run. Off until the real core (S1.5)
- * lands; turn on with `STREAM_WORK=1`. With the stub, every flush reports
- * `fullReparse: true`, which the non-strict check allows anyway.
+ * Whether the work-counter assertions run (`STREAM_WORK=1`). Off by default so
+ * the plain run stays fast; CI runs it explicitly (see ci.yml, `unit` job).
  */
 export const WORK_ASSERTIONS = process.env.STREAM_WORK === '1';
 /** Strict mode also rejects `fullReparse` outside done/reset/declared triggers. */
@@ -213,10 +212,9 @@ export function everyPosition(
 }
 
 /**
- * Splits at awkward points, as three-chunk splits around each point
- * (point-1, point, point+1 boundaries are covered by two chunkers each):
- * inside a surrogate pair, between `\r` and `\n`, and inside a fence marker
- * (a run of 3+ backticks or tildes at the start of a line).
+ * Two-chunk splits at awkward points: inside a surrogate pair, between `\r`
+ * and `\n`, and inside a fence marker (a run of 3+ backticks or tildes at the
+ * start of a line). One split per point.
  */
 export function awkwardSplits(
   source: string
@@ -239,11 +237,92 @@ export function awkwardSplits(
   }));
 }
 
+// --- path oracle -------------------------------------------------------
+
+/** True when `STREAM_NO_FENCE_FAST=1` turns the fast path off in the core. */
+export const FENCE_FAST_DISABLED = process.env.STREAM_NO_FENCE_FAST === '1';
+
+function hasCloser(text: string, char: string, length: number): boolean {
+  for (const line of text.split('\n')) {
+    const m = /^ {0,3}(`+|~+)[ \t]*$/.exec(line);
+    if (m && m[1]![0] === char && m[1]!.length >= length) return true;
+  }
+  return false;
+}
+
+/**
+ * Independent oracle for the open-fence fast path (does not share code with
+ * the core). True when `chunk`, appended to `prev`, MUST take the fast path:
+ * `prev` starts with a complete top-level fence opener at column 0, has no
+ * closing-fence candidate, and neither does the chunk (also a candidate
+ * spanning the old partial last line and the chunk); no `\r`/`\0`; the new
+ * last line is not whitespace-only. Flushes outside this set are unasserted
+ * (the core may still take the fast path there).
+ */
+export function mustTakeFastPath(prev: string, chunk: string): boolean {
+  if (/[\r\0]/.test(prev + chunk)) return false;
+  const m = /^(`{3,}|~{3,})/.exec(prev);
+  if (!m) return false;
+  const marker = m[1]!;
+  const firstEnd = prev.indexOf('\n');
+  if (firstEnd === -1) return false;
+  if (
+    marker[0] === '`' &&
+    prev.slice(0, firstEnd).indexOf('`', marker.length) !== -1
+  )
+    return false; // backtick info strings cannot contain backticks
+  const prevLast = prev.slice(prev.lastIndexOf('\n') + 1);
+  if (prevLast.length > 0 && prevLast.trim().length === 0) return false;
+  if (hasCloser(prev.slice(firstEnd + 1) + chunk, marker[0]!, marker.length))
+    return false;
+  const next = prev + chunk;
+  const nextLast = next.slice(next.lastIndexOf('\n') + 1);
+  return !(nextLast.length > 0 && nextLast.trim().length === 0);
+}
+
+/**
+ * Returns a violation message, or null; `checked` is set to true when the
+ * flush was one the expectation applies to.
+ * - 'fence-fast-path': flushes where `mustTakeFastPath` holds must report
+ *   'fence-fast-path' (with STREAM_NO_FENCE_FAST=1 none may).
+ * - 'tail': no flush may report 'fence-fast-path' (indented >= 4, inside a
+ *   list item or a quote: the fast path must not be taken).
+ */
+export function checkExpectedPath(
+  expected: ExpectedPath,
+  path: FlushStats['path'],
+  prev: string,
+  chunk: string
+): { violation: string | null; checked: boolean } {
+  if (expected === 'tail' || FENCE_FAST_DISABLED) {
+    return {
+      violation:
+        path === 'fence-fast-path'
+          ? `path 'fence-fast-path' where it must not be taken (expected ${FENCE_FAST_DISABLED ? 'tail/full, fast path disabled' : 'tail'})`
+          : null,
+      checked: true,
+    };
+  }
+  if (!mustTakeFastPath(prev, chunk))
+    return { violation: null, checked: false };
+  return {
+    violation:
+      path === 'fence-fast-path'
+        ? null
+        : `expected path 'fence-fast-path', got '${path}'`,
+    checked: true,
+  };
+}
+
 // --- the equivalence run ----------------------------------------------
+
+/** Which path an open-fence source must take; see `checkExpectedPath`. */
+export type ExpectedPath = 'fence-fast-path' | 'tail';
 
 export interface RunOptions {
   parse?: ParseOptions;
   allowFullReparse?: boolean;
+  expectedPath?: ExpectedPath;
 }
 
 export interface Failure {
@@ -258,8 +337,9 @@ export interface Failure {
 export function streamAndCompare(
   chunks: readonly string[],
   label: string,
-  { parse, allowFullReparse = false }: RunOptions = {}
-): void {
+  { parse, allowFullReparse = false, expectedPath }: RunOptions = {}
+): number {
+  let pathChecks = 0;
   const core = createMarkdownStreamCoreWith(parse, {
     fenceFastPath: process.env.STREAM_NO_FENCE_FAST !== '1',
   });
@@ -275,6 +355,7 @@ export function streamAndCompare(
     const before = core.table;
     const openBlockStart = openRegionStart(before, core.source);
     const chunk = chunks[i]!;
+    const prevSource = core.source;
     const table = core.append(chunk);
 
     const expected = parseWithMarkdownIt(core.source, parse).table;
@@ -291,6 +372,17 @@ export function streamAndCompare(
       });
       if (violation) fail(`work counter: ${violation}`, i);
     }
+
+    if (expectedPath) {
+      const r = checkExpectedPath(
+        expectedPath,
+        core.lastFlush.path,
+        prevSource,
+        chunk
+      );
+      if (r.violation) fail(`path: ${r.violation}`, i);
+      if (r.checked) pathChecks++;
+    }
   }
 
   // Guard: done() equals a full parse of everything.
@@ -303,6 +395,7 @@ export function streamAndCompare(
   if (diff) fail(`done() != parse(source): ${diff}`, last);
   if (core.source !== chunks.join(''))
     fail('source differs from the joined chunks', last);
+  return pathChecks;
 }
 
 // --- allowlist ---------------------------------------------------------
@@ -311,28 +404,49 @@ export interface StreamAllowlistEntry {
   /** `<group>:<name>`, e.g. `commonmark:19` or `targeted:setext late`. */
   key: string;
   reason: string;
+  /** Link to the tracking issue or decision. */
   issue: string;
 }
 
-/** Loads test/fixtures/stream-allowlist.json (shrink-only, like allowlist.json). */
-export function loadStreamAllowlist(): Map<string, StreamAllowlistEntry> {
-  const raw: unknown = JSON.parse(
-    readFileSync(
-      join(__dirname, '..', 'fixtures', 'stream-allowlist.json'),
-      'utf8'
-    )
-  );
+/**
+ * Validates parsed stream-allowlist JSON: an array of entries, each with a
+ * unique key, a non-empty reason and an http(s) link. Pure, so it is
+ * self-tested. (Shrink-only is enforced by `test.failing` in the runner: an
+ * allowlisted case that starts passing fails the suite.)
+ */
+export function parseStreamAllowlist(
+  raw: unknown
+): Map<string, StreamAllowlistEntry> {
   if (!Array.isArray(raw)) {
     throw new Error('test/fixtures/stream-allowlist.json must be a JSON array');
   }
   const entries = new Map<string, StreamAllowlistEntry>();
-  for (const entry of raw as StreamAllowlistEntry[]) {
-    if (!entry.key || !entry.reason || !entry.issue) {
+  for (const entry of raw as Partial<StreamAllowlistEntry>[]) {
+    const { key, reason, issue } = entry;
+    if (!key || !reason?.trim() || !issue?.trim()) {
       throw new Error(
-        `Stream allowlist entry ${entry.key} needs a key, reason and issue`
+        `Stream allowlist entry ${key} needs a key, reason and issue`
       );
     }
-    entries.set(entry.key, entry);
+    if (!/^https?:\/\//.test(issue)) {
+      throw new Error(`Stream allowlist entry ${key}: issue must be a link`);
+    }
+    if (entries.has(key)) {
+      throw new Error(`Stream allowlist entry ${key} is duplicated`);
+    }
+    entries.set(key, { key, reason, issue });
   }
   return entries;
+}
+
+/** Loads test/fixtures/stream-allowlist.json (shrink-only, like allowlist.json). */
+export function loadStreamAllowlist(): Map<string, StreamAllowlistEntry> {
+  return parseStreamAllowlist(
+    JSON.parse(
+      readFileSync(
+        join(__dirname, '..', 'fixtures', 'stream-allowlist.json'),
+        'utf8'
+      )
+    )
+  );
 }

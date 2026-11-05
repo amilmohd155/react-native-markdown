@@ -7,6 +7,7 @@ import { editLastParagraph, F1, F2, F3 } from '../bench/fixtures';
 import type { MarkdownDocument } from '../src/api/document';
 import { Markdown } from '../src/api/Markdown';
 import { parse } from '../src/api/parse';
+import { createMarkdownStreamCore } from '../src/stream/createMarkdownStream';
 import baseline from './baseline.json';
 
 /**
@@ -32,7 +33,11 @@ import baseline from './baseline.json';
  *
  * A failing metric is retried twice, so only a regression that repeats fails.
  *
- * Streaming (500 chunks of 10 KB) is phase 2: there is nothing to measure yet.
+ * Streaming (`stream:F4a`): the summed time of the 500 `append` flushes of the
+ * stream core for F2 (~10 KB) in 500 equal chunks (benchmark-protocol.md#f4,
+ * `streamCost`), one flush per chunk with no scheduler coalescing, over one full
+ * `parse()` of the same text. Unlike the other metrics its yardstick is our own
+ * `parse`, as in the protocol. `done()` is not included (`finalDone`).
  *
  * `node --jitless` has no WebAssembly, which Babel's Hermes parser needs to
  * compile React Native's own files. So `yarn perf` first runs this file
@@ -106,6 +111,26 @@ const SIZES: readonly Size[] = [
   { name: '1MB', source: F3.repeat(10), warmup: 1, runs: 8 },
 ];
 
+/** Sum of the flush times of a stream of `count` chunks; setup and `done()` are outside the timing. */
+function streamed(source: string, count: number): Sample {
+  const size = Math.ceil(source.length / count);
+  const chunks: string[] = [];
+  for (let i = 0; i < source.length; i += size) {
+    chunks.push(source.slice(i, i + size));
+  }
+  return () => {
+    const core = createMarkdownStreamCore();
+    let total = 0;
+    for (const chunk of chunks) {
+      const start = now();
+      core.append(chunk);
+      total += now() - start;
+    }
+    core.done();
+    return total;
+  };
+}
+
 const md = new MarkdownIt();
 const yardstick = (source: string): Sample => timed(() => md.parse(source, {}));
 
@@ -168,6 +193,7 @@ jest.retryTimes(2);
     // One of each thing the measured run does, so every module it needs is
     // compiled: parse, mount, update, unmount.
     await mounted(parse(F1), parse(editLastParagraph(F1)))();
+    streamed(F1, 20)();
     md.parse(F1, {});
   }
 );
@@ -220,6 +246,16 @@ jest.retryTimes(2);
         'rerender-one-block:100KB',
         mounted(parse(size.source), parse(editLastParagraph(size.source))),
         yardstick(size.source),
+        size
+      );
+    });
+
+    it('streams F4a (10KB in 500 chunks)', async () => {
+      const size = SIZES[1]!;
+      await ratioOf(
+        'stream:F4a',
+        streamed(F2, 500),
+        timed(() => parse(F2)),
         size
       );
     });

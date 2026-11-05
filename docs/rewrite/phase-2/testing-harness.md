@@ -38,10 +38,18 @@ The pathological cases (`test/fixtures/pathological/cases.ts`) run streamed in 1
 
 Environment knobs for the stream tests, run with `yarn test:stream`:
 
-- `STREAM_WORK=1` and `STREAM_WORK_STRICT=1`: enable the characters-re-parsed assertions (per-append work proportional to the open block); strict mode also rejects full re-parses outside the declared triggers.
+- `STREAM_WORK=1` and `STREAM_WORK_STRICT=1`: enable the characters-re-parsed assertions on every flush (per-append work proportional to the open block), including the pathological cases; strict mode also rejects full re-parses outside the declared triggers. CI runs both (`unit` job).
+- `STREAM_NO_FENCE_FAST=1`: turn the open-fence fast path off, so the harness runs against the plain tail re-parse; path expectations flip to "the fast path is never taken". CI runs this too.
 - `STREAM_SEED=<n>`: add one extra seeded chunking per input.
-- `STREAM_FULL=1`: run every chunk size on the large fixtures too.
-- `STREAM_NO_FENCE_FAST`: turn the open-fence fast path off, so the harness runs against the plain tail re-parse.
+- `STREAM_FULL=1`: also run chunk sizes 1 and 2 on the large fixtures (F2; about 14 s more). Smaller fixtures always run them.
+- `STREAM_PATHOLOGICAL_FULL=1`: stream the pathological inputs whole instead of the first 32 KB (about 12 minutes; the absolute cap is off).
+- `STREAM_PATHOLOGICAL_BUDGET_MS=<n>`: absolute cap per pathological case (default 20000 on the truncated run, none with `STREAM_PATHOLOGICAL_FULL`).
+
+The ratio bound has a 500 ms noise floor: `max(500 ms, 2 x (flushes + 1) x one parse)`. Without it an input whose single parse takes 1 ms would be held to a few tens of ms, which timer jitter alone can exceed. It cannot loosen the bound for slow inputs, where the ratio term is far above 500 ms.
+
+Pathological cases also get a full equivalence check every few flushes (about 16 per input; every flush would double the cost) and, with `STREAM_WORK=1`, the work-counter check on every flush. Only the appends are timed.
+
+Path assertions: cases with `expectedPath` check which path ran. Flushes inside an open top-level fence at column 0 (complete opener, no closing candidate in the chunk, no `\r`/`\0`) must report `fence-fast-path`; fences indented 4 or more, inside a list item or inside a quote must never report it. An independent oracle in the harness (`mustTakeFastPath`) decides which flushes are asserted, and the runner fails if it applied to none.
 
 ## Hook and scheduler tests
 

@@ -123,9 +123,16 @@ function sharedContract(
 
     it('done() with nothing buffered still emits a full-parse table', () => {
       const { tables, scheduler } = setup(strategy);
-      scheduler.done();
+      const table = scheduler.done();
       expect(tables).toHaveLength(1);
       expect(scheduler.table.blockCount).toBe(0);
+      expect(html(table)).toBe(htmlOf(''));
+
+      // And after a flush has already published everything.
+      scheduler.append('x *y*');
+      scheduler.flush();
+      expect(scheduler.pending).toBe('');
+      expect(html(scheduler.done())).toBe(htmlOf('x *y*'));
     });
 
     it('reset() drops buffered text, cancels pending work and emits', () => {

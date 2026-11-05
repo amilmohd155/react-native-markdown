@@ -6,11 +6,17 @@
  * Known divergences go in test/fixtures/stream-allowlist.json (shrink-only:
  * an allowlisted case that starts passing fails through `test.failing`).
  *
- * Knobs (env):
- *   STREAM_WORK=1         enable the work-counter assertions (needs S1.5)
+ * Knobs (env; also in docs/rewrite/phase-2/testing-harness.md):
+ *   STREAM_WORK=1         work-counter assertions on every flush (targeted,
+ *                         spec, fixtures AND pathological cases)
  *   STREAM_WORK_STRICT=1  also reject full re-parses outside declared triggers
+ *   STREAM_NO_FENCE_FAST=1  turn the open-fence fast path off in the core;
+ *                         path expectations flip to "never fence-fast-path"
  *   STREAM_SEED=<n>       one extra seeded chunking per input
- *   STREAM_FULL=1         run every chunk size on the large fixtures too
+ *   STREAM_FULL=1         also run chunk sizes 1 and 2 on the large fixtures
+ *   STREAM_PATHOLOGICAL_FULL=1  stream the pathological inputs whole (~12 min)
+ *   STREAM_PATHOLOGICAL_BUDGET_MS=<n>  absolute cap per pathological case
+ *                         (default 20000 truncated, none with _FULL)
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -22,17 +28,26 @@ import { readSpec, type SpecSuite } from '../utils/specReader';
 import { targetedCases } from './cases';
 import {
   awkwardSplits,
+  checkExpectedPath,
   checkWork,
+  FENCE_FAST_DISABLED,
+  mustTakeFastPath,
+  openRegionStart,
+  parseStreamAllowlist,
   diffDocuments,
   everyPosition,
   fixed,
   loadStreamAllowlist,
   seeded,
   streamAndCompare,
+  WORK_ASSERTIONS,
   WORK_STRICT,
   type RunOptions,
 } from './harness';
-import { createMarkdownStreamCore } from '../../src/stream/createMarkdownStream';
+import {
+  createMarkdownStreamCore,
+  createMarkdownStreamCoreWith,
+} from '../../src/stream/createMarkdownStream';
 
 const allowlist = loadStreamAllowlist();
 const FULL = process.env.STREAM_FULL === '1';
@@ -89,11 +104,17 @@ function register(
   options: ChunkingOptions,
   run: RunOptions = {}
 ) {
+  let pathChecks = 0;
   const body = () => {
     for (const source of Array.isArray(sources) ? sources : [sources]) {
       for (const c of chunkings(source, options)) {
-        streamAndCompare(c.chunks, label(key, c), run);
+        pathChecks += streamAndCompare(c.chunks, label(key, c), run);
       }
+      // Guard against a vacuous expectation: the oracle must have applied.
+      if (run.expectedPath === 'fence-fast-path' && !FENCE_FAST_DISABLED) {
+        expect(pathChecks).toBeGreaterThan(0);
+      }
+      pathChecks = 0;
     }
   };
   const known = allowlist.get(key);
@@ -136,6 +157,9 @@ for (const { suite, file } of SUITES) {
 
 // --- bench fixtures and transcripts -----------------------------------
 
+// code-heavy (5.6 KB) is cheap with chunk sizes 1 and 2; F2 (9.7 KB) is not.
+const LARGE_FIXTURE = 6000;
+
 describe('stream equivalence: fixtures', () => {
   const read = (rel: string) =>
     readFileSync(join(__dirname, '..', '..', 'bench', 'fixtures', rel), 'utf8');
@@ -150,8 +174,9 @@ describe('stream equivalence: fixtures', () => {
   for (const [name, source] of fixtures) {
     const key = `fixture:${name}`;
     knownKeys.add(key);
-    // 1-char chunks on a 10 KB source are 10k full parses with the stub.
-    const small = source.length <= 4000 || FULL;
+    // 1- and 2-char chunks on a 10 KB source are ~10k appends, each followed
+    // by a full-parse comparison (quadratic): opt-in with STREAM_FULL=1.
+    const small = source.length <= LARGE_FIXTURE || FULL;
     register(
       key,
       `${name} (${source.length} chars)`,
@@ -182,7 +207,11 @@ describe('stream equivalence: targeted cases', () => {
         fixedSizes: [1, 2, 3, 20, 195],
         seeds: [1, 2, 3, 4, 5, 6, 7, 8],
       },
-      { parse: c.parse, allowFullReparse: c.allowFullReparse }
+      {
+        parse: c.parse,
+        allowFullReparse: c.allowFullReparse,
+        expectedPath: c.expectedPath,
+      }
     );
   }
 });
@@ -192,9 +221,8 @@ describe('stream equivalence: targeted cases', () => {
 const PATHOLOGICAL_CHUNK = 1024;
 /**
  * Inputs are up to ~400 KB. By default only the first 32 KB of each is
- * streamed (32 flushes), so the stub (full re-parse per flush, quadratic by
- * design) stays fast; STREAM_PATHOLOGICAL_FULL=1 streams the whole input
- * (use once S1.5 lands; a linear-per-flush core handles it in seconds).
+ * streamed (32 flushes) to keep the default run short; STREAM_PATHOLOGICAL_FULL=1
+ * streams the whole input.
  */
 const PATHOLOGICAL_MAX_CHARS =
   process.env.STREAM_PATHOLOGICAL_FULL === '1' ? Infinity : 32 * 1024;
@@ -218,6 +246,7 @@ const PATHOLOGICAL_BUDGET_MS = Number(
  * beyond quadratic.
  */
 const PATHOLOGICAL_COST_FACTOR = 2;
+const RATIO_NOISE_FLOOR_MS = 500;
 /** Jest timeout is fixed per test, so the full run gets a long one (30 min). */
 const PATHOLOGICAL_TIMEOUT_MS = PATHOLOGICAL_FULL
   ? 30 * 60 * 1000
@@ -236,10 +265,41 @@ describe('stream equivalence: pathological (1 KB chunks)', () => {
       const fullMs = Date.now() - fullStarted;
 
       const core = createMarkdownStreamCore();
-      const started = Date.now();
-      for (const chunk of chunks) core.append(chunk);
+      // Only append() is timed: the checks below are excluded.
+      let elapsed = 0;
+      // A full comparison every `stride` flushes (a few per input); the work
+      // counter (STREAM_WORK=1) is checked on EVERY flush, which is cheap.
+      const stride = Math.max(8, Math.ceil(chunks.length / 16));
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i]!;
+        const openBlockStart = WORK_ASSERTIONS
+          ? openRegionStart(core.table, core.source)
+          : 0;
+        const t0 = Date.now();
+        core.append(chunk);
+        elapsed += Date.now() - t0;
+        if (WORK_ASSERTIONS) {
+          const violation = checkWork(core.lastFlush, {
+            openBlockStart,
+            sourceLength: core.source.length,
+            chunkLength: chunk.length,
+            allowFullReparse: false,
+          });
+          if (violation) {
+            throw new Error(`[${key}] chunk ${i}: work counter: ${violation}`);
+          }
+        }
+        if (i % stride === stride - 1) {
+          const diff = diffDocuments(
+            core.table,
+            parseWithMarkdownIt(core.source).table
+          );
+          if (diff) throw new Error(`[${key}] chunk ${i}: ${diff}`);
+        }
+      }
+      const t1 = Date.now();
       const table = core.done();
-      const elapsed = Date.now() - started;
+      elapsed += Date.now() - t1;
 
       if (PATHOLOGICAL_FULL) {
         console.log(
@@ -247,12 +307,16 @@ describe('stream equivalence: pathological (1 KB chunks)', () => {
         );
       }
       expect(elapsed).toBeLessThan(PATHOLOGICAL_BUDGET_MS);
-      // The floor keeps fast inputs from tripping on timer noise.
+      // The floor is a timer-noise guard for inputs whose single parse takes
+      // ~1 ms (the spec bound alone would then be tens of ms); it does not
+      // loosen the bound for slow inputs, where the ratio term dominates.
       expect(elapsed).toBeLessThan(
-        Math.max(500, fullMs * (chunks.length + 1) * PATHOLOGICAL_COST_FACTOR)
+        Math.max(
+          RATIO_NOISE_FLOOR_MS,
+          fullMs * (chunks.length + 1) * PATHOLOGICAL_COST_FACTOR
+        )
       );
-      // Per-flush comparison would double the cost of inputs this large;
-      // the final table (after done()) must still be a full parse.
+      // The final table (after done()) must be a full parse.
       expect(diffDocuments(table, expected)).toBeNull();
     };
     const known = allowlist.get(key);
@@ -316,6 +380,88 @@ describe('work counter assertion helper', () => {
       checkWork({ charsReparsed: 1, fullReparse: true, path: 'tail' }, ctx)
     ).toMatch(/fullReparse with path/);
   });
+});
+
+// --- path expectation helper (self-test) --------------------------------
+
+describe('path expectation helper', () => {
+  const fast = (path: 'tail' | 'fence-fast-path' | 'full') => path;
+  it('finds flushes that must take the fast path', () => {
+    expect(mustTakeFastPath('```\na\n', 'b')).toBe(true);
+    expect(mustTakeFastPath('```', '\nb')).toBe(false); // opener incomplete
+    expect(mustTakeFastPath('```\na\n', '```\n')).toBe(false); // closer
+    expect(mustTakeFastPath('```\na\n``', '`')).toBe(false); // closer spans
+    expect(mustTakeFastPath('    ```\na\n', 'b')).toBe(false); // indented
+    expect(mustTakeFastPath('```\na\r\n', 'b')).toBe(false); // CR
+    expect(mustTakeFastPath('```\na\n', '  ')).toBe(false); // blank last line
+  });
+  it('rejects the wrong path', () => {
+    const fp = (p: 'tail' | 'fence-fast-path' | 'full') =>
+      checkExpectedPath('fence-fast-path', fast(p), '```\na\n', 'b');
+    const tail = (p: 'tail' | 'fence-fast-path' | 'full') =>
+      checkExpectedPath('tail', fast(p), '- a\n  ```\n', 'b');
+    if (FENCE_FAST_DISABLED) {
+      expect(fp('fence-fast-path').violation).toMatch(/must not be taken/);
+      expect(fp('tail').violation).toBeNull();
+    } else {
+      expect(fp('fence-fast-path')).toEqual({ violation: null, checked: true });
+      expect(fp('tail').violation).toMatch(/expected path 'fence-fast-path'/);
+      expect(
+        checkExpectedPath('fence-fast-path', 'tail', '```\na\n', '```\n')
+      ).toEqual({ violation: null, checked: false });
+    }
+    expect(tail('fence-fast-path').violation).toMatch(/must not be taken/);
+    expect(tail('tail').violation).toBeNull();
+  });
+  it('really drives the core down the expected paths', () => {
+    const run = (source: string) => {
+      const c = createMarkdownStreamCoreWith(undefined, {
+        fenceFastPath: true,
+      });
+      const paths = new Set<string>();
+      for (const ch of source) {
+        c.append(ch);
+        paths.add(c.lastFlush.path);
+      }
+      return paths;
+    };
+    const topLevel = run('```\nabc\ndef\n');
+    const indented = run('    ```\n    abc\n    def\n');
+    const inItem = run('- a\n  ```\n  abc\n  def\n');
+    const inQuote = run('> ```\n> abc\n> def\n');
+    expect(topLevel.has('fence-fast-path')).toBe(true);
+    for (const p of [indented, inItem, inQuote]) {
+      expect(p.has('fence-fast-path')).toBe(false);
+    }
+  });
+});
+
+// --- allowlist loader (self-test) ----------------------------------------
+
+describe('stream allowlist loader', () => {
+  const ok = { key: 'targeted:x', reason: 'why', issue: 'https://e.com/1' };
+  it('accepts a complete entry and the empty list', () => {
+    expect(parseStreamAllowlist([]).size).toBe(0);
+    expect(parseStreamAllowlist([ok]).get('targeted:x')).toEqual(ok);
+  });
+  it('requires a key, a reason and a link per entry', () => {
+    expect(() => parseStreamAllowlist([{ ...ok, reason: '' }])).toThrow(
+      /needs a key, reason and issue/
+    );
+    expect(() => parseStreamAllowlist([{ ...ok, reason: '  ' }])).toThrow();
+    expect(() => parseStreamAllowlist([{ ...ok, issue: '' }])).toThrow();
+    expect(() => parseStreamAllowlist([{ ...ok, key: '' }])).toThrow();
+    expect(() => parseStreamAllowlist([{ ...ok, issue: '#12' }])).toThrow(
+      /must be a link/
+    );
+  });
+  it('rejects duplicates and non-arrays', () => {
+    expect(() => parseStreamAllowlist([ok, ok])).toThrow(/duplicated/);
+    expect(() => parseStreamAllowlist({})).toThrow(/JSON array/);
+  });
+  // Shrink-only: allowlisted keys register through test.failing (see
+  // register() and the pathological block), so an entry that starts passing
+  // fails the suite until it is removed.
 });
 
 // --- allowlist hygiene -------------------------------------------------

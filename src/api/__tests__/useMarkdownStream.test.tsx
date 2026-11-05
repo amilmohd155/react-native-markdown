@@ -373,14 +373,18 @@ describe.each(['timeout', 'raf'] as const)(
 describe('useMarkdownStream dev warning', () => {
   const pluginA = definePlugin({ name: 'a' });
   const pluginB = definePlugin({ name: 'b' });
+  const pluginC = definePlugin({ name: 'c' });
 
   it('warns once when plugins change', async () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const { rerender } = await setup({ plugins: [pluginA] });
     await rerender({ plugins: [pluginB] });
-    await rerender({ plugins: [pluginA] });
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0]![0]).toContain('useMarkdownStream');
+    // A further, different change (and a mixed one) does not warn again.
+    await rerender({ plugins: [pluginC] });
+    await rerender({ plugins: [pluginC], smoothing: 'hide-incomplete' });
+    expect(warn).toHaveBeenCalledTimes(1);
   });
 
   it('warns when the preset changes', async () => {
@@ -388,12 +392,16 @@ describe('useMarkdownStream dev warning', () => {
     const { rerender } = await setup({ preset: 'gfm' });
     await rerender({ preset: 'commonmark' });
     expect(warn).toHaveBeenCalledTimes(1);
+    await rerender({ preset: { base: 'gfm', exclude: ['tables'] } });
+    expect(warn).toHaveBeenCalledTimes(1);
   });
 
   it('warns when smoothing changes', async () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const { rerender } = await setup({ smoothing: 'none' });
     await rerender({ smoothing: 'hide-incomplete' });
+    expect(warn).toHaveBeenCalledTimes(1);
+    await rerender({ smoothing: 'none' });
     expect(warn).toHaveBeenCalledTimes(1);
   });
 

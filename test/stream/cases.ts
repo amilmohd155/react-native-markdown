@@ -4,6 +4,7 @@
  * chunkers, by equivalence.test.ts.
  */
 import type { ParseOptions } from '../../src/parse';
+import type { ExpectedPath } from './harness';
 
 export interface TargetedCase {
   name: string;
@@ -12,6 +13,13 @@ export interface TargetedCase {
   parse?: ParseOptions;
   /** Full re-parse triggers are expected (link ref defs, footnote definitions). */
   allowFullReparse?: boolean;
+  /**
+   * 'fence-fast-path': flushes inside an open top-level fence at column 0
+   * must report the fast path. 'tail': the fast path must never be taken
+   * (fence indented 4+, inside a list item or a quote). Self-tested in
+   * equivalence.test.ts.
+   */
+  expectedPath?: ExpectedPath;
 }
 
 const fence = (marker: string, body: string, close = marker) =>
@@ -80,12 +88,28 @@ export const targetedCases: TargetedCase[] = [
     ],
   },
   {
-    name: 'fences the fast path must not take',
+    name: 'open top-level fences take the fast path',
+    expectedPath: 'fence-fast-path',
     sources: [
+      '```\nlet a = 1;\nlet b = 2;\nlet c = 3;',
+      '~~~\nlet a = 1;\nmore\nand more\n',
+      '```js\nx\n\ny\nz',
+      '````\n```\ninner\n```\nstill open',
+      '```\nnever closed\nsecond line\nthird line',
+      '~~~~\n~~~\nnot closing\nbody',
+    ],
+  },
+  {
+    name: 'fences the fast path must not take',
+    expectedPath: 'tail',
+    sources: [
+      '    ```\n    indent 4: code, not a fence\n    more code\n',
+      '        ~~~\n        deeper indent\n        more\n',
       '- item\n\n  ```\n  code in a list\n  more\n  ```\n- next\n',
       '> ```\n> code in a quote\n> more\n> ```\n\nafter\n',
       '1. a\n   ~~~\n   open tilde in list\n',
-      '> ```\n> open in quote\n',
+      '> ```\n> open in quote\n> and more\n',
+      '- a\n  ```\n  open in item\n  more\n',
     ],
   },
   {
