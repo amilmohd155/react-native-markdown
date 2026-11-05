@@ -11,7 +11,7 @@ Phase 2 delivers streaming on the Phase 1 core ([07 · Phase 2](../07-roadmap.md
 
 - `useMarkdownStream` feeding `<Markdown document>`, built on a React-free stream core
 - Tail re-parse with node-table splicing (`parseFrom` for the markdown-it backend)
-- Frame batching (and, if the spike says so, cost-adaptive coalescing)
+- Batching of updates: a per-frame flush on native and a 16 ms window on web ([P2-4](./decisions.md#p2-4-coalescing-policy)); cost-adaptive coalescing stays deferred
 - Optional `smoothing: 'hide-incomplete'`
 - Randomized-chunking equivalence tests, perf CI additions, and the F4 device benchmark
 
@@ -23,9 +23,9 @@ Defined in [07](../07-roadmap.md#phase-2-streaming). Restated here only as a che
 
 - [ ] Streaming a 10 KB message costs at most 2× a single full parse in total with 195-character chunks, and at most 5× with 20-character chunks, **as proposed in [P2-1](./decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture)** (the roadmap wording leaves chunk size and timing open; see [why](./work-breakdown.md#why-s0-comes-first))
 - [ ] Equivalence: after every append, the streamed document equals `parse(source so far)`, apart from a reviewed allowlist ([testing-harness.md](./testing-harness.md#equivalence-harness))
-- [ ] Only the open block re-renders per update (memo test)
-- [ ] Runs unchanged in Expo Go and on the web (existing `check:expo-go` and `web` jobs stay green)
-- [ ] Device measurement of F4 on the S25 FE and web, written into [`../02-benchmarks.md`](../02-benchmarks.md)
+- [x] Only the open block re-renders per update (memo test, S2; the `isSameBlock` prefix fast path does not fire through `<Block>` yet, deferred to S5: [P2-2 note](./decisions.md#p2-2-splice-strategy))
+- [x] Runs unchanged in Expo Go and on the web (existing `check:expo-go` and `web` jobs stay green; the hook and scheduler also ran in Expo Go, on a release build and on the web in S2)
+- [ ] Device measurement of F4 on the S25 FE and web, written into [`../02-benchmarks.md`](../02-benchmarks.md) (scheduler runs for `F4a`, `F4b` and `F4d` are in; the S5 run adds F4c, an iPhone and the bars: [results so far](../02-benchmarks.md#phase-2-scheduler-s2))
 
 ## Carried over from Phase 1
 
@@ -38,7 +38,7 @@ Defined in [07](../07-roadmap.md#phase-2-streaming). Restated here only as a che
 | [work-breakdown.md](./work-breakdown.md) | Milestones S0–S5 in order, with dependencies and done criteria |
 | [stream-algorithm.md](./stream-algorithm.md) | Tail boundary, carried context, full-reparse triggers, open-fence fast path (proposed) |
 | [table-splicing.md](./table-splicing.md) | `parseFrom`, splicing into a new table, the `isSameBlock` prefix fast path |
-| [hook-and-scheduler.md](./hook-and-scheduler.md) | The React-free core, `useMarkdownStream`, flush-window batching, lifecycle |
+| [hook-and-scheduler.md](./hook-and-scheduler.md) | The React-free core, the scheduler (per-frame or windowed flushes), `useMarkdownStream`, lifecycle |
 | [smoothing.md](./smoothing.md) | `hide-incomplete` semantics |
 | [testing-harness.md](./testing-harness.md) | Equivalence harness, chunkers, allowlist, perf additions |
 | [benchmark-protocol.md](./benchmark-protocol.md) | F4, metrics, method and pass bars |

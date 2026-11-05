@@ -40,23 +40,27 @@ Partial syntax such as `**bold` or `[link](htt` looks broken while it streams in
 
 - Frozen blocks keep their source text and context, so `isSameBlock` lets their `memo(Block)` bail out (P1-9).
 - Only the last block re-renders.
-- Updates are batched with a fixed flush window, 50 ms proposed as the default (`flushIntervalMs`, to be confirmed on a device): a leading flush on the first chunk, then at most one per window, and a trailing flush so the last chunk always lands. Tokens that arrive within a window are combined into one append. Per-frame batching was measured and does not reduce parse count at one chunk per frame ([P2-4](./phase-2/decisions.md#p2-4-coalescing-policy)).
+- Updates are batched, and tokens that arrive between two flushes are combined into one append ([P2-4](./phase-2/decisions.md#p2-4-coalescing-policy)). The default depends on the platform: on iOS and Android one flush per animation frame; on web a 16 ms window, with a leading flush on the first chunk, at most one flush per window, and a trailing flush so the last chunk always lands (a hidden browser tab throttles animation frames, which stalled a stream in the web run). Passing `flushIntervalMs` selects that window on a timer on every platform. Per-frame batching does not reduce the parse count at one chunk per frame; it was chosen on native for its latency (about 15 ms against 34 to 43 ms for a 33 to 50 ms window on the S25 FE), at about 1.5× the flush cost ([results](./02-benchmarks.md#phase-2-scheduler-s2)).
 
 ## API
 
 ```ts
 function useMarkdownStream(options?: {
   preset?: 'gfm' | 'commonmark';
+  html?: HtmlMode;
   plugins?: MarkdownPlugin[];
-  backend?: ParserBackend;
+  backend?: ParserBackend;      // not implemented yet: the stream core is markdown-it only
   smoothing?: 'none' | 'hide-incomplete';
+  flushIntervalMs?: number;     // timer window on every platform; default: per frame on native, 16 ms on web
 }): {
   append(chunk: string): void;
   reset(source?: string): void;
   done(): void;                 // final full re-parse for exactness
-  document: MarkdownDocument;   // new opaque handle per frame, sharing the unchanged prefix of the node table
+  document: MarkdownDocument;   // new opaque handle per flush, sharing the unchanged prefix of the node table
 };
 ```
+
+Options are read when the hook is created.
 
 ```tsx
 const stream = useMarkdownStream({ plugins });

@@ -45,16 +45,26 @@ Environment knobs for the stream tests, run with `yarn test:stream`:
 
 ## Hook and scheduler tests
 
-- Fake clock and timer: the first append flushes at once (leading flush); further appends within the 50 ms window produce one trailing flush at the end of the window; appends in later windows produce one flush each; `flushIntervalMs` changes the window ([P2-4](./decisions.md#p2-4-coalescing-policy)).
-- `append`, `reset`, `done` keep their identity across renders.
-- StrictMode: double effect run neither duplicates nor drops text.
-- Unmount cancels the pending timer; a later `append` is a no-op without warning.
-- `done()` flushes synchronously and the result equals `parse(source)`.
-- Changing `plugins`/`preset` identity warns in dev.
+Scheduler (`src/stream/__tests__/scheduler.test.ts`, a hand-written fake clock with manual time, timers and frames):
+
+- **Both schedules:** `done()` flushes buffered text synchronously and the result equals a full parse (compared through the HTML serializer), with text still buffered and with nothing buffered; `reset()` drops the buffer and cancels pending work; empty chunks are ignored; `suspend()` cancels pending work but keeps the buffer and `resume()` flushes it; appends while suspended are dropped; `flush()` flushes now and is a no-op when empty.
+- **`timeout`:** the first append flushes at once (leading flush); appends inside the window produce one trailing flush; it goes idle after a quiet window and flushes the next append at once; at most one flush per window; later windows produce one flush each; `flushIntervalMs` changes the window ([P2-4](./decisions.md#p2-4-coalescing-policy)).
+- **`raf`:** no leading flush; many appends in one frame give one flush; a flush on the next frame when more arrives; nothing requested when idle; at most one flush per frame.
+- **`raf` without `requestFrame`:** falls back to a 16 ms timer, and cancels it on `suspend()` and `done()`.
+- **Smoothing:** intermediate flushes publish the smoothed view with the real `source`; `done()`, also with text still buffered, returns the exact parse; `'none'` equals no smoothing option.
+
+Hook (`src/api/__tests__/useMarkdownStream.test.tsx`, fake timers and a fake frame source):
+
+- Starts with an empty document; `append`, `reset` and `done` keep their identity across renders and flushes.
+- A new `document` per flush, with appends in between combined; `reset()` drops buffered text; `done()` flushes at once and equals `parse(source)`.
+- StrictMode: the double effect run neither duplicates nor drops text. Unmount cancels the pending flush, and a later `append` is a no-op without a warning.
+- **Default schedule:** on iOS and Android `raf` (no flush before the frame, one per frame after); on web a 16 ms `timeout` with a leading flush; an explicit `flushIntervalMs` selects the timer on every platform.
+- With smoothing on, the document is the view while streaming and the exact parse after `done()`.
+- Dev warning: once when `plugins` change (compared shallowly, so an equal inline array does not warn), and when `preset` or `smoothing` change.
 
 ## Memoization test
 
-As in 06, through spy components passed via `components`: stream a multi-block message and assert that, per flush, only the open block's elements render. Also asserts the `isSameBlock` fast path is taken for closed blocks (no source-text comparison) using a spy counter.
+`src/api/__tests__/streamMemo.test.tsx`. As in 06, through spy components passed via `components`: stream a multi-block message (paragraphs, a list, a code fence, a table) and assert that, per flush, only the open block's elements render. It also asserts that the `isSameBlock` prefix fast path is taken for closed blocks (no source-text comparison), by wrapping the real `isSameBlock`. **That second assertion is an `it.failing`**: the fast path never fires through `<Block>` today (see the note in [P2-2](./decisions.md#p2-2-splice-strategy)), deferred to S5. When it is fixed the test starts failing, which is the cue to make it a plain `it`.
 
 ## Platform tests
 

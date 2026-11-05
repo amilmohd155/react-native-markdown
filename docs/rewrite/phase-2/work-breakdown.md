@@ -68,16 +68,18 @@ Inside a block the cost is quadratic: about `Σ b² / (2·chunk)` over the block
 
 **Issue:** [#31](https://github.com/amilmohd155/react-native-markdown/issues/31)
 
-**Goal:** `useMarkdownStream` as in [05](../05-streaming.md#api), batching updates with a flush window.
+**Goal:** `useMarkdownStream` as in [05](../05-streaming.md#api), batching updates per [P2-4](./decisions.md#p2-4-coalescing-policy).
 
-- Scheduler: coalesce appends within the flush window, policy per P2-4 ([hook-and-scheduler.md](./hook-and-scheduler.md)).
-- `useMarkdownStream`: stable `append`/`reset`/`done`, a new `document` handle per flush, safe under StrictMode, cancelled on unmount.
+- Scheduler: coalesce appends between flushes ([hook-and-scheduler.md](./hook-and-scheduler.md)): `raf` and `timeout` schedules behind one contract, compared in Node, in Expo Go, on a release build and on the web before one was chosen.
+- `useMarkdownStream`: stable `append`/`reset`/`done`, a new `document` handle per flush, safe under StrictMode, cancelled on unmount. Platform default: `raf` on iOS and Android, a 16 ms window on web, and `flushIntervalMs` selects the timer everywhere.
 - Public typing and export through `src/api/index.ts`; `yarn check:public-types` stays green.
 
 **Done when:**
-- Hook tests pass with fake timers and `requestAnimationFrame`.
-- Memo test: during a stream, only the open block's elements re-render ([06 · Memoization tests](../06-testing.md#renderer-tests)).
-- The main entry is still pure JS (`yarn check:expo-go`).
+- Hook tests pass with fake timers and a fake frame source. Done.
+- Memo test: during a stream, only the open block's elements re-render ([06 · Memoization tests](../06-testing.md#renderer-tests)). Done. The `isSameBlock` prefix-fast-path assertion in it is an `it.failing` until S5 fixes the path ([P2-2 note](./decisions.md#p2-2-splice-strategy)).
+- The main entry is still pure JS (`yarn check:expo-go`). Done.
+
+**Result:** [P2-4](./decisions.md#p2-4-coalescing-policy) accepted with Node, S25 FE and web numbers ([02 · Phase 2 scheduler](../02-benchmarks.md#phase-2-scheduler-s2)); [P2-5](./decisions.md#p2-5-open-fence-fast-path) has its first device measurement. Left for S5: an iPhone, a backgrounded native app, F4c, and the `isSameBlock` fix.
 
 ## S3 · Smoothing
 

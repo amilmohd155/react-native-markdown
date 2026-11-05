@@ -277,6 +277,85 @@ All other cases stay under 10 s.
 
 The tail re-parse behaves as designed: the cost is flushes x open-block size. So the flush window ([P2-4](./phase-2/decisions.md#p2-4-coalescing-policy) coalescing, S2) and the S5 device numbers are what matter. The test therefore asserts streamed cost <= 2 x (flushes + 1) x one full parse, not a fixed 60x, and runs the full inputs only under `STREAM_PATHOLOGICAL_FULL=1` (about 12 minutes). See [testing-harness](./phase-2/testing-harness.md#pathological-input).
 
+## Phase 2 scheduler (S2)
+
+Which flush schedule `useMarkdownStream` uses by default ([P2-4](./phase-2/decisions.md#p2-4-coalescing-policy)): a per-frame flush (`raf`) or a timer window (`timeout`). Result: `raf` on iOS and Android, a 16 ms `timeout` on web, and an explicit `flushIntervalMs` selects the timer everywhere. Raw runs are in `bench/results/`:
+
+| File | Contents |
+|---|---|
+| `scheduler-node-jit-2026-11-05.json`, `scheduler-node-jitless-2026-11-05.json` | Node, simulated 60 Hz frames |
+| `scheduler-device-s25fe-release-2026-11-05.json` | S25 FE, Hermes release, F2 |
+| `scheduler-device-s25fe-release-f4d-2026-11-05.json` | S25 FE, Hermes release, `F4d` code-heavy; four runs flagged `display60Hz` |
+| `scheduler-web-chrome-4x-2026-11-05.json` | Web, Chromium 156, 4× CPU throttle, including two hidden-tab runs |
+
+### Method
+
+- **Streams:** F2 (9724 characters, 487 chunks of 20 characters, one every 16 ms) unless noted; `F4b` is 195-character chunks; `F4d` is `code-heavy.md` (5619 characters, 281 chunks). The text is fed through `useMarkdownStream` into a visible `<Markdown document>`; the hook is remounted for every run.
+- **Per run (device and web):** flush count; flush spacing; flush cost (the core's `append`, parse plus splice, not React); frame gaps (differences between `requestAnimationFrame` callbacks on the JS thread; "dropped" is a gap over 20 ms, which only means something at 120 Hz); append-to-commit latency (the time from `append` to the layout effect of the commit that carries it); total time; and whether the final document equals `parse(full)` (true in every run).
+- **Device:** Samsung S25 FE (Android 37, Hermes, New Architecture), a release build, 120 Hz display, USB-connected and charging. `timeout@50` against `raf` was interleaved (ABBAAB); the other windows were run one after the other. Medians of 3 runs unless noted.
+- **Web:** headless Chromium 156, CPU throttled 4× with CDP, a minified `expo export` build, 3 runs per configuration, interleaved.
+- The harness is the example app's Stream tab (`example/src/screens/StreamBench.tsx`). It is a permanent screen, reduced to the public API, and is what the S5 runs on other devices use.
+
+### Node, `--jitless` (S0-style virtual clock, simulated 60 Hz frames)
+
+Medians of 5 runs. One full parse of F2 is 8.0 ms. 20-character chunks at 1250 characters per second. Frames are simulated and React commit is not included, so this is indicative only.
+
+| Schedule | Flushes | Latency p50 / p90 / max (ms) | Total flush cost (× one full parse) |
+|---|---|---|---|
+| `timeout@16` | 487 | 0.2 / 0.6 / 8 | 20.4× |
+| `timeout@50` | 157 | 24 / 44 / 49 | 6.7× |
+| `timeout@100` | 79 | 48 / 88 / 97 | 5.1× |
+| `raf` | 467 | 8 / 15 / 17 | 18.4× |
+
+### S25 FE, Hermes release, F2
+
+| Schedule | Flushes | Flush cost p50 / p90 (ms) | Flush cost sum (ms) | Append-to-commit p50 / p90 (ms) | Frame gap p90 (ms) | Dropped frames |
+|---|---|---|---|---|---|---|
+| `timeout@16` | 303 | 1.7 / 3.0 | 571 | 22 / 36 | 14.2 | 1.6% |
+| `timeout@33` | 186 | 2.3 / 4.4 | 511 | 34 / 51 | 15.9 | 2.3% |
+| `timeout@50` | 132 | 3.1 / 5.6 | 463 | 43 / 64 | 15.4 | 2.5% |
+| `timeout@100` | 70 | 4.6 / 12.3 | 436 | 76 / 116 | 12.7 | 3.3% |
+| `raf` | 464 | 1.3 / 2.4 | 684 | 15 / 21 | 12.1 | 2.3% |
+
+- **Other chunkings** (`timeout@50` against `raf`): `F4b` (195-character chunks, 50 chunks, 2 runs): 14 against 48 flushes, latency p50 / p90 44 / 63 against 16 / 22 ms, dropped 2.9% against 3.4%. One run each of 1 character per 1 ms (9724 chunks): both finished in about 88 to 90 s because Android coarsens a 1 ms timer to about 9 ms; `timeout@50` flushed 1529 times and `raf` 4948 times, dropped 2.6% against 1.8%.
+- **Smoothing** `hide-incomplete` (2 runs each): no visible change, `timeout@50` dropped 3.3% and `raf` 1.5%, flush cost sums 444 and 659 ms.
+- **Expo Go (dev build) is misleading** and was not used: `timeout@50` dropped 8 to 14% of frames and `raf` 1.6 to 2.1%, a gap that disappears in the release build.
+- **Display refresh confound.** In the `F4d` session the display dropped from 120 Hz to 60 Hz after the first eight runs (frame-gap p50 16.7 ms instead of 8.5 ms, about half the frame samples, about half the `raf` flushes). Those four runs are flagged and excluded everywhere. All F2 runs above were at 120 Hz. It also shows that the `raf` flush rate follows the display's refresh rate.
+
+### S25 FE, `F4d` (code-heavy), the open-fence fast path ([P2-5](./phase-2/decisions.md#p2-5-open-fence-fast-path))
+
+| Schedule | Fast path | Flushes | Flush cost sum (ms) | Latency p50 / p90 (ms) | Dropped |
+|---|---|---|---|---|---|
+| `timeout@50` (3 runs) | on | 77 | 108 | 41 / 65 | 1.4% |
+| `timeout@50` (3 runs) | off | 76 | 236 | 39 / 62 | 0.8% |
+| `raf` (2 runs at 120 Hz) | on | 280 | 171 | n/a | 0% |
+| `raf` (2 runs at 120 Hz) | off | 277 | 354 | about 14 / 20 | 0% |
+
+The fast path roughly halves the flush cost and changes nothing else. The saving is small in absolute terms (about 130 to 180 ms over a 4.5 s stream).
+
+### Web, Chromium 156, 4× CPU throttle, F2
+
+A flush costs under 1 ms at p90 in every configuration, so the schedule changes latency and commit count, not frame health.
+
+| Schedule | Flushes | Flush cost sum (ms) | Latency p50 / p90 (ms) | Frame gap p90 (ms) | Dropped |
+|---|---|---|---|---|---|
+| `timeout@16` | 468 | 117 | 9 / 16 | 17.6 | 0.2% |
+| `timeout@33` | 223 | 59 | 17 / 25 | 18.8 | 0.6% |
+| `timeout@50` | 147 | 67 | 23 / 42 | 18.9 | 2.4% |
+| `timeout@100` | 75 | 28 | 50 / 87 | 18.5 | 0.6% |
+| `raf` | 465 | 266 | 13 / 17 | 17.8 | 0.0% |
+
+**Hidden tab** (headed Chromium, a second tab brought to the front 1.5 s after Run, one run each): `raf` completed with the right document but took 27.1 s against about 7.8 s in the foreground, with 354 flushes, a longest gap between flushes of 6.5 s, and a worst append-to-commit latency of 7.6 s. `timeout@50` took 7.8 s with 133 flushes and a flush spacing p90 of 65 ms. Headless Chromium never hides a tab (`visibilityState` stayed `visible`), so the first, headless attempts were invalid and are not in the file. Single runs: some of the `raf` stall may come from tab-switch timing.
+
+### Caveats and what S5 still has to measure
+
+- **No iPhone was available.** `raf` on iOS runs on `CADisplayLink`; it is expected to behave like Android and has not been tested. A 60 Hz Android phone would show about half the `raf` flushes of the S25 FE at 120 Hz.
+- **A backgrounded native app is untested.** Buffered text should flush when frames resume. There is a unit test for the suspend and resume path, not a device check.
+- **F4c (a real LLM transcript) is still not collected.** The transcripts in `bench/fixtures/transcripts/` are synthetic.
+- **The `isSameBlock` prefix fast path never fires through `<Block>`** ([note in P2-2](./phase-2/decisions.md#p2-2-splice-strategy)): measure the cost of the source-text comparison on a 900-block stream on the device, then fix it.
+- **`F4d`'s bar is still TBD** ([P2-1](./phase-2/decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture)); report absolute cost, not a multiple of a 13 ms full parse.
+- The `streamCost` bars of P2-1 were set for a 50 ms window. With the per-frame default on native the multiple is higher (about 18× in Node), so re-read them at S5.
+
 ## Not measured
 
 - A low-end Android (Snapdragon 6xx class) and a recent iPhone (not available for M7; see [P1-25](./phase-1/decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1)).
