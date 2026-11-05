@@ -26,7 +26,7 @@ A block that looks closed can still change, or affect earlier blocks, in a few c
 |---|---|---|
 | New link reference definition | `[x]: http://…` arrives after `[x]` was used | Full re-parse, which is rare in LLM output |
 | List or blockquote continuation | A list item followed by a blank line, then more items | Treat a top-level `list`/`blockquote` as open until a non-matching block starts |
-| Open fenced code | ```` ``` ```` not yet closed | The fence block stays open, and its content takes a fast path (append text only, no re-parse) |
+| Open fenced code | ```` ``` ```` not yet closed | The fence block stays open. The fast path appends the chunk's text to the open code block with no re-parse, and falls back to the tail re-parse when a line could close the fence. Proposed, pending device confirmation ([P2-5](./phase-2/decisions.md#p2-5-open-fence-fast-path)) |
 | Setext heading | `Title` followed by `===` | The previous paragraph stays open until the next block starts |
 | Table | Rows still arriving | The table stays open, and only that block re-renders |
 
@@ -40,7 +40,7 @@ Partial syntax such as `**bold` or `[link](htt` looks broken while it streams in
 
 - Frozen blocks keep their source text and context, so `isSameBlock` lets their `memo(Block)` bail out (P1-9).
 - Only the last block re-renders.
-- Updates are batched to **at most one per animation frame** (`requestAnimationFrame`). Tokens that arrive within a frame are combined into one append.
+- Updates are batched with a fixed flush window, 50 ms proposed as the default (`flushIntervalMs`, to be confirmed on a device): a leading flush on the first chunk, then at most one per window, and a trailing flush so the last chunk always lands. Tokens that arrive within a window are combined into one append. Per-frame batching was measured and does not reduce parse count at one chunk per frame ([P2-4](./phase-2/decisions.md#p2-4-coalescing-policy)).
 
 ## API
 

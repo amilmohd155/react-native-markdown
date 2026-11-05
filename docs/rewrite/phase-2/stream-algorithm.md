@@ -68,13 +68,15 @@ A full re-parse resets `stableCount` to `blockCount - 1`. It is rare in LLM outp
 
 ## Open fenced code: fast path
 
+Proposed ([P2-5](./decisions.md#p2-5-open-fence-fast-path)), pending device confirmation. On F2 fenced code is 4.6 to 13% of flush cost, but on a code-heavy stream it is 86 to 89% and the fast path cuts `streamCost` from 56.9× to 7.24× at 20-character chunks ([results](../02-benchmarks.md#code-heavy-fixture)).
+
 A top-level, unindented fenced block that has not been closed would otherwise be re-parsed in full on every chunk, which is quadratic in the block. The fast path appends the chunk's text to the open `CodeBlock` node's text and extends `blockEnd`, with no re-parse. It applies only when all of the following hold, otherwise the normal tail re-parse runs:
 
 - the open block is a top-level fenced `CodeBlock` (not inside a list or quote)
 - the chunk contains no line that could close the fence (a line of at least as many fence characters, optionally indented up to 3 spaces)
 - the previous parse ended inside the fence
 
-Whether it ships is decided in S0 ([P2-5](./decisions.md#p2-5-open-fence-fast-path)). The equivalence harness covers it either way.
+It ships only if the equivalence harness covers it and shows it matches a full parse ([testing-harness](./testing-harness.md#targeted-cases)).
 
 ## Hiding unfinished syntax
 

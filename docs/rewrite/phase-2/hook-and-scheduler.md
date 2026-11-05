@@ -30,10 +30,10 @@ interface MarkdownStream {
 
 ## Scheduler
 
-- **Default:** at most one `flush` per animation frame (`requestAnimationFrame`). Appends within a frame are combined.
-- **Adaptive (if S0 says so, [P2-4](./decisions.md#p2-4-coalescing-policy)):** the parse cost of recent flushes sets a minimum interval, so a slow device or a large open block flushes less often instead of falling behind. The interval is capped so text never lags by more than a few frames.
-- **`done()` and `reset()`** flush synchronously and cancel any pending frame.
-- **Clock/raf are injected**, so tests use a fake clock. Where `requestAnimationFrame` is missing (SSR, some test environments) fall back to `setTimeout(16)`.
+- **Default (proposed, [P2-4](./decisions.md#p2-4-coalescing-policy); the 50 ms value is confirmed on a device at S5):** a fixed flush window, `flushIntervalMs` (default 50). The first `append` flushes immediately (leading flush). After that there is at most one `flush` per window, and a trailing flush runs at the end of the window if anything is still buffered. Appends within a window are combined.
+- **Adaptive: deferred.** Deriving the interval from recent flush cost did nothing in S0, because a flush costs far less than a frame. Revisit if S5 shows a flush p90 above one frame.
+- **`done()` and `reset()`** flush synchronously and cancel any pending timer.
+- **Clock and timer are injected**, so tests use a fake clock. The scheduler uses `setTimeout`, so it needs no `requestAnimationFrame` and works in SSR and test environments.
 
 ## Hook
 
@@ -48,9 +48,9 @@ function useMarkdownStream(options?: UseMarkdownStreamOptions): {
 
 - `append`, `reset` and `done` have **stable identity** for the life of the component, so they are safe in effect dependency lists.
 - `document` is state: it changes once per flush. The initial value is an empty document, so `<Markdown document>` always has something to render.
-- Options (`preset`, `plugins`, `backend`, `smoothing`) are read at creation. Changing them after creation requires `reset()`. A dev warning fires if they change identity between renders, as `plugins` already does for `<Markdown>`.
-- **StrictMode:** effects run twice in development. The core is created lazily once (a ref), and cleanup only cancels the pending frame; it does not discard the buffered text.
-- **Unmount:** cancel the pending frame; later `append` calls are ignored.
+- Options (`preset`, `plugins`, `backend`, `smoothing`, `flushIntervalMs`) are read at creation. Changing them after creation requires `reset()`. A dev warning fires if they change identity between renders, as `plugins` already does for `<Markdown>`.
+- **StrictMode:** effects run twice in development. The core is created lazily once (a ref), and cleanup only cancels the pending timer; it does not discard the buffered text.
+- **Unmount:** cancel the pending timer; later `append` calls are ignored.
 - **Concurrent rendering:** the stream lives outside React state, and the hook publishes `document` with a state update. A render that is thrown away does not lose appended text.
 
 ## Usage (unchanged from 05)

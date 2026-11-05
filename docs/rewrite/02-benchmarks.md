@@ -153,6 +153,107 @@ Web (4× throttle): F3 `firstRender` 262.2 ms (table) against 255.3 ms (tree), a
 
 - `isSameBlock` against hashing every block ([P1-9](./phase-1/decisions.md)) and the node builder's share of parse time ([02 · Device results](#device-results-preliminary-m1)), on a low-end device: there is no such device, and the S25 FE results above are the M1 ones.
 
+## Phase 2 streaming spike (S0)
+
+Question: what does streaming a 10 KB message cost, as a multiple of one full `parse()`, for different chunk sizes and flush policies? Decisions that follow: [P2-1](./phase-2/decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture), [P2-4](./phase-2/decisions.md#p2-4-coalescing-policy), [P2-5](./phase-2/decisions.md#p2-5-open-fence-fast-path).
+
+**Setup:** Node `--jitless`; F2 (9,724 characters, 586 nodes, 58 blocks); the real markdown-it parser and the token-to-node-table conversion. Arrival is simulated at 1,250 characters per second, so a 20-character chunk arrives every 16 ms. One full `parse()` takes 7.0 to 7.2 ms. `streamCost` is the total flush cost divided by one full `parse()`. The naive figures are interpolated from 40 prefix parses.
+
+### `streamCost` by chunk size
+
+| Strategy | 1 char | 2 chars | 20 chars | 195 chars |
+|---|---|---|---|---|
+| naive full re-parse per chunk | 4633× | 2327× | 234× | 24.5× |
+| tail re-parse per chunk | 197× | 96× | 10.7× | 1.96× |
+| tail + 16 ms frame coalescing | 10.7× | 10.7× | 10.7× | 1.97× |
+
+Adaptive throttling gave the same result as frame coalescing: each flush costs about 0.37 ms, far below a frame, so the throttle never engages. On F2, tail re-parse with the open-fence fast path was 10.5× at 20 characters; it skipped 78 of 487 flushes and saved about 1.5%, because F2 has little fenced code. A code-heavy stream behaves differently: see [Code-heavy fixture](#code-heavy-fixture).
+
+### Fixed flush window, 20-character chunks
+
+| Window | Flushes | `streamCost` | Lag mean / max (ms) |
+|---|---|---|---|
+| none | 487 | 11.3× | 0.2 / 0.7 |
+| 16 ms | 487 | 11.3× | 0.2 / 0.6 |
+| 33 ms | 237 | 6.14× | 16.1 / 32.5 |
+| 50 ms | 157 | 4.36× | 24.1 / 48.7 |
+| 100 ms | 79 | 2.72× | 48.2 / 96.7 |
+| 200 ms | 40 | 1.84× | 96.3 / 192.7 |
+
+At 195-character chunks every window up to 100 ms stays at 2.0 to 2.2×, and 200 ms gives 1.83×.
+
+### Cost by open block kind
+
+Share of tail flush cost, by the kind of block that was open:
+
+| Chunk | Fenced code | Table | List | Other |
+|---|---|---|---|---|
+| 20 chars | 4.6% | 33.6% | 23.8% | 38.0% |
+| 195 chars | 13.4% | 17.2% | 18.7% | 50.8% |
+
+On F2, fenced code is a small share of the cost. The code-heavy fixture below reverses that. The earlier throwaway check (tail re-parse, markdown-it only) gave 10.4× at 500 chunks and 2.0× at 50 chunks, which matches.
+
+### Code-heavy fixture
+
+F2 has little fenced code, so it understates the cost of an open fence. `bench/fixtures/code-heavy.md` is hand-written: 5,619 characters, 6 blocks, 22 nodes, one TypeScript fence of about 4.5 KB plus a short list and a small second fence. One full `parse()` takes 0.65 ms. Node `--jitless`, 3 runs, same arrival rate as above.
+
+`streamCost`, 20-character chunks (281 flushes):
+
+| Strategy | `streamCost` |
+|---|---|
+| naive full re-parse per chunk | 117× |
+| tail re-parse | 56.9× |
+| tail + 16 ms frame coalescing | 61.3× |
+| tail + adaptive throttling | 55.8× |
+| tail + open-fence fast path | 7.24× (249 of 281 flushes skipped; 4.7 ms total against 37.3 ms) |
+
+`streamCost`, 195-character chunks (29 flushes): naive 11.95×; tail 6.79×; tail + open-fence fast path 1.63× (24 of 29 flushes skipped; 1.1 ms against 4.4 ms).
+
+Fixed flush window, tail re-parse without the fast path, 20-character chunks:
+
+| Window | `streamCost` | Lag mean / max (ms) |
+|---|---|---|
+| none | 55.8× | |
+| 16 ms | 67.4× | |
+| 33 ms | 31.1× | 15.9 / 32.3 |
+| 50 ms | 19.1× | 24.0 / 48.4 |
+| 100 ms | 9.96× | 48.0 / 96.4 |
+| 200 ms | 5.46× | 96.8 / 192.3 |
+
+At 195-character chunks every window up to 100 ms stays at about 6.7×, and 200 ms gives 5.5×.
+
+Share of tail flush cost by open block kind, against F2:
+
+| Fixture | Chunk | Fenced code | Table | List | Other |
+|---|---|---|---|---|---|
+| code-heavy | 20 chars | 89.0% | 0% | 7.1% | 3.9% |
+| code-heavy | 195 chars | 86.2% | 0% | 13.8% | 0% |
+| F2 | 20 chars | 4.6% | 33.6% | 23.8% | 38.0% |
+| F2 | 195 chars | 13.4% | 17.2% | 18.7% | 50.8% |
+
+Caveats:
+
+- **The multiples are inflated.** A code block parses very fast (22 nodes), so the full-parse denominator is tiny. In absolute terms the whole 5.6 KB stream costs 37 ms of flush time without the fast path and 4.7 ms with it (about 0.13 ms per flush against 0.02), spread over about 4.5 s. On Hermes, at roughly 2.8× Node `--jitless`, that is about 100 ms against 13 ms.
+- **A ratio may be the wrong test for code-heavy streams.** The exit criterion is a ratio ([P2-1](./phase-2/decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture)); whether it suits code-heavy streams is a question for the P2-1 device experiments.
+- **Equivalence is not shown.** The spike's fast path only appends text. It builds no document and does not compare with a full parse, so the equivalence harness must cover it if it ships ([P2-5](./phase-2/decisions.md#p2-5-open-fence-fast-path)).
+- **Windows alone do not fix code-heavy streams.** A 50 ms window still gives 19×; the fast path reaches 7.2× with no added lag.
+
+Reproduce: `cd bench && node --jitless --import tsx stream.mjs 3 --text fixtures/code-heavy.md --sizes 20,195`
+
+### Caveats
+
+- **Splice and React commit are not included.** The splice does not exist yet; S1 and S5 measure it and the commit. The default in [P2-2](./phase-2/decisions.md#p2-2-splice-strategy) stays as proposed.
+- **Node `--jitless` is a proxy.** Phase 1 found Hermes parsing about 2.8× slower than Node `--jitless`. The ratios should carry over, and S5 re-checks them on the S25 FE.
+- **No real LLM transcripts (F4c).** No API key or recording was available. `bench/fixtures/transcripts/` holds synthetic ones (about 1.3 to 1.5 KB each, authored and modelled; 24 to 32× unbatched, 5× at 200 ms). They must not set the bar. F4c stays open and has to be recorded before S5; see `bench/fixtures/transcripts/SOURCES.md`.
+- **The spike's tail path ends with 57 blocks, a full parse with 58.** F2 ends with a footnote definition `[^perf]:`, and the tail parse cannot see the earlier reference. The design already handles this (a footnote definition is a full re-parse trigger and the footnote section is always open, see [stream-algorithm](./phase-2/stream-algorithm.md)), so S1 must implement it; the spike does not.
+
+### Reproduce
+
+```bash
+cd bench && yarn stream:jitless                         # all strategies on F2
+cd bench && yarn stream:jitless --transcript file       # replay a transcript from bench/fixtures/transcripts
+```
+
 ## Not measured
 
 - A low-end Android (Snapdragon 6xx class) and a recent iPhone (not available for M7; see [P1-25](./phase-1/decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1)).

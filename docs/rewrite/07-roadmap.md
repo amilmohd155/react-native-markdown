@@ -18,10 +18,10 @@ Implementation detail: [`phase-1/`](./phase-1/README.md).
 
 ### Phase 2: Streaming
 Implementation detail: [`phase-2/`](./phase-2/README.md).
-- `useMarkdownStream` (feeding `<Markdown document>`), tail re-parse with node-table splicing, frame batching, optional smoothing.
+- `useMarkdownStream` (feeding `<Markdown document>`), tail re-parse with node-table splicing, flush-window batching, optional smoothing.
 - Randomized-chunking equivalence tests.
 
-**Exit criteria:** streaming a 10 KB message costs under 2× a single full parse in total.
+**Exit criteria:** streaming a 10 KB message costs, in total flush cost with the default flush window, at most 2× a single full parse when it arrives in 50 chunks of about 195 characters, and at most 5× when it arrives in 500 chunks of about 20 characters. The 2× bar for the 500-chunk case is proposed to be waived, and all bars stay provisional until measured on a device: [P2-1](./phase-2/decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture).
 
 ### Phase 3: Scale & polish
 - `virtualize` with FlashList.

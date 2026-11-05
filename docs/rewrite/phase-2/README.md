@@ -21,7 +21,7 @@ Out of scope: virtualization and polish (phase 3), the native backend (phase 4).
 
 Defined in [07](../07-roadmap.md#phase-2-streaming). Restated here only as a checklist to track:
 
-- [ ] Streaming a 10 KB message costs under 2× a single full parse in total, **as defined by [P2-1](./decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture)** (the roadmap wording leaves chunk size and timing open; see [why](./work-breakdown.md#why-s0-comes-first))
+- [ ] Streaming a 10 KB message costs at most 2× a single full parse in total with 195-character chunks, and at most 5× with 20-character chunks, **as proposed in [P2-1](./decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture)** (the roadmap wording leaves chunk size and timing open; see [why](./work-breakdown.md#why-s0-comes-first))
 - [ ] Equivalence: after every append, the streamed document equals `parse(source so far)`, apart from a reviewed allowlist ([testing-harness.md](./testing-harness.md#equivalence-harness))
 - [ ] Only the open block re-renders per update (memo test)
 - [ ] Runs unchanged in Expo Go and on the web (existing `check:expo-go` and `web` jobs stay green)
@@ -36,9 +36,9 @@ Defined in [07](../07-roadmap.md#phase-2-streaming). Restated here only as a che
 | Document | Contents |
 |---|---|
 | [work-breakdown.md](./work-breakdown.md) | Milestones S0–S5 in order, with dependencies and done criteria |
-| [stream-algorithm.md](./stream-algorithm.md) | Tail boundary, carried context, full-reparse triggers, fence fast path |
+| [stream-algorithm.md](./stream-algorithm.md) | Tail boundary, carried context, full-reparse triggers, open-fence fast path (proposed) |
 | [table-splicing.md](./table-splicing.md) | `parseFrom`, splicing into a new table, the `isSameBlock` prefix fast path |
-| [hook-and-scheduler.md](./hook-and-scheduler.md) | The React-free core, `useMarkdownStream`, frame batching, lifecycle |
+| [hook-and-scheduler.md](./hook-and-scheduler.md) | The React-free core, `useMarkdownStream`, flush-window batching, lifecycle |
 | [smoothing.md](./smoothing.md) | `hide-incomplete` semantics |
 | [testing-harness.md](./testing-harness.md) | Equivalence harness, chunkers, allowlist, perf additions |
 | [benchmark-protocol.md](./benchmark-protocol.md) | F4, metrics, method and pass bars |

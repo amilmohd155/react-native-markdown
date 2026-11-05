@@ -24,6 +24,8 @@ Each is run at every split position:
 - list continuation after a blank line; nested lists; a list ending and a paragraph starting
 - table rows arriving one at a time; header without delimiter yet
 - open fenced code (backticks and tildes, longer closing fence, info string), and an indented fence
+  - the open-fence fast path ([P2-5](./decisions.md#p2-5-open-fence-fast-path), proposed) must produce the same document as a full parse: randomized chunking of a fence, fences split mid-marker, chunks containing closing-fence candidates (a line of at least as many fence characters, indented 0 to 3 spaces), a closing fence arriving in the same chunk as more text, and the info string arriving late
+  - fences the fast path must not take (indented 4 or more, inside a list item or a quote) fall back to the normal tail re-parse; the work counter shows which path ran
 - link reference definition arriving after its use (full-reparse trigger)
 - footnote reference before its definition, and definitions arriving in any order
 - duplicate headings (slug counters across the boundary)
@@ -36,10 +38,10 @@ The pathological cases (`test/fixtures/pathological/cases.ts`) run streamed in 1
 
 ## Hook and scheduler tests
 
-- Fake clock and `requestAnimationFrame`: N appends within a frame produce one flush; appends across frames produce one flush each (or per the adaptive policy).
+- Fake clock and timer: the first append flushes at once (leading flush); further appends within the 50 ms window produce one trailing flush at the end of the window; appends in later windows produce one flush each; `flushIntervalMs` changes the window ([P2-4](./decisions.md#p2-4-coalescing-policy)).
 - `append`, `reset`, `done` keep their identity across renders.
 - StrictMode: double effect run neither duplicates nor drops text.
-- Unmount cancels the pending frame; a later `append` is a no-op without warning.
+- Unmount cancels the pending timer; a later `append` is a no-op without warning.
 - `done()` flushes synchronously and the result equals `parse(source)`.
 - Changing `plugins`/`preset` identity warns in dev.
 
