@@ -22,8 +22,13 @@ import baseline from './baseline.json';
  * a shared machine only ever adds time. A slower runner slows both, so the
  * ratio holds; only a change in our code moves it.
  *
- * `perf/baseline.json` holds the ratios. After an intended change, regenerate
- * it with `yarn perf:update` and commit it.
+ * `perf/baseline.json` holds the ratios, one section per platform: render
+ * cost relative to parsing differs between machines (a Mac and a Linux CI
+ * runner differ by about 35%), so a baseline only gates the platform it was
+ * recorded on. A platform with no baseline is skipped locally and fails in CI.
+ * After an intended change, regenerate it with `yarn perf:update` and commit
+ * it. For `linux-x64`, a failed CI run uploads a `perf-baseline` artifact:
+ * commit its `linux-x64` section.
  *
  * A failing metric is retried twice, so only a regression that repeats fails.
  *
@@ -37,6 +42,14 @@ import baseline from './baseline.json';
 const TOLERANCE = 1.2;
 const UPDATE = process.env.PERF_UPDATE === '1';
 const WARM = process.env.PERF_WARM === '1';
+const PLATFORM = `${process.platform}-${process.arch}`;
+
+type Baselines = {
+  note?: string;
+  platforms: Record<string, Record<string, unknown>>;
+};
+const stored = baseline as unknown as Baselines;
+const expected = stored.platforms[PLATFORM];
 
 // React's `act` needs this flag; the renderer is `test-renderer`, as under RNTL.
 (
@@ -119,7 +132,7 @@ async function ratioOf(
   const ratio = bestMetric / bestReference;
   measured[key] = ratio;
 
-  const base = (baseline as Record<string, unknown>)[key];
+  const base = expected?.[key];
   lines.push(
     `${key.padEnd(26)} ${bestMetric.toFixed(2).padStart(9)} ms   ratio ${ratio.toFixed(3)}` +
       (typeof base === 'number'
@@ -127,8 +140,19 @@ async function ratioOf(
         : '   no baseline')
   );
   if (UPDATE) return;
+  if (expected === undefined) {
+    // Nothing to compare with on this platform. CI must not pass silently.
+    if (process.env.CI) {
+      throw new Error(
+        `No perf baseline for ${PLATFORM}. Take the perf-baseline artifact of this run and commit its ${PLATFORM} section.`
+      );
+    }
+    return;
+  }
   if (typeof base !== 'number') {
-    throw new Error(`No baseline for ${key}: run \`yarn perf:update\`.`);
+    throw new Error(
+      `No baseline for ${key} on ${PLATFORM}: run \`yarn perf:update\`.`
+    );
   }
   expect(ratio).toBeLessThanOrEqual(base * TOLERANCE);
 }
@@ -152,15 +176,17 @@ jest.retryTimes(2);
   'perf (ratio to markdown-it, node --jitless)',
   () => {
     afterAll(() => {
-      process.stdout.write(`\n${lines.join('\n')}\n`);
+      process.stdout.write(`\n${PLATFORM}\n${lines.join('\n')}\n`);
       if (!UPDATE) return;
       const rounded = Object.fromEntries(
         Object.entries(measured).map(([k, v]) => [k, Number(v.toPrecision(3))])
       );
-      const next = {
-        note: 'Ratios to markdown-it parsing the same text. Regenerate with `yarn perf:update`.',
-        node: process.version,
-        ...rounded,
+      const next: Baselines = {
+        note: stored.note,
+        platforms: {
+          ...stored.platforms,
+          [PLATFORM]: { node: process.version, ...rounded },
+        },
       };
       writeFileSync(
         join(__dirname, 'baseline.json'),

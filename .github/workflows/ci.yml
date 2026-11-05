@@ -94,6 +94,20 @@ jobs:
       - name: Parse and render time against the stored baselines (node --jitless)
         run: yarn perf
 
+      # Baselines are per platform. If this job fails because the slowdown is
+      # intended, or because linux-x64 has no baseline yet, take the
+      # `linux-x64` section of this artifact and commit it to perf/baseline.json.
+      - name: Record a baseline for this runner
+        if: failure()
+        run: yarn perf:update
+
+      - name: Upload the recorded baseline
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-baseline
+          path: perf/baseline.json
+
   expo-go-check:
     runs-on: ubuntu-latest
     steps:
