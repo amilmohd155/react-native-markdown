@@ -26,9 +26,15 @@ The smoother runs on the open block's source before it is parsed for display, an
 
 Not smoothed: an unclosed fenced code block (it already renders as an open code block), table rows in progress, list markers.
 
-Open details to settle in S3, with tests:
-- Whether the visible tail may lag behind the true tail by at most one word, to avoid flicker when a marker completes.
-- How runs inside emphasis interact (`**a *b`).
+Details settled in S3 ([P2-6](./decisions.md#p2-6-hide-incomplete-semantics)):
+- **No extra lag.** The visible tail is the true tail minus the dangling fragment, never a word less. When a marker completes the run appears formatted in one step; there is no intermediate state to flicker through.
+- **Nested runs.** Cut at the earliest opener that is still unclosed at the end of the text. `**a *b` shows nothing of the run (cut at `**`); `*a **b` cuts at `*`; `**a** *b` cuts at the second `*`. The result is the longest prefix with no open construct.
+- **Openers.** A `*`, `_` or `~~` opens a run only when the next character is not whitespace (and, for `_`, the previous one is not alphanumeric). So `2 * 3` and `snake_case` are untouched. A marker with no next character yet (a lone trailing `*`) is removed.
+- **Whitespace.** The space before a cut stays: `text **bold` shows `text ` (the visible tail is the true tail).
+- **Links and images.** `[label]` alone stays (a valid shortcut reference). `[label` and `[label](...` without `)` show `label`. An unclosed `![alt` or `![alt](` shows nothing for the image.
+- **Tags.** `<` followed by a letter, `/`, `!` or `?` with no `>` yet is hidden, as is a lone trailing `<`; `a < b` is untouched. Limitation: a bare `x<y` in prose stays hidden until a `>` arrives or `done()` runs.
+- **Tables.** A scope whose first line starts with `|` is treated as a table and left unchanged; rows without a leading pipe are not detected.
+- **Scope.** The scanner starts at the open block's start, and restarts at each blank line and at each line that begins with a block marker (list item, quote, heading), because inline runs do not cross those.
 
 ## Implementation notes
 

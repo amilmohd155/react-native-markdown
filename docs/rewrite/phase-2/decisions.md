@@ -59,8 +59,8 @@ These are decisions made while building Phase 2, numbered `P2-n`. Design-level d
 
 ## P2-6: `hide-incomplete` semantics
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-05), implemented in S3.
 - **Date:** 2026-11-05
 - **Context:** 05 only says "buffers trailing unclosed inline markers". Two readings: hide the dangling marker, or auto-close it.
-- **Decision (proposed):** hide, applied to the open block's view only ([smoothing](./smoothing.md)).
-- **Consequences:** none on `source` or on the final document.
+- **Decision:** hide, applied to the open block's view only ([smoothing](./smoothing.md)). No extra one-word lag; nested runs are cut at the earliest unclosed opener ([details](./smoothing.md#semantics)). The stream core keeps its exact table for resuming, and only the table it returns is the smoothed view: the open block is parsed again from the smoothed text, and only when smoothing changed the text (otherwise the returned table is the exact one). `done()` and `reset()` return the exact parse.
+- **Consequences:** none on `source` or on the final document. Costs a second parse of the open block on flushes where a fragment is hidden. Smoothing does not give per-frame visual updates between flushes (the open point in [P2-4](#p2-4-coalescing-policy)): it changes what a flush shows, not when.

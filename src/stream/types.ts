@@ -99,6 +99,18 @@ export interface MarkdownStreamCore {
   readonly lastFlush: FlushStats;
 }
 
+/**
+ * Smoothing of the returned table (P2-6). `'hide-incomplete'` hides the
+ * dangling syntax fragment of the open block in the view only; the core's
+ * internal state, `source` and `done()` are always exact.
+ */
+export type SmoothingMode = 'none' | 'hide-incomplete';
+
+/** Parse options plus the stream-only `smoothing` option (default `'none'`). */
+export type StreamOptions = ParseOptions & {
+  readonly smoothing?: SmoothingMode;
+};
+
 export type CreateMarkdownStreamCore = (
-  options?: ParseOptions
+  options?: StreamOptions
 ) => MarkdownStreamCore;

@@ -17,12 +17,14 @@ import {
   parseWithMarkdownIt,
   type ParseOptions,
 } from '../parse';
+import { hideIncomplete } from './smoothing';
 import { spliceTables } from './splice';
 import type {
   CarriedContext,
   CreateMarkdownStreamCore,
   FlushStats,
   MarkdownStreamCore,
+  StreamOptions,
 } from './types';
 
 /** Internal knobs, for tests (equivalence with and without the fence fast path). */
@@ -102,9 +104,17 @@ function findOpenFence(table: NodeTable): OpenFence | null {
 }
 
 export const createMarkdownStreamCoreWith = (
-  options?: ParseOptions,
+  streamOptions?: StreamOptions,
   internals: StreamCoreInternals = {}
 ): MarkdownStreamCore => {
+  const smoothing = streamOptions?.smoothing ?? 'none';
+  // `smoothing` never reaches the parse functions.
+  let options: ParseOptions | undefined = streamOptions;
+  if (streamOptions && 'smoothing' in streamOptions) {
+    const rest: Record<string, unknown> = { ...streamOptions };
+    delete rest.smoothing;
+    options = rest as ParseOptions;
+  }
   const fastPathEnabled =
     (internals.fenceFastPath ?? FENCE_FAST_PATH_DEFAULT) &&
     !options?.plugins?.length;
@@ -259,53 +269,127 @@ export const createMarkdownStreamCoreWith = (
     return table;
   };
 
+  const appendExact = (chunk: string): NodeTable => {
+    if (chunk.length === 0) {
+      lastFlush = { charsReparsed: 0, fullReparse: false, path: 'tail' };
+      return table;
+    }
+    const wholeSourceTail = hasSection(table);
+    const before = table;
+    const blockless = table.blockCount === 0;
+    // Only blank lines so far: resume at the last line start instead of
+    // re-reading all of it (a blockless source can also hold definitions).
+    const blankOffset =
+      blockless && source.trim().length === 0
+        ? source.lastIndexOf('\n') + 1
+        : 0;
+    source += chunk;
+    const fast = tryFence(chunk);
+    if (fast) return fast;
+
+    const offset = blockless ? blankOffset : resumeOffset;
+    const seed = blockless ? undefined : resumeSeed;
+    const tail = parseFrom(source, offset, seed, options);
+    // Earlier blocks depend on definitions: if the set changed, re-parse all.
+    if (tail.table.context !== before.context || tail.hasFootnoteDefinition) {
+      return fullReparse();
+    }
+    table = spliceTables(table, stableCount, tail.table, prefixId);
+    probeChars = 0;
+    if (!settle(table, offset, seed, tail.prefixCarried)) {
+      return fullReparse();
+    }
+    lastFlush = {
+      charsReparsed: wholeSourceTail
+        ? source.length
+        : source.length - offset + probeChars,
+      fullReparse: false,
+      path: 'tail',
+    };
+    return table;
+  };
+
+  if (smoothing === 'none') {
+    return {
+      append: appendExact,
+      done: fullReparse,
+      reset(next = ''): NodeTable {
+        source = next;
+        return fullReparse();
+      },
+      get table() {
+        return table;
+      },
+      get source() {
+        return source;
+      },
+      get lastFlush() {
+        return lastFlush;
+      },
+    };
+  }
+
+  /** True after `done`/`reset`: the exact table is shown until the next append. */
+  let exactShown = true;
+  let viewOf: NodeTable | null = null;
+  let view: NodeTable | null = null;
+
+  /**
+   * The smoothed view of the exact `table` (P2-6): the open block (from
+   * `blockStart[stableCount]`) is parsed again from its text minus the
+   * dangling fragment, then spliced onto the exact closed prefix. Never
+   * feeds back into the core state. Falls back to the exact table whenever
+   * the view parse would change document-level context.
+   */
+  const smoothed = (): NodeTable => {
+    if (exactShown) return table;
+    if (viewOf === table && view) return view;
+    const exact = table;
+    const real = exact.blockCount - (hasSection(exact) ? 1 : 0);
+    const openStart = real > 0 ? exact.blockStart[stableCount]! : 0;
+    const openText = source.slice(openStart);
+    const hidden = hideIncomplete(openText);
+    let result = exact;
+    if (hidden !== openText) {
+      const offset = real > 0 ? resumeOffset : 0;
+      const seed = real > 0 ? resumeSeed : undefined;
+      const tail = parseFrom(
+        source.slice(0, openStart) + hidden,
+        offset,
+        seed,
+        options
+      );
+      if (tail.table.context === exact.context && !tail.hasFootnoteDefinition) {
+        // Offsets index the smoothed text (never longer than the real one);
+        // `source` stays the real text.
+        result = {
+          ...spliceTables(exact, stableCount, tail.table, prefixId),
+          source,
+        };
+      }
+    }
+    viewOf = exact;
+    view = result;
+    return result;
+  };
+
   return {
     append(chunk: string): NodeTable {
-      if (chunk.length === 0) {
-        lastFlush = { charsReparsed: 0, fullReparse: false, path: 'tail' };
-        return table;
-      }
-      const wholeSourceTail = hasSection(table);
-      const before = table;
-      const blockless = table.blockCount === 0;
-      // Only blank lines so far: resume at the last line start instead of
-      // re-reading all of it (a blockless source can also hold definitions).
-      const blankOffset =
-        blockless && source.trim().length === 0
-          ? source.lastIndexOf('\n') + 1
-          : 0;
-      source += chunk;
-      const fast = tryFence(chunk);
-      if (fast) return fast;
-
-      const offset = blockless ? blankOffset : resumeOffset;
-      const seed = blockless ? undefined : resumeSeed;
-      const tail = parseFrom(source, offset, seed, options);
-      // Earlier blocks depend on definitions: if the set changed, re-parse all.
-      if (tail.table.context !== before.context || tail.hasFootnoteDefinition) {
-        return fullReparse();
-      }
-      table = spliceTables(table, stableCount, tail.table, prefixId);
-      probeChars = 0;
-      if (!settle(table, offset, seed, tail.prefixCarried)) {
-        return fullReparse();
-      }
-      lastFlush = {
-        charsReparsed: wholeSourceTail
-          ? source.length
-          : source.length - offset + probeChars,
-        fullReparse: false,
-        path: 'tail',
-      };
-      return table;
+      exactShown = false;
+      appendExact(chunk);
+      return smoothed();
     },
-    done: fullReparse,
+    done(): NodeTable {
+      exactShown = true;
+      return fullReparse();
+    },
     reset(next = ''): NodeTable {
+      exactShown = true;
       source = next;
       return fullReparse();
     },
     get table() {
-      return table;
+      return smoothed();
     },
     get source() {
       return source;
