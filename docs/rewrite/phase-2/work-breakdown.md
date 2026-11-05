@@ -52,7 +52,7 @@ Inside a block the cost is quadratic: about `Σ b² / (2·chunk)` over the block
 
 **Goal:** a React-free `createMarkdownStream()` whose document equals a full parse after every append.
 
-- `parseFrom(source, offset, context, options)` for the markdown-it backend ([table-splicing.md](./table-splicing.md#parsefrom)). Contract: [P2-3](./decisions.md#p2-3-parsefrom-contract).
+- `parseFrom(source, offset, carried, options)` for the markdown-it backend ([table-splicing.md](./table-splicing.md#parsefrom)). Contract: [P2-3](./decisions.md#p2-3-parsefrom-contract).
 - Stable-block tracking and the rules in [stream-algorithm.md](./stream-algorithm.md): tail boundary, carried context (references, slugs, footnotes), full-reparse triggers.
 - Splicing into a new table, and the `isSameBlock` prefix fast path ([table-splicing.md](./table-splicing.md)). Strategy: [P2-2](./decisions.md#p2-2-splice-strategy).
 - The open-fence fast path ([stream-algorithm.md](./stream-algorithm.md#open-fenced-code-fast-path)), if P2-5 is confirmed.

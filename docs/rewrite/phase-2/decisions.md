@@ -27,7 +27,7 @@ These are decisions made while building Phase 2, numbered `P2-n`. Design-level d
 
 ## P2-2: Splice strategy
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-05). Implemented in S1 (`src/stream/splice.ts`): about 0.105 ms per splice at 900 blocks on Node, [measured](../02-benchmarks.md#s1-stream-core-node-proxy). Re-measure on Hermes at S5; the table is private, so B or C can still replace A.
 - **Date:** 2026-11-05
 - **Context:** A stream update must produce a new immutable `NodeTable` sharing the closed prefix. Options A (copy), B (shared append buffer), C (chunked): [table-splicing](./table-splicing.md#splice-strategy). S0 did not measure splice cost (the splice does not exist yet), so it gave no evidence that the copy matters; S1 measures it.
 - **Decision (proposed):** A (copy the prefix columns per flush), unless S0 shows the copy matters. The table is private, so this is reversible.
@@ -35,10 +35,10 @@ These are decisions made while building Phase 2, numbered `P2-n`. Design-level d
 
 ## P2-3: `parseFrom` contract
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-05). Implemented in S1 for the markdown-it backend; types in `src/stream/types.ts`.
 - **Date:** 2026-11-05
 - **Context:** `parseFrom(source, offset, options)` exists on `ParserBackendImpl` without carried context. A tail-only parse loses link references, heading-slug counters and footnote state ([stream-algorithm](./stream-algorithm.md#carried-context)). A native backend (phase 4) must implement the same contract.
-- **Decision (proposed):** `parseFrom(source, offset, carried, options) → { table, carried }` as in [table-splicing](./table-splicing.md#parsefrom). The carried context is an opaque backend-defined value; the stream core only passes it back.
+- **Decision (proposed):** `parseFrom(source, offset, carried, options) → { table, carried, prefixCarried, newReferences, hasFootnoteDefinition }` (`ParseFromResult`, `src/stream/types.ts`) as in [table-splicing](./table-splicing.md#parsefrom). The carried context is an opaque backend-defined value; the stream core only passes it back. `prefixCarried` seeds the next append, and the two flags drive the full-reparse triggers. The markdown-it backend implements it; with footnotes defined in the prefix it tokenizes the whole source (accepted for S1, revisit at S5).
 - **Consequences:** updates `03 · Backend interface` and `src/parse/backend.ts`.
 
 ## P2-4: Coalescing policy
@@ -51,7 +51,7 @@ These are decisions made while building Phase 2, numbered `P2-n`. Design-level d
 
 ## P2-5: Open fence fast path
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-05). Ships in Phase 2: implemented in S1 and the equivalence harness matches a full parse with it on and off (1400 tests, no allowlist entries). The device measurement on Hermes at S5 is still to be taken and can only turn it off (`FENCE_FAST_PATH_DEFAULT` in `src/stream/createMarkdownStream.ts`), not change the equivalence requirement.
 - **Date:** 2026-11-05
 - **Context:** 05 describes appending text to an open fenced block without a re-parse ([stream-algorithm](./stream-algorithm.md#open-fenced-code-fast-path)). On F2 the case for it is weak: fenced code is 4.6% of tail flush cost at 20-character chunks and 13.4% at 195, tables are 33.6% and 17.2%, lists 23.8% and 18.7%, and the fast path skipped 78 of 487 flushes and saved about 1.5% of total cost (10.5× against 10.7×). A code-heavy stream is different ([results](../02-benchmarks.md#code-heavy-fixture)): on `bench/fixtures/code-heavy.md` (5.6 KB, one ~4.5 KB fence) the open fence is 89.0% of flush cost at 20 characters and 86.2% at 195. The fast path takes `streamCost` from 56.9× to 7.24× at 20 characters (249 of 281 flushes skipped) and from 6.79× to 1.63× at 195, with no added lag, while a 50 ms window alone still leaves 19.1×. The multiples are inflated by a tiny full-parse denominator: absolute cost is 37 ms against 4.7 ms for the whole stream, about 100 ms against 13 ms on Hermes. The spike's fast path only appended text and did not build a document, so it showed no equivalence with a full parse.
 - **Decision (proposed):** ship the open-fence fast path in Phase 2, to be confirmed with device measurements (together with [P2-1](#p2-1-exit-criterion-wording-and-the-f4-fixture) and [P2-4](#p2-4-coalescing-policy), on Hermes on a real device at S5) and an equivalence test. It ships only if the equivalence harness shows it matches a full parse.

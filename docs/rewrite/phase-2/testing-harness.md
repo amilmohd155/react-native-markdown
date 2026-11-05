@@ -34,7 +34,14 @@ Each is run at every split position:
 
 ### Pathological input
 
-The pathological cases (`test/fixtures/pathological/cases.ts`) run streamed in 1 KB chunks and must stay time-bounded, so a case that is linear as a single parse is not quadratic when streamed.
+The pathological cases (`test/fixtures/pathological/cases.ts`) run streamed in 1 KB chunks without coalescing. A case that is linear as a single parse can still cost flushes x open-block size when streamed, so the bound is a ratio scaled by flush count: streamed cost must be at most 2 x (flushes + 1) x one full parse, not a fixed multiple. An absolute time cap applies only to the default run, which truncates inputs to 32 KB. The full-size inputs are opt-in with `STREAM_PATHOLOGICAL_FULL=1` and take about 12 minutes.
+
+Environment knobs for the stream tests, run with `yarn test:stream`:
+
+- `STREAM_WORK=1` and `STREAM_WORK_STRICT=1`: enable the characters-re-parsed assertions (per-append work proportional to the open block); strict mode also rejects full re-parses outside the declared triggers.
+- `STREAM_SEED=<n>`: add one extra seeded chunking per input.
+- `STREAM_FULL=1`: run every chunk size on the large fixtures too.
+- `STREAM_NO_FENCE_FAST`: turn the open-fence fast path off, so the harness runs against the plain tail re-parse.
 
 ## Hook and scheduler tests
 

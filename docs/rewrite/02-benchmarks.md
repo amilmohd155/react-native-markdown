@@ -254,6 +254,29 @@ cd bench && yarn stream:jitless                         # all strategies on F2
 cd bench && yarn stream:jitless --transcript file       # replay a transcript from bench/fixtures/transcripts
 ```
 
+## S1 stream core (Node proxy)
+
+Measured on Node/V8, not Hermes. These are proxy numbers, to be re-measured at S5 on the S25 FE.
+
+- **Splice:** about 0.105 ms at 900 blocks with one tail block changed.
+- **900-block mixed document (45.7 KB):** one full parse takes 63 ms.
+  - 20-character chunks: 2285 appends, mean 0.32 ms per append, p95 1 ms. Characters re-parsed per append: mean 58, max 129. The whole stream costs 11.5x one full parse.
+  - 100-character chunks: 457 appends, mean 0.59 ms per append, total 4.3x one full parse.
+  - The per-append cost late in the document equals the early cost: the work is independent of document size.
+- **Pathological single-block inputs, 1 KB chunks, no coalescing:** quadratic by nature.
+
+| Input | Flushes | Streamed | One parse |
+|---|---|---|---|
+| `![[]()` repeated | 938 | 392.6 s | 881 ms (~446 parses, about flushes / 2) |
+| `[ (](` repeated | 196 | 3.9 s | 53 ms |
+| nested strong and emphasis | | 66 s | |
+| backticks | | 105 s | |
+| unclosed `<!--` | | 115 s | |
+
+All other cases stay under 10 s.
+
+The tail re-parse behaves as designed: the cost is flushes x open-block size. So the flush window ([P2-4](./phase-2/decisions.md#p2-4-coalescing-policy) coalescing, S2) and the S5 device numbers are what matter. The test therefore asserts streamed cost <= 2 x (flushes + 1) x one full parse, not a fixed 60x, and runs the full inputs only under `STREAM_PATHOLOGICAL_FULL=1` (about 12 minutes). See [testing-harness](./phase-2/testing-harness.md#pathological-input).
+
 ## Not measured
 
 - A low-end Android (Snapdragon 6xx class) and a recent iPhone (not available for M7; see [P1-25](./phase-1/decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1)).

@@ -15,6 +15,14 @@ interface StreamState {
 
 `stableCount = blockCount - 1` after each parse: every block except the last is closed. Closed blocks are never re-parsed unless a full-reparse trigger fires.
 
+**Refinements found by the equivalence harness in S1** (the plain rule above is not sufficient):
+
+1. **The preceding block is re-opened** when it directly abuts the open block (`blockEnd == blockStart`) and is not a Heading, CodeBlock, Divider or HtmlBlock. Without this, `- foo\n*` then `**` (lazy continuation), `<p>…\n</p` then `</pr`, and `> Foo\n-` then `--` diverge from a full parse.
+2. **A definition in the gap before the open block** moves the resume point to the start of the gap, because the next line can extend it (`[foo]: /url` then `"title"`). At block 0 the resume offset is 0.
+3. **Footnotes:** the synthetic footnote section has an empty range at `source.length`. The core resumes from the last real block, and treats the section as always open. A footnote definition in the open region means a full re-parse on every append, because a tail parse cannot see references in the prefix. Once the prefix defines footnotes, `parseFrom` re-tokenizes the whole source, reported as `charsReparsed = source.length` with `path: 'tail'`. Accepted for S1; revisit with S5 numbers.
+4. **Blockless sources:** only a whitespace-only source resumes at its last line; one holding reference or footnote definitions resumes at 0.
+5. **Probe:** re-opening needs the carried context before an earlier block, which `ParseFromResult` does not give (it gives `prefixCarried` before the last real block). The core obtains it with a truncated `parseFrom` probe, needed only when a chunk adds 3 or more blocks; the probe counts toward `charsReparsed`. Per-block carried context would remove it.
+
 ## Why closed blocks stay closed
 
 Appending text can only change the **last** top-level block, or start a new one. A block that has a successor cannot be reopened by later text, with these exceptions, which are the full-reparse triggers below:
@@ -59,7 +67,7 @@ A parse of `source.slice(offset)` alone would render the tail differently from a
 
 | Trigger | Detection | Why |
 |---|---|---|
-| New link reference definition appears in the tail | The tail's references are not a subset of the seeded ones | Earlier blocks may now contain links they rendered as text |
+| Link reference definitions change | The tail table's `context` differs from the previous table's `context` (also catches a definition that stops being one; does not refire while unchanged) | Earlier blocks may now contain links they rendered as text |
 | Footnote definition appears in the tail | Footnote plugin enabled and the tail has a `footnote_open` | Numbering and section content change |
 | `done()` | Always | Guarantees the final document is exactly `parse(source)` |
 | `reset(source?)` | Always | New stream |
@@ -68,7 +76,7 @@ A full re-parse resets `stableCount` to `blockCount - 1`. It is rare in LLM outp
 
 ## Open fenced code: fast path
 
-Proposed ([P2-5](./decisions.md#p2-5-open-fence-fast-path)), pending device confirmation. On F2 fenced code is 4.6 to 13% of flush cost, but on a code-heavy stream it is 86 to 89% and the fast path cuts `streamCost` from 56.9× to 7.24× at 20-character chunks ([results](../02-benchmarks.md#code-heavy-fixture)).
+Accepted ([P2-5](./decisions.md#p2-5-open-fence-fast-path)); the device numbers at S5 can still turn it off. On F2 fenced code is 4.6 to 13% of flush cost, but on a code-heavy stream it is 86 to 89% and the fast path cuts `streamCost` from 56.9× to 7.24× at 20-character chunks ([results](../02-benchmarks.md#code-heavy-fixture)).
 
 A top-level, unindented fenced block that has not been closed would otherwise be re-parsed in full on every chunk, which is quadratic in the block. The fast path appends the chunk's text to the open `CodeBlock` node's text and extends `blockEnd`, with no re-parse. It applies only when all of the following hold, otherwise the normal tail re-parse runs:
 
@@ -77,6 +85,14 @@ A top-level, unindented fenced block that has not been closed would otherwise be
 - the previous parse ended inside the fence
 
 It ships only if the equivalence harness covers it and shows it matches a full parse ([testing-harness](./testing-harness.md#targeted-cases)).
+
+**As implemented (S1).** The fast path ships behind an internal switch (`FENCE_FAST_PATH_DEFAULT = true` in `src/stream/createMarkdownStream.ts`) and is disabled automatically when user plugins are present. It applies only when the last block is a column-0 fenced `CodeBlock` that runs to the end of the source, with a complete opening line and no closer, and:
+
+- the chunk contains no `\r` or `\0`
+- no line of (the previous partial last line + the chunk) could be a closer
+- the new partial last line is not whitespace-only, because markdown-it drops a whitespace-only last line from the code content
+
+A late info string (opening line not yet complete) and indented or nested fences fall back to the tail re-parse. The equivalence harness passes with the fast path on and off. P2-5 is Accepted; the device numbers at S5 decide only whether the default stays on.
 
 ## Hiding unfinished syntax
 

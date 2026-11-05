@@ -4,20 +4,24 @@ How a stream update becomes a new `NodeTable` cheaply, and how the renderer skip
 
 ## `parseFrom`
 
-`ParserBackendImpl.parseFrom` is declared in `src/parse/backend.ts` but the markdown-it backend does not implement it yet. Contract: [P2-3](./decisions.md#p2-3-parsefrom-contract).
+`ParserBackendImpl.parseFrom` is implemented by the markdown-it backend. Contract: [P2-3](./decisions.md#p2-3-parsefrom-contract). Types: `src/stream/types.ts`.
 
 ```ts
 parseFrom(
-  source: string,           // the whole source so far
-  offset: number,           // a top-level block boundary
-  carried: CarriedContext,  // references, slug counters, footnote state from the prefix
+  source: string,                       // the whole source so far
+  offset: number,                       // a top-level block boundary
+  carried: CarriedContext | undefined,  // references, slug counters, footnote state from the prefix; undefined at offset 0
   options?: ParseOptions
-): { table: NodeTable; carried: CarriedContext }
+): ParseFromResult
+// { table, carried, prefixCarried, newReferences, hasFootnoteDefinition }
 ```
 
-- Parses `source.slice(offset)`; every offset in the result is shifted by `offset` so it is absolute, and line numbers (`token.map`) are shifted by the line of `offset`.
-- Returns a table for the **tail only**; the stream core splices it.
-- Line offsets: the stream core keeps the line-offset table and extends it incrementally (only the tail's lines are new) instead of recomputing it over the whole source each time.
+- Parses `source.slice(offset)`; every block offset in the result is absolute, and line numbers (`token.map`) are relative to the tail and converted internally.
+- Returns a table for the **tail only** (node ids are tail-local, `source` is the whole source); the stream core splices it.
+- `carried` is the context after the whole tail. `prefixCarried` is the context after the closed blocks only (all but the last real block): the seed for the next append.
+- `newReferences` and `hasFootnoteDefinition` are the full-reparse trigger signals ([stream-algorithm](./stream-algorithm.md#full-reparse-triggers)).
+- Line offsets: the markdown-it backend computes tail-relative offsets and adds the base, so the stream core does not keep a line-offset table.
+- Footnotes: the footnote section is synthetic, with an empty range at `source.length`. The core resumes from the last **real** block. Once the prefix defines footnotes, `parseFrom` tokenizes the whole source (O(source) per append) because a tail-only parse cannot see the definitions. Accepted for S1; revisit with S5 numbers.
 
 ## Splice strategy
 
@@ -33,11 +37,17 @@ Recommendation until S0 measures: **A**. It keeps the "immutable after build" ru
 
 Whichever option is chosen, node ids in the prefix are unchanged and the tail's ids start at the first id after the prefix, so parent/child/sibling links in the tail are offset by the prefix node count. The `blocks`, `blockStart`, `blockEnd` and `blockContext` columns are concatenated the same way.
 
+As implemented (`src/stream/splice.ts`, option A):
+- Every table has a root at id 0. The prefix root is kept and the tail root dropped, so the spliced table equals a full parse, ids included. The last stable block's `nextSibling` (or the root's `firstChild` when there is no stable block) is re-linked to the first tail block.
+- The prefix keeps the nodes before `blocks[stableCount]`, which drops its open block and any capacity padding. `strings` and `attrs` are truncated to the run those nodes use (they are pushed in node order), then the tail's are appended with shifted indexes.
+- `stableCount` outside `[0, prefix.blockCount]` throws a `RangeError`.
+- Measured: about 0.1 ms per splice at 900 blocks (Node/V8, warm). Not a Hermes number; S5 measures it.
+
 ## `isSameBlock` fast path
 
 `isSameBlock(a, i, b, j)` ([P1-9](../phase-1/decisions.md#p1-9-block-identity-by-source-text-plus-context-and-index-keys)) compares context, block context and source text. On a stream, every flush would compare every closed block's text: 6 ms for 900 blocks on the S25 FE, because Hermes copies substrings.
 
-Fast path: tables produced by the stream core carry a `prefixId` token. If `a` and `b` share the same `prefixId` and both indexes are below the shared `stableCount`, the blocks are the same by construction (the prefix was not re-parsed), and the comparison returns immediately. Otherwise it falls back to the full comparison.
+Fast path: tables produced by the stream core carry a `prefixId` token. If `a` and `b` share the same `prefixId` and both indexes are below the shared `stableCount`, and `i === j` (blocks at different indexes of one prefix are different blocks), the blocks are the same by construction (the prefix was not re-parsed), and the comparison returns immediately. Otherwise it falls back to the full comparison.
 
 Rules:
 - `prefixId` changes whenever a full re-parse happens, so the fast path never survives one.

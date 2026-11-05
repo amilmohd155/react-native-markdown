@@ -47,7 +47,12 @@ interface ParserBackend {
   /** Parse a full document into the node table. */
   parse(source: string, options: ParseOptions): NodeTable;
   /** Optional: parse a substring starting at a block boundary (streaming). Offsets are shifted by `offset`. */
-  parseFrom?(source: string, offset: number, options: ParseOptions): NodeTable;
+  parseFrom?(
+    source: string,
+    offset: number,
+    carried: CarriedContext | undefined,
+    options?: ParseOptions
+  ): ParseFromResult; // phase 2, see phase-2/table-splicing.md#parsefrom
 }
 ```
 
