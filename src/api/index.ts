@@ -23,6 +23,11 @@ export type { MarkdownDocument } from './document';
 export { Markdown, type MarkdownProps } from './Markdown';
 export { parse, type ParseOptions } from './parse';
 export {
+  useMarkdownStream,
+  type UseMarkdownStreamOptions,
+  type UseMarkdownStreamResult,
+} from './useMarkdownStream';
+export {
   visit,
   type VisitElementName,
   type VisitInfo,
