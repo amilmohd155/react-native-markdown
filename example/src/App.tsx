@@ -20,6 +20,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { Bench } from './screens/Bench';
 import { Playground } from './screens/Playground';
+import { StreamBench } from './screens/StreamBench';
 import { WebSmoke } from './screens/WebSmoke';
 import {
   ChromeProvider,
@@ -39,6 +40,7 @@ const SCREENS: {
 }[] = [
   { name: 'Playground', glyph: '¶', component: Playground },
   { name: 'Bench', glyph: '⏱', component: Bench },
+  { name: 'Stream', glyph: '≈', component: StreamBench },
 ];
 
 const SCHEMES = [
