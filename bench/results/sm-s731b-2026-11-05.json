@@ -1,0 +1,259 @@
+{
+ "protocol": "docs/rewrite/phase-1/benchmark-protocol.md",
+ "harness": "example/src/screens/Bench.tsx, BenchList.tsx and BenchTree.tsx (bench tab), fixtures bench/fixtures/index.ts",
+ "commits": {
+  "v1": "f0209a8 (v1) plus uncommitted M7 working tree",
+  "v0": "@docren/react-native-markdown@0.8.5 from npm (md-v0 alias)"
+ },
+ "build": "release: expo prebuild + gradlew assembleRelease (Hermes, bytecode, __DEV__=false, New Architecture)",
+ "conditions": {
+  "airplaneMode": false,
+  "battery": "100%, charging over USB (needed for adb)",
+  "temperature": "35.0 C at start",
+  "activeCall": false,
+  "freshLaunch": true,
+  "idleAfterLaunchSeconds": 10,
+  "note": "Samsung S25 FE: upper-mid range, NOT the pass/fail device. Airplane mode was off (protocol asks for on)."
+ },
+ "notes": [
+  "summary: full mode (5 warm-up + 20 measured, interleaved), medians and p90 in ms; raw samples in the app log only.",
+  "f5List and f3Heap: one library per app launch, gc() forced (gcForced true on this build). f5List dropped frames are a JS-side rAF proxy; gfxinfo is the protocol's source.",
+  "tableVsTree (A/B, F2 and F3, 5+20): medians read from the screen summary; p90 not saved. An active phone call was shown in the status bar during this A/B only."
+ ],
+ "date": "2026-11-05T06:37:50.452Z",
+ "device": {
+  "os": "android",
+  "osVersion": 37,
+  "model": "SM-S731B",
+  "brand": "samsung",
+  "hermes": true,
+  "dev": false
+ },
+ "mode": "full",
+ "warmup": 5,
+ "runs": 20,
+ "fixtures": [
+  {
+   "id": "F1",
+   "bytes": 790
+  },
+  {
+   "id": "F2",
+   "bytes": 9724
+  },
+  {
+   "id": "F3",
+   "bytes": 100747
+  }
+ ],
+ "summary": [
+  {
+   "fixture": "F1",
+   "impl": "v1",
+   "metric": "parse",
+   "n": 20,
+   "median": 3.6939839720726013,
+   "p90": 4.434296011924744
+  },
+  {
+   "fixture": "F1",
+   "impl": "v1",
+   "metric": "firstRender",
+   "n": 20,
+   "median": 21.380625009536743,
+   "p90": 27.431680023670197
+  },
+  {
+   "fixture": "F1",
+   "impl": "v1",
+   "metric": "parse+firstRender",
+   "n": 20,
+   "median": 25.169218003749847,
+   "p90": 31.125663995742798
+  },
+  {
+   "fixture": "F1",
+   "impl": "v1",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 6.015663981437683,
+   "p90": 7.446758031845093
+  },
+  {
+   "fixture": "F1",
+   "impl": "v0",
+   "metric": "parse+firstRender",
+   "n": 20,
+   "median": 24.6075000166893,
+   "p90": 30.982461035251617
+  },
+  {
+   "fixture": "F1",
+   "impl": "v0",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 12.763125002384186,
+   "p90": 15.139178991317749
+  },
+  {
+   "fixture": "F2",
+   "impl": "v1",
+   "metric": "parse",
+   "n": 20,
+   "median": 19.567110002040863,
+   "p90": 25.40476495027542
+  },
+  {
+   "fixture": "F2",
+   "impl": "v1",
+   "metric": "firstRender",
+   "n": 20,
+   "median": 87.44953101873398,
+   "p90": 99.71718800067902
+  },
+  {
+   "fixture": "F2",
+   "impl": "v1",
+   "metric": "parse+firstRender",
+   "n": 20,
+   "median": 107.25847601890564,
+   "p90": 119.19929695129395
+  },
+  {
+   "fixture": "F2",
+   "impl": "v1",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 3.982069969177246,
+   "p90": 6.042734980583191
+  },
+  {
+   "fixture": "F2",
+   "impl": "v0",
+   "metric": "parse+firstRender",
+   "n": 20,
+   "median": 75.1049599647522,
+   "p90": 88.84679597616196
+  },
+  {
+   "fixture": "F2",
+   "impl": "v0",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 33.68730401992798,
+   "p90": 48.73269498348236
+  },
+  {
+   "fixture": "F3",
+   "impl": "v1",
+   "metric": "parse",
+   "n": 20,
+   "median": 215.8294529914856,
+   "p90": 256.2371090054512
+  },
+  {
+   "fixture": "F3",
+   "impl": "v1",
+   "metric": "firstRender",
+   "n": 20,
+   "median": 242.7388669848442,
+   "p90": 288.12093698978424
+  },
+  {
+   "fixture": "F3",
+   "impl": "v1",
+   "metric": "parse+firstRender",
+   "n": 20,
+   "median": 458.5683199763298,
+   "p90": 537.2815229892731
+  },
+  {
+   "fixture": "F3",
+   "impl": "v1",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 15.897303998470306,
+   "p90": 22.41277301311493
+  },
+  {
+   "fixture": "F3",
+   "impl": "v0",
+   "metric": "parse+firstRender",
+   "n": 20,
+   "median": 447.5234760046005,
+   "p90": 542.0787110328674
+  },
+  {
+   "fixture": "F3",
+   "impl": "v0",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 437.4753119945526,
+   "p90": 501.64753895998
+  }
+ ],
+ "f5List": {
+  "bytes": 159692,
+  "items": 200,
+  "v0": {
+   "retainedBytes": 570160,
+   "dropped": 77,
+   "frames": 522,
+   "worstGapMs": 59.3,
+   "gfxinfo": {
+    "totalFrames": 548,
+    "janky": 25,
+    "jankyPct": 4.56,
+    "p99Ms": 15
+   }
+  },
+  "v1": {
+   "retainedBytes": 1869040,
+   "parseMs": 238.9,
+   "dropped": 47,
+   "frames": 551,
+   "worstGapMs": 52.1,
+   "gfxinfo": {
+    "totalFrames": 577,
+    "janky": 21,
+    "jankyPct": 3.64,
+    "p99Ms": 10
+   }
+  },
+  "tree": {
+   "retainedBytes": 2161432,
+   "parseMs": 246.6,
+   "dropped": 44,
+   "frames": 560,
+   "worstGapMs": 33.8
+  }
+ },
+ "f3Heap": {
+  "tableRetainedBytes": 11638480,
+  "treeRetainedBytes": 12138064
+ },
+ "tableVsTree": {
+  "F2": {
+   "firstRender": {
+    "table": 74.2,
+    "tree": 77.8
+   },
+   "reRenderOneBlock": {
+    "table": 3.5,
+    "tree": 4.4
+   },
+   "convertTree": 0.9
+  },
+  "F3": {
+   "firstRender": {
+    "table": 260.5,
+    "tree": 263.0
+   },
+   "reRenderOneBlock": {
+    "table": 17.6,
+    "tree": 17.9
+   },
+   "convertTree": 6.7
+  }
+ }
+}

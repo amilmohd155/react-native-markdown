@@ -57,7 +57,11 @@ Fixtures are committed under `bench/fixtures/`. Images use local assets with kno
   - Fixtures have **no images** yet: markdown can't reference local assets without an asset resolver, and remote images would add network time.
   - `reRenderOneBlock` is measured to the **commit** (a layout effect after the content), not to `onLayout`, because an edit may not change the layout. v1 gets the edited document pre-parsed, so it measures render cost only; v0 can't take a pre-parsed document, so its number includes parsing.
   - v0 has no separate `parse` / `firstRender` split (it parses during render); only `parse+firstRender` compares both.
-  - `retainedHeap` and `droppedFrames` (F5) are not implemented yet (M7).
+  - `retainedHeap` and `droppedFrames` (F5) run from the bench tab's **List · v0 / List · v1** buttons (`BenchList.tsx`), one library per app launch (relaunch between runs: heap from a process that ran the other library isn't comparable).
+    - `retainedHeap` is the growth in `HermesInternal.getInstrumentedStats().js_allocatedBytes` from an empty list to 200 rendered messages (v1 includes its parsed documents). It forces a GC only if the engine exposes `gc()`; the result records `gcForced`, and without it the number includes uncollected garbage.
+    - `droppedFrames` scrolls the list for 5 s at 1500 px/s and counts missed frames from `requestAnimationFrame` gaps on the JS side, a proxy. The protocol's number still comes from `adb shell dumpsys gfxinfo <pkg>` (`reset` before, dump after; `[bench:list] scroll-start/end` mark the window) or Instruments.
+    - Output: one `[bench:list]` JSON log line per run (same chunked format as `[bench]`).
+  - The table vs. object tree A/B runs from the bench tab's **Table vs. object tree** card (`BenchTree.tsx`): **A/B · 5+20** (F2 and F3 `firstRender` and `reRenderOneBlock`, interleaved, tree conversion timed apart as `convert`), **F3 heap · table / tree** (one model per app launch) and **List · tree** for F5 heap. The object-tree renderer is the bench-only `bench/objectTree/` (the `objectTreeModel` flag); logs are `[bench:tree]`, `[bench:tree:heap]` and `[bench:list]`.
 
 ## Pass bars
 

@@ -1,5 +1,5 @@
 import { useLayoutEffect, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { Markdown as MarkdownV0 } from 'md-v0';
 import {
   editLastParagraph,
@@ -12,6 +12,9 @@ import {
   type MarkdownDocument,
 } from '@docren/react-native-markdown';
 import { Button, Card, UIText, useChrome } from '../ui';
+import { BenchList, type ListImpl, type ListResult } from './BenchList';
+import { BenchTree, type TreeMode, type TreeResult } from './BenchTree';
+import { deviceInfo, frames, logChunked, quantile } from './benchUtil';
 
 /**
  * Device benchmark: v1 vs v0.8.5 in one binary.
@@ -70,18 +73,6 @@ const MODES = {
   full: { warmup: 5, runs: 20 },
 } as const;
 
-const frames = (n: number) =>
-  new Promise<void>((resolve) => {
-    const step = (left: number) =>
-      left === 0 ? resolve() : requestAnimationFrame(() => step(left - 1));
-    step(n);
-  });
-
-function quantile(sorted: readonly number[], q: number): number {
-  const i = Math.min(sorted.length - 1, Math.ceil(q * sorted.length) - 1);
-  return sorted[Math.max(0, i)]!;
-}
-
 function summarize(samples: readonly Sample[]): Row[] {
   const groups = new Map<string, Sample[]>();
   for (const s of samples) {
@@ -100,18 +91,6 @@ function summarize(samples: readonly Sample[]): Row[] {
       p90: quantile(ms, 0.9),
     };
   });
-}
-
-function deviceInfo() {
-  const c = Platform.constants as Record<string, unknown>;
-  return {
-    os: Platform.OS,
-    osVersion: Platform.Version,
-    model: c.Model ?? c.model ?? null,
-    brand: c.Brand ?? null,
-    hermes: (globalThis as { HermesInternal?: unknown }).HermesInternal != null,
-    dev: __DEV__,
-  };
 }
 
 /** Calls `onCommit` after every commit of the tree it ends. */
@@ -246,28 +225,20 @@ async function runBench(io: BenchIO, mode: keyof typeof MODES) {
   logChunked('bench:samples', samples);
 }
 
-/**
- * Logs `value` as JSON in lines under Android's ~4 KB logcat limit:
- * `[tag i/n] <chunk>`. Reassemble by joining the chunks in order:
- *   adb logcat -d -s ReactNativeJS -v raw | grep '^\[bench'
- */
-function logChunked(tag: string, value: unknown) {
-  const json = JSON.stringify(value);
-  const size = 3000;
-  const n = Math.max(1, Math.ceil(json.length / size));
-  for (let i = 0; i < n; i++) {
-    console.log(
-      `[${tag} ${i + 1}/${n}] ${json.slice(i * size, (i + 1) * size)}`
-    );
-  }
-}
-
 export function Bench() {
   const { p } = useChrome();
   const [job, setJob] = useState<Job | null>(null);
   const [version, setVersion] = useState(0);
   const [status, setStatus] = useState('idle');
   const [rows, setRows] = useState<Row[]>([]);
+  const [listImpl, setListImpl] = useState<ListImpl | null>(null);
+  const [treeMode, setTreeMode] = useState<TreeMode | null>(null);
+  const [treeResults, setTreeResults] = useState<
+    Partial<Record<TreeMode, TreeResult>>
+  >({});
+  const [listResults, setListResults] = useState<
+    Partial<Record<ListImpl, ListResult>>
+  >({});
 
   const io: BenchIO = {
     setJob,
@@ -278,6 +249,30 @@ export function Bench() {
 
   const busy = status !== 'idle' && status !== 'done';
   const dotColor = busy ? '#d29922' : status === 'done' ? '#2da44e' : p.muted;
+
+  if (treeMode !== null) {
+    return (
+      <BenchTree
+        mode={treeMode}
+        onDone={(result) => {
+          setTreeResults((r) => ({ ...r, [treeMode]: result }));
+          setTreeMode(null);
+        }}
+      />
+    );
+  }
+
+  if (listImpl !== null) {
+    return (
+      <BenchList
+        impl={listImpl}
+        onDone={(result) => {
+          setListResults((r) => ({ ...r, [listImpl]: result }));
+          setListImpl(null);
+        }}
+      />
+    );
+  }
 
   return (
     <ScrollView
@@ -325,6 +320,59 @@ export function Bench() {
 
         {rows.length > 0 ? <Results rows={rows} /> : null}
 
+        <Card style={styles.runCard}>
+          <UIText variant="label">F5 · chat list, heap and scroll</UIText>
+          <UIText variant="caption" muted>
+            200 messages in a FlatList, one library per app launch (relaunch
+            between runs, or the heap numbers are not comparable).
+          </UIText>
+          <View style={styles.buttons}>
+            {(['v0', 'v1', 'tree'] as const).map((impl) => (
+              <Button
+                key={impl}
+                label={`List · ${impl}`}
+                tone="quiet"
+                disabled={busy}
+                onPress={() => setListImpl(impl)}
+                style={styles.flex}
+              />
+            ))}
+          </View>
+          {(['v0', 'v1', 'tree'] as const).map((impl) => {
+            const r = listResults[impl];
+            return r ? <ListSummary key={impl} result={r} /> : null;
+          })}
+        </Card>
+
+        <Card style={styles.runCard}>
+          <UIText variant="label">Table vs. object tree (v1 model A/B)</UIText>
+          <UIText variant="caption" muted>
+            Render A/B on F2 and F3 (5+20), and F3 heap, one model per app
+            launch. F5 heap is in the list card above (List · tree).
+          </UIText>
+          <View style={styles.buttons}>
+            {(
+              [
+                ['ab', 'A/B · 5+20'],
+                ['heap-table', 'F3 heap · table'],
+                ['heap-tree', 'F3 heap · tree'],
+              ] as const
+            ).map(([mode, label]) => (
+              <Button
+                key={mode}
+                label={label}
+                tone="quiet"
+                disabled={busy}
+                onPress={() => setTreeMode(mode)}
+                style={styles.flex}
+              />
+            ))}
+          </View>
+          {Object.values(treeResults).map((r) => (
+            <TreeSummary key={r.mode} result={r} />
+          ))}
+        </Card>
+
         {/* The document under test, on white for both libraries. */}
         <View
           style={job ? [styles.subject, { borderColor: p.border }] : undefined}
@@ -339,6 +387,55 @@ export function Bench() {
         </View>
       </View>
     </ScrollView>
+  );
+}
+
+function TreeSummary({ result: r }: { result: TreeResult }) {
+  const mb = (n: number | null) =>
+    n === null ? '—' : `${(n / 1e6).toFixed(2)} MB`;
+  if (r.heap) {
+    return (
+      <UIText variant="mono">
+        F3 heap · {r.heap.impl} · retained {mb(r.heap.retainedBytes)}
+        {r.heap.gcForced ? '' : ' (no gc)'}
+      </UIText>
+    );
+  }
+  const med = (fixture: string, impl: string, metric: string) =>
+    r.rows.find(
+      (x) => x.fixture === fixture && x.impl === impl && x.metric === metric
+    )?.median;
+  return (
+    <View style={styles.fixture}>
+      {Object.entries(r.firstRenderRatio).map(([id, ratio]) => (
+        <UIText key={id} variant="mono">
+          {id} firstRender table {med(id, 'table', 'firstRender')?.toFixed(1)} /
+          tree {med(id, 'tree', 'firstRender')?.toFixed(1)} ms (
+          {((ratio - 1) * 100).toFixed(0)}%) · reRender{' '}
+          {med(id, 'table', 'reRenderOneBlock')?.toFixed(1)} /{' '}
+          {med(id, 'tree', 'reRenderOneBlock')?.toFixed(1)} · convert{' '}
+          {med(id, 'tree', 'convert')?.toFixed(1)}
+        </UIText>
+      ))}
+    </View>
+  );
+}
+
+function ListSummary({ result: r }: { result: ListResult }) {
+  const mb = (n: number | null) =>
+    n === null ? '—' : `${(n / 1e6).toFixed(2)} MB`;
+  return (
+    <View style={styles.fixture}>
+      <UIText variant="mono">
+        {r.impl} · retained {mb(r.retainedBytes)} · dropped {r.scroll.dropped}/
+        {r.scroll.frames} (worst {r.scroll.worstGapMs.toFixed(0)} ms)
+      </UIText>
+      {!r.gcForced ? (
+        <UIText variant="caption" muted>
+          gc() not exposed: heap includes uncollected garbage.
+        </UIText>
+      ) : null}
+    </View>
   );
 }
 

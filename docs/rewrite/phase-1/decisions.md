@@ -385,3 +385,45 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - The CI table in [testing-harness](./testing-harness.md#ci-jobs) loses the row. The required set on `v1` is `lint`, `typecheck`, `unit`, `spec`, `web`, `expo-go-check`, `dts-leak` and `perf`.
   - [06 · Platform tests](../06-testing.md#platform-tests) no longer promises a native example build in CI.
   - If the example ever gets native code of its own, or a toolchain break goes unnoticed, revisit this with an on-demand workflow before a scheduled one.
+
+## P1-24: Keep the flat table (render A/B against an object tree)
+
+- **Status:** Accepted on the Galaxy S25 FE (2026-11-05); to be re-confirmed on the low-end Android device with the M7 run
+- **Date:** 2026-11-05
+- **Context:** [08](../08-model-and-api.md) left one item open: the render cost of the flat table vs. an object tree (option B). M7 measures it with the test-only object-tree renderer in `bench/objectTree/` (`<ObjectTreeMarkdown>`, the `objectTreeModel` flag; nothing under `src/` changed), following the [benchmark protocol](./benchmark-protocol.md#table-vs-object-tree-ab-the-remaining-open-item). The decision rule: keep the table unless its `firstRender` is more than 10% slower **and** its memory advantage is under 2×.
+- **Measured** (Samsung S25 FE, release build, Hermes, 120 Hz; medians; table / tree):
+  - `firstRender`, 5 warm-up + 20 interleaved runs: F2 74.2 / 77.8 ms (tree +5%), F3 260.5 / 263.0 ms (tree +1%).
+  - `reRenderOneBlock`: F2 3.5 / 4.4 ms, F3 17.6 / 17.9 ms.
+  - Tree conversion from the parsed table (`convert`): 0.9 ms (F2), 6.7 ms (F3), not included above.
+  - `retainedHeap`, `gc()` forced, one model per app launch: F3 11.64 / 12.14 MB (tree +4%), F5 1.87 / 2.16 MB (tree +16%).
+  - F5 scroll, 5 s at 1500 px/s: dropped frames (JS-side proxy) 47/551 / 44/560, no meaningful difference.
+- **Decision:** Keep the flat table. The table is not slower than the tree (it is 1–5% faster to first render) and uses less memory (4–16%), so the rule never fires; there's no case for the object tree. The table's advantages the A/B doesn't measure (cheap structural sharing, `isSameBlock` without deep walks, no per-node allocation during parse) stay as designed.
+- **Consequences:**
+  - `bench/objectTree/` stays as bench-only code for re-running the A/B; it is not exported and not part of the package.
+  - The Phase 1 exit item "device measurement done for the flat table vs. object tree" is met once the low-end device run (M7) confirms the same ordering.
+  - **Caveats:** the S25 FE is not the pass/fail device. The A/B was a single run with the phone showing an active call, and p90 wasn't saved. The tree is converted from the parsed table (not built from tokens), keeps a node `id` (overstates its heap slightly) and shares attribute objects with the table (understates it slightly). The F5 numbers retain the parsed documents (table) or trees (tree) for all 200 messages, not just the mounted window.
+
+## P1-25: The ≥ 5× parse-plus-first-render exit criterion is waived for Phase 1
+
+- **Status:** Accepted (2026-11-05)
+- **Date:** 2026-11-05
+- **Context:** The Phase 1 exit criteria ([roadmap](../07-roadmap.md#phase-1-core-pure-js)) require parse plus first render of the 100 KB fixture (F3) to be at least 5× faster than v0.8.5 on a low-end Android device. M7 ran the [benchmark protocol](./benchmark-protocol.md) on the hardware available: a Samsung S25 FE (release build, Hermes) and Chrome 156 at 4× CPU throttle. There is no low-end Android or iPhone, so the pass/fail device was never measured.
+- **Measured** (medians, v1 against v0.8.5; raw data in `bench/results/sm-s731b-2026-11-05.json` and `web-chrome156-4x-2026-11-05.json`):
+  - S25 FE `parse+firstRender`: F1 25.2 / 24.6 ms (1.0×), F2 107.3 / 75.1 ms (0.7×), F3 458.6 / 447.5 ms (1.0×).
+  - Web, 4× throttle: F1 1.0×, F2 1.06×, F3 1.08× (384 / 417 ms).
+  - Same picture as the M3 measurement (2026-11-04), so it is not run-to-run noise.
+  - On F3, v1 spends 216 ms in `parse()` and 243 ms in `firstRender` on the S25 FE.
+  - The other protocol bars on F3: `reRenderOneBlock` is 15.9 ms, 6.6% of v1's own `firstRender` (bar ≤ 10%: **met**; 27× faster than v0). F5 `retainedHeap` is 1.87 MB for v1 against 0.57 MB for v0 (bar v1 ≤ v0 / 3: **not met** with this method, which keeps all 200 parsed documents for v1 but only the mounted window for v0). F5 `droppedFrames` is reported only.
+- **Decision:**
+  - Waive the criterion for Phase 1. It fails on the S25 FE (1.0×), a faster device than the one it names; a low-end phone slows both libraries and would not be expected to move the ratio near 5×.
+  - The low-end device measurement is waived with it: no such device is available, and the result would not change the outcome.
+  - The rest of Phase 1's exit criteria stand: the spec suites, Expo Go and web, and the table vs. object tree measurement ([P1-24](#p1-24-keep-the-flat-table-render-ab-against-an-object-tree)).
+- **Consequences:**
+  - The speed target is not dropped, only deferred. It carries into Phase 2 as an open performance item. The [roadmap](../07-roadmap.md) text keeps the 5× target.
+  - Why it isn't met, from the [M3 analysis](../02-benchmarks.md#device-results-preliminary-m3) and these runs:
+    - The comparison isn't like for like. v0.8.5 has no GFM, so F2/F3's tables, task lists, strikethrough, autolinks and footnotes are plain text there, and v1 renders them as elements.
+    - v1's render dominates (243 ms against 216 ms of parse on F3 on device; about 90% on web).
+    - Parse on Hermes (216 ms) is about 2.8× the Node `--jitless` figure (78 ms).
+  - First steps for Phase 2: a CommonMark-only baseline where v0 does the same work; profile `firstRender` against element count (tables and their measuring pass, the `ScrollView` per code block, prop and element creation); profile parse on Hermes (markdown-it against the node builder); then re-measure on a low-end Android if one becomes available.
+  - The F5 `retainedHeap` bar and its method (pre-parsed documents against a windowed v0) also stay open for Phase 2. This waiver doesn't cover it, because it isn't an exit criterion.
+  - M7 is complete once the "Device results" section ([02](../02-benchmarks.md#device-results-m7)) records these numbers.
