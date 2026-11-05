@@ -57,13 +57,29 @@ export function cachedImageSize(src: string): Entry | undefined {
   return cache.get(src);
 }
 
+/**
+ * `Image.getSize` as a promise on every platform. react-native-web only has
+ * the callback form (it returns nothing), so pass callbacks and also accept
+ * a returned promise.
+ */
+function getSize(src: string): Promise<ImageSize> {
+  return new Promise<ImageSize>((resolve, reject) => {
+    const result: unknown = Image.getSize(
+      src,
+      (width, height) => resolve({ width, height }),
+      reject
+    );
+    if (result instanceof Promise) result.then(resolve, reject);
+  });
+}
+
 /** Looks up the size of `src`, at most one request per URL at a time. */
 export function loadImageSize(src: string): Promise<Entry> {
   const cached = cache.get(src);
   if (cached !== undefined) return Promise.resolve(cached);
   let request = pending.get(src);
   if (request === undefined) {
-    request = Image.getSize(src).then(
+    request = getSize(src).then(
       ({ width, height }) =>
         remember(
           src,
