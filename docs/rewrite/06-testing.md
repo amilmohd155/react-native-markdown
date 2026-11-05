@@ -34,7 +34,7 @@ Every backend (markdown-it, native) runs the same suite. A documented, per-backe
 
 ## Platform tests
 
-- **iOS and Android:** Jest with the `react-native` preset, plus the example app built in CI.
+- **iOS and Android:** Jest with the `react-native` preset. The example app is exported for web in CI (the `web` job) and run by hand on devices; there is no native build job ([P1-23](./phase-1/decisions.md#p1-23-no-scheduled-native-build-of-the-example-app-in-ci)).
 - **Web (decision D1):** run the renderer tests again under `react-native-web` with jsdom. A smoke test in a real browser (Playwright) renders the spec fixtures and checks text and links.
 - **Expo Go (decision D2):** a CI check fails if the main entry point's dependency graph imports a native module (`TurboModuleRegistry`, `requireNativeComponent`, `NativeModules`, Nitro). The example app also runs in Expo Go before each release.
 - **Raw HTML safe subset (D3):** each allowlisted tag, nesting, unmatched tags, unknown tags (must stay as literal text), and `'text'`/`'strip'`/`{ allow }` modes.

@@ -372,3 +372,16 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
   - [work-breakdown](./work-breakdown.md#m8--migration-guide) gets the M8 section; the [README](./README.md), [roadmap](../07-roadmap.md) and [04](../04-api.md#migration-from-v0x) point to it. The roadmap's Phase 3 list no longer carries the guide.
   - Until M8, the root README keeps its "v1 pre-release" note over the v0 text.
   - M8 is tracked in [#23](https://github.com/amilmohd155/react-native-markdown/issues/23), a sub-issue of #7.
+
+## P1-23: No scheduled native build of the example app in CI
+
+- **Status:** Accepted (2026-11-05)
+- **Date:** 2026-11-05
+- **Context:** The harness listed an `example-build` job (iOS and Android builds of the example app, nightly) and M6's done-when required every listed job. The library is pure JS (D2): nothing in it can break a native build, so a failing job would nearly always be a toolchain problem (Expo, Xcode, Gradle, Java versions), not ours. The `web` job already exports and runs the example's JS bundle, and `expo-go-check` guards against native code in the main entry. macOS runners cost about ten times Linux minutes, and a native workflow adds upkeep.
+- **Decision:**
+  - Drop the `example-build` job. There is no scheduled native build.
+  - The example is built natively where it matters: by hand in Expo Go during development, and as a release build on devices for the M7 benchmark (`expo run:android --variant release`).
+- **Consequences:**
+  - The CI table in [testing-harness](./testing-harness.md#ci-jobs) loses the row. The required set on `v1` is `lint`, `typecheck`, `unit`, `spec`, `web`, `expo-go-check`, `dts-leak` and `perf`.
+  - [06 · Platform tests](../06-testing.md#platform-tests) no longer promises a native example build in CI.
+  - If the example ever gets native code of its own, or a toolchain break goes unnoticed, revisit this with an on-demand workflow before a scheduled one.

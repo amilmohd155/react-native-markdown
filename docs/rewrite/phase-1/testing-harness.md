@@ -91,4 +91,5 @@ Details are in [06 · Platform tests](../06-testing.md#platform-tests). Harness 
 | `expo-go-check` | Native-import scan of the main entry | ✅ |
 | `dts-leak` | Build, then public `.d.ts` scan | ✅ |
 | `perf` | `yarn perf`: parse and render time under `node --jitless` against `perf/baseline.json` (fail on > 20% regression) | ✅ (after M6) |
-| `example-build` | Example app iOS/Android build | Nightly |
+
+The example app's native build is not a CI job ([P1-23](./decisions.md#p1-23-no-scheduled-native-build-of-the-example-app-in-ci)).
