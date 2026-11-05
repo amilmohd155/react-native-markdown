@@ -24,7 +24,8 @@
       "render:100KB": 6.44,
       "parse:1MB": 1.9,
       "render:1MB": 6.5,
-      "rerender-one-block:100KB": 0.117
+      "rerender-one-block:100KB": 0.117,
+      "stream:F4a": 18.7
     }
   }
 }
