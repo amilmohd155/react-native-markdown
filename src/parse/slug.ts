@@ -4,7 +4,17 @@
  * Spec: docs/rewrite/phase-1/element-props.md#per-element (Heading `id`)
  */
 export class Slugger {
-  private readonly seen = new Map<string, number>();
+  private readonly seen: Map<string, number>;
+
+  /** `seed`: the counters of the headings before this document part. Copied. */
+  constructor(seed?: ReadonlyMap<string, number>) {
+    this.seen = new Map(seed);
+  }
+
+  /** The counters now. Do not mutate. */
+  snapshot(): ReadonlyMap<string, number> {
+    return this.seen;
+  }
 
   slug(text: string): string {
     const base = text
