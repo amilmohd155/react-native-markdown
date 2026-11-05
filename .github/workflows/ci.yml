@@ -52,6 +52,27 @@ jobs:
       - name: Run CommonMark + GFM spec suites
         run: yarn test:spec --maxWorkers=2
 
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Run renderer tests on react-native-web (jsdom)
+        run: yarn test:web --maxWorkers=2
+
+      - name: Build the example app for web
+        run: yarn build:web-example
+
+      - name: Install Playwright browser
+        run: yarn playwright install --with-deps chromium
+
+      - name: Web smoke test (Playwright)
+        run: yarn test:e2e:web
+
   expo-go-check:
     runs-on: ubuntu-latest
     steps:
