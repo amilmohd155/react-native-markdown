@@ -42,6 +42,7 @@
     "test:spec": "jest --selectProjects spec",
     "check:expo-go": "node scripts/check-no-native.mjs",
     "check:public-types": "node scripts/check-public-types.mjs",
+    "check:migration-samples": "node scripts/check-migration-samples.mjs",
     "test:web": "jest --selectProjects web",
     "build:web-example": "yarn workspace @docren/react-native-markdown-example expo export --platform web --output-dir dist-web",
     "test:e2e:web": "playwright test",
