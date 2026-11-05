@@ -1,0 +1,277 @@
+{
+ "protocol": "docs/rewrite/phase-1/benchmark-protocol.md",
+ "harness": "example/src/screens/Bench.tsx and BenchTree.tsx (bench tab), fixtures bench/fixtures/index.ts, driven by a throwaway Playwright script (CDP Emulation.setCPUThrottlingRate)",
+ "commits": {
+  "v1": "f0209a8 (v1) plus uncommitted M7 working tree",
+  "v0": "@docren/react-native-markdown@0.8.5 from npm (md-v0 alias)"
+ },
+ "build": "expo export --platform web (production, minified), served statically; react-native-web 0.21",
+ "conditions": {
+  "browser": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+  "hardwareConcurrency": 8,
+  "cpuThrottle": "4x",
+  "headless": true,
+  "freshLaunch": true,
+  "note": "Mac host, other processes running; D1 sanity check, not pass/fail (protocol: Web)"
+ },
+ "notes": [
+  "No Hermes on web: retainedHeap and droppedFrames not measured.",
+  "Mode is full (5 warm-up + 20 measured, interleaved). Metrics are median and p90 in ms.",
+  "tableVsTree holds the A/B from the same page load (BenchTree, F2 and F3)."
+ ],
+ "date": "2026-11-05T06:29:25.852Z",
+ "device": {
+  "os": "web",
+  "osVersion": "0.0.0",
+  "model": null,
+  "brand": null,
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+  "hermes": false,
+  "dev": false
+ },
+ "mode": "full",
+ "warmup": 5,
+ "runs": 20,
+ "fixtures": [
+  {
+   "id": "F1",
+   "bytes": 790
+  },
+  {
+   "id": "F2",
+   "bytes": 9724
+  },
+  {
+   "id": "F3",
+   "bytes": 100747
+  }
+ ],
+ "summary": [
+  {
+   "fixture": "F1",
+   "impl": "v1",
+   "metric": "parse",
+   "n": 20,
+   "median": 0.5999999940395355,
+   "p90": 1.199999988079071
+  },
+  {
+   "fixture": "F1",
+   "impl": "v1",
+   "metric": "firstRender",
+   "n": 20,
+   "median": 19,
+   "p90": 20
+  },
+  {
+   "fixture": "F1",
+   "impl": "v1",
+   "metric": "parse+firstRender",
+   "n": 20,
+   "median": 19.5,
+   "p90": 20.400000005960464
+  },
+  {
+   "fixture": "F1",
+   "impl": "v1",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 2.399999976158142,
+   "p90": 3
+  },
+  {
+   "fixture": "F1",
+   "impl": "v0",
+   "metric": "parse+firstRender",
+   "n": 20,
+   "median": 19.5,
+   "p90": 20.5
+  },
+  {
+   "fixture": "F1",
+   "impl": "v0",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 5.100000023841858,
+   "p90": 6.300000011920929
+  },
+  {
+   "fixture": "F2",
+   "impl": "v1",
+   "metric": "parse",
+   "n": 20,
+   "median": 5.4000000059604645,
+   "p90": 5.9000000059604645
+  },
+  {
+   "fixture": "F2",
+   "impl": "v1",
+   "metric": "firstRender",
+   "n": 20,
+   "median": 34,
+   "p90": 35
+  },
+  {
+   "fixture": "F2",
+   "impl": "v1",
+   "metric": "parse+firstRender",
+   "n": 20,
+   "median": 39.400000005960464,
+   "p90": 40.900000005960464
+  },
+  {
+   "fixture": "F2",
+   "impl": "v1",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 2.4000000059604645,
+   "p90": 2.7999999821186066
+  },
+  {
+   "fixture": "F2",
+   "impl": "v0",
+   "metric": "parse+firstRender",
+   "n": 20,
+   "median": 41.70000001788139,
+   "p90": 48.29999998211861
+  },
+  {
+   "fixture": "F2",
+   "impl": "v0",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 22,
+   "p90": 24
+  },
+  {
+   "fixture": "F3",
+   "impl": "v1",
+   "metric": "parse",
+   "n": 20,
+   "median": 46.599999994039536,
+   "p90": 51.10000002384186
+  },
+  {
+   "fixture": "F3",
+   "impl": "v1",
+   "metric": "firstRender",
+   "n": 20,
+   "median": 335.5,
+   "p90": 405.40000000596046
+  },
+  {
+   "fixture": "F3",
+   "impl": "v1",
+   "metric": "parse+firstRender",
+   "n": 20,
+   "median": 384.19999998807907,
+   "p90": 452.80000001192093
+  },
+  {
+   "fixture": "F3",
+   "impl": "v1",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 4.0999999940395355,
+   "p90": 5.600000023841858
+  },
+  {
+   "fixture": "F3",
+   "impl": "v0",
+   "metric": "parse+firstRender",
+   "n": 20,
+   "median": 416.59999999403954,
+   "p90": 450.30000001192093
+  },
+  {
+   "fixture": "F3",
+   "impl": "v0",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 221,
+   "p90": 264.09999999403954
+  }
+ ],
+ "tableVsTree": [
+  {
+   "fixture": "F2",
+   "impl": "tree",
+   "metric": "convert",
+   "n": 20,
+   "median": 0,
+   "p90": 0.10000002384185791
+  },
+  {
+   "fixture": "F2",
+   "impl": "tree",
+   "metric": "firstRender",
+   "n": 20,
+   "median": 37.29999998211861,
+   "p90": 41.79999998211861
+  },
+  {
+   "fixture": "F2",
+   "impl": "tree",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 1.7000000178813934,
+   "p90": 2.100000023841858
+  },
+  {
+   "fixture": "F2",
+   "impl": "table",
+   "metric": "firstRender",
+   "n": 20,
+   "median": 35.900000005960464,
+   "p90": 43
+  },
+  {
+   "fixture": "F2",
+   "impl": "table",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 1.5999999940395355,
+   "p90": 2.0999999940395355
+  },
+  {
+   "fixture": "F3",
+   "impl": "tree",
+   "metric": "convert",
+   "n": 20,
+   "median": 0.800000011920929,
+   "p90": 1.2999999821186066
+  },
+  {
+   "fixture": "F3",
+   "impl": "tree",
+   "metric": "firstRender",
+   "n": 20,
+   "median": 255.30000001192093,
+   "p90": 322.2999999821186
+  },
+  {
+   "fixture": "F3",
+   "impl": "tree",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 2.5,
+   "p90": 3.199999988079071
+  },
+  {
+   "fixture": "F3",
+   "impl": "table",
+   "metric": "firstRender",
+   "n": 20,
+   "median": 262.2000000178814,
+   "p90": 321.7999999821186
+  },
+  {
+   "fixture": "F3",
+   "impl": "table",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 2.699999988079071,
+   "p90": 3.5999999940395355
+  }
+ ]
+}
