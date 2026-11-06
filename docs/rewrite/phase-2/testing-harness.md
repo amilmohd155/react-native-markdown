@@ -72,7 +72,7 @@ Hook (`src/api/__tests__/useMarkdownStream.test.tsx`, fake timers and a fake fra
 
 ## Memoization test
 
-`src/api/__tests__/streamMemo.test.tsx`. As in 06, through spy components passed via `components`: stream a multi-block message (paragraphs, a list, a code fence, a table) and assert that, per flush, only the open block's elements render. It also asserts that the `isSameBlock` prefix fast path is taken for closed blocks (no source-text comparison), by wrapping the real `isSameBlock`. **That second assertion is an `it.failing`**: the fast path never fires through `<Block>` today (see the note in [P2-2](./decisions.md#p2-2-splice-strategy)), deferred to S5. When it is fixed the test starts failing, which is the cue to make it a plain `it`.
+`src/api/__tests__/streamMemo.test.tsx`. As in 06, through spy components passed via `components`: stream a multi-block message (paragraphs, a list, a code fence, a table) and assert that, per flush, only the open block's elements render. It also asserts that the `isSameBlock` prefix fast path is taken for closed blocks (no source-text comparison), by wrapping the real `isSameBlock`. **That second assertion is an `it.failing`**: the fast path never fires through `<Block>` today, accepted as a gap at S5 (see the note in [P2-2](./decisions.md#p2-2-splice-strategy)). If it is ever fixed the test starts failing, which is the cue to make it a plain `it`.
 
 ## Platform tests
 

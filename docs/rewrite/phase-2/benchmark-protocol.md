@@ -4,7 +4,7 @@ How S0 and S5 measure the Phase 2 exit criterion. It reuses [Phase 1's protocol]
 
 ## Devices and build
 
-As in Phase 1: the Samsung Galaxy S25 FE (Hermes release build, New Architecture on, JS dev mode off) is the measured device, plus web (Chrome, CPU throttled 4×). There is still no low-end device, so, as in [P1-25](../phase-1/decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1), a result on the S25 FE is a lower bound on a slow phone's cost.
+As in Phase 1: the Samsung Galaxy S25 FE (Hermes release build, New Architecture on, JS dev mode off) is the measured device, plus web (Chrome, CPU throttled 4×). **iPhone: deferred ([P2-8](./decisions.md#p2-8-iphone-run-and-f4c-deferred)).** None was available, so Phase 2 was measured on the S25 FE and web only; run this protocol on an iPhone the first time one is cabled and record it in [02-benchmarks](../02-benchmarks.md). There is still no low-end device, so, as in [P1-25](../phase-1/decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1), a result on the S25 FE is a lower bound on a slow phone's cost.
 
 ## F4
 
@@ -14,8 +14,8 @@ Phase 1 sketched F4 as "`F2` streamed in 500 chunks". That leaves arrival timing
 |---|---|---|
 | `F4a` | `F2` (~10 KB) split into ~20-character chunks (500 chunks) | Paced at one chunk per 16 ms (≈ one per frame; a fast LLM stream). Bar: `streamCost` at most 5× |
 | `F4b` | the same text, 50 chunks of ~195 characters | Paced at one chunk per 16 ms. Bar: `streamCost` at most 2× |
-| `F4d` | `bench/fixtures/code-heavy.md` (5.6 KB, one ~4.5 KB fence), the code-heavy variant of F4 | ~20-character chunks, paced at one chunk per 16 ms. Bar: TBD with [P2-1](./decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture); a ratio may not suit it (see [results](../02-benchmarks.md#code-heavy-fixture)) |
-| `F4c` | a real LLM transcript of ~10 KB, chunk sizes taken from the recorded token stream | Replayed with recorded timing. Not yet collected (the transcripts in `bench/fixtures/transcripts/` are synthetic); re-checked at S5, where the bar is re-confirmed or revised |
+| `F4d` | `bench/fixtures/code-heavy.md` (5.6 KB, one ~4.5 KB fence), the code-heavy variant of F4 | ~20-character chunks, paced at one chunk per 16 ms. Bar: absolute, at most 20 ms total flush cost at 50 ms on the S25 FE ([P2-1](./decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture), accepted 2026-11-06); a ratio does not suit it (see [results](../02-benchmarks.md#code-heavy-fixture)) |
+| `F4c` | a real LLM transcript of ~10 KB, chunk sizes taken from the recorded token stream | Replayed with recorded timing. **Deferred, waived for Phase 2 ([P2-8](./decisions.md#p2-8-iphone-run-and-f4c-deferred)):** no real transcript is collected (the transcripts in `bench/fixtures/transcripts/` are synthetic and set no bar); run it, and re-confirm or revise the P2-1 bar, when one is captured or at the v1.0 gate |
 
 Chunks are split on UTF-16 code units, including inside surrogate pairs and tokens, exactly as a real stream is.
 
@@ -30,7 +30,7 @@ Chunks are split on UTF-16 code units, including inside surrogate pairs and toke
 | `retainedHeap` | Hermes heap growth after the stream ends and GC runs, vs one static document | `HermesInternal.getInstrumentedStats()` |
 | `finalDone` | Time of `done()` (the final full parse) | `performance.now()` |
 
-The **pass/fail metric** is `streamCost` for `F4a` and `F4b` (and `F4c` once recorded), against the bars fixed in P2-1, with the default flush window (50 ms, provisional until measured on a device, [P2-4](./decisions.md#p2-4-coalescing-policy)). Because the criterion is about parse cost, `streamRender` and `droppedFrames` are recorded but not pass/fail.
+The **pass/fail metric** is `streamCost` for `F4a` and `F4b` (and `F4c` once recorded), against the bars fixed in P2-1, with the default flush window (50 ms, the window the P2-1 bars assume, [P2-4](./decisions.md#p2-4-coalescing-policy)). Because the criterion is about parse cost, `streamRender` and `droppedFrames` are recorded but not pass/fail.
 
 ## Strategies compared
 

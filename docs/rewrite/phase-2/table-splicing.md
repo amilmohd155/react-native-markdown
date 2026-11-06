@@ -21,7 +21,7 @@ parseFrom(
 - `carried` is the context after the whole tail. `prefixCarried` is the context after the closed blocks only (all but the last real block): the seed for the next append.
 - `newReferences` and `hasFootnoteDefinition` are the full-reparse trigger signals ([stream-algorithm](./stream-algorithm.md#full-reparse-triggers)).
 - Line offsets: the markdown-it backend computes tail-relative offsets and adds the base, so the stream core does not keep a line-offset table.
-- Footnotes: the footnote section is synthetic, with an empty range at `source.length`. The core resumes from the last **real** block. Once the prefix defines footnotes, `parseFrom` tokenizes the whole source (O(source) per append) because a tail-only parse cannot see the definitions. Accepted for S1; revisit with S5 numbers.
+- Footnotes: the footnote section is synthetic, with an empty range at `source.length`. The core resumes from the last **real** block. Once the prefix defines footnotes, `parseFrom` tokenizes the whole source (O(source) per append) because a tail-only parse cannot see the definitions. Accepted for S1. S5 (2026-11-06): about 17 ms per full re-parse on the S25 FE; a cheaper footnote tail was tried and dropped (no change in total flush time), and the cost is accepted with a redefined bar and a waiver ([P2-1](./decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture), [P2-3 note](./decisions.md#p2-3-parsefrom-contract)).
 
 ## Splice strategy
 
@@ -45,7 +45,7 @@ As implemented (`src/stream/splice.ts`, option A):
 
 ## `isSameBlock` fast path
 
-`isSameBlock(a, i, b, j)` ([P1-9](../phase-1/decisions.md#p1-9-block-identity-by-source-text-plus-context-and-index-keys)) compares context, block context and source text. On a stream, every flush would compare every closed block's text: 6 ms for 900 blocks on the S25 FE, because Hermes copies substrings.
+`isSameBlock(a, i, b, j)` ([P1-9](../phase-1/decisions.md#p1-9-block-identity-by-source-text-plus-context-and-index-keys)) compares context, block context and source text. On a stream, every flush compares every closed block's text. The Phase 1 estimate of 6 ms per flush at 900 blocks (Hermes copies substrings) did not reproduce in a stream: measured on the S25 FE (Hermes release) at 862 blocks, the comparator costs 0.428 ms p50 / 1.276 ms p90 per flush (0.703 / 2.381 ms for late flushes), and 58 blocks (the 10 KB `F2`) costs 0.151 / 0.389 ms ([results](../02-benchmarks.md#issameblock-comparator-s5-s25-fe)).
 
 Fast path: tables produced by the stream core carry a `prefixId` token. If `a` and `b` share the same `prefixId` and both indexes are below the shared `stableCount`, and `i === j` (blocks at different indexes of one prefix are different blocks), the blocks are the same by construction (the prefix was not re-parsed), and the comparison returns immediately. Otherwise it falls back to the full comparison.
 
@@ -53,6 +53,8 @@ Rules:
 - `prefixId` changes whenever a full re-parse happens, so the fast path never survives one.
 - It lives on the private `NodeTable`, not on the public handle.
 - `isSameBlock` semantics for non-stream tables are unchanged.
+
+**Status: the fast path does not fire through `<Block>`, and the gap is accepted ([P2-2](./decisions.md#p2-2-splice-strategy), S5).** `Block`'s memo compares the props of its last render with the new ones, so the table a block retains is the one from when the block was still open (`stableCount` 0 at that time). `i < stableCount` is then never true, and closed blocks fall back to the source-text comparison. Comparing against the previous flush's table instead is unsound: a render skipped by the memo or a suspended flush would leave a block compared against a table it never rendered with, and it would keep chains of old tables alive. Two spikes (version stamps per block; a `WeakMap` in `Block.tsx`) did make it fire and cut the comparator to 0.211 and 0.255 ms p50 at 862 blocks, but the whole-stream time did not change (about 7 s) and the baseline comparator is about 0.8% of stream time at 862 blocks (57.4 of 7,192 ms) and a fix saves at most about 0.5% (A 0.49%, B 0.42%). The cost is not worth the complexity, so the source-text comparison stays. Revisit if the comparator exceeds about 2 ms p50 per flush on a real workload.
 
 ## Handle per flush
 

@@ -54,7 +54,7 @@ Inside a block the cost is quadratic: about `Σ b² / (2·chunk)` over the block
 
 - `parseFrom(source, offset, carried, options)` for the markdown-it backend ([table-splicing.md](./table-splicing.md#parsefrom)). Contract: [P2-3](./decisions.md#p2-3-parsefrom-contract).
 - Stable-block tracking and the rules in [stream-algorithm.md](./stream-algorithm.md): tail boundary, carried context (references, slugs, footnotes), full-reparse triggers.
-- Splicing into a new table, and the `isSameBlock` prefix fast path ([table-splicing.md](./table-splicing.md)). Strategy: [P2-2](./decisions.md#p2-2-splice-strategy).
+- Splicing into a new table, and the `isSameBlock` prefix fast path ([table-splicing.md](./table-splicing.md)); the fast path does not fire through `<Block>` and the gap is accepted at S5 (measured on the S25 FE). Strategy: [P2-2](./decisions.md#p2-2-splice-strategy).
 - The open-fence fast path ([stream-algorithm.md](./stream-algorithm.md#open-fenced-code-fast-path)), if P2-5 is confirmed.
 - `append`, `reset`, `done` on the core, with no timers: scheduling is S2.
 
@@ -79,7 +79,7 @@ Inside a block the cost is quadratic: about `Σ b² / (2·chunk)` over the block
 - Memo test: during a stream, only the open block's elements re-render ([06 · Memoization tests](../06-testing.md#renderer-tests)). Done. The `isSameBlock` prefix-fast-path assertion in it is an `it.failing` until S5 fixes the path ([P2-2 note](./decisions.md#p2-2-splice-strategy)).
 - The main entry is still pure JS (`yarn check:expo-go`). Done.
 
-**Result:** [P2-4](./decisions.md#p2-4-coalescing-policy) accepted with Node, S25 FE and web numbers ([02 · Phase 2 scheduler](../02-benchmarks.md#phase-2-scheduler-s2)); [P2-5](./decisions.md#p2-5-open-fence-fast-path) has its first device measurement. Left for S5: an iPhone, a backgrounded native app, F4c, and the `isSameBlock` fix.
+**Result:** [P2-4](./decisions.md#p2-4-coalescing-policy) accepted with Node, S25 FE and web numbers ([02 · Phase 2 scheduler](../02-benchmarks.md#phase-2-scheduler-s2)); [P2-5](./decisions.md#p2-5-open-fence-fast-path) has its first device measurement. Left for S5 at the time: an iPhone (waived, P2-8), a backgrounded native app (since measured on the S25 FE: [results](../02-benchmarks.md#native-background-and-resume-s25-fe)), F4c (waived, P2-8), and the `isSameBlock` fix (gap accepted).
 
 ## S3 · Smoothing
 
@@ -107,8 +107,9 @@ Inside a block the cost is quadratic: about `Σ b² / (2·chunk)` over the block
 
 **Goal:** show the exit criteria are met on real devices.
 
-- Run [benchmark-protocol.md](./benchmark-protocol.md) on the S25 FE (Hermes release build) and web.
-- Write the results into [`../02-benchmarks.md`](../02-benchmarks.md) under "Device results".
+- Run [benchmark-protocol.md](./benchmark-protocol.md) on the S25 FE (Hermes release build) and web. **Done with a finding (2026-11-06):** web and S25 FE are measured with the full method; the S25 FE `core` misses the 2×/5× bars at the 50 ms window (`F4a` 6.30× / 7.11×, `F4b` 2.46× / 2.51×) because of footnote-triggered full re-parses. The bar was accepted on 2026-11-06 with a redefinition (steady-state flush cost, excluding the necessary footnote full re-parse, which is reported separately) and a waiver for documents that end in a footnote definition, the measured figures being the accepted ones ([P2-1](./decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture)). Option A (cheaper footnote tail) was tried and dropped ([P2-3 note](./decisions.md#p2-3-parsefrom-contract)). The footnote-free F2 variant was then measured on the S25 FE and passes the original bars at 50 ms (`F4a` 4.32× / 4.34×, `F4b` 1.42× / 1.44×; P2-1 not reopened), and native background and resume was checked on the S25 FE (no bug, no scheduler change needed). The iPhone and `F4c` are **waived and deferred** ([P2-8](./decisions.md#p2-8-iphone-run-and-f4c-deferred)).
+- Write the results into [`../02-benchmarks.md`](../02-benchmarks.md) under "Device results". Web and S25 FE are written ([web](../02-benchmarks.md#phase-2-web-benchmark-s5-web-part), [S25 FE](../02-benchmarks.md#phase-2-device-benchmark-s5-s25-fe), [`isSameBlock`](../02-benchmarks.md#issameblock-comparator-s5-s25-fe)); the footnote-free variant and native background and resume are also written ([footnote-free](../02-benchmarks.md#footnote-free-variant-s25-fe), [background](../02-benchmarks.md#native-background-and-resume-s25-fe)); the iPhone and `F4c` are waived (P2-8). The results have a [summary table](../02-benchmarks.md#phase-2-device-results-summary) at the top.
 - Exit review: check every item in [README](./README.md#exit-criteria). Record any waived item in [decisions.md](./decisions.md).
+- Phase 1 carry-over (P1-25): **decided** in [P2-7](./decisions.md#p2-7-where-the-phase-1-carry-over-lives) (accepted 2026-11-06). No S6: items 1 to 3 go to the standalone perf-hardening issue (#36), the F5 `retainedHeap` method to the start of Phase 3, the low-end Android re-measure to a v1.0 release gate (#37). Phase 2 can close without any of it.
 
-**Done when:** all exit criteria are checked or waived with a recorded reason.
+**Done when:** all exit criteria are checked or waived with a recorded reason. Done 2026-11-06: see the [exit review](./README.md#exit-review-2026-11-06).
