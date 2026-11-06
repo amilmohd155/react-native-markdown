@@ -196,8 +196,12 @@ describe.each(['timeout', 'raf'] as const)(
     // with the new ones, and a block last rendered while it was open has
     // `i >= table.stableCount` in that retained table, so `i < a.stableCount`
     // is never true. Closed blocks are skipped (first test) but by the slow
-    // source-text comparison (6 ms for 900 blocks on the S25 FE, table-splicing.md).
-    // When the fast path is fixed this test starts passing and `it.failing`
+    // source-text comparison (measured on the S25 FE: 0.43 ms p50 per flush at
+    // 862 blocks, not the 6 ms first estimated).
+    // ACCEPTED, not to be fixed now (P2-2, S5, docs/rewrite/phase-2/decisions.md):
+    // the baseline comparator is ~0.8% of stream time at 862 blocks and a fix
+    // saves at most ~0.5% (spikes A/B: 0.49% / 0.42%). If a fix is ever merged
+    // (see the spikes in P2-2) this test starts passing and `it.failing`
     // fails: change it to `it`.
     it.failing(
       'skips closed blocks without comparing source text',
