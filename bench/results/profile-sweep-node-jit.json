@@ -1,0 +1,133 @@
+{
+  "mode": "jit",
+  "node": "v24.22.1",
+  "reps": 30,
+  "coldThemeMs": 0.7701249718666077,
+  "warmThemeMs": 0.06458401679992676,
+  "tally": {
+    "Root": 1,
+    "Heading": 140,
+    "Text": 2127,
+    "Paragraph": 516,
+    "Strong": 171,
+    "Strikethrough": 1,
+    "Link": 2,
+    "FootnoteReference": 1,
+    "List": 103,
+    "ListItem": 309,
+    "CodeBlock": 70,
+    "Table": 34,
+    "TableHead": 34,
+    "TableRow": 238,
+    "TableCell": 952,
+    "TableBody": 34,
+    "InlineCode": 1394,
+    "Blockquote": 34,
+    "Divider": 34,
+    "FootnoteSection": 1,
+    "FootnoteDefinition": 1
+  },
+  "f3Buckets": [
+    {
+      "type": "Table",
+      "blocks": 34,
+      "ms": 4.285542011260986,
+      "usPerBlock": 126.04535327238194,
+      "pct": 43.07402032622457
+    },
+    {
+      "type": "List",
+      "blocks": 69,
+      "ms": 3.16525000333786,
+      "usPerBlock": 45.87318845417189,
+      "pct": 31.8139555330693
+    },
+    {
+      "type": "Paragraph",
+      "blocks": 172,
+      "ms": 1.1094580292701721,
+      "usPerBlock": 6.4503373794777445,
+      "pct": 11.151172378733717
+    },
+    {
+      "type": "Blockquote",
+      "blocks": 34,
+      "ms": 0.4751250147819519,
+      "usPerBlock": 13.974265140645644,
+      "pct": 4.775485688960432
+    },
+    {
+      "type": "Heading",
+      "blocks": 140,
+      "ms": 0.3941660523414612,
+      "usPerBlock": 2.8154718024390086,
+      "pct": 3.961766447709625
+    },
+    {
+      "type": "CodeBlock",
+      "blocks": 70,
+      "ms": 0.17808300256729126,
+      "usPerBlock": 2.5440428938184465,
+      "pct": 1.7899138200447953
+    },
+    {
+      "type": "Divider",
+      "blocks": 34,
+      "ms": 0.06937503814697266,
+      "usPerBlock": 2.040442298440372,
+      "pct": 0.6972891166212214
+    },
+    {
+      "type": "FootnoteSection",
+      "blocks": 1,
+      "ms": 0.03241699934005737,
+      "usPerBlock": 32.41699934005737,
+      "pct": 0.3258235445644321
+    }
+  ],
+  "f3RenderBlockMs": 9.949250102043152,
+  "variants": [
+    {
+      "id": "F3",
+      "bytes": 100747,
+      "blocks": 554,
+      "renderBlockMs": 9.18362021446228,
+      "mountMs": 97.54824995994568
+    },
+    {
+      "id": "no-tables",
+      "bytes": 83678,
+      "blocks": 520,
+      "renderBlockMs": 5.250168800354004,
+      "mountMs": 49.63229203224182
+    },
+    {
+      "id": "tables",
+      "bytes": 17100,
+      "blocks": 34,
+      "renderBlockMs": 3.8354589343070984,
+      "mountMs": 34.55562502145767
+    },
+    {
+      "id": "code",
+      "bytes": 17097,
+      "blocks": 70,
+      "renderBlockMs": 0.12970900535583496,
+      "mountMs": 3.9952499866485596
+    },
+    {
+      "id": "lists",
+      "bytes": 19731,
+      "blocks": 68,
+      "renderBlockMs": 2.6228339672088623,
+      "mountMs": 34.36204195022583
+    },
+    {
+      "id": "prose",
+      "bytes": 46600,
+      "blocks": 346,
+      "renderBlockMs": 1.6651689410209656,
+      "mountMs": 12.863334000110626
+    }
+  ]
+}

@@ -2,6 +2,8 @@
 
 This is how M7 measures the Phase 1 exit criterion (≥ 5× faster parse plus first render on a low-end Android device) and the remaining open item (render cost of the flat table vs. an object tree). Results go into [`../02-benchmarks.md`](../02-benchmarks.md) under a new "Device results" section.
 
+> **Update (2026-11-06):** the 5× exit criterion was waived by [P1-25](./decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1) and replaced by absolute F3 budgets in [P2-9](../phase-2/decisions.md#p2-9-absolute-f3-budgets-replace-the-5-against-v0-criterion) (`bench/budgets.json`, checked by `bench/check-budgets.mjs`). The conversion share of markdown-it from P1-10 is restated as an absolute budget in [P2-10](../phase-2/decisions.md#p2-10-absolute-conversion-budget-replaces-the-relative-p1-10-budget). The bars table below is the original; where it differs, those decisions apply.
+
 ## Devices
 
 | Class | Target | Why |
@@ -67,7 +69,7 @@ Fixtures are committed under `bench/fixtures/`. Images use local assets with kno
 
 | Check | Bar |
 |---|---|
-| **Exit criterion** | `parse+firstRender` on `F3`, low-end Android: v1 median ≤ v0.8.5 median / 5 |
+| **Exit criterion** (waived by P1-25, replaced by the P2-9 budgets) | `parse+firstRender` on `F3`, low-end Android: v1 median ≤ v0.8.5 median / 5 |
 | `reRenderOneBlock` on `F3` | v1 ≤ 1/10 of v1's own `firstRender` (shows memoization works) |
 | `retainedHeap` on `F5` | v1 ≤ v0.8.5 / 3 (expected about 5×, based on the Node measurements in [08](../08-model-and-api.md#measurements)) |
 | `droppedFrames` on `F5` | Reported and compared, not pass/fail in phase 1 |

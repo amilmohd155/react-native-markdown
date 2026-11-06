@@ -24,7 +24,7 @@ Defined in [07](../07-roadmap.md#phase-1-core-pure-js). Restated here only as a 
 - [x] CommonMark spec suite passes (documented allowlist only)
 - [x] GFM spec suite passes (documented allowlist only)
 - [x] Runs unchanged in Expo Go and on the web
-- [ ] ~~Parse plus first render of the 100 KB fixture is ≥ 5× faster than v0.8.5 on the low-end Android device~~ **Waived**, not met (1.0× on the S25 FE; no low-end device): [P1-25](./decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1) ([benchmark protocol](./benchmark-protocol.md))
+- [ ] ~~Parse plus first render of the 100 KB fixture is ≥ 5× faster than v0.8.5 on the low-end Android device~~ **Waived**, not met (1.0× on the S25 FE; no low-end device): [P1-25](./decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1) ([benchmark protocol](./benchmark-protocol.md)). Replaced by absolute F3 budgets: [P2-9](../phase-2/decisions.md#p2-9-absolute-f3-budgets-replace-the-5-against-v0-criterion)
 - [x] Device measurement done for the flat table vs. object tree render cost (the remaining open item): [P1-24](./decisions.md#p1-24-keep-the-flat-table-render-ab-against-an-object-tree)
 
 ## Documents

@@ -171,6 +171,7 @@ These are decisions made while building Phase 1, numbered `P1-n`. Design-level d
 - **Date:** 2026-11-04
 - **Context:** M1's done check said conversion must cost ≤ 5 ms on top of markdown-it's parse (97 KB, Node `--jitless`). That number came from an early prototype that did much less work, and absolute times depend on the machine: markdown-it alone takes 54 ms on one machine and 77 ms on another.
 - **Decision:** Conversion must cost **≤ 15% of markdown-it's own parse time**, for the 97 KB fixture, in Node `--jitless`. Checked by `bench/convert.mjs` (`yarn workspace @docren/react-native-markdown-bench convert:jitless`), which exits non-zero on failure.
+- **Restated as an absolute budget by [P2-10](../phase-2/decisions.md#p2-10-absolute-conversion-budget-replaces-the-relative-p1-10-budget).**
 - **Consequences:**
   - After the line-offset fast path, the inline-pass allocation fixes and P1-9: 6.0 ms = **11.2%** in Node `--jitless` (13.3% with JIT).
   - **On device** (Samsung S25 FE, Hermes release build): 15.95 ms = **14.8%** of markdown-it's 107.95 ms. Passes, with little margin: the jitless proxy underestimates Hermes by about a third. If M7's low-end device fails it, the node builder is the first thing to optimize ([02 · Device results](../02-benchmarks.md#device-results-preliminary-m1)).

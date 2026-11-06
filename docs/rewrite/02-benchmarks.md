@@ -121,7 +121,7 @@ The [benchmark protocol](./phase-1/benchmark-protocol.md) run on the hardware av
 | Web 4× `parse+firstRender` | 19.5 / 19.5 (**1.0×**) | 39.4 / 41.7 (**1.06×**) | 384.2 / 416.6 (**1.08×**) |
 | Web 4× `reRenderOneBlock` | 2.4 / 5.1 (**2.1×**) | 2.4 / 22.0 (**9.2×**) | 4.1 / 221 (**54×**) |
 
-- **Exit criterion (≥ 5× on `parse+firstRender`, F3): not met.** 1.0× on the S25 FE and 1.08× on web. The M3 explanation holds: v0.8.5 has no GFM (so v1 does more work on F2/F3), and v1's render dominates its total (243 ms against 216 ms of parse on device; about 90% on web). Parse on Hermes is about 2.8× the Node `--jitless` figure above (216 against 78 ms on F3). Waived for Phase 1, carried into Phase 2: [P1-25](./phase-1/decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1).
+- **Exit criterion (≥ 5× on `parse+firstRender`, F3): not met.** 1.0× on the S25 FE and 1.08× on web. The M3 explanation holds: v0.8.5 has no GFM (so v1 does more work on F2/F3), and v1's render dominates its total (243 ms against 216 ms of parse on device; about 90% on web). Parse on Hermes is about 2.8× the Node `--jitless` figure above (216 against 78 ms on F3). Waived for Phase 1, carried into Phase 2: [P1-25](./phase-1/decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1). Follow-up (2026-11-06): the CommonMark-only baseline, the `firstRender` profile and the Hermes parse profile are in [Phase 1 carry-over](#phase-1-carry-over-36-p1-25); the like-for-like ratio is 2.0×, not 5×.
 - **Memoization bar (`reRenderOneBlock` ≤ 1/10 of v1's `firstRender`, F3): met.** 15.9 ms against 242.7 ms is 6.6% on device (M3: 13%) and 1.2% on web.
 
 ### F5: chat list, 200 messages (S25 FE)
@@ -743,6 +743,159 @@ In the table, the `Longest commit gap` column is as logged: it is 40 to 76 ms in
 | `raf-nat-off5` | raf | native | yes | 178 | 0 (1 incl. done) | 51 | - | - | - (-) | 219, background |
 | `w50-nat-off5b` | timer 50 ms | native | yes | 94 | 0 (1 incl. done) | 68 | - | - | - (-) | 219, background |
 | `raf-nat-off5b` | raf | native | yes | 331 | 0 (0 incl. done) | 2402 | 59 | 1 | 3 (41) | 25, active |
+
+## Phase 1 carry-over (#36, P1-25)
+
+Items 1 to 3 of [P2-7](./phase-2/decisions.md#p2-7-where-the-phase-1-carry-over-lives), the work behind the [P1-25](./phase-1/decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1) waiver, measured for issue #36. The budgets at the end are the ones adopted by [P2-9](./phase-2/decisions.md#p2-9-absolute-f3-budgets-replace-the-5-against-v0-criterion).
+
+- **Device:** Samsung Galaxy S25 FE (SM-S731B), Android 37, release build (Hermes, bytecode, `__DEV__ = false`, New Architecture). Not the pass/fail device. Date: 2026-11-06.
+- **Raw data:** [`bench/results/sm-s731b-2026-11-06-f3cm.json`](../../bench/results/sm-s731b-2026-11-06-f3cm.json) (Bench, A), [`parsesplit-s25fe-2026-11-06.log`](../../bench/results/parsesplit-s25fe-2026-11-06.log) (C), [`profile-s25fe-2026-11-06.log`](../../bench/results/profile-s25fe-2026-11-06.log) (B, device), [`profile-sweep-node-jit.json`](../../bench/results/profile-sweep-node-jit.json) and [`profile-sweep-node-jitless.json`](../../bench/results/profile-sweep-node-jitless.json) (B, Node). The two device logs are chunked (`[parseSplit i/n]`, `[profile i/n]`); concatenate the chunks in order to get the JSON. Scripts: `bench/f3-cm.mjs`, `bench/parse-split.mjs`, `bench/profile/`; `bench/fixtures/commonmark.ts` derives F3-cm from F3.
+- **Method:** A uses the bench tab, "full" mode (5 warm-up + 20 measured, medians), as in M7. B ran 3 warm-up + 15 measured rounds, jobs shuffled each round. C ran 3 warm-up + 21 measured.
+- **Web (Chrome 157, 4× throttle).** Same three screens, one run each on a production export, driven by `bench/web-bench.mjs`: [`web-chrome-4x-2026-11-06-bench.json`](../../bench/results/web-chrome-4x-2026-11-06-bench.json), [`-parsesplit.log`](../../bench/results/web-chrome-4x-2026-11-06-parsesplit.log), [`-profile.log`](../../bench/results/web-chrome-4x-2026-11-06-profile.log). One run per screen on a Mac with other processes, and p90s are large (F3 v1 `firstRender` p90 1207 ms against a median of 477), so read these medians as indicative. They are not budgeted ([P2-9](./phase-2/decisions.md#p2-9-absolute-f3-budgets-replace-the-5-against-v0-criterion)).
+  - **A.** F3 `parse+firstRender`: v1 550.4 ms, v0 564.6 ms (a tie, as on device). F3-cm: v1 with the `commonmark` preset 347.5 ms, v1 `gfm` 513.5 ms, v0 509.1 ms, so 1.5× against 2.03× on device. `reRenderOneBlock` on F3: v1 6.8 ms, v0 387.9 ms.
+  - **Parse against render is the other way round on web.** F3 v1 `parse` is 73.6 ms (269 ms on Hermes) and `firstRender` is 476.8 ms (323 ms on device), so parse is about 13% of the total on web and about 45% on device.
+  - **C.** `md.parse` p50 is 212.5 ms on F3 and 159.1 ms on F3-cm; conversion is 8.7% and 7.7% of it (budget 15%). `core:linkify` is 30.4% of F3 (97 ms) and 40.0% of F3-cm (92 ms), against about 69% on Hermes. The absolute cost is similar on both engines and the rest of the parse is much cheaper on V8, so it is the largest single rule on F3-cm on web too.
+  - **B.** Warm `firstRender` medians (ms): F3 335, tables 224, no-tables 305, lists 104, prose 88, code 34. Element self time sums to about 9 ms of 371 ms, so the cost is outside the component bodies, as on device. The web timer steps are 0.1 ms, so per-element self times are indicative only.
+
+### A: CommonMark-only baseline (F3-cm)
+
+F3-cm is F3 with everything v0.8.5 has no GFM for taken out of the text (83,538 bytes against 100,747): table lines, task-list markers, `~~` strikethrough, autolink brackets and bare schemes, footnotes. Both libraries then do the same work. `v1cm` is v1 with the `commonmark` preset (no tables, strikethrough, autolinks, task lists or footnotes); `v1` is the default `gfm` preset. Medians, ms (p90 in the raw data):
+
+| Fixture, library | `parse` | `firstRender` | `parse+firstRender` | `reRenderOneBlock` |
+|---|---|---|---|---|
+| F3, v0.8.5 | n/a | n/a | 632.8 | 501.1 |
+| F3, v1 `gfm` | 268.5 | 323.3 | 593.6 | 20.2 |
+| F3-cm, v0.8.5 | n/a | n/a | 355.8 | 315.5 |
+| F3-cm, v1 `gfm` | 158.0 | 140.7 (p90 660.4) | 299.0 | 17.8 |
+| F3-cm, v1cm | 41.4 | 133.8 | 175.3 | 18.0 |
+
+v0 is timed as one `fromMarkdown` plus render, so it has no separate `parse` or `firstRender` here.
+
+Ratios against v0.8.5 on the same fixture (v0 / v1):
+
+| | `parse+firstRender` | `reRenderOneBlock` |
+|---|---|---|
+| F3, v1 `gfm` (the waived criterion) | **1.07×** | 24.8× |
+| F3-cm, v1 `gfm` | 1.19× | 17.7× |
+| F3-cm, v1cm (the like-for-like baseline) | **2.03×** | 17.5× |
+
+- **Is GFM the reason for the 1.0×? Part of it, not all.** Two steps separate the first row from the last. Taking the GFM constructs out of the text (F3 to F3-cm, same `gfm` preset) moves the ratio from 1.07× to 1.19×: v1 drops by 295 ms and v0 by 277 ms, so the removed content costs about the same in both. Switching to the `commonmark` preset then moves it from 1.19× to 2.03×, because `parse` falls from 158.0 to 41.4 ms. That second step is a fixed cost of the `gfm` preset, not a difference in work between the libraries: F3-cm has no link anywhere, and the `gfm` preset still spends most of its parse in the `linkify` core rule ([C](#c-parse-on-hermes-markdown-it-against-the-node-builder); fixed in `9f4845b`, see [After the autolink fix](#after-the-autolink-fix-9f4845b)).
+- **The like-for-like baseline does not reach 5×.** Without GFM anywhere, v1cm is 2.03× v0 on `parse+firstRender`. 5× of v0's 355.8 ms is 71.2 ms, and v1cm's `firstRender` alone is 133.8 ms. What is left is render ([B](#b-where-firstrender-goes)), not parse: with the `commonmark` preset `parse` is 24% of the total. On the edit path v1 is 17.5× faster than v0 on F3-cm, so the memoization result does not depend on GFM.
+- **Per phase.** Parse: v1cm 41.4 ms. Render: v1cm 133.8 ms against v1 `gfm` 140.7 ms on F3-cm, the same within noise (the `gfm` preset adds no render work when the text has no GFM). The `gfm` row's `firstRender` p90 of 660.4 ms is one slow run in 20 (the median is 140.7); the `parse+firstRender` p90 (822.0) carries it.
+- **Caveats.**
+  - This run was slower than M7: F3 v1 `parse+firstRender` is 593.6 ms against 458.6 ms, `parse` 268.5 against 215.8, `firstRender` 323.3 against 242.7. v0 was slower too (632.8 against 447.5), so the F3 ratio (1.07×) stays near M7's 1.0×, but absolute numbers here are not comparable to the M7 table. The reason is not known.
+  - Run-to-run variance on this device is large and its cause is not identified (see the repeat run in [After the autolink fix](#after-the-autolink-fix-9f4845b): v1cm F3-cm `parse` went from 41.4 to 55.2 ms with no change to that preset).
+  - Airplane mode, battery and temperature were not recorded for this run, so the M7 conditions do not carry over.
+  - F3-cm is derived by text edits; it keeps `[text](url)` links, inline code and fenced code, and has 2,961 tokens against F3's 6,505. It is a like-for-like fixture, not a typical CommonMark document.
+
+### B: where `firstRender` goes
+
+The timed window is Bench's: from the `setState` that mounts a pre-parsed document to the container's `onLayout`. Inside it: `renderBlock` and inline flattening, React reconciliation and every component's render function, creation of the native views, and layout up to `onLayout`. Not inside it: parse, and the table measuring pass (cells report their widths on layout, then a `requestAnimationFrame` callback re-renders the table with fixed column widths). With a cold width cache, the wrapped run counted all 34 F3 tables rendering after the window (`tableAfter` 34 of 34); with a warm cache none did. So the measuring re-render is **not** in any `firstRender` figure below. It is real work on the first mount of a table, and it is not measured here.
+
+Device, S25 FE, uninstrumented (`plain`) medians of 15 runs, warm table cache, ms. The variants are F3 cut into top-level segments by kind (`bench/profile/variants.ts`):
+
+| Rank | Variant | Blocks | `firstRender` | Per block | Node `--jitless` mount | Node JIT mount |
+|---|---|---|---|---|---|---|
+| 1 | tables (17,100 B; 34 tables, 952 cells) | 34 | 132.0 (p90 208.8) | 3.9 | 80.7 | 34.6 |
+| 2 | prose (46,600 B) | 346 | 110.7 (p90 142.5) | 0.32 | 34.1 | 12.9 |
+| 3 | lists (19,731 B; 309 items) | 68 | 102.3 (p90 189.6) | 1.5 | 71.1 | 34.4 |
+| 4 | code (17,097 B) | 70 | 77.5 (p90 92.9) | 1.1 | 9.6 | 4.0 |
+| | F3 without tables | 520 | 156.8 (p90 234.9) | | 117.6 | 49.6 |
+| | F3 | 554 | 291.7 (cold cache 295.1; p90 355.6) | | 203.3 | 97.5 |
+
+- **Tables are the largest single cost, about 46% of F3's `firstRender`.** F3 minus the no-tables variant is 134.9 ms on the device (46%), 85.7 ms in Node `--jitless` (42%) and 47.9 ms in Node JIT (49%). The three agree, so the share is not an artifact of one engine.
+- **Code blocks are cheap in JavaScript and expensive on the device.** The 70 code blocks mount in 4.0 ms (Node JIT) or 9.6 ms (`--jitless`) without layout, and take 77.5 ms on the device: 1.1 ms per block, each block a `View` and a horizontal `ScrollView` ([`CodeBlock`](../../src/render/defaults/block.tsx)). The per-block figure includes the fixed cost of one mount. No variant has 70 plain `View`s to subtract, so how much of the 1.1 ms is the `ScrollView` itself is **not measured**.
+- **The variants do not add up to F3** (132.0 + 110.7 + 102.3 + 77.5 = 422.5 against 291.7): each carries its own mount overhead, and F3 also has headings, quotes and dividers that no variant holds. Read them as a ranking and as per-block rates, not as slices of F3.
+- **Component self time is almost nothing.** With every default component wrapped, the components' own render time on F3 sums to 6.2 ms (warm) and 6.4 ms (cold), out of 282 and 298 ms. By element, ms of self time on F3 (calls, µs per call): `TableCell` 2.09 (952, 2.2), `ListItem` 1.05 (309, 3.4), `InlineCode` 0.97 (1,394, 0.7), `Paragraph` 0.86 (516, 1.7), `Heading` 0.30 (140, 2.1), `Table` 0.27 (34, 8.0), `CodeBlock` 0.17 (70, 2.5), every other element under 0.15 ms. About 2% of `firstRender` is in the components' own functions. The rest is `renderBlock` and inline flattening, React reconciliation, native view creation and layout, which this run does not separate.
+- **Node: element creation is a small part of the mount.** `renderBlock` over every F3 block with stub components (block walk, props, theme lookups, `createElement`; no reconciliation) takes 9.9 ms of the 97.5 ms JIT mount (10%) and 15.7 of 203.3 ms `--jitless` (8%). Share of that time by top-level type (JIT / `--jitless`): `Table` 43% / 45% (126 / 207 µs per block), `List` 32% / 33% (46 / 74 µs), `Paragraph` 11% / 12%, `Blockquote` 5%, `Heading` 4%, `CodeBlock` 2%. The first theme resolution costs 0.77 ms (JIT), 0.06 ms warm.
+- **Counts.** F3 renders 2,127 `Text`, 1,394 `InlineCode`, 952 `TableCell`, 516 `Paragraph`, 309 `ListItem`, 238 `TableRow`, 140 `Heading`, 103 `List`, 70 `CodeBlock`, and 34 each of `Table`, `TableHead`, `TableBody`, `Blockquote` and `Divider`. Native view counts per element were not collected.
+
+Not shown by B: a Hermes sampling profile (no function-level CPU data for `renderBlock`, React or the native commit), and the cost of the table measuring pass. The wrapped numbers include timer overhead (0.00008 ms per timer pair, subtracted from self times only, not from the totals).
+
+### C: parse on Hermes (markdown-it against the node builder)
+
+The `ParseSplit` screen times `md.parse` and the token-to-table conversion separately, then runs `md.parse` again with every rule wrapped for a per-rule split. Medians of 21 runs after 3 warm-up runs, `gfm` preset, ms:
+
+| Fixture | Tokens | `md.parse` | Conversion | Conversion / `md.parse` | Total |
+|---|---|---|---|---|---|
+| F2 × 10 (95 KB) | 6,087 | 171.6 | 9.8 | 5.7% | 179.5 |
+| F3 (98 KB) | 6,505 | 178.4 | 10.0 | 5.6% | 188.8 |
+| F3-cm (82 KB) | 2,961 | 177.3 | 8.4 | 4.7% | 187.2 |
+
+- **Conversion meets the P1-10 budget with a wide margin.** (Before the autolink fix; after it the share is about 21%, see [After the autolink fix](#after-the-autolink-fix-9f4845b).) 4.7% to 5.7% against the 15% limit ([P1-10](./phase-1/decisions.md#p1-10-relative-conversion-budget)); this is its first measurement on F3. The M1 device figure was 14.8% of a 108 ms `md.parse`. The share fell because `md.parse` grew (the `linkify` rule, below), and the conversion itself is also lower (10.0 ms against 15.95 ms); the fixture and build differ, so the two are not directly comparable.
+- **`md.parse` is the cost, and F3-cm costs as much as F3.** `md.parse` is 177.3 ms on F3-cm, which has no table and no link, against 178.4 ms on F3 with 2.2× the tokens. Neither token count nor GFM syntax sets the time.
+
+Per-rule split (instrumented run, same preset; share of the sum of the top-level `core` rules, since the `inline:*` rules run inside `core:inline`):
+
+| Rule | F3 ms | F3 share | F3-cm ms | F3-cm share | Calls per parse (F3) |
+|---|---|---|---|---|---|
+| `core:linkify` | 218.1 | 68.7% | 191.0 | 74.2% | 1 |
+| `core:inline` | 58.6 | 18.5% | 40.9 | 15.9% | 1 |
+| `core:block` | 36.7 | 11.6% | 22.9 | 8.9% | 1 |
+| `inline:backticks` (in `core:inline`) | 10.5 | 3.3% | 7.0 | 2.7% | 2,022 |
+| `inline:text` (in `core:inline`) | 7.9 | 2.5% | 6.9 | 2.7% | 5,083 |
+| `inline:emphasis` (in `core:inline`) | 4.6 | 1.4% | 4.6 | 1.8% | 626 |
+| `inline:linkify` (in `core:inline`) | 1.0 | 0.3% | 0.5 | 0.2% | 2,400 |
+
+- **The `core:linkify` rule takes about 69% of F3's `md.parse` (74% on F3-cm).** (Fixed in `9f4845b`; see [After the autolink fix](#after-the-autolink-fix-9f4845b).) It is one call per parse that runs linkify-it's fuzzy matcher over the text tokens of every inline token ([`autolinks.ts`](../../src/plugins/autolinks.ts)), and on F3-cm it finds nothing to link.
+- **A second measurement agrees.** On F3-cm the Bench `parse` is 158.0 ms with the `gfm` preset and 41.4 ms with `commonmark`; the 116.6 ms difference is 74% of the `gfm` figure, the same as the rule split. The `gfm` preset also adds tables, strikethrough and footnotes, but F3-cm has none of those constructs.
+- **P1-1's estimate was for Node `--jitless`, and Hermes pays far more.** [P1-1](./phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps) measured fuzzy linkify at +18% of markdown-it's parse (56.1 to 66.4 ms). On Hermes it is about two thirds of the parse. The Node figure was not a usable proxy for this rule.
+- **Caveats.**
+  - The instrumented run is slower than the plain one: the top-level rule times sum to about 317 ms for F3 (218.1 + 58.6 + 36.7 + small rules), against 178.4 ms for the plain `md.parse`. Wrapping a rule costs time, mostly in rules with thousands of calls, so the shares are approximate and the absolute milliseconds in the table are not parse times. `core:linkify` is one call, so the wrapper is not what makes it large; the `gfm`-against-`commonmark` difference above is the check on its share.
+  - The ParseSplit and Bench runs disagree on F3's parse time: 188.8 ms against 268.5 ms. They are separate runs, with the variance caveat above. Use the shares and ratios, not the two absolute figures together.
+  - No Hermes sampling profile was taken, so nothing is known below rule level (for example, whether the time goes to regular-expression scans, `linkify.test` calls or token allocation inside the rule).
+
+### After the autolink fix (9f4845b)
+
+Commit `9f4845b` (`perf(v1): prefilter linkify.test with substring checks`) puts a cheap substring check (`mayContainAutolink` in [`autolinks.ts`](../../src/plugins/autolinks.ts)) in front of `md.linkify.test`, so text that cannot contain a link skips linkify-it's fuzzy matcher. The same device, build and methods as A and C, run later on 2026-11-06.
+
+- **Raw data:** [`sm-s731b-2026-11-06-linkify-fix.json`](../../bench/results/sm-s731b-2026-11-06-linkify-fix.json) (Bench, full mode, 5 warm-up + 20 measured, impls v0, v1 and v1cm) and [`parsesplit-s25fe-2026-11-06-linkify-fix.log`](../../bench/results/parsesplit-s25fe-2026-11-06-linkify-fix.log) (ParseSplit, 3 warm-up + 21 measured; chunked `[parseSplit i/n]`, concatenate the chunks). Before: the F3-cm Bench file and ParseSplit log listed above.
+
+ParseSplit, F3 (medians, ms):
+
+| | Before | After |
+|---|---|---|
+| `md.parse` | 178.4 | 42.2 |
+| `core:linkify` (instrumented run) | 218.1 ms, 68.7% of the top-level `core` rules | 1.7 ms, 3.1% |
+| `parse()` (`md.parse` plus conversion) | 188.8 | 52.9 |
+| Conversion (`convertTokens`) | 10.0 | 8.7 |
+| Conversion / `md.parse` | 5.6% | 20.6% |
+
+`md.parse` on the other fixtures: F2 × 10 171.6 to 39.9 ms (conversion share 20.5%), F3-cm 177.3 to 27.7 ms (21.4%).
+
+Bench, F3, v1 `gfm` (medians, ms):
+
+| | Before (11-06 earlier run) | After | Change |
+|---|---|---|---|
+| `parse` | 268.5 | 79.4 | -189.1 |
+| `firstRender` | 323.3 | 264.5 | -58.8 |
+| `parse+firstRender` | 593.6 | 338.1 | -255.5 |
+| `reRenderOneBlock` | 20.2 | 18.5 | -1.7 |
+| v0.8.5 `parse+firstRender`, same run | 632.8 | 504.7 | |
+| Ratio against v0.8.5 | 1.07× | **1.5×** | |
+
+F3-cm `parse+firstRender` (ms): v1 `gfm` 240.0 (before 299.0), v1cm 230.1 (before 175.3), v0.8.5 482.2 (before 355.8). Ratios against v0.8.5: `gfm` **2.0×** (was 1.19×), `commonmark` **2.1×** (was 2.03×).
+
+- **The fix removes the cost it was aimed at.** `core:linkify` falls from about 218 ms to 1.7 ms on F3, and F3 `md.parse` from 178.4 to 42.2 ms. The F3-cm `gfm` preset now parses in 66.2 ms in Bench (158.0 before), close to the `commonmark` preset. In Node `--jitless`, as reported by the owner and not re-measured here: `core:linkify` about 18 ms to 1 to 2 ms, F3 `md.parse` 64.8 to 43.9 ms, conversion 15.2% of `md.parse`.
+- **Same-run ratios are the reliable part; absolute numbers are not.** Run-to-run noise on this device is large and its cause is not identified: v0.8.5 on F3 was 632.8 ms in the earlier run and 504.7 ms in this one, and the v1cm F3-cm `parse` went from 41.4 to 55.2 ms although that preset is not touched by the fix. The F3 ratio against v0.8.5 went from 1.07× (earlier run, v1 593.6 ms against v0 632.8 ms) to 1.5× (this run, v1 338.1 ms against v0 504.7 ms). Part of that change is v0 running faster in the second run, so compare each ratio only with the other numbers of its own run. v1 fell by 255 ms between the runs and v0 by 128 ms.
+- **`firstRender` is now most of the total.** On F3 it is 264.5 of 338.1 ms (78%). 5× against v0.8.5 on F3 would need about 101 ms (504.7 / 5) for `parse+firstRender`; `firstRender` alone is 264.5 ms, so it is still out of reach. On F3-cm the like-for-like ratio is 2.1×, as before.
+- **Conversion is now over the P1-10 share.** `convertTokens` is 8.7 ms, which is 20.6% of F3's `md.parse` (20.5% on F2 × 10, 21.4% on F3-cm), above the 15% limit of [P1-10](./phase-1/decisions.md#p1-10-relative-conversion-budget). The builder did not change (10.0 ms before, 8.7 ms now); the denominator shrank from 178.4 to 42.2 ms. P1-10 was set when markdown-it was 100 ms or more of the parse, so a relative budget no longer fits. It is restated as an absolute budget in [P2-10](./phase-2/decisions.md#p2-10-absolute-conversion-budget-replaces-the-relative-p1-10-budget).
+- **Not measured:** why v0.8.5 and the unaffected v1cm preset differ between the two runs; whether the fix changes autolink output (the spec suites are the check for that, not this table).
+
+### Proposed budgets for F3
+
+**Adopted by [P2-9](./phase-2/decisions.md#p2-9-absolute-f3-budgets-replace-the-5-against-v0-criterion); `parse` tightened to 100 ms on 2026-11-06 after the autolink fix. All are medians of 5 warm-up + 20 measured runs on the S25 FE release build, F3, bench tab "full" mode. Two kinds of number are kept apart: a **ceiling** (the worst median seen on this device in the three runs of 2026-11-04, 11-05 and 11-06, a do-not-regress guard) and a **target after a fix**, given only where the data above supports a derivation.
+
+| Metric (F3, v1 `gfm`) | Measured (11-04 / 11-05 / 11-06 / 11-06 after fix) | Adopted ceiling | Derivation |
+|---|---|---|---|
+| `parse` | 194.8 / 215.8 / 268.5 / 79.4 | 100 | Tightened from 270 after the autolink fix: 79.4 (the after-fix median) plus 25% for noise is 99.3, rounded to 100. The owner's pick, made on 2026-11-06 per [P2-9](./phase-2/decisions.md#p2-9-absolute-f3-budgets-replace-the-5-against-v0-criterion) point 2. It is a guard, not a target. |
+| `firstRender` | 254.1 / 242.7 / 323.3 / 264.5 | 325 | Unchanged (worst median of the first three runs). The data ranks costs (tables about 46%) but no experiment shows what a fix saves. Tightened when a render fix is measured. |
+| `reRenderOneBlock` | 33.9 / 15.9 / 20.2 / 18.5 | 25 | 25 ms is the highest recent median (20.2) plus 25%; it is also 7.7% of that run's `firstRender`, inside the existing bar of at most 10%. The 11-04 figure (33.9) is the M3 one and is not used. Unchanged. |
+| `parse+firstRender` | 448.1 / 458.6 / 593.6 / 338.1 | 595 | Unchanged: the sum of the old `parse` and `firstRender` ceilings. Tightened when a render fix is measured. For scale, 5× faster than v0 on F3 would be about 101 ms (504.7 / 5, same run as the after-fix figures). |
+
+- **The spread between runs is large (`parse` 194.8 to 268.5 ms) and its cause is not identified.** A budget enforced on one number needs the run repeated on the same device in the same session, or the ceiling is a guess. Until then the ceilings are a record of the worst seen, not a statement of what the library costs.
+- **Reference ratio, not a gate.** F3-cm `parse+firstRender` is 2.03× v0.8.5 with the `commonmark` preset (1.19× with `gfm`). This is the number a ratio criterion would be judged against (the roadmap's v1.0 line); on this data 5× is out of reach without cutting `firstRender` by more than half.
+- **Not proposed:** a `firstRender` target, a code-block or table budget, and a low-end device figure (no device; [P2-7](./phase-2/decisions.md#p2-7-where-the-phase-1-carry-over-lives) item 5).
 
 ## Not measured
 

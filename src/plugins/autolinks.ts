@@ -96,6 +96,22 @@ function linkText(md: MarkdownIt, schema: string, raw: string): string {
 
 // ── Core rule: matches in text tokens ───────────────────────────────────
 
+/**
+ * Cheap substring prefilter before `md.linkify.test()`, which runs several
+ * regexes per text token. Every candidate `isGfmAutolink` accepts contains one
+ * of these (`://` schemes, `@` emails, `www.`, `mailto:`, `xmpp:`), so text
+ * without any cannot link.
+ */
+function mayContainAutolink(text: string): boolean {
+  if (text.includes('://') || text.includes('@')) return true;
+  const lower = text.toLowerCase();
+  return (
+    lower.includes('www.') ||
+    lower.includes('mailto:') ||
+    lower.includes('xmpp:')
+  );
+}
+
 function linkifyCore(state: StateCore): void {
   const { md } = state;
   for (const block of state.tokens) {
@@ -124,6 +140,7 @@ function linkifyCore(state: StateCore): void {
         if (/^<\/a\s*>/i.test(token.content)) htmlLinkLevel++;
       }
       if (htmlLinkLevel > 0 || token.type !== 'text') continue;
+      if (!mayContainAutolink(token.content)) continue;
       if (!md.linkify.test(token.content)) continue;
 
       // As markdown-it: no link right after an escape (`\www.x.com`).
