@@ -1,0 +1,28 @@
+{
+  "status": "proposed",
+  "decision": "docs/rewrite/phase-2/decisions.md#p2-9-absolute-f3-budgets-replace-the-5-against-v0-criterion",
+  "note": "Ceilings are the worst median seen on this device across the runs of 2026-11-04, 11-05 and 11-06. They guard against regressions, they are not targets. Not adopted until P2-9 is accepted.",
+  "device": {
+    "model": "SM-S731B",
+    "name": "Samsung Galaxy S25 FE",
+    "build": "release",
+    "hermes": true
+  },
+  "method": "Median of 5 warm-up + 20 measured runs, Bench tab full mode (docs/rewrite/phase-1/benchmark-protocol.md).",
+  "fixture": "F3",
+  "impl": "v1",
+  "budgets": [
+    { "metric": "parse", "ceilingMs": 270, "recent": [194.8, 215.8, 268.5] },
+    { "metric": "firstRender", "ceilingMs": 325, "recent": [254.1, 242.7, 323.3] },
+    { "metric": "reRenderOneBlock", "ceilingMs": 25, "recent": [33.9, 15.9, 20.2] },
+    { "metric": "parse+firstRender", "ceilingMs": 595, "recent": [448.1, 458.6, 593.6] }
+  ],
+  "reference": {
+    "note": "Reference ratio, not a gate: F3-cm parse+firstRender, v0.8.5 over v1 with the commonmark preset.",
+    "fixture": "F3-cm",
+    "v0Ms": 355.8,
+    "v1CommonmarkMs": 175.3,
+    "ratio": 2.03,
+    "date": "2026-11-06"
+  }
+}
