@@ -1,7 +1,7 @@
 {
-  "status": "proposed",
+  "status": "accepted",
   "decision": "docs/rewrite/phase-2/decisions.md#p2-9-absolute-f3-budgets-replace-the-5-against-v0-criterion",
-  "note": "Ceilings are the worst median seen on this device across the runs of 2026-11-04, 11-05 and 11-06. They guard against regressions, they are not targets. Not adopted until P2-9 is accepted.",
+  "note": "Ceilings are the worst median seen on this device across the runs of 2026-11-04, 11-05 and 11-06. They guard against regressions, they are not targets. Adopted by P2-9, provisional until the autolink fix is measured.",
   "device": {
     "model": "SM-S731B",
     "name": "Samsung Galaxy S25 FE",
@@ -13,9 +13,21 @@
   "impl": "v1",
   "budgets": [
     { "metric": "parse", "ceilingMs": 270, "recent": [194.8, 215.8, 268.5] },
-    { "metric": "firstRender", "ceilingMs": 325, "recent": [254.1, 242.7, 323.3] },
-    { "metric": "reRenderOneBlock", "ceilingMs": 25, "recent": [33.9, 15.9, 20.2] },
-    { "metric": "parse+firstRender", "ceilingMs": 595, "recent": [448.1, 458.6, 593.6] }
+    {
+      "metric": "firstRender",
+      "ceilingMs": 325,
+      "recent": [254.1, 242.7, 323.3]
+    },
+    {
+      "metric": "reRenderOneBlock",
+      "ceilingMs": 25,
+      "recent": [33.9, 15.9, 20.2]
+    },
+    {
+      "metric": "parse+firstRender",
+      "ceilingMs": 595,
+      "recent": [448.1, 458.6, 593.6]
+    }
   ],
   "reference": {
     "note": "Reference ratio, not a gate: F3-cm parse+firstRender, v0.8.5 over v1 with the commonmark preset.",
