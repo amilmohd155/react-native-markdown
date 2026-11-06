@@ -49,6 +49,20 @@ jobs:
       - name: Run unit tests
         run: yarn test --maxWorkers=2 --coverage
 
+      - name: Run stream equivalence tests
+        run: yarn test:stream
+
+      - name: Run stream equivalence tests (strict work counter)
+        run: yarn test:stream
+        env:
+          STREAM_WORK: '1'
+          STREAM_WORK_STRICT: '1'
+
+      - name: Run stream equivalence tests (fence fast path off)
+        run: yarn test:stream
+        env:
+          STREAM_NO_FENCE_FAST: '1'
+
   spec:
     runs-on: ubuntu-latest
     steps:

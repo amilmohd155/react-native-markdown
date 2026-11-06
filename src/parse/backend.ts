@@ -1,4 +1,5 @@
 import type { NodeTable } from '../model';
+import type { CarriedContext, ParseFromResult } from '../stream/types';
 import type { MarkdownPlugin } from '../plugins/definePlugin';
 import type { Preset } from '../plugins/presets';
 
@@ -50,5 +51,10 @@ export interface ParserBackendImpl extends ParserBackend {
    * Parse `source` from `offset`, which must be a top-level block boundary.
    * Offsets in the result are absolute. Used for streaming (phase 2).
    */
-  parseFrom?(source: string, offset: number, options?: ParseOptions): NodeTable;
+  parseFrom?(
+    source: string,
+    offset: number,
+    carried: CarriedContext | undefined,
+    options?: ParseOptions
+  ): ParseFromResult;
 }

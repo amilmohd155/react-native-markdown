@@ -4,6 +4,7 @@
  * - `unit`: the library's own tests, React Native preset (`yarn test`).
  * - `web`: the renderer under react-native-web and jsdom (`yarn test:web`).
  * - `spec`: the CommonMark and GFM suites, plain Node (`yarn test:spec`).
+ * - `stream`: the stream equivalence harness, plain Node (`yarn test:stream`).
  * - `perf`: parse and render time against stored baselines (`yarn perf`).
  */
 
@@ -54,6 +55,12 @@ module.exports = {
       displayName: 'spec',
       testEnvironment: 'node',
       testMatch: ['<rootDir>/test/spec/**/*.test.ts'],
+    },
+    {
+      ...shared,
+      displayName: 'stream',
+      testEnvironment: 'node',
+      testMatch: ['<rootDir>/test/stream/**/*.test.ts'],
     },
     {
       ...reactNative,

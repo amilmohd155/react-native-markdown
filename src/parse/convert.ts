@@ -30,6 +30,24 @@ export interface ConvertOptions {
   readonly context?: string;
   /** Plugin nodes to map tokens to. Default: none. */
   readonly registry?: PluginRegistry;
+  /**
+   * Tail conversion (`parseFrom`, phase 2): `source` passed to `convertTokens`
+   * is the text that was tokenized, which starts at `offset` of `fullSource`.
+   * Block offsets come out absolute in `fullSource`, which is also the
+   * table's `source`. Default: `source` is the whole document.
+   */
+  readonly offset?: number;
+  readonly fullSource?: string;
+  /** Heading slug counters of the prefix. Default: none. */
+  readonly slugger?: Slugger;
+  /** Collects every heading outside the footnote section, if given. */
+  readonly headings?: HeadingRecord[];
+}
+
+/** A heading's text and the top-level block (of this conversion) it is in. */
+export interface HeadingRecord {
+  readonly block: number;
+  readonly text: string;
 }
 
 export interface ConvertResult {
@@ -79,8 +97,14 @@ export function convertTokens(
 ): ConvertResult {
   const builder = new TableBuilder(Math.max(64, tokens.length));
   const lineOffsets = computeLineOffsets(source);
-  const blocks = new BlockIndexBuilder(source, lineOffsets);
-  const slugger = new Slugger();
+  const offset = options.offset ?? 0;
+  const fullSource = options.fullSource ?? source;
+  // The block index wants absolute offsets; footnote text is cut from `source`.
+  const blocks = new BlockIndexBuilder(
+    fullSource,
+    offset === 0 ? lineOffsets : lineOffsets.map((o) => o + offset)
+  );
+  const slugger = options.slugger ?? new Slugger();
   const warned = new Set<string>();
   const warnings: string[] = [];
   const registry = options.registry ?? EMPTY_REGISTRY;
@@ -180,7 +204,11 @@ export function convertTokens(
       }
       case 'heading_close': {
         const node = top().node;
-        const id = slugger.slug(headingText?.join('') ?? '');
+        const text = headingText?.join('') ?? '';
+        const id = slugger.slug(text);
+        if (options.headings && !footnote) {
+          options.headings.push({ block: blocks.count - 1, text });
+        }
         builder.setAttrs(node, {
           level: Number(token.tag.slice(1)) as 1 | 2 | 3 | 4 | 5 | 6,
           id,
@@ -277,7 +305,7 @@ export function convertTokens(
         // null): a synthesized block entry at the end of the source whose
         // context carries the definitions (P1-4, P1-9).
         const node = open(token, NodeType.FootnoteSection);
-        blocks.addRange(node, source.length, source.length);
+        blocks.addRange(node, fullSource.length, fullSource.length);
         break;
       }
       case 'footnote_open': {
@@ -394,7 +422,7 @@ export function convertTokens(
   return {
     table: builder.finish(
       blocks.finish(),
-      source,
+      fullSource,
       options.context ?? '',
       registry.info
     ),

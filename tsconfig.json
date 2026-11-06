@@ -26,5 +26,6 @@
     "target": "ESNext",
     "verbatimModuleSyntax": true,
     "types": ["jest", "node"]
-  }
+  },
+  "exclude": ["node_modules", "lib", "bench/stream-web-head.ts", "bench/stream-web-tail.ts"]
 }

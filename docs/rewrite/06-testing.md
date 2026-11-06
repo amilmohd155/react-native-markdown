@@ -46,7 +46,7 @@ Every backend (markdown-it, native) runs the same suite. A documented, per-backe
   - parse time for 1 KB / 10 KB / 100 KB / 1 MB fixtures,
   - first render (`<Markdown document>` mounted with the test renderer) for the same fixtures,
   - the re-render after editing the last block of the 100 KB fixture, and
-  - streaming time for a 10 KB message in 500 chunks: phase 2, nothing to measure yet.
+  - streaming cost (`streamCost`, metric `stream:F4a`) for a 10 KB message in 500 chunks of about 20 characters: the summed `append` flush time of the stream core, one flush per chunk, as a ratio to one full `parse()` of the same text (implemented in phase 2). It guards against regressions from the stored baseline; the pass/fail bars of [P2-1](./phase-2/decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture) are judged with the benchmark protocol, with scheduler coalescing, not by this test.
 - Run with `node --jitless`, the closest CI proxy for Hermes. Fail on more than a 20% regression from the baseline stored in the repo (`perf/baseline.json`).
 - Runners differ in speed, so each metric is stored as a ratio to markdown-it parsing the same text, sampled alternately in the same run (best of N each); a failing metric is retried twice, so only a regression that repeats fails. After an intended change, run `yarn perf:update` and commit the new baseline. `bench/` stays the research workspace (parser comparisons, evidence scripts).
 - Manual, per release: a Hermes profile on a low-end Android device using the example app's benchmark screen.

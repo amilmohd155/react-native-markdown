@@ -1,0 +1,1428 @@
+{
+ "device": "Samsung S25 FE (SM-S731B), Android 37, Hermes release build, New Architecture, quizcript.reactnativemarkdown.example",
+ "date": "2026-11-05",
+ "note": "S2.9b release runs from example/src/screens/StreamBench.tsx; F2 text, 9724 chars",
+ "runs": [
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7864.63472700119,
+   "flushCount": 133,
+   "flushSpacingMs": {
+    "n": 132,
+    "p50": 58.39679700136185,
+    "p90": 59.98058605194092,
+    "max": 68.27793002128601
+   },
+   "flushCostMs": {
+    "n": 133,
+    "p50": 2.556290030479431,
+    "p90": 4.915975987911224,
+    "max": 34.88968801498413
+   },
+   "flushSumMs": 386.46562898159027,
+   "frames": {
+    "n": 827,
+    "p50": 8.366367995738983,
+    "p90": 15.444334983825684,
+    "max": 44.68468803167343,
+    "dropped": 21
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 42.82664102315903,
+    "p90": 63.324178993701935,
+    "max": 84.83714801073074
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "raf",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7856.904219031334,
+   "flushCount": 464,
+   "flushSpacingMs": {
+    "n": 463,
+    "p50": 16.655586004257202,
+    "p90": 21.248788952827454,
+    "max": 51.238945960998535
+   },
+   "flushCostMs": {
+    "n": 464,
+    "p50": 1.0205850005149841,
+    "p90": 2.0105469822883606,
+    "max": 25.85160195827484
+   },
+   "flushSumMs": 576.2525708675385,
+   "frames": {
+    "n": 859,
+    "p50": 8.576719045639038,
+    "p90": 11.696835994720459,
+    "max": 32.4387109875679,
+    "dropped": 20
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 14.685000002384186,
+    "p90": 20.68449205160141,
+    "max": 52.62742203474045
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "raf",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7866.17429703474,
+   "flushCount": 464,
+   "flushSpacingMs": {
+    "n": 463,
+    "p50": 16.659725964069366,
+    "p90": 20.19320297241211,
+    "max": 59.6900389790535
+   },
+   "flushCostMs": {
+    "n": 464,
+    "p50": 1.2738670110702515,
+    "p90": 2.4725000262260437,
+    "max": 31.17656296491623
+   },
+   "flushSumMs": 700.1366712450981,
+   "frames": {
+    "n": 859,
+    "p50": 8.59781301021576,
+    "p90": 12.071952998638153,
+    "max": 37.77730494737625,
+    "dropped": 19
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 15.64941394329071,
+    "p90": 20.953125,
+    "max": 58.05343699455261
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7835.202030956745,
+   "flushCount": 132,
+   "flushSpacingMs": {
+    "n": 131,
+    "p50": 58.38714796304703,
+    "p90": 59.563984990119934,
+    "max": 68.99492198228836
+   },
+   "flushCostMs": {
+    "n": 132,
+    "p50": 3.2370700240135193,
+    "p90": 5.631874978542328,
+    "max": 34.79124999046326
+   },
+   "flushSumMs": 469.4155907034874,
+   "frames": {
+    "n": 814,
+    "p50": 8.357343971729279,
+    "p90": 16.27785098552704,
+    "max": 34.93742102384567,
+    "dropped": 30
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 43.14242202043533,
+    "p90": 63.82831996679306,
+    "max": 83.86410200595856
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7855.443399012089,
+   "flushCount": 132,
+   "flushSpacingMs": {
+    "n": 131,
+    "p50": 58.39402401447296,
+    "p90": 61.815937995910645,
+    "max": 66.95620995759964
+   },
+   "flushCostMs": {
+    "n": 132,
+    "p50": 3.0677730441093445,
+    "p90": 6.018124997615814,
+    "max": 34.345117032527924
+   },
+   "flushSumMs": 462.5642173886299,
+   "frames": {
+    "n": 832,
+    "p50": 8.386914014816284,
+    "p90": 15.099922001361847,
+    "max": 35.84503901004791,
+    "dropped": 20
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 43.90281301736832,
+    "p90": 65.43472701311111,
+    "max": 87.06277400255203
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "raf",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7895.11370998621,
+   "flushCount": 460,
+   "flushSpacingMs": {
+    "n": 459,
+    "p50": 16.723241984844208,
+    "p90": 22.82023400068283,
+    "max": 61.09484398365021
+   },
+   "flushCostMs": {
+    "n": 460,
+    "p50": 1.2987890243530273,
+    "p90": 2.3548830151557922,
+    "max": 31.24457097053528
+   },
+   "flushSumMs": 684.2403205037117,
+   "frames": {
+    "n": 861,
+    "p50": 8.512578010559082,
+    "p90": 12.127461016178131,
+    "max": 58.659530997276306,
+    "dropped": 21
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 15.431717991828918,
+    "p90": 21.138749957084656,
+    "max": 63.15589797496796
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 16,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7915.369491994381,
+   "flushCount": 301,
+   "flushSpacingMs": {
+    "n": 300,
+    "p50": 25.11683601140976,
+    "p90": 31.492148995399475,
+    "max": 68.51808601617813
+   },
+   "flushCostMs": {
+    "n": 301,
+    "p50": 1.6884369850158691,
+    "p90": 3.0153120160102844,
+    "max": 29.505312979221344
+   },
+   "flushSumMs": 587.9135470986366,
+   "frames": {
+    "n": 806,
+    "p50": 8.806484997272491,
+    "p90": 15.52546900510788,
+    "max": 42.6090230345726,
+    "dropped": 11
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 22.689218044281006,
+    "p90": 36.58562499284744,
+    "max": 72.66929602622986
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 16,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7844.254608988762,
+   "flushCount": 305,
+   "flushSpacingMs": {
+    "n": 304,
+    "p50": 25.0940620303154,
+    "p90": 27.28566402196884,
+    "max": 55.49644500017166
+   },
+   "flushCostMs": {
+    "n": 305,
+    "p50": 1.6514840126037598,
+    "p90": 2.865781009197235,
+    "max": 29.328007996082306
+   },
+   "flushSumMs": 568.8323627114296,
+   "frames": {
+    "n": 827,
+    "p50": 8.688711047172546,
+    "p90": 13.930077970027924,
+    "max": 37.69828099012375,
+    "dropped": 18
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 22.101993024349213,
+    "p90": 35.31992197036743,
+    "max": 58.81097596883774
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 16,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7856.683788955212,
+   "flushCount": 303,
+   "flushSpacingMs": {
+    "n": 302,
+    "p50": 25.101563036441803,
+    "p90": 28.075586020946503,
+    "max": 65.3051570057869
+   },
+   "flushCostMs": {
+    "n": 303,
+    "p50": 1.7230859994888306,
+    "p90": 2.988241970539093,
+    "max": 28.120820999145508
+   },
+   "flushSumMs": 570.7427831292152,
+   "frames": {
+    "n": 819,
+    "p50": 8.892538964748383,
+    "p90": 14.197851002216339,
+    "max": 36.88632798194885,
+    "dropped": 13
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 21.96058601140976,
+    "p90": 35.6633979678154,
+    "max": 66.58351504802704
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 33,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7864.518281042576,
+   "flushCount": 186,
+   "flushSpacingMs": {
+    "n": 185,
+    "p50": 41.71050798892975,
+    "p90": 42.7487890124321,
+    "max": 77.93785101175308
+   },
+   "flushCostMs": {
+    "n": 186,
+    "p50": 2.2526170015335083,
+    "p90": 4.624491989612579,
+    "max": 32.28707003593445
+   },
+   "flushSumMs": 520.8290659189224,
+   "frames": {
+    "n": 824,
+    "p50": 8.47648400068283,
+    "p90": 15.429531037807465,
+    "max": 62.81230401992798,
+    "dropped": 19
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 32.955624997615814,
+    "p90": 50.87761700153351,
+    "max": 100.69418001174927
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 33,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7873.144452989101,
+   "flushCount": 187,
+   "flushSpacingMs": {
+    "n": 186,
+    "p50": 41.71652299165726,
+    "p90": 42.712421000003815,
+    "max": 78.32613295316696
+   },
+   "flushCostMs": {
+    "n": 187,
+    "p50": 2.309414029121399,
+    "p90": 4.411562979221344,
+    "max": 32.26238298416138
+   },
+   "flushSumMs": 511.23207998275757,
+   "frames": {
+    "n": 815,
+    "p50": 8.485585987567902,
+    "p90": 15.924999952316284,
+    "max": 65.44265699386597,
+    "dropped": 21
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 33.54679697751999,
+    "p90": 48.76281297206879,
+    "max": 106.21683496236801
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 33,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7864.28839802742,
+   "flushCount": 186,
+   "flushSpacingMs": {
+    "n": 185,
+    "p50": 41.715743005275726,
+    "p90": 43.20253896713257,
+    "max": 75.79140597581863
+   },
+   "flushCostMs": {
+    "n": 186,
+    "p50": 2.2871100306510925,
+    "p90": 4.1856250166893005,
+    "max": 36.507342994213104
+   },
+   "flushSumMs": 501.6456344127655,
+   "frames": {
+    "n": 814,
+    "p50": 8.495625019073486,
+    "p90": 16.14538997411728,
+    "max": 36.76257801055908,
+    "dropped": 15
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 33.84375,
+    "p90": 50.93589800596237,
+    "max": 80.64003902673721
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 100,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7836.493476986885,
+   "flushCount": 70,
+   "flushSpacingMs": {
+    "n": 69,
+    "p50": 108.90828096866608,
+    "p90": 116.7982029914856,
+    "max": 125.48511695861816
+   },
+   "flushCostMs": {
+    "n": 70,
+    "p50": 4.659843981266022,
+    "p90": 11.508125007152557,
+    "max": 15.171875
+   },
+   "flushSumMs": 397.1998019814491,
+   "frames": {
+    "n": 838,
+    "p50": 8.408475995063782,
+    "p90": 12.70527297258377,
+    "max": 34.895079016685486,
+    "dropped": 34
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 74.94339895248413,
+    "p90": 115.33699202537537,
+    "max": 146.82749998569489
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 100,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7847.797149002552,
+   "flushCount": 70,
+   "flushSpacingMs": {
+    "n": 69,
+    "p50": 109.00917899608612,
+    "p90": 117.64742201566696,
+    "max": 132.64742195606232
+   },
+   "flushCostMs": {
+    "n": 70,
+    "p50": 3.9346089959144592,
+    "p90": 13.68285197019577,
+    "max": 35.29320299625397
+   },
+   "flushSumMs": 441.1832790374756,
+   "frames": {
+    "n": 841,
+    "p50": 8.422147989273071,
+    "p90": 12.851953983306885,
+    "max": 36.73957002162933,
+    "dropped": 28
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 75.4823830127716,
+    "p90": 116.51171898841858,
+    "max": 155.24109399318695
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 100,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7838.462188005447,
+   "flushCount": 70,
+   "flushSpacingMs": {
+    "n": 69,
+    "p50": 109.29343700408936,
+    "p90": 117.0194919705391,
+    "max": 125.7459380030632
+   },
+   "flushCostMs": {
+    "n": 70,
+    "p50": 4.624140024185181,
+    "p90": 12.344920992851257,
+    "max": 17.340390980243683
+   },
+   "flushSumMs": 436.45917695760727,
+   "frames": {
+    "n": 839,
+    "p50": 8.415117025375366,
+    "p90": 12.487342953681946,
+    "max": 35.24746096134186,
+    "dropped": 26
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 76.33312499523163,
+    "p90": 116.36925798654556,
+    "max": 150.9784380197525
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4b"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 853.7062110304832,
+   "flushCount": 14,
+   "flushSpacingMs": {
+    "n": 13,
+    "p50": 58.3878909945488,
+    "p90": 66.66777294874191,
+    "max": 66.85793000459671
+   },
+   "flushCostMs": {
+    "n": 14,
+    "p50": 4.253984987735748,
+    "p90": 8.508007943630219,
+    "max": 10.38609403371811
+   },
+   "flushSumMs": 73.67515790462494,
+   "frames": {
+    "n": 86,
+    "p50": 8.444765031337738,
+    "p90": 16.10191398859024,
+    "max": 34.499882996082306,
+    "dropped": 4
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 44.78695297241211,
+    "p90": 62.850585997104645,
+    "max": 79.78468698263168
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4b"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 841.5846490263939,
+   "flushCount": 14,
+   "flushSpacingMs": {
+    "n": 13,
+    "p50": 58.339999973773956,
+    "p90": 66.18722701072693,
+    "max": 66.98652303218842
+   },
+   "flushCostMs": {
+    "n": 14,
+    "p50": 3.2753899693489075,
+    "p90": 9.961836040019989,
+    "max": 10.483592987060547
+   },
+   "flushSumMs": 67.54527187347412,
+   "frames": {
+    "n": 87,
+    "p50": 8.380860030651093,
+    "p90": 15.116445004940033,
+    "max": 33.005389988422394,
+    "dropped": 1
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 42.24578100442886,
+    "p90": 62.93961000442505,
+    "max": 75.14019501209259
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "raf",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4b"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 845.5392190217972,
+   "flushCount": 48,
+   "flushSpacingMs": {
+    "n": 47,
+    "p50": 16.550898015499115,
+    "p90": 23.97792899608612,
+    "max": 25.252265989780426
+   },
+   "flushCostMs": {
+    "n": 48,
+    "p50": 1.4353899955749512,
+    "p90": 2.6191800236701965,
+    "max": 22.607303977012634
+   },
+   "flushSumMs": 98.75456804037094,
+   "frames": {
+    "n": 89,
+    "p50": 8.797421991825104,
+    "p90": 14.115078032016754,
+    "max": 22.685000002384186,
+    "dropped": 2
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 15.651522994041443,
+    "p90": 19.803866982460022,
+    "max": 56.750898003578186
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "raf",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "f4b"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 845.4102739691734,
+   "flushCount": 47,
+   "flushSpacingMs": {
+    "n": 46,
+    "p50": 16.601210951805115,
+    "p90": 24.309179961681366,
+    "max": 25.373202979564667
+   },
+   "flushCostMs": {
+    "n": 47,
+    "p50": 1.7680079936981201,
+    "p90": 3.056249976158142,
+    "max": 22.921836018562317
+   },
+   "flushSumMs": 112.20117205381393,
+   "frames": {
+    "n": 87,
+    "p50": 8.670117974281311,
+    "p90": 17.250663995742798,
+    "max": 30.214960992336273,
+    "dropped": 4
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 15.399178981781006,
+    "p90": 23.695468962192535,
+    "max": 54.46109402179718
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "raf",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "c1"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 9724,
+   "totalMs": 88256.98691397905,
+   "flushCount": 4948,
+   "flushSpacingMs": {
+    "n": 4947,
+    "p50": 16.802617013454437,
+    "p90": 24.48988300561905,
+    "max": 48.46660202741623
+   },
+   "flushCostMs": {
+    "n": 4948,
+    "p50": 1.1542189717292786,
+    "p90": 2.0276569724082947,
+    "max": 26.346562027931213
+   },
+   "flushSumMs": 6372.6159563064575,
+   "frames": {
+    "n": 9728,
+    "p50": 8.561836004257202,
+    "p90": 11.769414007663727,
+    "max": 37.565078020095825,
+    "dropped": 172
+   },
+   "latencyMs": {
+    "n": 9724,
+    "p50": 12.332343995571136,
+    "p90": 18.70109397172928,
+    "max": 47.85015594959259
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": true,
+    "preset": "c1"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 9724,
+   "totalMs": 90302.06335902214,
+   "flushCount": 1529,
+   "flushSpacingMs": {
+    "n": 1528,
+    "p50": 58.382265985012054,
+    "p90": 59.8293359875679,
+    "max": 107.82499998807907
+   },
+   "flushCostMs": {
+    "n": 1529,
+    "p50": 2.2122270464897156,
+    "p90": 4.653750002384186,
+    "max": 53.85941398143768
+   },
+   "flushSumMs": 3980.617063522339,
+   "frames": {
+    "n": 9725,
+    "p50": 8.367147982120514,
+    "p90": 14.45261698961258,
+    "max": 54.28371101617813,
+    "dropped": 254
+   },
+   "latencyMs": {
+    "n": 9724,
+    "p50": 39.09414100646973,
+    "p90": 60.25238299369812,
+    "max": 107.29441398382187
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 50,
+    "smoothing": "hide-incomplete",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7856.590234041214,
+   "flushCount": 132,
+   "flushSpacingMs": {
+    "n": 131,
+    "p50": 58.466679990291595,
+    "p90": 60.926718950271606,
+    "max": 74.67531299591064
+   },
+   "flushCostMs": {
+    "n": 132,
+    "p50": 2.6516409516334534,
+    "p90": 4.913085997104645,
+    "max": 34.14257800579071
+   },
+   "flushSumMs": 428.0225370526314,
+   "frames": {
+    "n": 813,
+    "p50": 8.398320019245148,
+    "p90": 16.131054997444153,
+    "max": 38.560194969177246,
+    "dropped": 27
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 43.397109031677246,
+    "p90": 63.75898402929306,
+    "max": 84.89046800136566
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 50,
+    "smoothing": "hide-incomplete",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7852.099920988083,
+   "flushCount": 132,
+   "flushSpacingMs": {
+    "n": 131,
+    "p50": 58.46125000715256,
+    "p90": 60.4350780248642,
+    "max": 69.633553981781
+   },
+   "flushCostMs": {
+    "n": 132,
+    "p50": 3.1433209776878357,
+    "p90": 5.6481640338897705,
+    "max": 31.775938034057617
+   },
+   "flushSumMs": 459.7797684073448,
+   "frames": {
+    "n": 809,
+    "p50": 8.41753900051117,
+    "p90": 16.651952981948853,
+    "max": 41.56195396184921,
+    "dropped": 26
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 44.35062497854233,
+    "p90": 63.41746097803116,
+    "max": 85.13363295793533
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "raf",
+    "flushIntervalMs": 50,
+    "smoothing": "hide-incomplete",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7832.824764966965,
+   "flushCount": 470,
+   "flushSpacingMs": {
+    "n": 469,
+    "p50": 16.638515949249268,
+    "p90": 19.33363300561905,
+    "max": 41.72289001941681
+   },
+   "flushCostMs": {
+    "n": 470,
+    "p50": 1.1964840292930603,
+    "p90": 2.201641023159027,
+    "max": 24.783515989780426
+   },
+   "flushSumMs": 642.1385450363159,
+   "frames": {
+    "n": 862,
+    "p50": 8.481953978538513,
+    "p90": 12.084375023841858,
+    "max": 34.7978909611702,
+    "dropped": 11
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 15.79449200630188,
+    "p90": 21.312110006809235,
+    "max": 42.323436975479126
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "raf",
+    "flushIntervalMs": 50,
+    "smoothing": "hide-incomplete",
+    "fenceFastPath": true,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7839.640313029289,
+   "flushCount": 464,
+   "flushSpacingMs": {
+    "n": 463,
+    "p50": 16.680234014987946,
+    "p90": 21.034452974796295,
+    "max": 49.473438024520874
+   },
+   "flushCostMs": {
+    "n": 464,
+    "p50": 1.238358974456787,
+    "p90": 2.343867003917694,
+    "max": 26.79324197769165
+   },
+   "flushSumMs": 676.1796485185623,
+   "frames": {
+    "n": 860,
+    "p50": 8.642733991146088,
+    "p90": 11.955116987228394,
+    "max": 26.874920964241028,
+    "dropped": 14
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 16.12515699863434,
+    "p90": 21.555469036102295,
+    "max": 48.953828036785126
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "raf",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": false,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7826.328086018562,
+   "flushCount": 467,
+   "flushSpacingMs": {
+    "n": 466,
+    "p50": 16.62839901447296,
+    "p90": 20.626952946186066,
+    "max": 40.83574199676514
+   },
+   "flushCostMs": {
+    "n": 467,
+    "p50": 1.2443749904632568,
+    "p90": 2.1816009879112244,
+    "max": 24.29246097803116
+   },
+   "flushSumMs": 677.0622369647026,
+   "frames": {
+    "n": 861,
+    "p50": 8.558203041553497,
+    "p90": 11.872578024864197,
+    "max": 28.396875023841858,
+    "dropped": 17
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 16.138633012771606,
+    "p90": 21.5003120303154,
+    "max": 47.990898966789246
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "raf",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": false,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7849.522305011749,
+   "flushCount": 467,
+   "flushSpacingMs": {
+    "n": 466,
+    "p50": 16.65972602367401,
+    "p90": 18.971678972244263,
+    "max": 48.871913969516754
+   },
+   "flushCostMs": {
+    "n": 467,
+    "p50": 1.204921007156372,
+    "p90": 2.1676170229911804,
+    "max": 25.839532017707825
+   },
+   "flushSumMs": 673.1922708153725,
+   "frames": {
+    "n": 874,
+    "p50": 8.481445014476776,
+    "p90": 11.469452977180481,
+    "max": 26.562108993530273,
+    "dropped": 19
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 15.702461004257202,
+    "p90": 20.6893749833107,
+    "max": 56.96171897649765
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": false,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7833.298985004425,
+   "flushCount": 133,
+   "flushSpacingMs": {
+    "n": 132,
+    "p50": 58.3712899684906,
+    "p90": 59.520391047000885,
+    "max": 66.73566401004791
+   },
+   "flushCostMs": {
+    "n": 133,
+    "p50": 2.8899999856948853,
+    "p90": 4.720118045806885,
+    "max": 30.11785101890564
+   },
+   "flushSumMs": 433.21484434604645,
+   "frames": {
+    "n": 824,
+    "p50": 8.376249969005585,
+    "p90": 15.742148041725159,
+    "max": 30.369062960147858,
+    "dropped": 28
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 44.10238200426102,
+    "p90": 62.32929700613022,
+    "max": 84.85941398143768
+   },
+   "finalEqual": true
+  },
+  {
+   "config": {
+    "scheduler": "timeout",
+    "flushIntervalMs": 50,
+    "smoothing": "none",
+    "fenceFastPath": false,
+    "preset": "f4a"
+   },
+   "device": {
+    "os": "android",
+    "osVersion": 37,
+    "model": "SM-S731B",
+    "brand": "samsung",
+    "userAgent": null,
+    "hermes": true,
+    "dev": false
+   },
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7846.359454035759,
+   "flushCount": 133,
+   "flushSpacingMs": {
+    "n": 132,
+    "p50": 58.3707030415535,
+    "p90": 59.32597601413727,
+    "max": 66.75617200136185
+   },
+   "flushCostMs": {
+    "n": 133,
+    "p50": 2.9020699858665466,
+    "p90": 4.898750007152557,
+    "max": 31.345586001873016
+   },
+   "flushSumMs": 422.60582196712494,
+   "frames": {
+    "n": 824,
+    "p50": 8.367929995059967,
+    "p90": 16.634727001190186,
+    "max": 31.42410099506378,
+    "dropped": 28
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 43.54847699403763,
+    "p90": 61.14160096645355,
+    "max": 87.69742196798325
+   },
+   "finalEqual": true
+  }
+ ]
+}

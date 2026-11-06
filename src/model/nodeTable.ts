@@ -62,4 +62,11 @@ export interface NodeTable {
    * must fill it; if it differs, every block counts as changed.
    */
   readonly context: string;
+
+  // Stream identity (phase 2, table-splicing.md#issameblock-fast-path).
+  // Set only by the stream core's splice; absent on ordinary parses.
+  /** Identity token of the stable prefix; changes on every full re-parse. */
+  readonly prefixId?: object;
+  /** Blocks [0, stableCount) came from the prefix identified by `prefixId`. */
+  readonly stableCount?: number;
 }

@@ -1,0 +1,56 @@
+[
+  {
+    "file": "t1-debug-flatlist.json",
+    "chars": 1435,
+    "chunks": 328,
+    "size": {
+      "min": 1,
+      "median": 4,
+      "p90": 8,
+      "max": 16
+    },
+    "gapMs": {
+      "min": 12,
+      "median": 25,
+      "p90": 45,
+      "max": 391
+    },
+    "durationMs": 11904
+  },
+  {
+    "file": "t2-explain-streaming.json",
+    "chars": 1533,
+    "chunks": 325,
+    "size": {
+      "min": 1,
+      "median": 4,
+      "p90": 9,
+      "max": 15
+    },
+    "gapMs": {
+      "min": 12,
+      "median": 27,
+      "p90": 43,
+      "max": 385
+    },
+    "durationMs": 10551
+  },
+  {
+    "file": "t3-setup-guide.json",
+    "chars": 1259,
+    "chunks": 309,
+    "size": {
+      "min": 1,
+      "median": 4,
+      "p90": 8,
+      "max": 16
+    },
+    "gapMs": {
+      "min": 12,
+      "median": 26,
+      "p90": 43,
+      "max": 260
+    },
+    "durationMs": 9216
+  }
+]

@@ -26,7 +26,7 @@ A block that looks closed can still change, or affect earlier blocks, in a few c
 |---|---|---|
 | New link reference definition | `[x]: http://…` arrives after `[x]` was used | Full re-parse, which is rare in LLM output |
 | List or blockquote continuation | A list item followed by a blank line, then more items | Treat a top-level `list`/`blockquote` as open until a non-matching block starts |
-| Open fenced code | ```` ``` ```` not yet closed | The fence block stays open, and its content takes a fast path (append text only, no re-parse) |
+| Open fenced code | ```` ``` ```` not yet closed | The fence block stays open. The fast path appends the chunk's text to the open code block with no re-parse, and falls back to the tail re-parse when a line could close the fence. Proposed, pending device confirmation ([P2-5](./phase-2/decisions.md#p2-5-open-fence-fast-path)) |
 | Setext heading | `Title` followed by `===` | The previous paragraph stays open until the next block starts |
 | Table | Rows still arriving | The table stays open, and only that block re-renders |
 
@@ -40,23 +40,27 @@ Partial syntax such as `**bold` or `[link](htt` looks broken while it streams in
 
 - Frozen blocks keep their source text and context, so `isSameBlock` lets their `memo(Block)` bail out (P1-9).
 - Only the last block re-renders.
-- Updates are batched to **at most one per animation frame** (`requestAnimationFrame`). Tokens that arrive within a frame are combined into one append.
+- Updates are batched, and tokens that arrive between two flushes are combined into one append ([P2-4](./phase-2/decisions.md#p2-4-coalescing-policy)). The default depends on the platform: on iOS and Android one flush per animation frame; on web a 16 ms window, with a leading flush on the first chunk, at most one flush per window, and a trailing flush so the last chunk always lands (a hidden browser tab throttles animation frames, which stalled a stream in the web run). Passing `flushIntervalMs` selects that window on a timer on every platform. Per-frame batching does not reduce the parse count at one chunk per frame; it was chosen on native for its latency (about 15 ms against 34 to 43 ms for a 33 to 50 ms window on the S25 FE), at about 1.5× the flush cost ([results](./02-benchmarks.md#phase-2-scheduler-s2)).
 
 ## API
 
 ```ts
 function useMarkdownStream(options?: {
   preset?: 'gfm' | 'commonmark';
+  html?: HtmlMode;
   plugins?: MarkdownPlugin[];
-  backend?: ParserBackend;
+  backend?: ParserBackend;      // not implemented yet: the stream core is markdown-it only
   smoothing?: 'none' | 'hide-incomplete';
+  flushIntervalMs?: number;     // timer window on every platform; default: per frame on native, 16 ms on web
 }): {
   append(chunk: string): void;
   reset(source?: string): void;
   done(): void;                 // final full re-parse for exactness
-  document: MarkdownDocument;   // new opaque handle per frame, sharing the unchanged prefix of the node table
+  document: MarkdownDocument;   // new opaque handle per flush, sharing the unchanged prefix of the node table
 };
 ```
+
+Options are read when the hook is created.
 
 ```tsx
 const stream = useMarkdownStream({ plugins });
