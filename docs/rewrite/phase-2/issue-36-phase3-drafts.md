@@ -1,41 +1,14 @@
 # Issue #36 · Phase 3 fix drafts
 
-**All four are drafts, not filed.** They follow from the measurements of the perf-hardening issue ([#36](../02-benchmarks.md#phase-1-carry-over-36-p1-25)): the CommonMark-only baseline, the `firstRender` profile and the Hermes parse profile, all on the S25 FE (Hermes release, 2026-11-06). The budgets they refer to are proposals ([P2-9](./decisions.md#p2-9-absolute-f3-budgets-replace-the-5-against-v0-criterion), draft). Web (Chrome 4×) figures are pending and are not used. Nothing here was filed with `gh`; milestone and labels are for the owner to set.
+**Done:** the autolink `linkify` draft that was Draft 1 is fixed in commit `9f4845b` (`perf(v1): prefilter linkify.test with substring checks`); results are in [After the autolink fix](../02-benchmarks.md#after-the-autolink-fix-9f4845b). It is removed from this file and the remaining drafts are renumbered.
+
+**All three are drafts, not filed.** They follow from the measurements of the perf-hardening issue ([#36](../02-benchmarks.md#phase-1-carry-over-36-p1-25)): the CommonMark-only baseline, the `firstRender` profile and the Hermes parse profile, all on the S25 FE (Hermes release, 2026-11-06). The budgets they refer to are adopted by [P2-9](./decisions.md#p2-9-absolute-f3-budgets-replace-the-5-against-v0-criterion). Web (Chrome 4×) figures are pending and are not used. Nothing here was filed with `gh`; milestone and labels are for the owner to set.
 
 Order is by measured payoff, largest first. Each draft says what is measured, what is a hypothesis, and what must be measured first.
 
 ---
 
-## Draft 1: Autolink `linkify` core rule dominates Hermes parse
-
-**Status:** draft, not filed. **Priority:** top.
-
-**Title:** `perf(parse): the autolinks linkify core rule is ~69% of F3 parse on Hermes`
-
-**Body**
-
-On the S25 FE (Hermes release), the `core:linkify` rule is about 69% of markdown-it's parse of F3 (218 of 317 ms in the instrumented run) and about 74% on F3-cm, a fixture with no links in it ([parse split](../02-benchmarks.md#c-parse-on-hermes-markdown-it-against-the-node-builder)). A second measurement agrees: on F3-cm, `parse` is 158.0 ms with the `gfm` preset and 41.4 ms with `commonmark`. `md.parse` is 177 ms on F3-cm and 178 ms on F3, although F3 has 2.2× the tokens, so the cost does not scale with content. [P1-1](../phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps) estimated +18% from Node `--jitless`; Hermes pays far more.
-
-`src/plugins/autolinks.ts` replaces markdown-it's core `linkify` rule with one that tests every text token (not the raw paragraph) with linkify-it's fuzzy matcher, so that `~~www.x.com~~` links. That per-token test is the likely cost. This is a hypothesis: no Hermes sampling profile has been taken, so it is not known whether the time is in `linkify.test`, `linkify.match`, regular expressions or token allocation.
-
-Proposed work:
-
-1. Take a Hermes sampling profile of `md.parse` on F3-cm (`gfm` preset) to confirm where the time goes inside the rule.
-2. Cut the cost for text that cannot contain a link, without changing the output: for example a cheap character pre-check on each text token (no `.`, `:`, `/` or `@` means no fuzzy match), or one pre-test per inline block before any per-token work, keeping the `~~www` behaviour. Which of these is valid is for the profile to say.
-3. Keep every autolink spec case that passes today (49 of 55 in `autolinkCases`, plus the GFM spec suite with its allowlist unchanged).
-
-Out of scope: dropping fuzzy matching, or making autolinks opt-in. `preset: { base: 'gfm', exclude: ['autolinks'] }` already removes the cost for those who do not want it; documenting that stays an option.
-
-**Acceptance**
-
-- F3 `parse` on the S25 FE (bench tab "full", medians) falls by a margin the owner sets from the profile. Reference points: current 268.5 ms in the latest run (194.8 to 268.5 across three runs); lower bound if the rule cost fell to zero, about 84 ms.
-- F3-cm `parse` with the `gfm` preset moves toward the `commonmark` preset's 41.4 ms (current 158.0 ms).
-- Spec suites (CommonMark, GFM, autolink cases) pass with no new allowlist entries; `yarn lint`, `yarn typecheck`, `yarn test`, `yarn test:spec` and `yarn check:expo-go` pass.
-- Results recorded in `docs/rewrite/02-benchmarks.md` with the device conditions (airplane mode, battery, temperature, no overlay), run twice on the same device in the same session.
-
----
-
-## Draft 2: One `ScrollView` per code block
+## Draft 1: One `ScrollView` per code block
 
 **Status:** draft, not filed.
 
@@ -61,7 +34,7 @@ Proposed work:
 
 ---
 
-## Draft 3: Table and list-item native view count, and the table measuring pass
+## Draft 2: Table and list-item native view count, and the table measuring pass
 
 **Status:** draft, not filed.
 
@@ -87,7 +60,7 @@ Proposed work:
 
 ---
 
-## Draft 4: One-edit budget (`reRenderOneBlock`)
+## Draft 3: One-edit budget (`reRenderOneBlock`)
 
 **Status:** draft, not filed.
 

@@ -1,7 +1,7 @@
 {
   "status": "accepted",
   "decision": "docs/rewrite/phase-2/decisions.md#p2-9-absolute-f3-budgets-replace-the-5-against-v0-criterion",
-  "note": "Ceilings are the worst median seen on this device across the runs of 2026-11-04, 11-05 and 11-06. They guard against regressions, they are not targets. Adopted by P2-9, provisional until the autolink fix is measured.",
+  "note": "Ceilings guard against regressions, they are not targets. firstRender, reRenderOneBlock and parse+firstRender are the worst median seen on this device across the runs of 2026-11-04, 11-05 and 11-06. parse is 100 ms: the after-fix median 79.4 (9f4845b) plus 25% for noise, the owner's pick on 2026-11-06. Adopted by P2-9; the other ceilings are tightened when a render fix is measured.",
   "device": {
     "model": "SM-S731B",
     "name": "Samsung Galaxy S25 FE",
@@ -12,7 +12,11 @@
   "fixture": "F3",
   "impl": "v1",
   "budgets": [
-    { "metric": "parse", "ceilingMs": 270, "recent": [194.8, 215.8, 268.5] },
+    {
+      "metric": "parse",
+      "ceilingMs": 100,
+      "recent": [194.8, 215.8, 268.5, 79.4]
+    },
     {
       "metric": "firstRender",
       "ceilingMs": 325,
