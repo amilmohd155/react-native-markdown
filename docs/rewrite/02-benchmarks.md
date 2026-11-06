@@ -470,7 +470,7 @@ What the source-text comparison costs per flush on a stream, because the prefix 
 
 - **The "about 6 ms per flush at 900 blocks" estimate did not reproduce.** It came from timing every block's comparison at once in the Phase 1 run ([above](#device-results-preliminary-m1)); in a stream the real cost is 0.43 ms p50 at 862 blocks and 0.15 ms at 58.
 - **Both spikes cut the comparator by about half** (0.211 and 0.255 ms p50 at 862 blocks), but the whole-stream time did not move (about 7 s; the run-to-run spread, 6.9 to 7.4 s, is larger than any effect). The total comparator time for the base is 57.4 ms of a 7,192 ms stream at 862 blocks (about 0.8%) and 28.0 ms of 7,851 ms at 58 blocks (about 0.36%). Spike A cuts it by 35.4 ms (about 0.49% of stream time) and spike B by 30.4 ms (about 0.42%) at 862 blocks; at 58 blocks the cuts are 13.7 ms and 15.3 ms (about 0.17% and 0.19%). So no fix can save more than about 0.5% of stream time.
-- **Conclusion: the gap is accepted, no code fix.** The spikes stay as uncommitted branches (`worktree-agent-acb7d87e6c24cbdcc` for A, `worktree-agent-a91d4c109d9f846dd` for B). Revisit if a larger-document or real-transcript workload shows the comparator above about 2 ms p50 per flush.
+- **Conclusion: the gap is accepted, no code fix.** The spike code was discarded; the two approaches are described in P2-2 and can be rebuilt from that description. Revisit if a larger-document or real-transcript workload shows the comparator above about 2 ms p50 per flush.
 
 ## Phase 2 device benchmark (S5, S25 FE)
 
