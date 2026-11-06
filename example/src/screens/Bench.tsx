@@ -37,7 +37,8 @@ import { deviceInfo, frames, logChunked, quantile } from './benchUtil';
  * in a release build; Expo Go numbers are dev-mode.
  */
 
-type Impl = 'v0' | 'v1';
+// `v1cm`: v1 with the GFM plugins off (`preset: 'commonmark'`), F3-cm only.
+type Impl = 'v0' | 'v1' | 'v1cm';
 type Metric =
   | 'parse'
   | 'firstRender'
@@ -47,7 +48,7 @@ type Metric =
 type Job =
   | {
       readonly key: number;
-      readonly impl: 'v1';
+      readonly impl: 'v1' | 'v1cm';
       readonly document: MarkdownDocument;
     }
   | { readonly key: number; readonly impl: 'v0'; readonly source: string };
@@ -136,13 +137,17 @@ function until(kind: 'layout' | 'commit') {
   });
 }
 
+function parseOptions(impl: Impl) {
+  return impl === 'v1cm' ? { preset: 'commonmark' as const } : undefined;
+}
+
 async function mount(io: BenchIO, impl: Impl, source: string) {
   const key = nextKey++;
   const t0 = performance.now();
   let parsed = t0;
   let next: Job;
-  if (impl === 'v1') {
-    const document = parse(source);
+  if (impl !== 'v0') {
+    const document = parse(source, parseOptions(impl));
     parsed = performance.now();
     next = { key, impl, document };
   } else {
@@ -168,10 +173,21 @@ async function runBench(io: BenchIO, mode: keyof typeof MODES) {
   for (const fixture of FIXTURES) {
     const edited = editLastParagraph(fixture.source);
     const editedDocument = parse(edited);
+    const editedDocumentCm = parse(edited, parseOptions('v1cm'));
+    // F3-cm also runs v1 with the GFM plugins off, so v0.8.5 (no GFM) and v1
+    // can be compared on the same work.
+    const impls: Impl[] =
+      fixture.id === 'F3-cm' ? ['v0', 'v1', 'v1cm'] : ['v0', 'v1'];
     for (let i = 0; i < warmup + runs; i++) {
       const measured = i >= warmup;
-      // Alternate which implementation goes first (A B, B A, …).
-      const order: Impl[] = i % 2 === 0 ? ['v0', 'v1'] : ['v1', 'v0'];
+      // Alternate which implementation goes first (A B, B A, …); with three,
+      // rotate the start.
+      const order: Impl[] =
+        impls.length === 2
+          ? i % 2 === 0
+            ? impls
+            : [...impls].reverse()
+          : [...impls.slice(i % 3), ...impls.slice(0, i % 3)];
       for (const impl of order) {
         io.setStatus(
           `${fixture.id} ${impl} ${
@@ -182,7 +198,7 @@ async function runBench(io: BenchIO, mode: keyof typeof MODES) {
         // First render.
         const first = await mount(io, impl, fixture.source);
         if (measured) {
-          if (impl === 'v1') {
+          if (impl !== 'v0') {
             add(fixture.id, impl, 'parse', first.parse);
             add(fixture.id, impl, 'firstRender', first.firstRender);
           }
@@ -194,8 +210,12 @@ async function runBench(io: BenchIO, mode: keyof typeof MODES) {
         const committed = until('commit');
         const t0 = performance.now();
         io.setJob(
-          impl === 'v1'
-            ? { key: first.key, impl, document: editedDocument }
+          impl !== 'v0'
+            ? {
+                key: first.key,
+                impl,
+                document: impl === 'v1cm' ? editedDocumentCm : editedDocument,
+              }
             : { key: first.key, impl, source: edited }
         );
         io.bumpVersion();
@@ -379,7 +399,7 @@ export function Bench() {
           onLayout={() => settle('layout')}
           key={job?.key ?? 'none'}
         >
-          {job?.impl === 'v1' ? (
+          {job?.impl === 'v1' || job?.impl === 'v1cm' ? (
             <Markdown document={job.document} theme="light" />
           ) : null}
           {job?.impl === 'v0' ? <MarkdownV0 markdown={job.source} /> : null}
@@ -451,6 +471,8 @@ function Results({ rows }: { rows: readonly Row[] }) {
     'parse+firstRender',
     'reRenderOneBlock',
   ];
+  const hasCm = (fixture: string) =>
+    rows.some((r) => r.fixture === fixture && r.impl === 'v1cm');
   const ms = (row: Row | undefined) => (row ? `${row.median.toFixed(1)}` : '—');
   return (
     <View style={styles.results}>
@@ -466,6 +488,11 @@ function Results({ rows }: { rows: readonly Row[] }) {
             <UIText variant="caption" muted style={styles.numCol}>
               v0 ms
             </UIText>
+            {hasCm(id) ? (
+              <UIText variant="caption" muted style={styles.numCol}>
+                v1 cm ms
+              </UIText>
+            ) : null}
             <UIText variant="caption" muted style={styles.numCol}>
               speed-up
             </UIText>
@@ -492,6 +519,11 @@ function Results({ rows }: { rows: readonly Row[] }) {
                 <UIText variant="mono" muted style={styles.numCol}>
                   {ms(v0)}
                 </UIText>
+                {hasCm(id) ? (
+                  <UIText variant="mono" style={styles.numCol}>
+                    {ms(get(id, metric, 'v1cm'))}
+                  </UIText>
+                ) : null}
                 <UIText
                   variant="mono"
                   color={ratio !== null && ratio >= 1 ? '#2da44e' : undefined}

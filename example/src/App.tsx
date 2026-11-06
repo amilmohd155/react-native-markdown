@@ -19,7 +19,9 @@ import {
   useFonts,
 } from '@expo-google-fonts/inter';
 import { Bench } from './screens/Bench';
+import { ParseSplit } from './screens/ParseSplit';
 import { Playground } from './screens/Playground';
+import { ProfileBench } from './screens/ProfileBench';
 import { StreamBench } from './screens/StreamBench';
 import { WebSmoke } from './screens/WebSmoke';
 import {
@@ -41,6 +43,8 @@ const SCREENS: {
   { name: 'Playground', glyph: '¶', component: Playground },
   { name: 'Bench', glyph: '⏱', component: Bench },
   { name: 'Stream', glyph: '≈', component: StreamBench },
+  { name: 'ParseSplit', glyph: '÷', component: ParseSplit },
+  { name: 'Profile', glyph: '∑', component: ProfileBench },
 ];
 
 const SCHEMES = [

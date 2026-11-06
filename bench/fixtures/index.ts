@@ -5,6 +5,8 @@
  * - F1: one chat message (paragraphs, list, inline code, link), ~1 KB.
  * - F2: a typical README (headings, code blocks, tables, lists), ~10 KB.
  * - F3: F2-style content repeated, ~100 KB.
+ * - F3-cm: F3 with every GFM construct stripped (`./commonmark`), so v0.8.5
+ *   (no GFM) and v1 do the same work. Derived, not hand-written.
  *
  * Deviation from the protocol: no images yet. Local image assets can't be
  * referenced from markdown in the example app without an asset resolver,
@@ -15,6 +17,8 @@
  *
  * F4 (streaming) comes with phase 2.
  */
+
+import { toCommonMark } from './commonmark';
 
 export const F1 = `Sure! Here's how to fix the **build error** you're seeing.
 
@@ -156,6 +160,9 @@ export const F3 =
   Array.from({ length: 34 }, (_, i) => SECTION(i + 1)).join('') +
   README_TAIL;
 
+/** ~98 KB: F3 without tables, task lists, strikethrough, autolinks and footnotes. */
+export const F3_CM = toCommonMark(F3).source;
+
 /** Messages in the F5 chat list. */
 export const F5_COUNT = 200;
 
@@ -169,7 +176,7 @@ export const F5_MESSAGES: readonly string[] = Array.from(
 );
 
 export interface Fixture {
-  readonly id: 'F1' | 'F2' | 'F3';
+  readonly id: 'F1' | 'F2' | 'F3' | 'F3-cm';
   readonly source: string;
 }
 
@@ -177,6 +184,7 @@ export const FIXTURES: readonly Fixture[] = [
   { id: 'F1', source: F1 },
   { id: 'F2', source: F2 },
   { id: 'F3', source: F3 },
+  { id: 'F3-cm', source: F3_CM },
 ];
 
 /**
