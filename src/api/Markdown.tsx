@@ -24,7 +24,12 @@ import {
 import { tableOf, type MarkdownDocument } from './document';
 import { mergeComponents } from './mergeComponents';
 import { parse } from './parse';
-import { shallowEqualArray, shallowEqualObject, useStable } from './stable';
+import {
+  presetEqual,
+  shallowEqualArray,
+  shallowEqualObject,
+  useStable,
+} from './stable';
 
 /** Where the markdown comes from: raw text, or a document from `parse()`. */
 type MarkdownInput =
@@ -87,12 +92,6 @@ export type MarkdownProps = MarkdownInput & {
 };
 
 const NO_PLUGINS: readonly MarkdownPlugin[] = Object.freeze([]);
-
-function presetEqual(a: Preset | undefined, b: Preset | undefined): boolean {
-  if (a === b) return true;
-  if (typeof a !== 'object' || typeof b !== 'object') return false;
-  return a.base === b.base && shallowEqualArray(a.exclude, b.exclude);
-}
 
 function imagesEqual(
   a: ImagesPolicy | undefined,

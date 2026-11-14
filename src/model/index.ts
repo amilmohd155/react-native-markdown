@@ -16,14 +16,8 @@
 
 export * from './types';
 export type { NodeTable } from './nodeTable';
-export {
-  EMPTY_BLOCK_INDEX,
-  NONE,
-  ROOT,
-  TableBuilder,
-  type BlockIndex,
-} from './tableBuilder';
-export { childIds, forEachChild, getAttrs, getText } from './read';
+export { NONE, ROOT, TableBuilder } from './tableBuilder';
+export { childIds, getAttrs, getText } from './read';
 export {
   BlockIndexBuilder,
   blockKey,

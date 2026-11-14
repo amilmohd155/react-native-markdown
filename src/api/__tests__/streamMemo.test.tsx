@@ -1,6 +1,6 @@
 /**
  * Memoization during a stream (phase 2, S2.5).
- * Spec: docs/rewrite/phase-2/testing-harness.md#memoization-test
+ * Spec: docs/rewrite/testing-harness.md#memoization-test
  *
  * Streams a multi-block message through `useMarkdownStream` into
  * `<Markdown document>` and checks, per flush, that only the open block's

@@ -32,18 +32,10 @@ export {
   type ThemeInput,
   type ThemeTokens,
 } from './types';
-export type {
-  PluginElementName,
-  PluginElementPropsMap,
-} from './pluginElements';
+export type { PluginElementPropsMap } from './pluginElements';
 export { darkTheme, lightTheme } from './tokens';
-export { createTheme, mergeElements, mergeTokens } from './create';
-export {
-  clearThemeCache,
-  resolveThemeProp,
-  type ColorScheme,
-  type ThemeProp,
-} from './cache';
+export { createTheme, mergeElements } from './create';
+export { clearThemeCache, resolveThemeProp, type ThemeProp } from './cache';
 export {
   MarkdownThemeContext,
   useMarkdownTheme,
@@ -55,7 +47,6 @@ export {
   HEADING_FONT,
   TABLE_HEAD_FONT,
   fontStateIndex,
-  monoFamily,
   regularFamily,
   withFont,
   type FontState,

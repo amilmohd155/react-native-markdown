@@ -244,7 +244,7 @@ function hasHtml(children: readonly Token[]): boolean {
  * Plain text of inline tokens, the way markdown-it builds image alt text:
  * text and code content, nested image alt, breaks as newlines.
  */
-export function plainText(tokens: readonly Token[]): string {
+function plainText(tokens: readonly Token[]): string {
   let out = '';
   for (const t of tokens) {
     switch (t.type) {

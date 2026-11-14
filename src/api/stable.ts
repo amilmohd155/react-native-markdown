@@ -1,22 +1,8 @@
 import { useState } from 'react';
+import type { Preset } from '../plugins/presets';
+import { shallowEqual } from '../theme/cache';
 
-const NONE: Readonly<Record<string, unknown>> = Object.freeze({});
-
-/** Same keys, values `===`. `undefined` equals an empty object. */
-export function shallowEqualObject(
-  a: object | undefined,
-  b: object | undefined
-): boolean {
-  if (a === b) return true;
-  const x = (a ?? NONE) as Record<string, unknown>;
-  const y = (b ?? NONE) as Record<string, unknown>;
-  const keys = Object.keys(x);
-  if (keys.length !== Object.keys(y).length) return false;
-  for (const key of keys) {
-    if (!Object.hasOwn(y, key) || x[key] !== y[key]) return false;
-  }
-  return true;
-}
+export const shallowEqualObject = shallowEqual;
 
 /** Same length, items `===`. `undefined` equals an empty array. */
 export function shallowEqualArray(
@@ -31,6 +17,16 @@ export function shallowEqualArray(
     if (x[i] !== y[i]) return false;
   }
   return true;
+}
+
+/** Same preset: equal names, or the same base with the same `exclude` list. */
+export function presetEqual(
+  a: Preset | undefined,
+  b: Preset | undefined
+): boolean {
+  if (a === b) return true;
+  if (typeof a !== 'object' || typeof b !== 'object') return false;
+  return a.base === b.base && shallowEqualArray(a.exclude, b.exclude);
 }
 
 /**

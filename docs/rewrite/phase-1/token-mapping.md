@@ -129,7 +129,6 @@ An unclosed `<sup>x` therefore comes out as the literal text `<sup>x`, the same 
 
 - **Attributes:** tags with attributes (`<span class="x">`) don't match `parseSimpleTag` and become literal text. That's deliberate: attributes are never interpreted.
 - **Nesting:** pairing is per `inline` token. HTML can't span blocks.
-- **Unclosed tags:** an unclosed allowlisted tag falls back to literal text plus its content, so content is never dropped.
 
 | Tag | Row |
 |---|---|

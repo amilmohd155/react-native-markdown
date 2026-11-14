@@ -3,12 +3,9 @@
 // markdown-it tokens (time), and retained heap per document (memory).
 //   node model.mjs 60 time
 //   node --jitless model.mjs 60 time
-//   node --expose-gc model.mjs 60 <mdast|tokens|tree|table>
+//   node --expose-gc model.mjs 60 <tokens|tree|table>
 
 import MarkdownIt from 'markdown-it';
-import { fromMarkdown } from 'mdast-util-from-markdown';
-import { gfm } from 'micromark-extension-gfm';
-import { gfmFromMarkdown } from 'mdast-util-gfm';
 import { readFileSync } from 'node:fs';
 const unit = readFileSync(new URL('./node_modules/markdown-it/README.md', import.meta.url), 'utf8') +
   `\n\n| a | b |\n|---|---|\n| **x** | [l](http://a.com) |\n\n- [x] task\n- [ ] ~~gone~~ www.example.com\n\n`;
@@ -62,12 +59,10 @@ if (mode === 'time') {
   console.log('markdown-it parse          ', time(() => md.parse(doc, {})).toFixed(1), 'ms');
   console.log('  + tokens → object tree   ', time(() => toTree(tokens)).toFixed(1), 'ms');
   console.log('  + tokens → flat table    ', time(() => toTable(tokens)).toFixed(1), 'ms');
-  console.log('micromark → mdast (current)', time(() => fromMarkdown(doc, { extensions: [gfm()], mdastExtensions: [gfmFromMarkdown()] })).toFixed(1), 'ms');
   const t = toTable(tokens); console.log('nodes:', t.n);
 } else {
   // retained heap for K documents kept alive (e.g. chat history)
-  const K = 20; const build = { tokens: () => md.parse(doc, {}), tree: () => toTree(md.parse(doc, {})), table: () => toTable(md.parse(doc, {})),
-    mdast: () => fromMarkdown(doc, { extensions: [gfm()], mdastExtensions: [gfmFromMarkdown()] }) }[mode];
+  const K = 20; const build = { tokens: () => md.parse(doc, {}), tree: () => toTree(md.parse(doc, {})), table: () => toTable(md.parse(doc, {})) }[mode];
   global.gc(); const before = process.memoryUsage().heapUsed; const keep = []; for (let i = 0; i < K; i++) keep.push(build());
   global.gc(); const mem = process.memoryUsage(); const per = (mem.heapUsed + mem.arrayBuffers - before) / K;
   console.log(mode.padEnd(8), 'retained per', (doc.length/1024|0), 'KB doc:', (per / 1024 / 1024).toFixed(2), 'MB'); keep.length;

@@ -24,21 +24,5 @@ export {
   type PluginElementComponentProps,
   type PluginNodeSpec,
 } from './definePlugin';
-export {
-  autolinks,
-  footnotes,
-  GFM_PLUGINS,
-  strikethrough,
-  tables,
-  tagfilter,
-  taskLists,
-  type GfmPluginName,
-} from './gfm';
-export { resolvePreset, type Preset, type PresetName } from './presets';
-export {
-  baseTokenType,
-  createRegistry,
-  EMPTY_REGISTRY,
-  type PluginRegistry,
-  type RegisteredNode,
-} from './registry';
+export { GFM_PLUGINS, type GfmPluginName } from './gfm';
+export { type Preset } from './presets';

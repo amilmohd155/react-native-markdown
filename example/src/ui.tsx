@@ -1,7 +1,9 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import {
+  Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -326,6 +328,64 @@ export function Button({
   );
 }
 
+/**
+ * A bottom sheet for a screen's options: a scrim, a header with Reset and
+ * Done, and a scrolling body.
+ */
+export function OptionsSheet({
+  visible,
+  changed,
+  onReset,
+  onClose,
+  children,
+}: {
+  visible: boolean;
+  /** Enables Reset. */
+  changed: boolean;
+  onReset: () => void;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  const { p } = useChrome();
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <Pressable
+        accessibilityLabel="Close options"
+        style={[styles.scrim, { backgroundColor: p.scrim }]}
+        onPress={onClose}
+      />
+      <View
+        style={[styles.sheet, { backgroundColor: p.bg, borderColor: p.border }]}
+      >
+        <View style={[styles.grabber, { backgroundColor: p.border }]} />
+        <View style={styles.sheetHeader}>
+          <UIText variant="heading">Options</UIText>
+          <View style={styles.sheetActions}>
+            <Button
+              label="Reset"
+              tone="quiet"
+              disabled={!changed}
+              onPress={onReset}
+            />
+            <Button label="Done" onPress={onClose} />
+          </View>
+        </View>
+        <ScrollView
+          contentContainerStyle={styles.sheetBody}
+          showsVerticalScrollIndicator={false}
+        >
+          {children}
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
   segmented: {
     flexDirection: 'row',
@@ -378,4 +438,29 @@ const styles = StyleSheet.create({
   buttonText: { fontFamily: FONT.semibold, fontSize: 14 },
   pressed: { opacity: 0.8 },
   disabled: { opacity: 0.4 },
+  scrim: { flex: 1 },
+  sheet: {
+    maxHeight: '78%',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: 0,
+    paddingTop: 8,
+  },
+  grabber: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    marginBottom: 8,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+  },
+  sheetActions: { flexDirection: 'row', gap: 8 },
+  sheetBody: { paddingHorizontal: 20, paddingBottom: 32, gap: 20 },
 });

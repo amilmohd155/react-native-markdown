@@ -16,7 +16,7 @@
 // Streams F2 (~10 KB, the F4 text) or the code-heavy fixture (F4d) through
 // useMarkdownStream into <Markdown document>, paced on a timer (F4a: 20 chars
 // every 16 ms, F4b: 195 chars every 16 ms, 1 char every 1 ms, F4d: 20 chars
-// every 16 ms). Spec: docs/rewrite/phase-2/benchmark-protocol.md (F4).
+// every 16 ms). Spec: docs/rewrite/benchmark-protocol.md (F4).
 //
 // Per run:
 // - commits: count and spacing of document commits;
@@ -32,7 +32,7 @@
 // Results are listed on screen and logged as `[streamBench i/n] <json>`
 // (read them with `adb logcat -d -s ReactNativeJS -v raw | grep '^\[streamBench'`).
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import {
   Markdown,
   parse,
@@ -41,7 +41,7 @@ import {
   type MarkdownDocument,
 } from '@docren/react-native-markdown';
 import { F2 } from '../../../bench/fixtures';
-import { Button, Card, Field, Segmented, UIText, useChrome } from '../ui';
+import { Button, Card, Field, OptionsSheet, Segmented, UIText } from '../ui';
 import { deviceInfo, logChunked } from './benchUtil';
 import { CODE_HEAVY } from './streamBenchFixtures';
 
@@ -377,7 +377,6 @@ const schedulerCaption = (o: Options): string =>
     : 'hook default · frame on iOS/Android, 16 ms timer on web';
 
 export function StreamBench() {
-  const { p } = useChrome();
   const [options, setOptions] = useState<Options>(DEFAULTS);
   const [sheet, setSheet] = useState(false);
   const { scheduler, interval, smoothing, preset } = options;
@@ -494,133 +493,103 @@ export function StreamBench() {
         </View>
       </View>
 
-      <Modal
+      <OptionsSheet
         visible={sheet}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setSheet(false)}
+        changed={changed}
+        onReset={() => setOptions(DEFAULTS)}
+        onClose={() => setSheet(false)}
       >
-        <Pressable
-          accessibilityLabel="Close options"
-          style={[styles.scrim, { backgroundColor: p.scrim }]}
-          onPress={() => setSheet(false)}
-        />
-        <View
-          style={[
-            styles.sheet,
-            { backgroundColor: p.bg, borderColor: p.border },
-          ]}
-        >
-          <View style={[styles.grabber, { backgroundColor: p.border }]} />
-          <View style={styles.sheetHeader}>
-            <UIText variant="heading">Options</UIText>
-            <View style={styles.sheetActions}>
-              <Button
-                label="Reset"
-                tone="quiet"
-                disabled={!changed}
-                onPress={() => setOptions(DEFAULTS)}
-              />
-              <Button label="Done" onPress={() => setSheet(false)} />
-            </View>
+        <Field label="Stream">
+          <Segmented
+            label="Stream preset"
+            value={preset}
+            onChange={(v) => set('preset', v)}
+            options={(Object.keys(PRESETS) as PresetId[]).map((id) => ({
+              value: id,
+              label: PRESETS[id].name,
+            }))}
+          />
+          <UIText variant="caption" muted>
+            {PRESETS[preset].caption}
+          </UIText>
+        </Field>
+        <Field label="Updates">
+          <Segmented
+            label="Scheduler"
+            value={scheduler}
+            onChange={(v) => set('scheduler', v)}
+            options={[
+              { value: 'timeout', label: SCHEDULER_NAMES.timeout },
+              { value: 'raf', label: SCHEDULER_NAMES.raf },
+            ]}
+          />
+          <UIText variant="caption" muted>
+            {schedulerCaption(options)}
+          </UIText>
+        </Field>
+        <Field label="Timer window">
+          <Segmented
+            label="Flush window"
+            value={interval}
+            onChange={(v) => set('interval', v)}
+            options={INTERVALS.map((v) => ({
+              value: v,
+              label: `${v} ms`,
+            }))}
+          />
+          <UIText variant="caption" muted>
+            {`flushIntervalMs ${interval}${
+              scheduler === 'raf' ? ' · ignored by Auto' : ''
+            }`}
+          </UIText>
+        </Field>
+        <Field label="Smoothing">
+          <Segmented
+            label="Smoothing"
+            value={smoothing}
+            onChange={(v) => set('smoothing', v)}
+            options={[
+              { value: 'none', label: SMOOTHING_NAMES.none },
+              {
+                value: 'hide-incomplete',
+                label: SMOOTHING_NAMES['hide-incomplete'],
+              },
+            ]}
+          />
+          <UIText variant="caption" muted>
+            {`smoothing '${smoothing}'`}
+          </UIText>
+        </Field>
+        <Field label="Runs">
+          <View style={styles.buttons}>
+            <Button
+              label="A/B ×3"
+              tone="quiet"
+              disabled={active !== null}
+              onPress={() => {
+                setSheet(false);
+                start(ABBA[0]!, ABBA.slice(1));
+              }}
+            />
+            <Button
+              label="Log all"
+              tone="quiet"
+              disabled={results.length === 0}
+              onPress={() => logChunked('streamBench', results)}
+            />
+            <Button
+              label="Clear"
+              tone="quiet"
+              disabled={results.length === 0 || active !== null}
+              onPress={() => setResults([])}
+            />
           </View>
-          <ScrollView
-            contentContainerStyle={styles.sheetBody}
-            showsVerticalScrollIndicator={false}
-          >
-            <Field label="Stream">
-              <Segmented
-                label="Stream preset"
-                value={preset}
-                onChange={(v) => set('preset', v)}
-                options={(Object.keys(PRESETS) as PresetId[]).map((id) => ({
-                  value: id,
-                  label: PRESETS[id].name,
-                }))}
-              />
-              <UIText variant="caption" muted>
-                {PRESETS[preset].caption}
-              </UIText>
-            </Field>
-            <Field label="Updates">
-              <Segmented
-                label="Scheduler"
-                value={scheduler}
-                onChange={(v) => set('scheduler', v)}
-                options={[
-                  { value: 'timeout', label: SCHEDULER_NAMES.timeout },
-                  { value: 'raf', label: SCHEDULER_NAMES.raf },
-                ]}
-              />
-              <UIText variant="caption" muted>
-                {schedulerCaption(options)}
-              </UIText>
-            </Field>
-            <Field label="Timer window">
-              <Segmented
-                label="Flush window"
-                value={interval}
-                onChange={(v) => set('interval', v)}
-                options={INTERVALS.map((v) => ({
-                  value: v,
-                  label: `${v} ms`,
-                }))}
-              />
-              <UIText variant="caption" muted>
-                {`flushIntervalMs ${interval}${
-                  scheduler === 'raf' ? ' · ignored by Auto' : ''
-                }`}
-              </UIText>
-            </Field>
-            <Field label="Smoothing">
-              <Segmented
-                label="Smoothing"
-                value={smoothing}
-                onChange={(v) => set('smoothing', v)}
-                options={[
-                  { value: 'none', label: SMOOTHING_NAMES.none },
-                  {
-                    value: 'hide-incomplete',
-                    label: SMOOTHING_NAMES['hide-incomplete'],
-                  },
-                ]}
-              />
-              <UIText variant="caption" muted>
-                {`smoothing '${smoothing}'`}
-              </UIText>
-            </Field>
-            <Field label="Runs">
-              <View style={styles.buttons}>
-                <Button
-                  label="A/B ×3"
-                  tone="quiet"
-                  disabled={active !== null}
-                  onPress={() => {
-                    setSheet(false);
-                    start(ABBA[0]!, ABBA.slice(1));
-                  }}
-                />
-                <Button
-                  label="Log all"
-                  tone="quiet"
-                  disabled={results.length === 0}
-                  onPress={() => logChunked('streamBench', results)}
-                />
-                <Button
-                  label="Clear"
-                  tone="quiet"
-                  disabled={results.length === 0 || active !== null}
-                  onPress={() => setResults([])}
-                />
-              </View>
-              <UIText variant="caption" muted>
-                A/B ×3 runs Timer and Auto in the order A B B A A B with the
-                options above.
-              </UIText>
-            </Field>
-          </ScrollView>
-        </View>
-      </Modal>
+          <UIText variant="caption" muted>
+            A/B ×3 runs Timer and Auto in the order A B B A A B with the options
+            above.
+          </UIText>
+        </Field>
+      </OptionsSheet>
     </View>
   );
 }
@@ -667,29 +636,4 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 5,
   },
-  scrim: { flex: 1 },
-  sheet: {
-    maxHeight: '78%',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderBottomWidth: 0,
-    paddingTop: 8,
-  },
-  grabber: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    marginBottom: 8,
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
-  sheetActions: { flexDirection: 'row', gap: 8 },
-  sheetBody: { paddingHorizontal: 20, paddingBottom: 32, gap: 20 },
 });

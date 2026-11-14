@@ -1,12 +1,12 @@
 /**
  * Stream equivalence harness (phase 2, S1.6).
- * Design: docs/rewrite/phase-2/testing-harness.md
+ * Design: docs/rewrite/testing-harness.md
  *
  * After EVERY flush the streamed table must equal `parse(source so far)`.
  * Known divergences go in test/fixtures/stream-allowlist.json (shrink-only:
  * an allowlisted case that starts passing fails through `test.failing`).
  *
- * Knobs (env; also in docs/rewrite/phase-2/testing-harness.md):
+ * Knobs (env; also in docs/rewrite/testing-harness.md):
  *   STREAM_WORK=1         work-counter assertions on every flush (targeted,
  *                         spec, fixtures AND pathological cases)
  *   STREAM_WORK_STRICT=1  also reject full re-parses outside declared triggers

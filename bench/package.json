@@ -2,19 +2,16 @@
   "name": "@docren/react-native-markdown-bench",
   "private": true,
   "type": "module",
-  "description": "Benchmarks and evidence scripts for the v1 rewrite (docs/rewrite: 02-benchmarks, 08-model-and-api, phase-1/decisions P1-1). Private workspace, never published.",
+  "description": "Benchmarks and evidence scripts for the v1 rewrite (docs/rewrite: results/REPORT.md, 08-model-and-api, phase-1/decisions P1-1). Private workspace, never published.",
   "scripts": {
     "bench": "node bench.mjs 5",
     "bench:large": "node bench.mjs 60 --no-stream",
     "bench:jitless": "node --jitless bench.mjs 60 --no-stream",
     "model": "node model.mjs 60 time",
     "model:jitless": "node --jitless model.mjs 60 time",
-    "model:memory": "for m in mdast tokens tree table; do node --expose-gc model.mjs 60 $m; done",
+    "model:memory": "for m in tokens tree table; do node --expose-gc model.mjs 60 $m; done",
     "autolink": "node autolink.cjs",
     "autolink:detail": "node autolink.cjs --detail",
-    "check:src": "tsx src-check.mjs",
-    "f3-cm": "node --import tsx f3-cm.mjs",
-    "f3-cm:jitless": "node --jitless --import tsx f3-cm.mjs",
     "profile": "PROFILE_WARM=1 node ../node_modules/jest/bin/jest.js --config profile/jest.config.cjs --runInBand && PROFILE_MODE=jit node ../node_modules/jest/bin/jest.js --config profile/jest.config.cjs --runInBand",
     "profile:jitless": "PROFILE_WARM=1 node ../node_modules/jest/bin/jest.js --config profile/jest.config.cjs --runInBand && PROFILE_MODE=jitless PROFILE_REPS=10 node --jitless ../node_modules/jest/bin/jest.js --config profile/jest.config.cjs --runInBand",
     "convert": "node --import tsx convert.mjs",
@@ -24,15 +21,13 @@
     "stream": "node --import tsx stream.mjs",
     "stream:jitless": "node --jitless --import tsx stream.mjs",
     "scheduler": "node --import tsx scheduler.mjs",
-    "scheduler:jitless": "node --jitless --import tsx scheduler.mjs"
+    "scheduler:jitless": "node --jitless --import tsx scheduler.mjs",
+    "check:budgets": "node check-budgets.mjs"
   },
   "dependencies": {
     "commonmark": "0.31.2",
     "markdown-it": "15.0.3",
-    "marked": "18.1.3",
-    "mdast-util-from-markdown": "2.1.0",
-    "mdast-util-gfm": "3.1.0",
-    "micromark-extension-gfm": "3.0.0"
+    "marked": "18.1.3"
   },
   "devDependencies": {
     "tsx": "^4.19.0"

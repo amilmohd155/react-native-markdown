@@ -18,14 +18,9 @@ S0 Spike & criterion ─► S1 Stream core ─► S2 Hook & scheduler ─┬─�
 
 ## Why S0 comes first
 
-S0 measured it: the table is in [02 · Phase 2 streaming spike (S0)](../02-benchmarks.md#phase-2-streaming-spike-s0). The summary is that tail re-parse costs 10.7× at 20-character chunks and 2.0× at 195 with frame coalescing, a 50 ms flush window brings the 20-character case to 4.4×, and [P2-1](./decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture) sets the bars accordingly. Before S0, a throwaway check on `bench/fixtures` F2 (9.5 KB), markdown-it only, Node `--jitless`, tail re-parse from the last top-level block (conversion not included), gave:
+S0 measured it: [results](../../../bench/results/REPORT.md#phase-2-streaming-spike-s0). Tail re-parse costs 10.7× at 20-character chunks and 2.0× at 195 with frame coalescing, and a 50 ms flush window brings the 20-character case to 4.4×; [P2-1](./decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture) sets the bars accordingly. A throwaway check before S0 agreed (tail re-parse 10.4× at 500 chunks, 2.0× at 50; naive 265× and 26×).
 
-| Chunks | Naive re-parse | Tail re-parse (vs one full parse) |
-|---|---|---|
-| 500 (≈20 chars) | 265× | **10.4×** |
-| 50 (≈195 chars) | 26× | **2.0×** |
-
-Inside a block the cost is quadratic: about `Σ b² / (2·chunk)` over the blocks. So the roadmap's "under 2× a full parse" cannot be met by tail re-parse alone at 500 chunks; it needs a definition of what arrives when, plus coalescing. These rough numbers agreed with the S0 measurement, which includes node-table conversion.
+Inside a block the cost is quadratic: about `Σ b² / (2·chunk)` over the blocks. So the roadmap's original "under 2× a full parse" cannot be met by tail re-parse alone at 500 chunks; it needs a definition of what arrives when, plus coalescing.
 
 ---
 
@@ -44,7 +39,7 @@ Inside a block the cost is quadratic: about `Σ b² / (2·chunk)` over the block
 - Define the F4 fixture and the exit-criterion wording: [P2-1](./decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture).
 - Decide the coalescing policy ([P2-4](./decisions.md#p2-4-coalescing-policy)) and whether the fence fast path ships ([P2-5](./decisions.md#p2-5-open-fence-fast-path)). The code-heavy fixture (`bench/fixtures/code-heavy.md`) makes the case for shipping it.
 
-**Done when:** the results are in [`../02-benchmarks.md`](../02-benchmarks.md), and P2-1, P2-4 and P2-5 are all `Proposed` (2×/5×, a 50 ms window and the open-fence fast path are the candidates). No `Accepted` decision is needed: all three are settled by experiments on Hermes on a real device at S5, not by the Node proxy. Real-transcript collection is deferred: synthetic transcripts stand in until then.
+**Done:** the results are in [`bench/results/REPORT.md`](../../../bench/results/REPORT.md). P2-1, P2-4 and P2-5 were first proposed from the Node proxy and accepted after the device runs (S2 and S5). Real-transcript collection is waived ([P2-8](./decisions.md#p2-8-iphone-run-and-f4c-deferred)).
 
 ## S1 · Stream core
 
@@ -59,7 +54,7 @@ Inside a block the cost is quadratic: about `Σ b² / (2·chunk)` over the block
 - `append`, `reset`, `done` on the core, with no timers: scheduling is S2.
 
 **Done when:**
-- The equivalence harness ([testing-harness.md](./testing-harness.md#equivalence-harness)) passes for the CommonMark and GFM spec examples with seeded random chunkings, apart from a reviewed allowlist.
+- The equivalence harness ([testing-harness.md](../testing-harness.md#equivalence-harness)) passes for the CommonMark and GFM spec examples with seeded random chunkings, apart from a reviewed allowlist.
 - Per-append work is proportional to the open block, not the document (checked by a counter in the harness: characters re-parsed per append).
 - Pathological inputs stay time-bounded when streamed.
 - If P2-5 is confirmed, the fence fast path passes the same equivalence harness, including its targeted cases.
@@ -79,7 +74,7 @@ Inside a block the cost is quadratic: about `Σ b² / (2·chunk)` over the block
 - Memo test: during a stream, only the open block's elements re-render ([06 · Memoization tests](../06-testing.md#renderer-tests)). Done. The `isSameBlock` prefix-fast-path assertion in it is an `it.failing` until S5 fixes the path ([P2-2 note](./decisions.md#p2-2-splice-strategy)).
 - The main entry is still pure JS (`yarn check:expo-go`). Done.
 
-**Result:** [P2-4](./decisions.md#p2-4-coalescing-policy) accepted with Node, S25 FE and web numbers ([02 · Phase 2 scheduler](../02-benchmarks.md#phase-2-scheduler-s2)); [P2-5](./decisions.md#p2-5-open-fence-fast-path) has its first device measurement. Left for S5 at the time: an iPhone (waived, P2-8), a backgrounded native app (since measured on the S25 FE: [results](../02-benchmarks.md#native-background-and-resume-s25-fe)), F4c (waived, P2-8), and the `isSameBlock` fix (gap accepted).
+**Result:** [P2-4](./decisions.md#p2-4-coalescing-policy) accepted with Node, S25 FE and web numbers ([02 · Phase 2 scheduler](../../../bench/results/REPORT.md#phase-2-scheduler-s2)); [P2-5](./decisions.md#p2-5-open-fence-fast-path) has its first device measurement. Left for S5 at the time: an iPhone (waived, P2-8), a backgrounded native app (since measured on the S25 FE: [results](../../../bench/results/REPORT.md#native-background-and-resume-s25-fe)), F4c (waived, P2-8), and the `isSameBlock` fix (gap accepted).
 
 ## S3 · Smoothing
 
@@ -99,7 +94,7 @@ Inside a block the cost is quadratic: about `Σ b² / (2·chunk)` over the block
 - `perf/perf.test.tsx` gains the streaming metric (the 06 placeholder "phase 2, nothing to measure yet"), with a baseline.
 - Web job runs the hook tests under `react-native-web`.
 
-**Done when:** every job in [testing-harness.md · CI jobs](./testing-harness.md#ci-jobs) is green and required on `v1`.
+**Done when:** every job in [testing-harness.md · CI jobs](../testing-harness.md#ci-jobs) is green and required on `v1`.
 
 ## S5 · Device benchmark & exit review
 
@@ -107,9 +102,9 @@ Inside a block the cost is quadratic: about `Σ b² / (2·chunk)` over the block
 
 **Goal:** show the exit criteria are met on real devices.
 
-- Run [benchmark-protocol.md](./benchmark-protocol.md) on the S25 FE (Hermes release build) and web. **Done with a finding (2026-11-06):** web and S25 FE are measured with the full method; the S25 FE `core` misses the 2×/5× bars at the 50 ms window (`F4a` 6.30× / 7.11×, `F4b` 2.46× / 2.51×) because of footnote-triggered full re-parses. The bar was accepted on 2026-11-06 with a redefinition (steady-state flush cost, excluding the necessary footnote full re-parse, which is reported separately) and a waiver for documents that end in a footnote definition, the measured figures being the accepted ones ([P2-1](./decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture)). Option A (cheaper footnote tail) was tried and dropped ([P2-3 note](./decisions.md#p2-3-parsefrom-contract)). The footnote-free F2 variant was then measured on the S25 FE and passes the original bars at 50 ms (`F4a` 4.32× / 4.34×, `F4b` 1.42× / 1.44×; P2-1 not reopened), and native background and resume was checked on the S25 FE (no bug, no scheduler change needed). The iPhone and `F4c` are **waived and deferred** ([P2-8](./decisions.md#p2-8-iphone-run-and-f4c-deferred)).
-- Write the results into [`../02-benchmarks.md`](../02-benchmarks.md) under "Device results". Web and S25 FE are written ([web](../02-benchmarks.md#phase-2-web-benchmark-s5-web-part), [S25 FE](../02-benchmarks.md#phase-2-device-benchmark-s5-s25-fe), [`isSameBlock`](../02-benchmarks.md#issameblock-comparator-s5-s25-fe)); the footnote-free variant and native background and resume are also written ([footnote-free](../02-benchmarks.md#footnote-free-variant-s25-fe), [background](../02-benchmarks.md#native-background-and-resume-s25-fe)); the iPhone and `F4c` are waived (P2-8). The results have a [summary table](../02-benchmarks.md#phase-2-device-results-summary) at the top.
-- Exit review: check every item in [README](./README.md#exit-criteria). Record any waived item in [decisions.md](./decisions.md).
-- Phase 1 carry-over (P1-25): **decided** in [P2-7](./decisions.md#p2-7-where-the-phase-1-carry-over-lives) (accepted 2026-11-06). No S6: items 1 to 3 go to the standalone perf-hardening issue (#36), the F5 `retainedHeap` method to the start of Phase 3, the low-end Android re-measure to a v1.0 release gate (#37). Phase 2 can close without any of it.
+- Run the [benchmark protocol](../benchmark-protocol.md) on the S25 FE (Hermes release build) and web. **Done with a finding:** the S25 FE `core` misses the 2×/5× bars at 50 ms on F2 because of footnote-triggered full re-parses; accepted with a redefined bar and a waiver for footnote-ending documents ([P2-1](./decisions.md#p2-1-exit-criterion-wording-and-the-f4-fixture)). A cheaper footnote tail was tried and dropped ([P2-3](./decisions.md#p2-3-parsefrom-contract)); the footnote-free variant passes the original bars; background and resume found no bug. The iPhone and `F4c` are waived ([P2-8](./decisions.md#p2-8-iphone-run-and-f4c-deferred)).
+- Results are in [`bench/results/REPORT.md`](../../../bench/results/REPORT.md), with a [summary table](../../../bench/results/REPORT.md#phase-2-device-results-summary) at the top.
+- Exit review: check every item in the [README](./README.md#exit-criteria), recording waived items in [decisions.md](./decisions.md).
+- Phase 1 carry-over ([P2-7](./decisions.md#p2-7-where-the-phase-1-carry-over-lives)): no S6; the items go to #36, the optimization pass and the v1.0 gate (#37). Phase 2 can close without any of it.
 
 **Done when:** all exit criteria are checked or waived with a recorded reason. Done 2026-11-06: see the [exit review](./README.md#exit-review-2026-11-06).

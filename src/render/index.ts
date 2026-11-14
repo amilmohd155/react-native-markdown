@@ -25,65 +25,26 @@ export type {
   ElementProps,
   ElementPropsMap,
   HeadingLevel,
-  InlineElementName,
   PluginComponents,
 } from './elements';
 export {
-  DEFAULT_RENDER_OPTIONS,
   createRenderCtx,
   useRenderCtx,
   type FootnotePressInfo,
-  type HandlersRef,
   type ImagePressInfo,
   type LinkPressInfo,
-  type RenderCtx,
-  type RenderCtxInput,
   type RenderHandlers,
-  type RenderOptions,
   type ScriptFallback,
   type SoftBreak,
   type TaskToggleInfo,
 } from './context';
-export {
-  Block,
-  BlockList,
-  blockPropsEqual,
-  type BlockListProps,
-  type BlockProps,
-} from './Block';
+export { BlockList } from './Block';
 export { renderBlock } from './renderBlock';
-export { renderInline } from './inline';
 export {
-  baselineOf,
   inlineView,
-  inlineViewOffset,
-  isInlineView,
   type InlineBaseline,
   type InlineViewProps,
 } from './inlineView';
 export { defaultComponents, defaults } from './defaults';
-export { hostOf, imageAllowed, type ImagesPolicy } from './imagePolicy';
-export {
-  cachedImageSize,
-  loadImageSize,
-  useImageSize,
-  type ImageSize,
-} from './imageSize';
-export {
-  MAX_COLUMN_WIDTH,
-  MIN_COLUMN_WIDTH,
-  cachedColumnWidths,
-  columnWidths,
-} from './tableLayout';
-export { isOpenableUrl, pressLink } from './links';
-export { toSubscript, toSuperscript } from './scripts';
-export {
-  InheritedTextContext,
-  ListMarkerContext,
-  RenderCtxContext,
-  TableKeyContext,
-  TableLayoutContext,
-  useRenderContext,
-  type TableLayout,
-} from './contexts';
+export { type ImagesPolicy } from './imagePolicy';
 export * from './props';

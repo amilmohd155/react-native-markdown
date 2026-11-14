@@ -33,7 +33,7 @@ export function blockPropsEqual(a: BlockProps, b: BlockProps): boolean {
  * render's table, so unchanged blocks can keep an older table alive until
  * they next re-render.
  */
-export const Block = memo(BlockImpl, blockPropsEqual);
+const Block = memo(BlockImpl, blockPropsEqual);
 
 export interface BlockListProps {
   readonly table: NodeTable;

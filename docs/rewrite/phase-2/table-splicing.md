@@ -45,7 +45,7 @@ As implemented (`src/stream/splice.ts`, option A):
 
 ## `isSameBlock` fast path
 
-`isSameBlock(a, i, b, j)` ([P1-9](../phase-1/decisions.md#p1-9-block-identity-by-source-text-plus-context-and-index-keys)) compares context, block context and source text. On a stream, every flush compares every closed block's text. The Phase 1 estimate of 6 ms per flush at 900 blocks (Hermes copies substrings) did not reproduce in a stream: measured on the S25 FE (Hermes release) at 862 blocks, the comparator costs 0.428 ms p50 / 1.276 ms p90 per flush (0.703 / 2.381 ms for late flushes), and 58 blocks (the 10 KB `F2`) costs 0.151 / 0.389 ms ([results](../02-benchmarks.md#issameblock-comparator-s5-s25-fe)).
+`isSameBlock(a, i, b, j)` ([P1-9](../phase-1/decisions.md#p1-9-block-identity-by-source-text-plus-context-and-index-keys)) compares context, block context and source text. On a stream, every flush compares every closed block's text. The Phase 1 estimate of 6 ms per flush at 900 blocks (Hermes copies substrings) did not reproduce in a stream: measured on the S25 FE (Hermes release) at 862 blocks, the comparator costs 0.428 ms p50 / 1.276 ms p90 per flush (0.703 / 2.381 ms for late flushes), and 58 blocks (the 10 KB `F2`) costs 0.151 / 0.389 ms ([results](../../../bench/results/REPORT.md#issameblock-comparator-s5-s25-fe)).
 
 Fast path: tables produced by the stream core carry a `prefixId` token. If `a` and `b` share the same `prefixId` and both indexes are below the shared `stableCount`, and `i === j` (blocks at different indexes of one prefix are different blocks), the blocks are the same by construction (the prefix was not re-parsed), and the comparison returns immediately. Otherwise it falls back to the full comparison.
 

@@ -8,7 +8,7 @@ These files are vendored, not downloaded at test time, so spec tests are reprodu
 | `gfm/spec.txt` | [github/cmark-gfm `test/spec.txt`](https://github.com/github/cmark-gfm/blob/0.29.0.gfm.13/test/spec.txt) (GFM spec 0.29) | tag `0.29.0.gfm.13` | `7d8e5814befec287ac116786d81ff14e0adc9b13295b4494649e995408fd871c` | CC-BY-SA 4.0 |
 | `gfm/extensions.txt` | [github/cmark-gfm `test/extensions.txt`](https://github.com/github/cmark-gfm/blob/0.29.0.gfm.13/test/extensions.txt) | tag `0.29.0.gfm.13` | `a2a45e98be9fca95f564f927265a0f63beea6cae5369d1cf4bde44caa51b2a3a` | CC-BY-SA 4.0 |
 | `pathological/cases.ts` | Ported by hand from [commonmark/cmark `test/pathological_tests.py`](https://github.com/commonmark/cmark/blob/0.31.1/test/pathological_tests.py) | tag `0.31.1` | — (derived) | BSD-2-Clause |
-| `allowlist.json` | Ours: known spec divergences, each with a reason and an issue ([format](../../docs/rewrite/phase-1/testing-harness.md#allowlist-format)) | — | — | MIT (this repo) |
+| `allowlist.json` | Ours: known spec divergences, each with a reason and an issue ([format](../../docs/rewrite/testing-harness.md#allowlist-format)) | — | — | MIT (this repo) |
 
 ## Licenses and attribution
 

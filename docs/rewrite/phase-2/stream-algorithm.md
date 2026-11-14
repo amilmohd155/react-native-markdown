@@ -39,7 +39,7 @@ Cases that look like exceptions but aren't, because the affected block is still 
 | Table rows arriving one by one | The table is the last block |
 | A lazy continuation (`> a\nb`) | No new block is created, the quote is still last |
 
-The randomized equivalence tests are the safety net for anything missed here ([testing-harness.md](./testing-harness.md#equivalence-harness)).
+The randomized equivalence tests are the safety net for anything missed here ([testing-harness.md](../testing-harness.md#equivalence-harness)).
 
 ## Append
 
@@ -76,7 +76,7 @@ A full re-parse resets `stableCount` to `blockCount - 1`. It is rare in LLM outp
 
 ## Open fenced code: fast path
 
-Accepted ([P2-5](./decisions.md#p2-5-open-fence-fast-path)); the device numbers at S5 can still turn it off. On F2 fenced code is 4.6 to 13% of flush cost, but on a code-heavy stream it is 86 to 89% and the fast path cuts `streamCost` from 56.9× to 7.24× at 20-character chunks ([results](../02-benchmarks.md#code-heavy-fixture)).
+Accepted ([P2-5](./decisions.md#p2-5-open-fence-fast-path)); the device numbers at S5 can still turn it off. On F2 fenced code is 4.6 to 13% of flush cost, but on a code-heavy stream it is 86 to 89% and the fast path cuts `streamCost` from 56.9× to 7.24× at 20-character chunks ([results](../../../bench/results/REPORT.md#code-heavy-fixture)).
 
 A top-level, unindented fenced block that has not been closed would otherwise be re-parsed in full on every chunk, which is quadratic in the block. The fast path appends the chunk's text to the open `CodeBlock` node's text and extends `blockEnd`, with no re-parse. It applies only when all of the following hold, otherwise the normal tail re-parse runs:
 
@@ -84,7 +84,7 @@ A top-level, unindented fenced block that has not been closed would otherwise be
 - the chunk contains no line that could close the fence (a line of at least as many fence characters, optionally indented up to 3 spaces)
 - the previous parse ended inside the fence
 
-It ships only if the equivalence harness covers it and shows it matches a full parse ([testing-harness](./testing-harness.md#targeted-cases)).
+It ships only if the equivalence harness covers it and shows it matches a full parse ([testing-harness](../testing-harness.md#targeted-cases)).
 
 **As implemented (S1).** The fast path ships behind an internal switch (`FENCE_FAST_PATH_DEFAULT = true` in `src/stream/createMarkdownStream.ts`) and is disabled automatically when user plugins are present. It applies only when the last block is a column-0 fenced `CodeBlock` that runs to the end of the source, with a complete opening line and no closer, and:
 

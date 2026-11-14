@@ -27,17 +27,32 @@ const MAX_ENTRIES = 16;
 
 // -- equality ---------------------------------------------------------------
 
-/** Same keys, values `===`. `undefined` equals an empty object. */
-function shallowEqual(a: object | undefined, b: object | undefined): boolean {
+/**
+ * Same keys, and `same` says each pair of values is equal. `undefined` equals
+ * an empty object.
+ */
+function recordEqual(
+  a: object | undefined,
+  b: object | undefined,
+  same: (p: unknown, q: unknown) => boolean
+): boolean {
   if (a === b) return true;
   const x = (a ?? EMPTY) as Record<string, unknown>;
   const y = (b ?? EMPTY) as Record<string, unknown>;
   const keys = Object.keys(x);
   if (keys.length !== Object.keys(y).length) return false;
   for (const key of keys) {
-    if (!Object.hasOwn(y, key) || x[key] !== y[key]) return false;
+    if (!Object.hasOwn(y, key) || !same(x[key], y[key])) return false;
   }
   return true;
+}
+
+/** Same keys, values `===`. `undefined` equals an empty object. */
+export function shallowEqual(
+  a: object | undefined,
+  b: object | undefined
+): boolean {
+  return recordEqual(a, b, (p, q) => p === q);
 }
 
 /** `===`, or both objects (a face map) with `===` values. */
@@ -54,15 +69,7 @@ function valueEqual(a: unknown, b: unknown): boolean {
 
 /** A token group: same keys, values equal one level down (face maps). */
 function groupEqual(a: object | undefined, b: object | undefined): boolean {
-  if (a === b) return true;
-  const x = (a ?? EMPTY) as Record<string, unknown>;
-  const y = (b ?? EMPTY) as Record<string, unknown>;
-  const keys = Object.keys(x);
-  if (keys.length !== Object.keys(y).length) return false;
-  for (const key of keys) {
-    if (!Object.hasOwn(y, key) || !valueEqual(x[key], y[key])) return false;
-  }
-  return true;
+  return recordEqual(a, b, valueEqual);
 }
 
 /**
@@ -73,24 +80,16 @@ function elementsEqual(
   a: ElementOverrides | undefined,
   b: ElementOverrides | undefined
 ): boolean {
-  if (a === b) return true;
-  const x = (a ?? EMPTY) as Record<string, unknown>;
-  const y = (b ?? EMPTY) as Record<string, unknown>;
-  const keys = Object.keys(x);
-  if (keys.length !== Object.keys(y).length) return false;
-  for (const key of keys) {
-    if (!Object.hasOwn(y, key)) return false;
-    const p = x[key];
-    const q = y[key];
-    if (p === q) continue;
+  return recordEqual(a, b, (p, q) => {
+    if (p === q) return true;
     if (typeof p !== 'object' || p === null) return false;
     if (typeof q !== 'object' || q === null) return false;
     const po = p as { text?: object; container?: object };
     const qo = q as { text?: object; container?: object };
-    if (!shallowEqual(po.text, qo.text)) return false;
-    if (!shallowEqual(po.container, qo.container)) return false;
-  }
-  return true;
+    return (
+      shallowEqual(po.text, qo.text) && shallowEqual(po.container, qo.container)
+    );
+  });
 }
 
 /** Theme inputs are equal when every group is, shallowly. */

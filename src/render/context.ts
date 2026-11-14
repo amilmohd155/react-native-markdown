@@ -70,7 +70,7 @@ export interface RenderOptions {
 
 const NO_HANDLERS: RenderHandlers = Object.freeze({});
 
-export const DEFAULT_RENDER_OPTIONS: RenderOptions = Object.freeze({
+const DEFAULT_RENDER_OPTIONS: RenderOptions = Object.freeze({
   softBreak: 'space',
   selectable: false,
   maxFontSizeMultiplier: null,

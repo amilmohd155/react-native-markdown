@@ -2,7 +2,7 @@
 
 **Tracking issue:** [#7 Phase 1 · Core (pure JS)](https://github.com/amilmohd155/react-native-markdown/issues/7). Each milestone below links to its own issue, which holds its status and checklist.
 
-Milestones are listed in build order. Each one has its inputs, deliverables and a **done** check that can be verified. Milestones on the same row of the dependency graph can run in parallel.
+All milestones (M0–M8) are done; this is the plan as executed. Milestones are listed in build order. Each one has its inputs, deliverables and a **done** check that can be verified. Milestones on the same row of the dependency graph can run in parallel.
 
 ## Dependency graph
 
@@ -32,9 +32,9 @@ M0 Groundwork
   - add `markdown-it` and `markdown-it-footnote`;
   - move `css-to-react-native` to the example app, its only user. `mdast-util-from-markdown` stays until M5, because the v0 code (still the public entry point, so CI and the example keep working) depends on it;
   - set peer dependencies to real ranges (`react >= 18`, `react-native >= 0.76`; final values chosen in [decisions](./decisions.md)).
-- Vendor the spec fixtures with pinned versions ([testing-harness.md](./testing-harness.md#fixtures)).
-- Move `docs/rewrite/bench` into a `bench/` workspace that can import `src/` (via `tsx`; see `bench/src-check.mjs`).
-- CI skeleton: lint, typecheck, Jest, plus empty web and Expo Go check jobs ([testing-harness.md](./testing-harness.md#ci-jobs)).
+- Vendor the spec fixtures with pinned versions ([testing-harness.md](../testing-harness.md#fixtures)).
+- Move `docs/rewrite/bench` into a `bench/` workspace that can import `src/` (via `tsx`).
+- CI skeleton: lint, typecheck, Jest, plus empty web and Expo Go check jobs ([testing-harness.md](../testing-harness.md#ci-jobs)).
 - Gate releases on the repo's checks: a Verify step in the release workflow. `skipChecks` stays, because npm Trusted Publishing requires it ([P1-7](./decisions.md#p1-7-keep-release-it-skipchecks-gate-releases-in-the-release-workflow)).
 
 **Done when:** CI is green on the empty skeleton, the spec runner loads all fixtures (and every example fails as "not implemented"), and `bench` runs against `src/`.
@@ -50,7 +50,7 @@ M0 Groundwork
 - Token → table conversion for all CommonMark tokens ([token-mapping.md](./token-mapping.md)).
 - Line-offset table, block index (`blocks`, `blockStart`, `blockEnd`, `blockContext`), block identity (`isSameBlock`, P1-9).
 - Raw HTML safe subset: pairing `html_inline` tokens ([token-mapping.md](./token-mapping.md#raw-html-pairing)).
-- `documentToHtml(doc)` serializer for tests ([testing-harness.md](./testing-harness.md#html-serializer)).
+- `documentToHtml(doc)` serializer for tests ([testing-harness.md](../testing-harness.md#html-serializer)).
 - Opaque `MarkdownDocument` handle, frozen in dev.
 
 **Done when:**
@@ -139,10 +139,10 @@ M0 Groundwork
 
 - Behaviour, memoization, plugin, HTML subset and inline view tests.
 - Web job (react-native-web + jsdom, plus a Playwright smoke test).
-- Expo Go check (no native imports in the main entry graph). The example app migrates to the v1 API and runs in Expo Go. Its bench tab keeps its method and fixtures ([benchmark-protocol.md](./benchmark-protocol.md)), so M7 results stay reproducible.
+- Expo Go check (no native imports in the main entry graph). The example app migrates to the v1 API and runs in Expo Go. It has a bench tab with the method and fixtures of the [benchmark protocol](../benchmark-protocol.md) (removed after Phase 2, see that page for restoring it).
 - Perf CI job with stored baselines.
 
-**Done when:** every job in [testing-harness.md · CI jobs](./testing-harness.md#ci-jobs) is green and required on the `v1` branch.
+**Done when:** every job in [testing-harness.md · CI jobs](../testing-harness.md#ci-jobs) is green and required on the `v1` branch.
 
 ## M7 · Benchmark & exit review
 
@@ -150,9 +150,9 @@ M0 Groundwork
 
 **Goal:** show the exit criteria are met on real devices.
 
-- Run [benchmark-protocol.md](./benchmark-protocol.md) for v0.8.5 and v1.
+- Run [benchmark-protocol.md](../benchmark-protocol.md) for v0.8.5 and v1.
 - Measure the A/B for the flat table vs. object tree render cost (the remaining open item).
-- Write the results into [`../02-benchmarks.md`](../02-benchmarks.md) as a "Device results" section.
+- Write the results into [`bench/results/REPORT.md`](../../../bench/results/REPORT.md) as a "Device results" section.
 - Exit review: check every exit criterion in [README](./README.md#exit-criteria). Record any waived item in [decisions.md](./decisions.md).
 
 **Done when:** all exit criteria are checked or waived with a recorded reason.
