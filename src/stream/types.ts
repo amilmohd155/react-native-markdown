@@ -49,14 +49,6 @@ export interface ParseFromResult {
   readonly hasFootnoteDefinition: boolean;
 }
 
-/** `ParserBackendImpl.parseFrom` (P2-3). `offset` must be a top-level block boundary. */
-export type ParseFrom = (
-  source: string,
-  offset: number,
-  carried: CarriedContext | undefined, // undefined = offset 0 / empty prefix
-  options?: ParseOptions
-) => ParseFromResult;
-
 /**
  * Splice (S1.3, P2-2 option A). New immutable table =
  *   prefix blocks [0, stableCount)  +  every block of `tail`.

@@ -68,11 +68,6 @@ export class TableBuilder {
     this.append(NodeType.Root, NONE, 0, null, null);
   }
 
-  /** Number of nodes added so far, including the root. */
-  get count(): number {
-    return this.size;
-  }
-
   /**
    * Adds a node as the last child of `parent` and returns its id.
    * Throws if `parent` doesn't exist yet.

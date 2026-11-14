@@ -31,7 +31,7 @@ import type { StreamOptions } from './types';
 export type SchedulerStrategy = 'timeout' | 'raf';
 
 /** Default `flushIntervalMs` for the `timeout` strategy: the web default (P2-4). */
-export const DEFAULT_FLUSH_INTERVAL_MS = 16;
+const DEFAULT_FLUSH_INTERVAL_MS = 16;
 
 /** Stand-in frame length where `requestAnimationFrame` is missing. */
 export const FRAME_MS = 16;
@@ -77,7 +77,7 @@ export interface MarkdownScheduler {
 }
 
 /** The global timers, looked up now. */
-export function defaultClock(): SchedulerClock {
+function defaultClock(): SchedulerClock {
   const g = globalThis as {
     requestAnimationFrame?: (cb: () => void) => unknown;
     cancelAnimationFrame?: (handle: never) => void;

@@ -1,7 +1,7 @@
 import type { MarkdownIt, StateCore, Token } from 'markdown-it';
 
 /** `meta` that the tagfilter rule sets on `html_block` / `html_inline` tokens. */
-export interface TagfilterMeta {
+interface TagfilterMeta {
   /** The token's HTML with each disallowed tag's `<` replaced by `&lt;`. */
   readonly filteredHtml: string;
 }
@@ -19,8 +19,8 @@ const DISALLOWED =
  *
  * Raw HTML is never interpreted by the renderer (D3), and none of these tags
  * is in the safe subset, so the filter changes nothing on screen: the node
- * text stays the source. It matters for consumers that output HTML (spec
- * serializer, mdast interop): the filtered HTML is recorded in
+ * text stays the source. It matters for consumers that output HTML (the spec
+ * serializer): the filtered HTML is recorded in
  * `meta.filteredHtml` and stored as the node's `filteredHtml` attr.
  */
 export function gfmTagfilter(md: MarkdownIt): void {

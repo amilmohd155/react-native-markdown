@@ -12,7 +12,7 @@ import {
 /**
  * Serializes a node table to HTML in the CommonMark spec's conventions
  * (cmark's output format), so spec examples can be compared exactly.
- * Test-only: never shipped. Spec: docs/rewrite/phase-1/testing-harness.md
+ * Test-only: never shipped. Spec: docs/rewrite/testing-harness.md
  *
  * Iterative (explicit stack): pathological inputs nest inline containers
  * tens of thousands deep, which would overflow a recursive walk.
@@ -359,6 +359,6 @@ const ESCAPES: Record<string, string> = {
   '"': '&quot;',
 };
 
-export function escapeHtml(text: string): string {
+function escapeHtml(text: string): string {
   return text.replace(/[&<>"]/g, (c) => ESCAPES[c]!);
 }

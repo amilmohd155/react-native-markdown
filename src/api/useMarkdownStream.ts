@@ -6,7 +6,7 @@ import { createMarkdownScheduler } from '../stream/scheduler';
 import type { SmoothingMode } from '../stream/types';
 import { createDocument, type MarkdownDocument } from './document';
 import { parse } from './parse';
-import { shallowEqualArray } from './stable';
+import { presetEqual, shallowEqualArray } from './stable';
 
 export interface UseMarkdownStreamOptions {
   /** As for `parse()`. Read once, when the hook is created. */
@@ -41,12 +41,6 @@ export interface UseMarkdownStreamResult {
   done(): void;
   /** Changes once per flush. Never null: starts out empty. */
   readonly document: MarkdownDocument;
-}
-
-function presetEqual(a: Preset | undefined, b: Preset | undefined): boolean {
-  if (a === b) return true;
-  if (typeof a !== 'object' || typeof b !== 'object') return false;
-  return a.base === b.base && shallowEqualArray(a.exclude, b.exclude);
 }
 
 /**

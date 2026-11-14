@@ -22,6 +22,6 @@ export type {
   ParserBackendImpl,
   Preset,
 } from './backend';
-export { getMarkdownIt, MAX_NESTING } from './markdownIt';
-export { convertTokens, type ConvertResult } from './convert';
+export { getMarkdownIt } from './markdownIt';
+export { convertTokens } from './convert';
 export { markdownItBackend, parseWithMarkdownIt } from './markdownItBackend';

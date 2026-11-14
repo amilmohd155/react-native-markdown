@@ -14,7 +14,7 @@ import { gfmTaskLists } from './taskLists';
  */
 
 /** GFM tables: markdown-it's core `table` rule. Mapping: token-mapping.md#block-tokens */
-export const tables = definePlugin({
+const tables = definePlugin({
   name: 'tables',
   syntax: { markdownIt: (md) => md.enable('table') },
 });
@@ -24,13 +24,13 @@ export const tables = definePlugin({
  * semantics, replacing markdown-it's core rule (P1-11).
  * Mapping: token-mapping.md#inline-tokens-inlinechildren
  */
-export const strikethrough = definePlugin({
+const strikethrough = definePlugin({
   name: 'strikethrough',
   syntax: { markdownIt: gfmStrikethrough },
 });
 
 /** GFM task list items: an in-house core rule. Mapping: token-mapping.md#task-lists */
-export const taskLists = definePlugin({
+const taskLists = definePlugin({
   name: 'taskLists',
   syntax: { markdownIt: gfmTaskLists },
 });
@@ -39,7 +39,7 @@ export const taskLists = definePlugin({
  * GFM autolinks (`www.x.com`, `https://…`, emails): linkify-it plus a thin
  * GFM wrapper (P1-1). Links carry the `AUTOLINK` flag.
  */
-export const autolinks = definePlugin({
+const autolinks = definePlugin({
   name: 'autolinks',
   syntax: { markdownIt: gfmAutolinks },
 });
@@ -48,7 +48,7 @@ export const autolinks = definePlugin({
  * Footnotes (GitHub, not in the GFM spec; on by default): markdown-it-footnote.
  * Mapping: token-mapping.md#footnotes
  */
-export const footnotes = definePlugin({
+const footnotes = definePlugin({
   name: 'footnotes',
   syntax: { markdownIt: gfmFootnotes },
 });
@@ -57,7 +57,7 @@ export const footnotes = definePlugin({
  * GFM tagfilter (disallowed raw HTML): in-house. Records the filtered HTML
  * on `HtmlBlock` / `HtmlInline` nodes as `filteredHtml` (P1-13).
  */
-export const tagfilter = definePlugin({
+const tagfilter = definePlugin({
   name: 'tagfilter',
   syntax: { markdownIt: gfmTagfilter },
 });

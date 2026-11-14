@@ -134,7 +134,7 @@ function lineOf(lineOffsets: Int32Array, offset: number): number {
 
 /**
  * Parses `source` from `offset` (a top-level block boundary) with the
- * prefix's context carried in. See `ParseFrom` in src/stream/types.ts.
+ * prefix's context carried in. See `ParserBackendImpl.parseFrom` in src/parse/backend.ts.
  *
  * - References: the tail's `env.references` is seeded from the prefix, so
  *   `[x]` resolves and the merged map (same key order as a full parse)

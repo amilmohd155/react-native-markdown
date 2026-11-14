@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import {
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -27,10 +26,10 @@ import {
 } from '../components/inlineViews';
 import { gallery } from '../gallery';
 import {
-  Button,
   Card,
   Field,
   MONO,
+  OptionsSheet,
   Segmented,
   Toggle,
   UIText,
@@ -230,115 +229,85 @@ export function Playground() {
         </Pressable>
       </View>
 
-      <Modal
+      <OptionsSheet
         visible={sheet}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setSheet(false)}
+        changed={changed}
+        onReset={() => setOptions(DEFAULTS)}
+        onClose={() => setSheet(false)}
       >
-        <Pressable
-          accessibilityLabel="Close options"
-          style={[styles.scrim, { backgroundColor: p.scrim }]}
-          onPress={() => setSheet(false)}
-        />
-        <View
-          style={[
-            styles.sheet,
-            { backgroundColor: p.bg, borderColor: p.border },
-          ]}
-        >
-          <View style={[styles.grabber, { backgroundColor: p.border }]} />
-          <View style={styles.sheetHeader}>
-            <UIText variant="heading">Options</UIText>
-            <View style={styles.sheetActions}>
-              <Button
-                label="Reset"
-                tone="quiet"
-                disabled={!changed}
-                onPress={() => setOptions(DEFAULTS)}
-              />
-              <Button label="Done" onPress={() => setSheet(false)} />
-            </View>
+        <Field label="Typeface">
+          <Segmented
+            label="Typeface"
+            value={options.font}
+            onChange={(v) => set('font', v)}
+            options={[
+              { value: 'system', label: 'System' },
+              { value: 'inter', label: 'Inter' },
+            ]}
+          />
+        </Field>
+        <Field label="Text size">
+          <Segmented
+            label="Text size"
+            value={options.size}
+            onChange={(v) => set('size', v)}
+            options={[
+              { value: 'default', label: 'Default' },
+              { value: 'large', label: 'Large' },
+            ]}
+          />
+        </Field>
+        <Field label="Theme">
+          <View style={styles.wrap}>
+            <Toggle
+              label="Accent colour"
+              value={options.accent}
+              onChange={(v) => set('accent', v)}
+            />
+            <Toggle
+              label="Element overrides"
+              value={options.overrides}
+              onChange={(v) => set('overrides', v)}
+            />
           </View>
-          <ScrollView
-            contentContainerStyle={styles.sheetBody}
-            showsVerticalScrollIndicator={false}
-          >
-            <Field label="Typeface">
-              <Segmented
-                label="Typeface"
-                value={options.font}
-                onChange={(v) => set('font', v)}
-                options={[
-                  { value: 'system', label: 'System' },
-                  { value: 'inter', label: 'Inter' },
-                ]}
-              />
-            </Field>
-            <Field label="Text size">
-              <Segmented
-                label="Text size"
-                value={options.size}
-                onChange={(v) => set('size', v)}
-                options={[
-                  { value: 'default', label: 'Default' },
-                  { value: 'large', label: 'Large' },
-                ]}
-              />
-            </Field>
-            <Field label="Theme">
-              <View style={styles.wrap}>
-                <Toggle
-                  label="Accent colour"
-                  value={options.accent}
-                  onChange={(v) => set('accent', v)}
-                />
-                <Toggle
-                  label="Element overrides"
-                  value={options.overrides}
-                  onChange={(v) => set('overrides', v)}
-                />
-              </View>
-            </Field>
-            <Field label="Soft line breaks">
-              <Segmented
-                label="Soft line breaks"
-                value={options.softBreak}
-                onChange={(v) => set('softBreak', v)}
-                options={[
-                  { value: 'space', label: 'Space' },
-                  { value: 'newline', label: 'Newline' },
-                ]}
-              />
-            </Field>
-            <Field label="Superscript fallback">
-              <Segmented
-                label="Superscript fallback"
-                value={options.scriptFallback}
-                onChange={(v) => set('scriptFallback', v)}
-                options={[
-                  { value: 'smaller', label: 'Smaller' },
-                  { value: 'raised', label: 'Raised' },
-                ]}
-              />
-            </Field>
-            <Field label="Behaviour">
-              <View style={styles.wrap}>
-                <Toggle
-                  label="Inline views"
-                  value={options.inlineViews}
-                  onChange={(v) => set('inlineViews', v)}
-                />
-                <Toggle
-                  label="Interactive tasks"
-                  value={options.tasks}
-                  onChange={(v) => set('tasks', v)}
-                />
-              </View>
-            </Field>
-          </ScrollView>
-        </View>
-      </Modal>
+        </Field>
+        <Field label="Soft line breaks">
+          <Segmented
+            label="Soft line breaks"
+            value={options.softBreak}
+            onChange={(v) => set('softBreak', v)}
+            options={[
+              { value: 'space', label: 'Space' },
+              { value: 'newline', label: 'Newline' },
+            ]}
+          />
+        </Field>
+        <Field label="Superscript fallback">
+          <Segmented
+            label="Superscript fallback"
+            value={options.scriptFallback}
+            onChange={(v) => set('scriptFallback', v)}
+            options={[
+              { value: 'smaller', label: 'Smaller' },
+              { value: 'raised', label: 'Raised' },
+            ]}
+          />
+        </Field>
+        <Field label="Behaviour">
+          <View style={styles.wrap}>
+            <Toggle
+              label="Inline views"
+              value={options.inlineViews}
+              onChange={(v) => set('inlineViews', v)}
+            />
+            <Toggle
+              label="Interactive tasks"
+              value={options.tasks}
+              onChange={(v) => set('tasks', v)}
+            />
+          </View>
+        </Field>
+      </OptionsSheet>
     </View>
   );
 }
@@ -390,30 +359,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 5,
   },
-  scrim: { flex: 1 },
-  sheet: {
-    maxHeight: '78%',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderBottomWidth: 0,
-    paddingTop: 8,
-  },
-  grabber: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    marginBottom: 8,
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
-  sheetActions: { flexDirection: 'row', gap: 8 },
-  sheetBody: { paddingHorizontal: 20, paddingBottom: 32, gap: 20 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 });

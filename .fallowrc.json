@@ -1,0 +1,19 @@
+{
+  "entry": [
+    "bench/stream-web.mjs",
+    "bench/stream-web-*.ts",
+    "bench/fixtures/transcripts/make-synthetic.mjs"
+  ],
+  "ignoreDependencies": [
+    "react-native-web",
+    "expo-atlas",
+    "expo-system-ui",
+    "esbuild",
+    "playwright-core"
+  ],
+  "ignoreBinaries": [
+    "do",
+    "done",
+    "for"
+  ]
+}

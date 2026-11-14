@@ -1,6 +1,6 @@
 /**
  * Stream equivalence harness (phase 2, S1.6).
- * Design: docs/rewrite/phase-2/testing-harness.md#equivalence-harness
+ * Design: docs/rewrite/testing-harness.md#equivalence-harness
  *
  * Invariant: after EVERY flush, the streamed table equals
  * `parse(source so far)`, compared as `documentToHtml` (exact string) and
@@ -166,7 +166,7 @@ export function fixed(size: number): Chunker {
 
 /* eslint-disable no-bitwise -- PRNG arithmetic */
 /** mulberry32: small seeded PRNG. */
-export function rng(seed: number): () => number {
+function rng(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
@@ -193,7 +193,7 @@ export function seeded(seed: number, maxSize = 40): Chunker {
 }
 
 /** A two-chunk split at `at`. */
-export function splitAt(at: number): Chunker {
+function splitAt(at: number): Chunker {
   return (source) =>
     at <= 0 || at >= source.length
       ? [source]
@@ -323,10 +323,6 @@ export interface RunOptions {
   parse?: ParseOptions;
   allowFullReparse?: boolean;
   expectedPath?: ExpectedPath;
-}
-
-export interface Failure {
-  message: string;
 }
 
 /**

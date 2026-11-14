@@ -16,7 +16,7 @@ export function getAttrs(table: NodeTable, id: number): NodeAttrs | null {
 }
 
 /** Calls `fn` for each child of `id`, in order. Allocates nothing. */
-export function forEachChild(
+function forEachChild(
   table: NodeTable,
   id: number,
   fn: (child: number) => void

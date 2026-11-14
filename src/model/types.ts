@@ -45,8 +45,6 @@ export const NodeType = {
   FootnoteReference: 46,
 } as const;
 
-export type BuiltInNodeType = (typeof NodeType)[keyof typeof NodeType];
-
 /** First id available to plugin-registered node types. */
 export const PLUGIN_NODE_TYPE_MIN = 128;
 /** Last id that fits the `Uint8` type column. */

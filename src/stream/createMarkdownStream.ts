@@ -34,7 +34,7 @@ export interface StreamCoreInternals {
 }
 
 /** Default for the open-fence fast path (S1.4, P2-5). */
-export const FENCE_FAST_PATH_DEFAULT = true;
+const FENCE_FAST_PATH_DEFAULT = true;
 
 const parseFrom = markdownItBackend.parseFrom!;
 

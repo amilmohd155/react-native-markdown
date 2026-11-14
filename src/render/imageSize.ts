@@ -14,7 +14,7 @@ import { Image } from 'react-native';
  *   `useSyncExternalStore` and re-render when that URL's size arrives.
  */
 
-export interface ImageSize {
+interface ImageSize {
   readonly width: number;
   readonly height: number;
 }
