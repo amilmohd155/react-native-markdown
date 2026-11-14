@@ -31,7 +31,6 @@ What is exported ([04](./04-api.md)):
 - `parse(source, options) → MarkdownDocument`: an opaque, immutable handle, usable ahead of render time, in tests or on a server
 - `<Markdown source | document>`, which parses (if needed) and renders with memoization
 - `visit(doc, visitor)`: read-only traversal using the same semantic props as components
-- `toMdast(doc)` from `/mdast`: opt-in interop with unified/remark
 
 The node table, tokens and backends' internals are not exported.
 
@@ -80,116 +79,45 @@ marked was faster still in the benchmark. It's not the default because its Commo
 
 ### Why a flat token stream fits the block model
 
-#### What markdown-it produces
-
-`md.parse()` doesn't return a tree. It returns a **flat array of tokens** in document order. Nesting is encoded in each token's fields, not by putting objects inside other objects:
+`md.parse()` returns a **flat array of tokens** in document order, not a tree. Nesting is encoded in each token's fields:
 
 - `nesting`: `1` opens a container (`*_open`), `-1` closes it (`*_close`), `0` is self-contained (`inline`, `fence`, `hr`, …).
 - `level`: nesting depth. **`level === 0` marks a top-level block.**
-- `map`: `[startLine, endLine)` source line range, set on open and self-contained block tokens.
-- `children`: only on `inline` tokens. This is again a **flat** array of inline tokens, using the same `_open`/`_close` convention.
+- `map`: `[startLine, endLine)` source line range, set on open and self-contained block tokens (close tokens and inline tokens have none).
+- `children`: only on `inline` tokens; again a flat array using the same open/close convention.
 
-For this input:
+That gives us:
 
-```md
-# Title
+1. **Top-level block boundaries for free.** Every token with `level === 0` and `nesting !== -1` starts a block, and its `map` gives the line range. We never search a tree for the blocks we memoize and virtualize.
+2. **Cheap block ranges and identity.** A line-start offset table is built once per parse (native `indexOf` between newlines) and turns each `map` into `[start, end)` character offsets in O(1). Identity needs no hashing: the renderer compares block source text natively, plus small context strings ([P1-9](./phase-1/decisions.md#p1-9-block-identity-by-source-text-plus-context-and-index-keys)).
+3. **One forward loop with an explicit stack.** The conversion appends rows to the node table ([§2](#2-document-model)); each token is visited once, so it is linear in the token count, creates no per-node object (typed-array writes and string pushes only), and can't overflow the call stack on deeply nested input. Node ids come out in document order, so each top-level block occupies a contiguous id range. It costs about 2–3 ms on top of a 77 ms no-JIT parse of the 97 KB document ([08](./08-model-and-api.md#measurements)).
 
-- one **bold**
-  > quote
-- two
-
-Para
+```ts
+function tokensToTable(tokens: Token[], source: string, t: TableBuilder): void {
+  const lineOffsets = computeLineOffsets(source); // once per parse
+  const stack: number[] = [ROOT];                 // node ids of open containers
+  for (const tok of tokens) {
+    const parent = stack[stack.length - 1];
+    if (tok.nesting === 1) {                      // *_open → container node
+      const id = t.add(typeOf(tok), parent, attrsOf(tok));
+      if (tok.level === 0) t.beginBlock(id, lineOffsets[tok.map![0]], lineOffsets[tok.map![1]]);
+      stack.push(id);
+    } else if (tok.nesting === -1) {              // *_close
+      stack.pop();
+    } else if (tok.type === 'inline') {           // same open/close pattern; text runs merged
+      addInline(tok.children!, parent, t);
+    } else {                                      // fence / hr / html_block … → leaf
+      const id = t.add(typeOf(tok), parent, attrsOf(tok), tok.content);
+      if (tok.level === 0) t.beginBlock(id, lineOffsets[tok.map![0]], lineOffsets[tok.map![1]]);
+    }
+  }
+  t.finish(blocks, source, context);              // block index + identity context
+}
 ```
 
-markdown-it 15 produces this token stream (captured from a real run):
+**Streaming and virtualization.** Streaming ([05](./05-streaming.md)) re-parses from the last open block's `blockStart`; because block ids are contiguous, a splice truncates the table at that block's first node id and appends the re-parsed tail with the same loop, offsets shifted. An off-screen block costs only its table rows, and React elements are created when it is first rendered. Keeping raw tokens for lazy conversion was rejected: retained tokens cost more memory than the whole table ([08](./08-model-and-api.md#measurements)).
 
-```
-level type               nesting map     inline children
-0     heading_open        1     [0,1]
-1     inline              0     [0,1]   text "Title"
-0     heading_close      -1
-0     bullet_list_open    1     [2,6]   ← top-level block #2 starts
-1     list_item_open      1     [2,4]
-2     paragraph_open      1     [2,3]
-3     inline              0     [2,3]   text "one ", strong_open, text "bold", strong_close
-2     paragraph_close    -1
-2     blockquote_open     1     [3,4]
-3     paragraph_open      1     [3,4]
-4     inline              0     [3,4]   text "quote"
-3     paragraph_close    -1
-2     blockquote_close   -1
-1     list_item_close    -1
-1     list_item_open      1     [4,6]
-…
-0     bullet_list_close  -1             ← top-level block #2 ends
-0     paragraph_open      1     [6,7]   ← top-level block #3 starts
-1     inline              0     [6,7]   text "Para"
-0     paragraph_close    -1
-```
-
-#### What this gives us
-
-1. **Top-level block boundaries are already there.** Every token with `level === 0` and `nesting !== -1` starts a new top-level block, and its `map` gives that block's line range. We never have to search a tree to find the blocks we memoize and virtualize.
-
-2. **Block ranges and identity cost almost nothing.**
-   - A line-start offset table is built once per parse (native `indexOf` jumps between newlines).
-   - It turns each block's `map` into `[start, end)` character offsets in O(1).
-   - Identity needs no hashing: the renderer compares block source text natively, plus small context strings ([P1-9](./phase-1/decisions.md#p1-9-block-identity-by-source-text-plus-context-and-index-keys)).
-
-3. **The conversion is one forward loop with an explicit stack.** It appends rows to the flat node table ([§2](#2-document-model)). The token stream is already in document order, so node ids come out in document order too, and each top-level block occupies a contiguous id range.
-
-   ```ts
-   function tokensToTable(tokens: Token[], source: string, t: TableBuilder): void {
-     const lineOffsets = computeLineOffsets(source); // once per parse
-     const stack: number[] = [ROOT];                 // node ids of open containers
-
-     for (const tok of tokens) {                     // single pass, O(tokens)
-       const parent = stack[stack.length - 1];
-       if (tok.nesting === 1) {                      // *_open → container node
-         const id = t.add(typeOf(tok), parent, attrsOf(tok));
-         if (tok.level === 0) t.beginBlock(id, lineOffsets[tok.map![0]], lineOffsets[tok.map![1]]);
-         stack.push(id);
-       } else if (tok.nesting === -1) {              // *_close
-         stack.pop();
-       } else if (tok.type === 'inline') {           // inline children: same open/close pattern
-         addInline(tok.children!, parent, t);        // runs of text merged into one string row
-       } else {                                      // fence / hr / html_block … → leaf node
-         const id = t.add(typeOf(tok), parent, attrsOf(tok), tok.content);
-         if (tok.level === 0) t.beginBlock(id, lineOffsets[tok.map![0]], lineOffsets[tok.map![1]]);
-       }
-     }
-     t.finish(blocks, source, context);              // block index + identity context (P1-9)
-   }
-   ```
-
-   - Each token is visited exactly once, so the cost is linear in the number of tokens. On the 97 KB benchmark document, this costs about 2–3 ms on top of a 77 ms parse with no JIT ([08](./08-model-and-api.md#measurements)).
-   - No object is created per node (only typed-array writes and string pushes), nothing is mutated after the build, and no `parentStack` arrays are copied.
-
-#### Why this is better than the current approach
-
-| | Today (micromark → mdast → recursive walk) | Proposed (markdown-it tokens → linear pass) |
-|---|---|---|
-| Passes over the document | micromark builds events, `mdast-util-from-markdown` builds a tree, then 2 transform walks (refs, keys) and a recursive render walk | Parse, then one linear conversion pass |
-| Finding top-level blocks | Implicit in `root.children`, with positions read from nested `position` objects | `level === 0` tokens, with line ranges in `map` |
-| Traversal | Recursive, one JS call frame per nesting level | Iterative, with an explicit stack |
-| Per-node allocation | An mdast object per node, plus a `[node, ...parentStack]` copy at every node | None: typed-array rows |
-| Retained memory (97 KB doc) | 2.10 MB | 0.38 MB |
-| Deeply nested input (e.g. 10,000 `>` characters) | Can overflow the JS call stack, and on a phone the limit may be lower than in Node | Stack depth is just an array length, so it can't overflow |
-
-#### Benefits for streaming and virtualization
-
-- **Streaming ([05](./05-streaming.md)):**
-  - The tail re-parse needs to know where the last top-level block starts. That's `blockStart` of the last open block.
-  - Because block ids are contiguous, splicing means truncating the table at that block's first node id and appending the re-parsed tail with the same loop, with offsets shifted.
-- **Virtualization:**
-  - An off-screen block costs only its table rows. React elements and props are created only when the block is first rendered.
-  - Keeping raw tokens around for lazy inline conversion was considered and rejected: retained tokens cost more memory than the whole table ([08](./08-model-and-api.md#measurements)).
-
-#### Caveats
-
-- `map` is in **lines**, not characters, so the line-offset table is required. Inline tokens have no `map`. That's fine, because identity is only needed at block granularity.
-- Close tokens have `map === null`. A block's range comes from its opening token.
-- Plugins can emit custom tokens. Each plugin declares `nodes: { Name: { token, kind, from } }` ([04](./04-api.md#plugins)), which registers a `tokenType → node type + attrs` mapping. Unknown token types fall back to a generic node rendered as text, so content is never dropped silently.
+**Caveats.** `map` is in lines, so the offset table is required, and a block's range comes from its opening token. Plugins can emit custom tokens: each declares `nodes: { Name: { token, kind, from } }` ([04](./04-api.md#plugins)), which registers a `tokenType → node type + attrs` mapping, and unknown token types fall back to a generic node rendered as text, so content is never dropped silently.
 
 ### Optional backend: native via JSI (phase 4)
 
@@ -334,7 +262,7 @@ The full catalog with props is in [04](./04-api.md#element-catalog).
 | `List` / `ListItem` | `View` rows with a marker column. Ordered markers use `start`. Task items render a checkbox glyph (read-only by default, interactive with `onTaskToggle`). Nesting depth comes from context, not a parent-stack copy. |
 | `Blockquote` | `View` with a container style, rendering its child blocks recursively (not memoized individually). |
 | `CodeBlock` | `ScrollView horizontal` + one `<Text>`. Syntax highlighting is a plugin (or a user `CodeBlock`), loaded lazily and outside the core bundle. |
-| `Table` / `TableRow` / `TableCell` | `ScrollView horizontal`. Column widths are computed once per table (max cell intrinsic width, capped) and cached by block hash. |
+| `Table` / `TableRow` / `TableCell` | `ScrollView horizontal`. Column widths are computed once per table (max cell intrinsic width, capped) and cached per table. |
 | `Divider` | `View` hairline. |
 | `Image` (block) | `<Image>` with a cached aspect ratio (`Image.getSize`, memoized by URL). A placeholder box holds the space, to avoid layout jumps. |
 | `HtmlBlock` / `HtmlInline` | Allowlisted inline tags become elements. Everything else is literal text ([Raw HTML](#raw-html)). |
@@ -382,9 +310,8 @@ A theme has two levels ([04](./04-api.md#theme)):
 
 ### Bundle size
 
-- The core is markdown-it plus its plugins. Its minified size compared with the current micromark + mdast + GFM stack still needs measuring in phase 1. Highlighting and the native backend are separate entry points (`/highlight`, `/native`).
+- The core is markdown-it plus its plugins. Highlighting and the native backend are separate entry points (`/highlight`, `/native`).
 - `sideEffects: false` lets bundlers tree-shake unused default elements and plugins.
-- `toMdast` lives in `/mdast`, so the mdast types and converter cost nothing unless imported.
 
 ### Package layout
 
@@ -396,7 +323,6 @@ src/
   render/       BlockList, Block, inline flattener, table → props, default elements
   theme/        tokens, createTheme, light/dark themes, context
   api/          parse, visit, public types
-  mdast/        toMdast (separate entry point, Phase 3)
   stream/       useMarkdownStream, tail re-parse
   components/   <Markdown>
   native/       (phase 4) JSI backend

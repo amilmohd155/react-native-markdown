@@ -1,6 +1,6 @@
 /**
  * CommonMark + GFM spec suites and pathological inputs.
- * Harness design: docs/rewrite/phase-1/testing-harness.md
+ * Harness design: docs/rewrite/testing-harness.md
  *
  * Suites not yet in IMPLEMENTED_SUITES register every example with
  * `test.failing`: it must fail, which keeps CI green while showing the

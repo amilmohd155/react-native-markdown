@@ -32,7 +32,7 @@ The core has no timers: **every `append` parses now**. With smoothing on, `appen
 
 ## Scheduler
 
-`createMarkdownScheduler(options)` in `src/stream/scheduler.ts`, on top of the core. Policy: [P2-4](./decisions.md#p2-4-coalescing-policy). Results: [02-benchmarks](../02-benchmarks.md#phase-2-scheduler-s2).
+`createMarkdownScheduler(options)` in `src/stream/scheduler.ts`, on top of the core. Policy: [P2-4](./decisions.md#p2-4-coalescing-policy). Results: [02-benchmarks](../../../bench/results/REPORT.md#phase-2-scheduler-s2).
 
 ```ts
 interface MarkdownScheduler {
@@ -88,4 +88,4 @@ There is no separate streaming component: `<Markdown document>` already memoizes
 
 ## Tests
 
-See [testing-harness.md](./testing-harness.md#hook-and-scheduler-tests).
+See [testing-harness.md](../testing-harness.md#hook-and-scheduler-tests).

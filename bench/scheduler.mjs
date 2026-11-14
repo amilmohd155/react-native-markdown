@@ -274,7 +274,7 @@ if (save) {
     file,
     JSON.stringify(
       {
-        protocol: 'docs/rewrite/phase-2/benchmark-protocol.md (S2.9a, Node)',
+        protocol: 'docs/rewrite/benchmark-protocol.md (S2.9a, Node)',
         harness: 'bench/scheduler.mjs',
         node: process.version,
         jit,

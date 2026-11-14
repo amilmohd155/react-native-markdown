@@ -1,6 +1,6 @@
 /**
  * GFM autolinks, case by case.
- * Harness design: docs/rewrite/phase-1/testing-harness.md#allowlist-format
+ * Harness design: docs/rewrite/testing-harness.md#allowlist-format
  *
  * `extensions.txt` example 19 bundles 32 autolink cases, one paragraph each.
  * 5 are known gaps (P1-1), so the example is allowlisted as a whole; this

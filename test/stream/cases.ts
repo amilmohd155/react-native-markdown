@@ -1,5 +1,5 @@
 /**
- * Targeted streaming cases (docs/rewrite/phase-2/testing-harness.md#targeted-cases).
+ * Targeted streaming cases (docs/rewrite/testing-harness.md#targeted-cases).
  * Each is run at every two-chunk split position, plus the fixed and seeded
  * chunkers, by equivalence.test.ts.
  */

@@ -14,7 +14,7 @@ Phase 1 delivers everything needed to ship a usable v1 core, except streaming (p
 - Renderer: `BlockList`, memoized `Block`, inline flattener, all default elements, declared inline views
 - Public API: `<Markdown>`, `components`, `definePlugin`, theme tokens, `parse`/`visit`, events, URL and image policy, safe HTML subset
 - Spec suites, renderer and API-contract tests, platform CI (iOS, Android, web, Expo Go check), perf CI job
-- Device benchmark against v0.8.5
+- Device benchmark (the v0.8.5 comparison is finished; see the results record)
 - Migration guide and v1 README, last (M8)
 
 ## Exit criteria
@@ -24,7 +24,7 @@ Defined in [07](../07-roadmap.md#phase-1-core-pure-js). Restated here only as a 
 - [x] CommonMark spec suite passes (documented allowlist only)
 - [x] GFM spec suite passes (documented allowlist only)
 - [x] Runs unchanged in Expo Go and on the web
-- [ ] ~~Parse plus first render of the 100 KB fixture is ≥ 5× faster than v0.8.5 on the low-end Android device~~ **Waived**, not met (1.0× on the S25 FE; no low-end device): [P1-25](./decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1) ([benchmark protocol](./benchmark-protocol.md)). Replaced by absolute F3 budgets: [P2-9](../phase-2/decisions.md#p2-9-absolute-f3-budgets-replace-the-5-against-v0-criterion)
+- [ ] ~~Parse plus first render of the 100 KB fixture is ≥ 5× faster than v0.8.5 on the low-end Android device~~ **Waived**, not met (1.0× on the S25 FE; no low-end device): [P1-25](./decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1) ([benchmark protocol](../benchmark-protocol.md)). Replaced by absolute F3 budgets: [P2-9](../phase-2/decisions.md#p2-9-absolute-f3-budgets-replace-the-5-against-v0-criterion)
 - [x] Device measurement done for the flat table vs. object tree render cost (the remaining open item): [P1-24](./decisions.md#p1-24-keep-the-flat-table-render-ab-against-an-object-tree)
 
 ## Documents
@@ -35,8 +35,8 @@ Defined in [07](../07-roadmap.md#phase-1-core-pure-js). Restated here only as a 
 | [token-mapping.md](./token-mapping.md) | Every markdown-it token → node table row, including the HTML subset, task lists, footnotes and plugin tokens |
 | [element-props.md](./element-props.md) | How each element's public props are derived from the node table |
 | [theme-resolution.md](./theme-resolution.md) | How tokens become element styles, merge order, caching |
-| [testing-harness.md](./testing-harness.md) | Spec runner, HTML serializer, allowlist format, platform CI jobs |
-| [benchmark-protocol.md](./benchmark-protocol.md) | Devices, fixtures, metrics, method and pass bars |
+| [testing-harness.md](../testing-harness.md) | Spec runner, HTML serializer, allowlist format, platform CI jobs |
+| [benchmark-protocol.md](../benchmark-protocol.md) | Devices, fixtures, metrics, method and pass bars |
 | [decisions.md](./decisions.md) | Implementation-level decisions P1-1 to P1-26 (all accepted), separate from the design decisions D1–D8 |
 
 ## Reading order

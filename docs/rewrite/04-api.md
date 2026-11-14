@@ -203,10 +203,6 @@ const toc: { level: number; id: string; text: string }[] = [];
 visit(doc, { Heading: ({ level, id }, { text }) => toc.push({ level, id, text }) });
 ```
 
-```ts
-import { toMdast } from '@docren/react-native-markdown/mdast'; // opt-in unified interop (Phase 3)
-```
-
 ## Streaming
 
 ```tsx
@@ -219,20 +215,4 @@ See [05](./05-streaming.md).
 
 ## Migration from v0.x
 
-| v0.x | v1 |
-|---|---|
-| `markdown` | `source` |
-| `styles` + `mergeStyle` | `theme` (tokens plus `elements` overrides, always merged onto a base) |
-| `renderRules.heading({ node })` using `node.depth` | `components.Heading({ level })` |
-| `renderRules.link` using `node.url`, `extras.onPress` | `components.Link({ href })` / `onLinkPress` |
-| `renderRules.code` using `node.lang`, `node.value` | `components.CodeBlock({ language, code })` |
-| `renderRules.inlineCode` | `components.InlineCode({ code })` |
-| `renderRules.delete` | `components.Strikethrough` |
-| `renderRules.thematicBreak` | `components.Divider` |
-| `renderRules.image` | `components.Image` (block) / `components.InlineImage` |
-| `renderRules.text` | theme tokens (text isn't a component) |
-| `listBulletStyle`, `customBulletElement` | `components.ListItem` (`marker`) or theme |
-| `extensions` (mdast-util-from-markdown) | `plugins` (`definePlugin` with `syntax.markdownIt`) |
-| `debug` | removed (use React DevTools) |
-
-The full walkthrough, with before/after code for every row, is the [migration guide](../migration-from-v0.md) ([P1-22](./phase-1/decisions.md#p1-22-the-migration-guide-is-its-own-milestone-m8)). There is no `renderRules` adapter: v0 rules need an mdast `node`, pre-rendered `children` and `parentStack`, which v1 doesn't have ([P1-26](./phase-1/decisions.md#p1-26-no-fromrenderrules-adapter)).
+See the [migration guide](../migration-from-v0.md): a checklist and before/after code for every v0 prop (`markdown` → `source`, `styles` → `theme`, `renderRules` → `components`, `extensions` → `plugins`). There is no `renderRules` adapter: v0 rules need an mdast `node`, pre-rendered `children` and `parentStack`, which v1 doesn't have ([P1-26](./phase-1/decisions.md#p1-26-no-fromrenderrules-adapter)).

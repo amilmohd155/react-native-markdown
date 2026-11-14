@@ -40,7 +40,7 @@ The rewrite is allowed to break the API, and does. Users work with **element com
 | # | Document | What it covers |
 |---|---|---|
 | 01 | [Current state](./01-current-state.md) | Review of v0.8.5: what works, bugs, structural limits |
-| 02 | [Benchmarks](./02-benchmarks.md) | Parser measurements, method, how to reproduce |
+| 02 | [Benchmarks](./02-benchmarks.md) | Conclusions from the measurements (full log: [`bench/results/REPORT.md`](../../bench/results/REPORT.md)) |
 | 03 | [Architecture](./03-architecture.md) | The proposed pipeline, layer by layer |
 | 04 | [Public API](./04-api.md) | `<Markdown>` props, element catalog, theme, plugins, migration |
 | 05 | [Streaming](./05-streaming.md) | Incremental parsing and rendering for LLM/chat output |
@@ -48,6 +48,6 @@ The rewrite is allowed to break the API, and does. Users work with **element com
 | 07 | [Roadmap & decisions](./07-roadmap.md) | Phased plan, risks, competing libraries, **decision log (D1–D8)** |
 | 08 | [Data model & public API](./08-model-and-api.md) | Options and measurements behind the private node table and the components/plugins/tokens API |
 
-Implementation detail for Phase 1 (work breakdown, token mapping, element props, theme resolution, test harness, device benchmark protocol, implementation decisions) is in [`phase-1/`](./phase-1/README.md).
+Implementation detail is in [`phase-1/`](./phase-1/README.md) and [`phase-2/`](./phase-2/README.md) (work breakdown, decisions, and design notes), with the shared [testing harness](./testing-harness.md) and [benchmark protocol](./benchmark-protocol.md).
 
 The benchmark scripts are in [`bench/`](../../bench) (a private workspace at the repo root).
