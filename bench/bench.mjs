@@ -1,4 +1,4 @@
-// Parser benchmark used in docs/rewrite/02-benchmarks.md.
+// Parser benchmark used in bench/results/REPORT.md.
 //
 // Usage (from this directory):
 //   npm install
@@ -8,9 +8,6 @@
 // The fixture is markdown-it's README plus a GFM snippet (table, task list,
 // strikethrough, autolink literal), repeated `repeat` times.
 
-import { fromMarkdown } from 'mdast-util-from-markdown';
-import { gfm } from 'micromark-extension-gfm';
-import { gfmFromMarkdown } from 'mdast-util-gfm';
 import MarkdownIt from 'markdown-it';
 import { marked } from 'marked';
 import * as commonmark from 'commonmark';
@@ -30,14 +27,8 @@ const doc = unit.repeat(repeat);
 
 const md = new MarkdownIt();
 const cm = new commonmark.Parser();
-const mdast = (s) =>
-  fromMarkdown(s, {
-    extensions: [gfm()],
-    mdastExtensions: [gfmFromMarkdown()],
-  });
 
 const cases = {
-  'mdast (micromark+gfm)': () => mdast(doc),
   'markdown-it (tokens)': () => md.parse(doc, {}),
   'marked lexer (gfm)': () => marked.lexer(doc),
   'commonmark.js (no gfm)': () => cm.parse(doc),
@@ -61,7 +52,6 @@ if (!noStream) {
   const steps = 200;
   const step = Math.ceil(doc.length / steps);
   const streamCases = {
-    'mdast reparse-all': mdast,
     'marked reparse-all': (s) => marked.lexer(s),
   };
   for (const [name, fn] of Object.entries(streamCases)) {

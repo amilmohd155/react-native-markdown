@@ -6,7 +6,7 @@
 |---|---|---|
 | `t1-debug-flatlist.json`, `t2-explain-streaming.json`, `t3-setup-guide.json` | Markdown replies in assistant style, written by Claude (an LLM) for this repo. Source in `text/*.md`. | **Synthetic.** `make-synthetic.mjs` splits the text into BPE-like pseudo-tokens, groups 1 to 3 per event (70/22/8%), and draws inter-arrival gaps from a seeded PRNG (median about 25 ms, rare 150 to 400 ms stalls, 400 ms first-token latency). Deterministic and reproducible. |
 
-Format: JSON array of `{ "t": <ms since stream start>, "text": <chunk> }`. Concatenating `text` gives the exact source file (the script checks this). Chunks split on UTF-16 code units, inside tokens. `stats.json` has per-file stats.
+The JSON files are not committed: run `node make-synthetic.mjs` in this folder to regenerate them (deterministic). Format: JSON array of `{ "t": <ms since stream start>, "text": <chunk> }`. Concatenating `text` gives the exact source file (the script checks this). Chunks split on UTF-16 code units, inside tokens. `stats.json` has per-file stats.
 
 Size: about 4.2 KB total, below the ~10 KB F4c target.
 

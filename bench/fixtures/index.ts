@@ -1,11 +1,11 @@
 /**
- * Device benchmark fixtures. Spec: docs/rewrite/phase-1/benchmark-protocol.md
+ * Device benchmark fixtures. Spec: docs/rewrite/benchmark-protocol.md
  * (Fixtures). Hand-written content, no generated or downloaded text.
  *
  * - F1: one chat message (paragraphs, list, inline code, link), ~1 KB.
  * - F2: a typical README (headings, code blocks, tables, lists), ~10 KB.
  * - F3: F2-style content repeated, ~100 KB.
- * - F3-cm: F3 with every GFM construct stripped (`./commonmark`), so v0.8.5
+ * - F3-cm: F3 with every GFM construct stripped (`./commonmark`), a CommonMark-only
  *   (no GFM) and v1 do the same work. Derived, not hand-written.
  *
  * Deviation from the protocol: no images yet. Local image assets can't be

@@ -2,8 +2,7 @@
  * Differential variants of F3 for the per-node-type cost sweep (issue #36,
  * task B1). Derived from F3's text by splitting it into top-level source
  * segments and keeping some kinds, so no fixture text is duplicated here.
- * Pure TypeScript (no React Native import): used by the Node sweep and by
- * the device screen (example/src/screens/ProfileBench.tsx).
+ * Pure TypeScript (no React Native import): used by the Node sweep (the device screen was removed, see docs/rewrite/benchmark-protocol.md).
  */
 import { F3 } from '../fixtures';
 
@@ -17,7 +16,7 @@ export type SegmentKind =
   | 'footnote'
   | 'paragraph';
 
-export interface Segment {
+interface Segment {
   readonly kind: SegmentKind;
   readonly text: string;
 }
@@ -25,7 +24,7 @@ export interface Segment {
 const LIST_MARKER = /^\s*(?:[-*+]|\d+[.)])\s/;
 
 /** Splits markdown written like F3 into top-level segments. */
-export function segmentsOf(source: string): Segment[] {
+function segmentsOf(source: string): Segment[] {
   const lines = source.split('\n');
   const out: Segment[] = [];
   let i = 0;

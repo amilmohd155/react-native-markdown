@@ -1,10 +1,8 @@
 /**
  * Derives a CommonMark-only variant of a fixture (F3-cm, issue #36 / P1-25).
  *
- * v0.8.5 parses without GFM, so on F3 it does less work than v1: tables,
- * task lists, strikethrough, autolinks and footnotes are plain text to it.
- * F3-cm removes those constructs from the text so both libraries do the same
- * work. Pure and deterministic: the same input gives the same output.
+ * F3-cm removes the GFM constructs (tables, task lists, strikethrough,
+ * autolinks, footnotes) so the text is plain CommonMark. Pure and deterministic: the same input gives the same output.
  *
  * Removed (everything else is kept as is):
  * - tables: every table line (a line starting with `|`), and the blank line after

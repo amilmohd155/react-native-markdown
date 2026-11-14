@@ -1,6 +1,5 @@
 /**
- * Shared by bench/parse-split.mjs (Node) and example/src/screens/ParseSplit.tsx
- * (device): the md.parse vs convertTokens split (issue #36 C1, P1-10) and a
+ * Shared by bench/parse-split.mjs (Node): the md.parse vs convertTokens split (issue #36 C1, P1-10) and a
  * per-rule markdown-it breakdown on a throwaway instance.
  */
 import markdownIt, { type MarkdownIt } from 'markdown-it';
@@ -36,7 +35,7 @@ export interface RuleStat {
 }
 
 /** Cost of one `performance.now()` pair in ms (median of batches). */
-export function timerOverheadMs(): number {
+function timerOverheadMs(): number {
   const per: number[] = [];
   for (let b = 0; b < 15; b++) {
     const n = 5000;
