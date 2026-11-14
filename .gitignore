@@ -97,3 +97,5 @@ coverage/
 example/dist-web/
 playwright-report/
 test-results/
+
+.build
