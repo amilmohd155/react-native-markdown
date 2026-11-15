@@ -821,6 +821,115 @@ Issue #38, step 1: how much of the `code` variant's `firstRender` is the default
 - **A "scroll only if a line overflows" structure cannot help on this fixture.** Every one of the 70 blocks has a longest line of 41 to 78 characters (median 66). At a 13 px monospace font (about 7.8 dp per character; the theme's actual code font size was not read), 66 characters are about 515 dp, wider than the S25 FE's 412 dp screen, so all 70 blocks need to scroll. A static line-length rule would keep the `ScrollView` on every block, and measuring first (`onTextLayout`, then upgrade) would add a wasted pass to each. The fixture is uniform, so this says nothing about code with shorter lines.
 - **Not done:** no cheaper structure was built or measured, and no realistic-width code fixture exists, so the gain on typical documents is unknown. The 30 ms target discussed for #38 is not reachable on the F3 `code` variant without changing the look (wrapping long lines).
 
+### B3: host element census, the table measuring pass and the 900 ms gap (#39)
+
+Issue #39, step 1: measurement only, no render change. **Node** (v24, Jest with the React Native preset, `test-renderer`); the host counts are exact and do not depend on the engine, the times are Node and indicative only (device numbers are in the S25 FE subsection below). Raw data: [`hostviews-node-2026-11-06.json`](./hostviews-node-2026-11-06.json). Test: `bench/profile/hostviews.test.tsx`.
+
+- **Method.** F3, `tables` and `lists` ([`variants.ts`](../profile/variants.ts)) are mounted through `<Markdown document>` with the real default components. Host nodes are every node `test-renderer` holds (`View`, `Text`, `RCTScrollView`, the Jest mock's `ScrollView` host). "Settled" is after the measuring pass: every cell with an `onLayout` reports a width, then the pending `requestAnimationFrame` runs under Jest fake timers. Per-element counts come from small synthetic documents (tables of 1x1, 1x2 and 2x2 cells; lists of one and two one-line items), solved exactly and then used to predict the real documents. The column width cache is cleared before every run (equal themes resolve to one object, and the cache hangs off it, so without this the second document would start warm).
+- **Counts per element** (identical at first render and settled):
+
+| Element | Hosts | Detail |
+|---|---|---|
+| `TableCell` | 2 | 1 `View` (the cell, with `onLayout` while measuring) + 1 `Text` |
+| `TableRow` | 1 | 1 `View` |
+| `Table` | 3 | 1 `ScrollView` host + 2 `View` (the content `View` and the table's inner `View`; `TableHead` and `TableBody` add none) |
+| `ListItem` | 5 | 3 `View` (item, marker column, content column) + 2 `Text` (marker, and the item's one-line `Paragraph`) |
+| `List` | 1 | 1 `View` |
+| Markdown root | 1 | 1 `View`, once per document |
+
+The Jest `ScrollView` mock is one host node; a real native `ScrollView` is more than one native view (it adds a content container), so the native view count on device is higher than this host count by about one per `ScrollView`. Not measured on device.
+
+- **Totals** (host nodes, first render and settled are equal):
+
+| Document | `View` | `Text` | `ScrollView` | Total |
+|---|---|---|---|---|
+| F3 (100,747 B) | 2,500 | 3,558 | 104 | 6,162 |
+| `tables` (34 tables, 238 rows, 952 cells) | 1,259 | 1,530 | 34 | 2,823 |
+| `lists` (102 lists, 309 items) | 1,030 | 1,196 | 0 | 2,226 |
+
+- **The per-element figures reproduce the `View` totals exactly** (`tables` 1 + 34 x 2 + 238 + 952 = 1,259; `lists` 1 + 102 + 309 x 3 = 1,030). `Text` is under-predicted (`tables` 952 against 1,530, `lists` 618 against 1,196): the rest is nested `Text` from inline code, links and emphasis inside cells and items. F3 has 104 `ScrollView`: 34 tables + 70 code blocks.
+- **Tables are 2,823 of F3's 6,162 host nodes (46%)**, 1,258 of its 2,500 `View` (50%) and 34 of 104 `ScrollView`. Lists (as the `lists` variant, which holds their paragraphs) are 2,226 (36%). The two variants overlap with nothing in F3 except the shared root, so they sum to 5,049 of 6,162 (82%).
+- **The measuring pass renders each Table twice** (one commit at mount, one when the frame callback sets the widths): all 34 tables have 2 commits in F3 and in `tables`, and the whole tree has 2 commits (1 for `lists`, which has no table). One `requestAnimationFrame` is scheduled per table (34), not one per document. Tables whose width key is already cached skip the second commit; F3 repeats the same table in every section, but all 34 mount in one commit before any width is stored, so none hit the cache on a cold start.
+- **Node time of the measuring pass, cold width cache** (median of 10, after 3 warm-up runs; mount = `act` around the render, measure = cell `onLayout` reports plus the frame flush and the second commit; no real layout is involved, so this is the React work only):
+
+| Document | Mount (ms) | Measure (ms) | Total (ms) | Warm cache total (ms) |
+|---|---|---|---|---|
+| F3 | 84.6 | 21.9 | 106.4 | 88.2 (measure 2.3) |
+| `tables` | 39.1 | 19.8 | 58.9 | 33.4 (measure 1.0) |
+
+So the second table commit costs about 20 ms in Node on both documents (about 19% of F3's total, about 34% of `tables`'), and a warm cache saves almost all of it. Native layout of the 952 cells (twice) is not in this figure and is the larger unknown on device.
+
+- **Rerun:** `yarn profile:hosts` in `bench/` (`HOSTS_REPS=n` sets the repetitions). It overwrites the JSON above.
+
+#### B3 device: S25 FE, release build
+
+Samsung Galaxy S25 FE (SM-S731B), Android 37, release build (Hermes, New Architecture), 2026-11-06. Raw data: [`hostviews-s25fe-release-2026-11-06.json`](./hostviews-s25fe-release-2026-11-06.json). Screen: a throwaway `Hosts` tab (`HostBench.tsx`, measurement only, no change under `src/`; not committed, see #39).
+
+- **Method.** Fresh app launch, 3 warm-up + 15 measured rounds, 12 jobs per round (F3, `tables`, `lists` x cold/warm width cache x `plain`/`probe`) shuffled each round. Same `firstRender` window as Bench and Profile (pre-parsed document, `setState` to the container's `onLayout`). `plain` has no instrumentation. `probe` wraps `Table` in a component that records `performance.now()` in a layout effect after every commit; `lastTableCommit` is the time from the same `setState` to the last such commit, that is the commit of the measuring re-render. Native layout and draw of that commit are not in it. Cold = a fresh theme per run (empty width cache); warm = the shared light theme.
+- **Native views** (`adb shell dumpsys activity <pkg>/.MainActivity`, count of the `View Hierarchy` lines, minus a baseline of 230 with the Hosts tab and nothing mounted; the screens stay mounted, so the baseline is not zero). Each document was held mounted and settled.
+
+| Document | Native views | Jest host nodes (above) | Per unit |
+|---|---|---|---|
+| `tables` (34 tables, 952 cells) | 1,973 | 2,823 | 2.07 per cell, 58 per table |
+| `lists` (102 lists, 309 items) | 618 | 2,226 | 2.0 per item |
+| F3 | 3,288 | 6,162 |  |
+
+The native counts are lower than the host counts because Fabric flattens layout-only `View`s and nested `Text` is one native `TextView`. The counts are of what is in the view tree (RN does not clip off-screen views here), by `dumpsys`; the class names are minified in release, so no breakdown by view type. Per cell and per item are totals divided by the unit count, including the lists', tables' and root's own views. One run per document.
+
+- **`firstRender`, medians of 15 (p90), ms**, against the #36 baseline (B above):
+
+| Variant | Cache | `plain` | `probe` | #36 baseline (plain, warm) |
+|---|---|---|---|---|
+| F3 | cold | 278.0 (337.5) | 275.2 (373.5) | 291.7 (cold 295.1) |
+| F3 | warm | 259.9 (353.6) | 265.1 (299.7) |  |
+| `tables` | cold | 127.1 (226.3) | 119.0 (148.8) | 132.0 |
+| `tables` | warm | 110.7 (239.7) | 122.9 (210.6) |  |
+| `lists` | cold | 112.2 (163.5) | 93.7 (169.3) | 102.3 |
+| `lists` | warm | 90.0 (149.0) | 128.5 (155.5) |  |
+
+Within about 10% of the earlier run and inside the spread (`plain` against `probe`, the same work, differ by up to 40 ms on `lists`). Treat these as reproducing the baseline.
+
+- **The table measuring pass** (`probe`, from `setState`, median of 15, with the p10 to p90 range), ms:
+
+| Variant | Cache | Table commits | First commit | Last commit | Measuring pass after `firstRender` |
+|---|---|---|---|---|---|
+| F3 | cold | 68 (34 x 2) | 264 | 1,172 (1,022 to 1,268) | about 900 |
+| F3 | warm | 34 | 255 | 256 (216 to 289) | none |
+| `tables` | cold | 68 | 113 | 309 (299 to 340) | about 190 |
+| `tables` | warm | 34 | 109 | 109 (88 to 129) | none |
+
+So on the device every cold table commits twice, as in Node (`tableAfter` 34 of 34), and a warm cache removes the second commit. The second commit lands about 190 ms after the first on `tables`, and about 900 ms after on F3, where it ends about 4x later than `firstRender`. The F3 gap is much larger than the extra table work alone would explain (Node: about 20 ms for the second commit). The cells' `onLayout` reports only arrive after native layout of the whole 3,300-view tree and the frame callbacks; which of those stretches it is was not separated. The figure is JS plus native layout and frame waits up to the last commit's layout effect, not the layout and draw of that commit itself.
+
+- **Not measured:** native layout time per commit (no native trace was taken); the per-view-type breakdown of the native counts; a second app launch with a warm cache (the width cache is in memory only); thermal state, airplane mode and battery were not recorded.
+
+#### B3 trace: what fills the 900 ms
+
+Same device and release build. Five fresh-launch runs of one cold-cache F3 mount (`trace F3` button in the throwaway `HostBench.tsx`), each with a Perfetto trace (sched, atrace `gfx view input am`, `android.log`, frame timeline) read with the trace processor vendored in argent. JS clock and trace clock are aligned through a log line written at `t0`. Summary: [`hostviews-tablegap-trace-s25fe-release-2026-11-06.json`](./hostviews-tablegap-trace-s25fe-release-2026-11-06.json); one run's JS probe data (every `requestAnimationFrame`, per-table commits, cell reports, a frame heartbeat): [`hostviews-tablegap-jsprobe-run4-s25fe-2026-11-06.json`](./hostviews-tablegap-jsprobe-run4-s25fe-2026-11-06.json). The `.pftrace` files are not kept (7 to 15 MB each).
+
+Timeline, ms from the `setState`, median of the runs (range in the JSON):
+
+| From to | Where | What |
+|---|---|---|
+| 0 to about 215 | JS thread | render, React commit (first Table commit about 214), Fabric commit with layout; all 612 cell `onLayout` reports are handled by about 230 (9 ms for the lot), so every table has scheduled its `requestAnimationFrame` by then |
+| about 227 to about 810 | UI thread | one `Choreographer#doFrame` of 555 to 604 ms: view creation 195 to 249, mount of 3,322 views 142 to 164 (`UPDATE_STATE` 2,199, `UPDATE_LAYOUT` 3,323 instructions), measure and draw 191 to 205. The JS thread sleeps for 340 to 400 ms of it |
+| about 580 to about 1,080 | JS thread | about 480 ms of continuous running with no JS probe event in it. The UI thread receives 104 one-instruction `UPDATE_STATE` mount batches in this window (exactly the 104 `ScrollView` of F3: 34 tables and 70 code blocks) |
+| about 1,060 to 1,100 | JS thread | the 34 `requestAnimationFrame` callbacks run (under 0.4 ms in total) |
+| to about 1,160 | JS thread | second render and commit of all 34 tables, 64 to 67 ms, one React commit (the 34 layout effects fall within 0.7 ms). This is the "last Table commit" of the table above |
+| about 1,150 to about 1,340 | UI thread | mount and draw of the second commit: one `doFrame` of 172 to 194 ms (`UPDATE_STATE` 1,706 instructions 80 to 87, traversal 46 to 67) |
+
+So the about 900 ms between the first and last Table commit is, in order: about 400 ms of UI-thread mount of the first tree while the JS thread has nothing to do; about 480 ms of JS-thread commits caused by the 104 `ScrollView` state updates; about 65 ms for the second render. The frame callbacks and the second commit's own mount are not the delay.
+
+- **Does each Table schedule its own rAF?** Yes: 34 callbacks, scheduled within 8 to 9 ms of each other, right after their cell reports. **Same frame?** In two runs all 34 fire in one frame callback; in two runs 3 to 5 fire at about 585 and the other 29 to 31 at about 1,060 to 1,080. They are never serialised across more than two frame callbacks, and a callback costs under 0.4 ms for all 34. **Batched?** Yes: the second commits of all 34 tables are one React commit in every run.
+- **Frames.** The display runs at 120 Hz (8.3 ms). The first mount is a single 555 to 604 ms frame (about 70 missed frames) and the second a single 172 to 194 ms frame (about 21 missed); between them every main-thread frame is under 1 ms. The JS thread is not delayed by the F3 render (that finishes at about 225); the rAF callbacks wait for a frame callback, which the JS thread then runs behind about 480 ms of other work.
+- **Hermes GC** is 10.6 to 10.7 ms in 6 collections over the whole window: not a factor.
+- **Attribution of the 480 ms.** The release build is not profileable, so there are no JS or native call stacks and no slices on the JS thread. The 480 ms is JS-thread running time between the end of the first mount and the rAF callbacks. It is attributed to Fabric commits caused by the 104 single-instruction `UPDATE_STATE` batches because the count matches the `ScrollView` count exactly (104 in both runs that counted them, none after the second commit) and the timing fits (about 4.6 ms per commit on a 3,300-view tree); it is not measured per commit. The `tables` variant (34 `ScrollView`, a smaller tree) would then predict a gap of about 150 to 200 ms against the 190 ms measured; that was not traced.
+- **What would address which part** (predictions from this trace, not tried):
+  - the 104 `ScrollView` state commits, about 480 ms (53% of the gap): fewer `ScrollView` per document. Tables whose width is known up front (fixed or estimated widths, no horizontal scrolling needed when they fit) or a cheaper container would remove up to 34 of the 104; code blocks (70, [#38](#b2-the-codeblock-scrollview-38)) are the larger share. This is the biggest lever and it is independent of the measuring pass.
+  - the second pass itself, about 65 ms of JS plus 172 to 194 ms of UI-thread mount (about 30% of the gap, and the part the user sees as the columns jumping): estimated or fixed widths that avoid the second pass remove both. A 1-node cell (one `Text` carrying the cell style, instead of a `View` and a `Text`) halves the views in the first mount and in the second commit's `UPDATE_STATE` and `UPDATE_LAYOUT`.
+  - batching all tables' width updates into one commit: already the case (one commit, 34 callbacks under 0.4 ms), so it saves nothing.
+  - the UI-thread mount of the first tree, about 400 ms (views, `UPDATE_STATE`, traversal): fewer host views per cell (1-node cell) and fewer tables or rows mounted up front.
+- **Not measured:** the per-commit cost of the `ScrollView` state commits (above); the `tables` variant; Yoga time apart from the JS commit it belongs to; a warm second launch. The probes (a patched `requestAnimationFrame` and, in two runs, a counter on `Math.max`) change the timings by less than the run-to-run spread (about 1,060 to 1,140 for the last rAF).
+
 ### C: parse on Hermes (markdown-it against the node builder)
 
 The `ParseSplit` screen times `md.parse` and the token-to-table conversion separately, then runs `md.parse` again with every rule wrapped for a per-rule split. Medians of 21 runs after 3 warm-up runs, `gfm` preset, ms:

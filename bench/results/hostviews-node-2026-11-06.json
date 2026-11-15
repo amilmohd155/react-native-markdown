@@ -1,0 +1,236 @@
+{
+  "note": "Node (jest, React Native preset, test-renderer). Host counts are exact and engine-independent; times are indicative only. Device numbers need the S25 FE.",
+  "node": "v24.22.1",
+  "issue": 39,
+  "emptyDocumentHosts": {
+    "View": 1,
+    "total": 1
+  },
+  "perElement": {
+    "table": {
+      "first": {
+        "table": {
+          "View": 2,
+          "RCTScrollView": 1,
+          "Text": 0,
+          "total": 3
+        },
+        "row": {
+          "View": 1,
+          "RCTScrollView": 0,
+          "Text": 0,
+          "total": 1
+        },
+        "cell": {
+          "View": 1,
+          "RCTScrollView": 0,
+          "Text": 1,
+          "total": 2
+        }
+      },
+      "settled": {
+        "table": {
+          "View": 2,
+          "RCTScrollView": 1,
+          "Text": 0,
+          "total": 3
+        },
+        "row": {
+          "View": 1,
+          "RCTScrollView": 0,
+          "Text": 0,
+          "total": 1
+        },
+        "cell": {
+          "View": 1,
+          "RCTScrollView": 0,
+          "Text": 1,
+          "total": 2
+        }
+      }
+    },
+    "list": {
+      "first": {
+        "list": {
+          "View": 1,
+          "Text": 0,
+          "total": 1
+        },
+        "item": {
+          "View": 3,
+          "Text": 2,
+          "total": 5
+        }
+      },
+      "settled": {
+        "list": {
+          "View": 1,
+          "Text": 0,
+          "total": 1
+        },
+        "item": {
+          "View": 3,
+          "Text": 2,
+          "total": 5
+        }
+      }
+    }
+  },
+  "documents": {
+    "F3": {
+      "bytes": 100747,
+      "modelCounts": {
+        "Table": 34,
+        "TableRow": 238,
+        "TableCell": 952,
+        "List": 103,
+        "ListItem": 309,
+        "Paragraph": 516,
+        "CodeBlock": 70
+      },
+      "hostsFirstRender": {
+        "View": 2500,
+        "Text": 3558,
+        "RCTScrollView": 104,
+        "total": 6162
+      },
+      "hostsSettled": {
+        "View": 2500,
+        "Text": 3558,
+        "RCTScrollView": 104,
+        "total": 6162
+      },
+      "predictedFromTableAndListPartsFirst": {
+        "View": 2289,
+        "total": 3893,
+        "RCTScrollView": 34,
+        "Text": 1570
+      },
+      "predictedFromTableAndListPartsSettled": {
+        "View": 2289,
+        "total": 3893,
+        "RCTScrollView": 34,
+        "Text": 1570
+      },
+      "rootCommits": 2,
+      "measuringPassesScheduled": 34,
+      "commitsPerTable": {
+        "tables": 34,
+        "min": 2,
+        "max": 2
+      }
+    },
+    "tables": {
+      "bytes": 17100,
+      "modelCounts": {
+        "Table": 34,
+        "TableRow": 238,
+        "TableCell": 952,
+        "List": 0,
+        "ListItem": 0,
+        "Paragraph": 0,
+        "CodeBlock": 0
+      },
+      "hostsFirstRender": {
+        "View": 1259,
+        "RCTScrollView": 34,
+        "Text": 1530,
+        "total": 2823
+      },
+      "hostsSettled": {
+        "View": 1259,
+        "RCTScrollView": 34,
+        "Text": 1530,
+        "total": 2823
+      },
+      "predictedFromTableAndListPartsFirst": {
+        "View": 1259,
+        "total": 2245,
+        "RCTScrollView": 34,
+        "Text": 952
+      },
+      "predictedFromTableAndListPartsSettled": {
+        "View": 1259,
+        "total": 2245,
+        "RCTScrollView": 34,
+        "Text": 952
+      },
+      "rootCommits": 2,
+      "measuringPassesScheduled": 34,
+      "commitsPerTable": {
+        "tables": 34,
+        "min": 2,
+        "max": 2
+      }
+    },
+    "lists": {
+      "bytes": 19731,
+      "modelCounts": {
+        "Table": 0,
+        "TableRow": 0,
+        "TableCell": 0,
+        "List": 102,
+        "ListItem": 309,
+        "Paragraph": 309,
+        "CodeBlock": 0
+      },
+      "hostsFirstRender": {
+        "View": 1030,
+        "Text": 1196,
+        "total": 2226
+      },
+      "hostsSettled": {
+        "View": 1030,
+        "Text": 1196,
+        "total": 2226
+      },
+      "predictedFromTableAndListPartsFirst": {
+        "View": 1030,
+        "total": 1648,
+        "RCTScrollView": 0,
+        "Text": 618
+      },
+      "predictedFromTableAndListPartsSettled": {
+        "View": 1030,
+        "total": 1648,
+        "RCTScrollView": 0,
+        "Text": 618
+      },
+      "rootCommits": 1,
+      "measuringPassesScheduled": 0,
+      "commitsPerTable": {
+        "tables": 0,
+        "min": 0,
+        "max": 0
+      }
+    }
+  },
+  "measuringPassTiming": {
+    "F3": {
+      "reps": 10,
+      "coldCache": {
+        "mountMs": 84.80287498235703,
+        "measureMs": 21.610666036605835,
+        "totalMs": 107.50900000333786
+      },
+      "warmCache": {
+        "mountMs": 85.58658301830292,
+        "measureMs": 2.272707998752594,
+        "totalMs": 88.57504200935364
+      }
+    },
+    "tables": {
+      "reps": 10,
+      "coldCache": {
+        "mountMs": 39.43554097414017,
+        "measureMs": 19.92304104566574,
+        "totalMs": 59.79508304595947
+      },
+      "warmCache": {
+        "mountMs": 32.51558303833008,
+        "measureMs": 0.9237080216407776,
+        "totalMs": 33.44249999523163
+      }
+    }
+  }
+}

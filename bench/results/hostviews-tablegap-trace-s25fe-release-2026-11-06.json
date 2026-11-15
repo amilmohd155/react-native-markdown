@@ -1,0 +1,179 @@
+{
+ "issue": 39,
+ "date": "2026-11-06",
+ "device": "Samsung Galaxy S25 FE (SM-S731B), Android 37, release build, New Architecture, Hermes, 120 Hz display",
+ "scenario": "Hosts tab, \"trace F3\" button: one cold-width-cache mount of F3 (34 tables, 104 ScrollViews in total), fresh app launch per run, 5 runs (runs 1-3 with the rAF and heartbeat probes, runs 4-5 also with the Math.max report counter)",
+ "method": "Perfetto (sched, ftrace atrace gfx/view/input/am, android.log, frametimeline) captured with adb perfetto, queried with the trace processor vendored in argent. The JS clock is aligned to Perfetto through the android.log line written right after t0. The app is not profileable: no perf_sample callstacks and no Hermes samples.",
+ "timesMs": "relative to the setState that mounts F3 (t0)",
+ "runs": {
+  "run1": {
+   "trace": "p39.pftrace",
+   "firstTableCommit": 207.1,
+   "uiFrameStart": 220.7,
+   "uiFrame": 593.6,
+   "preMount": 236.6,
+   "mountItems": 163.8,
+   "traversalDraw": 191.1,
+   "jsIdle": [
+    225.7,
+    623.5
+   ],
+   "lastRaf": 1102.8,
+   "lastTableCommit": 1170.3,
+   "secondFrameStart": 1179.8,
+   "secondFrame": 179.2,
+   "secondAnimation": 133.1,
+   "secondTraversal": 46.1,
+   "jsRunning": 765.4
+  },
+  "run2": {
+   "trace": "run2.pftrace",
+   "firstTableCommit": 224,
+   "uiFrameStart": 237.9,
+   "uiFrame": 603.5,
+   "preMount": 248.5,
+   "mountItems": 146.6,
+   "traversalDraw": 204.9,
+   "jsIdle": [
+    243.9,
+    636.5
+   ],
+   "lastRaf": 1141,
+   "lastTableCommit": 1208,
+   "secondFrameStart": 1230.4,
+   "secondFrame": 194.1,
+   "secondAnimation": 126.8,
+   "secondTraversal": 67.2,
+   "jsRunning": 813.2
+  },
+  "run3": {
+   "trace": "run3.pftrace",
+   "firstTableCommit": null,
+   "uiFrameStart": 227.3,
+   "uiFrame": 583.8,
+   "preMount": 240.8,
+   "mountItems": 142.5,
+   "traversalDraw": 197.2,
+   "jsIdle": [
+    234.0,
+    614.5
+   ],
+   "lastRaf": null,
+   "lastTableCommit": null,
+   "secondFrameStart": 1169.2,
+   "secondFrame": 172.3,
+   "secondAnimation": 123.1,
+   "secondTraversal": 49.2,
+   "jsRunning": 769.3
+  },
+  "run4": {
+   "trace": "run4.pftrace",
+   "firstTableCommit": 217.8,
+   "uiFrameStart": 230.6,
+   "uiFrame": 555.1,
+   "preMount": 194.6,
+   "mountItems": 146.6,
+   "traversalDraw": 204.7,
+   "jsIdle": [
+    244.4,
+    581.1
+   ],
+   "lastRaf": 1081.6,
+   "lastTableCommit": 1148.4,
+   "secondFrameStart": 1164.7,
+   "secondFrame": 176.8,
+   "secondAnimation": 125.4,
+   "secondTraversal": 51.4,
+   "jsRunning": 799.2,
+   "cellReports": 612,
+   "reportsSpanMs": [
+    227.9,
+    236.8
+   ],
+   "gcMs": 10.6,
+   "gcCount": 6,
+   "singleInstrUpdateStateBatches": 104,
+   "tableRafSched": [
+    227.9,
+    236.5
+   ],
+   "tableRafFire": [
+    581.3,
+    1081.6
+   ]
+  },
+  "run5": {
+   "trace": "run5.pftrace",
+   "firstTableCommit": 210.8,
+   "uiFrameStart": 222.0,
+   "uiFrame": 563.8,
+   "preMount": 212.3,
+   "mountItems": 141.6,
+   "traversalDraw": 200.6,
+   "jsIdle": [
+    237.8,
+    585.4
+   ],
+   "lastRaf": 1060.1,
+   "lastTableCommit": 1124.4,
+   "secondFrameStart": 1148.1,
+   "secondFrame": 180.9,
+   "secondAnimation": 126.5,
+   "secondTraversal": 54.3,
+   "jsRunning": 784.3,
+   "cellReports": 612,
+   "reportsSpanMs": [
+    220.7,
+    229.3
+   ],
+   "gcMs": 10.7,
+   "gcCount": 6,
+   "singleInstrUpdateStateBatches": 104,
+   "tableRafSched": [
+    220.7,
+    229.1
+   ],
+   "tableRafFire": [
+    585.5,
+    1060.1
+   ]
+  }
+ },
+ "medians": {
+  "firstTableCommit": 214.3,
+  "uiFrameStart": 227.3,
+  "uiFrame": 583.8,
+  "preMount": 236.6,
+  "mountItems": 146.6,
+  "traversalDraw": 200.6,
+  "jsRunning": 784.3,
+  "lastRaf": 1092.2,
+  "lastTableCommit": 1159.3,
+  "secondFrame": 179.2,
+  "secondAnimation": 126.5,
+  "secondTraversal": 51.4
+ },
+ "breakdownMedianMs": {
+  "jsFirstRenderAndCommit": "about 210-225: JS render, React commit, Fabric commit and Yoga layout; all 612 cell onLayout reports handled by about 230",
+  "uiThreadMountOfFirstTree": "about 555-604 in ONE Choreographer#doFrame: view creation (preMountItems) 195-249, mount items (INSERT 3,322, UPDATE_STATE 2,199, UPDATE_LAYOUT 3,323) 142-164, measure/draw traversal 191-205; the JS thread is asleep for about 340-400 of it",
+  "jsScrollViewStateCommits": "about 480 of continuous JS-thread running (about 580-1080) while 104 single-instruction UPDATE_STATE mount batches (one per ScrollView: 34 tables + 70 code blocks) land on the UI thread",
+  "frameCallbacksAndSecondRender": "34 rAF callbacks total under 0.4 ms; second React render and commit of all 34 tables about 64-67 ms (one commit, layout effects within 0.7 ms)",
+  "uiThreadMountOfSecondTree": "172-194 in one Choreographer#doFrame (UPDATE_STATE about 1,706 instructions 80-87, UPDATE_LAYOUT 16-24, traversal 46-67), after the last Table commit"
+ },
+ "findings": {
+  "rafPerTable": true,
+  "tableRafsScheduledWithin": "about 8-9 ms of each other (220-237), right after the cell onLayout reports",
+  "rafsFireInSameFrame": "runs 1-2: all 34 in one frame callback; runs 4-5: 3-5 fire at about 581-586, the other 29-31 at 1060-1082; never spread over more than 2 callbacks",
+  "secondCommitsBatched": "yes in all runs: the 34 layout effects of the second pass fall within 0.1-0.7 ms, one React commit",
+  "frameBehaviour": "display runs at 120 Hz (8.3 ms vsync). Choreographer#doFrame is 555-604 ms once (about 70 missed frames) and 172-194 ms once (about 21 missed); between them every frame is under 1 ms of main-thread work",
+  "jsThreadBusyBehindFrameCallbacks": "the JS thread is not busy with the F3 mount while the frame callbacks wait (it is asleep for about 340-400 ms from about 230); it is busy with the ScrollView state commits, which the rAF callbacks queue behind",
+  "hermesGc": "10.6-10.7 ms in 6 collections over the whole 2.5 s window: not a factor",
+  "cellReports": "612 cell onLayout reports (Math.max counter), all within 9 ms"
+ },
+ "notMeasured": [
+  "Per-commit cost of the 104 ScrollView state commits on the JS thread: no profileable build and no Hermes sampling. The 480 ms is JS-thread Running time in that window, attributed to the state commits by the exact count of 104 matching batches, not by a JS-side slice.",
+  "Whether the same cause explains the tables variant (190 ms): not traced.",
+  "Yoga layout time apart from the JS commit it is part of.",
+  "Any warm-launch or second-launch behaviour."
+ ]
+}
