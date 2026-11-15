@@ -13,6 +13,7 @@
     "autolink": "node autolink.cjs",
     "autolink:detail": "node autolink.cjs --detail",
     "profile": "PROFILE_WARM=1 node ../node_modules/jest/bin/jest.js --config profile/jest.config.cjs --runInBand && PROFILE_MODE=jit node ../node_modules/jest/bin/jest.js --config profile/jest.config.cjs --runInBand",
+    "profile:hosts": "node ../node_modules/jest/bin/jest.js --config profile/jest.config.cjs --runInBand profile/hostviews",
     "profile:jitless": "PROFILE_WARM=1 node ../node_modules/jest/bin/jest.js --config profile/jest.config.cjs --runInBand && PROFILE_MODE=jitless PROFILE_REPS=10 node --jitless ../node_modules/jest/bin/jest.js --config profile/jest.config.cjs --runInBand",
     "convert": "node --import tsx convert.mjs",
     "convert:jitless": "node --jitless --import tsx convert.mjs",
