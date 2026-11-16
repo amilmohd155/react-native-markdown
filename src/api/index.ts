@@ -2,7 +2,9 @@
  * Public v1 API surface (Phase 1 · M5).
  *
  * Contents:
- * - <Markdown> and its props (./Markdown)
+ * - <Markdown> and its props (./Markdown), scroll and virtualize options
+ *   (./scrollOptions; the containers are ./containers)
+ * - useMarkdownBlocks(): the same blocks for the user's own list (./useMarkdownBlocks)
  * - parse() → opaque MarkdownDocument (./parse, ./document)
  * - read-only visit() (./visit)
  * - defaults, inlineView(): wrap or declare elements (../render)
@@ -12,9 +14,11 @@
  *
  * Design:
  * - docs/rewrite/04-api.md
+ * - docs/rewrite/phase-3/virtualization.md (useMarkdownBlocks)
  *
  * This is the package entry point (src/index.tsx re-exports it). `tableOf`
- * (./document) and every internal type (NodeTable, markdown-it `Token`)
+ * (./document), the shared pipeline (./pipeline) and every internal type
+ * (NodeTable, RenderCtx, markdown-it `Token`)
  * must never be exported or reachable from here: `yarn check:public-types`
  * walks the built declarations and fails if one is.
  */
@@ -22,6 +26,24 @@
 export type { MarkdownDocument } from './document';
 export { Markdown, type MarkdownProps } from './Markdown';
 export { parse, type ParseOptions } from './parse';
+export type {
+  MarkdownListComponent,
+  MarkdownListComponentProps,
+  MarkdownListRef,
+  MarkdownScrollComponent,
+  MarkdownScrollComponentProps,
+  MarkdownScrollToBlockOptions,
+  MarkdownScrollToOptions,
+  ScrollOptions,
+  VirtualizeOptions,
+} from './scrollOptions';
+export {
+  useMarkdownBlocks,
+  type MarkdownBlock,
+  type MarkdownBlockRenderInfo,
+  type UseMarkdownBlocksOptions,
+  type UseMarkdownBlocksResult,
+} from './useMarkdownBlocks';
 export {
   useMarkdownStream,
   type UseMarkdownStreamOptions,

@@ -1,9 +1,11 @@
 /// <reference lib="dom" />
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import { createRef } from 'react';
 import { Image, Linking } from 'react-native';
 import { WEB_FIXTURES } from '../../../test/web/fixtures';
 import { clearImageSizeCache } from '../../render/imageSize';
 import { Markdown } from '../Markdown';
+import type { MarkdownListRef } from '../scrollOptions';
 
 /**
  * The renderer tests again under react-native-web + jsdom (D1, 06-testing.md ·
@@ -125,6 +127,66 @@ describe('images', () => {
     expect(container.querySelector('img')).toBeNull();
     expect(container.textContent).toContain('nope');
   });
+});
+
+describe('scroll containers', () => {
+  const source = '# Title\n\nbody\n\n```js\ncode\n```\n\n| a |\n|---|\n| 1 |';
+
+  it('renders every block with scroll', () => {
+    const { container } = render(
+      <Markdown
+        source={source}
+        scroll={{ contentContainerStyle: { padding: 8 } }}
+      />
+    );
+    for (const t of ['Title', 'body', 'code', 'a', '1']) {
+      expect(container.textContent).toContain(t);
+    }
+  });
+
+  it('renders the blocks with virtualize', () => {
+    const { container } = render(
+      <Markdown source={source} virtualize={{ initialNumToRender: 10 }} />
+    );
+    for (const t of ['Title', 'body', 'code', 'a', '1']) {
+      expect(container.textContent).toContain(t);
+    }
+  });
+
+  it.each(['scroll', 'virtualize'] as const)(
+    'gives a working ref and follow-tail with %s',
+    async (mode) => {
+      const ref = createRef<MarkdownListRef>();
+      const componentRef = { current: null as unknown };
+      const options = { ref, componentRef, autoScroll: true };
+      const { container } = render(
+        <Markdown
+          source={source}
+          {...(mode === 'scroll'
+            ? { scroll: options }
+            : { virtualize: options })}
+        />
+      );
+      await act(async () => {});
+      expect(container.textContent).toContain('Title');
+      expect(componentRef.current).not.toBeNull();
+      const handle = ref.current!;
+      expect(() => {
+        handle.scrollToEnd();
+        handle.scrollToEnd({ animated: false });
+        handle.scrollToOffset(10);
+        handle.scrollToBlock(1);
+        handle.scrollToBlock(99, { viewPosition: 0.5 });
+      }).not.toThrow();
+      // scrollToEnd reaches react-native-web's scroll view.
+      type Node = { scrollToEnd(): void; getNativeScrollRef(): Node };
+      const instance = componentRef.current as Node;
+      const node = mode === 'scroll' ? instance : instance.getNativeScrollRef();
+      const scrollToEnd = jest.spyOn(node, 'scrollToEnd');
+      handle.scrollToEnd({ animated: false });
+      expect(scrollToEnd).toHaveBeenCalledWith({ animated: false });
+    }
+  );
 });
 
 describe('memoization', () => {

@@ -11,7 +11,8 @@
  * What must not be reachable from the built declarations is checked
  * separately by `yarn check:public-types`.
  */
-import type { ComponentType, ReactNode } from 'react';
+import { createRef, useRef, type ComponentType, type ReactNode } from 'react';
+import { Animated, FlatList, ScrollView, Text } from 'react-native';
 import {
   Markdown,
   createTheme,
@@ -32,11 +33,18 @@ import {
   type InlineViewProps,
   type LinkPressInfo,
   type MarkdownDocument,
+  type MarkdownListComponent,
+  type MarkdownListComponentProps,
+  type MarkdownListRef,
   type MarkdownPlugin,
   type MarkdownProps,
+  type MarkdownScrollComponent,
+  type MarkdownScrollComponentProps,
   type MarkdownTheme,
+  type ScrollOptions,
   type TaskToggleInfo,
   type ThemeInput,
+  type VirtualizeOptions,
   type VisitProps,
 } from '@docren/react-native-markdown';
 
@@ -163,6 +171,171 @@ describe('<Markdown> props', () => {
     element(<Markdown source="x" theme={lightTheme} />);
     // @ts-expect-error: unknown token group
     element(<Markdown source="x" theme={{ sizes: {} }} />);
+  });
+
+  it('types the scroll and virtualize containers', () => {
+    const flag = Math.random() > 0.5;
+    const header = <Text>top</Text>;
+    function ScrollWrapper(props: MarkdownScrollComponentProps) {
+      return <ScrollView {...props} />;
+    }
+    function ListWrapper(props: MarkdownListComponentProps) {
+      return <FlatList {...props} />;
+    }
+
+    element(<Markdown source="x" scroll />);
+    element(<Markdown source="x" scroll={false} />);
+    element(<Markdown source="x" virtualize />);
+    element(<Markdown source="x" scroll={flag} virtualize={flag} />);
+    element(
+      <Markdown
+        source="x"
+        scroll={{
+          header,
+          footer: null,
+          style: { flex: 1 },
+          contentContainerStyle: { padding: 16 },
+          onScroll: (e) => void e.nativeEvent.contentOffset.y,
+          scrollEventThrottle: 16,
+        }}
+      />
+    );
+    element(
+      <Markdown
+        source="x"
+        scroll={{ header }}
+        virtualize={{ initialNumToRender: 4, windowSize: 5 }}
+      />
+    );
+
+    // The component slots take RN's components, their Animated versions
+    // and wrappers typed with the props we pass.
+    element(<Markdown source="x" scroll={{ component: ScrollView }} />);
+    element(
+      <Markdown source="x" scroll={{ component: Animated.ScrollView }} />
+    );
+    element(<Markdown source="x" scroll={{ component: ScrollWrapper }} />);
+    element(<Markdown source="x" virtualize={{ component: FlatList }} />);
+    element(
+      <Markdown source="x" virtualize={{ component: Animated.FlatList }} />
+    );
+    element(<Markdown source="x" virtualize={{ component: ListWrapper }} />);
+    const scrollSlot: MarkdownScrollComponent = Animated.ScrollView;
+    const listSlot: MarkdownListComponent = Animated.FlatList;
+    void scrollSlot;
+    void listSlot;
+
+    // A list can't stand in for a scroll view.
+    // @ts-expect-error: FlatList needs data and renderItem
+    element(<Markdown source="x" scroll={{ component: FlatList }} />);
+    element(
+      // @ts-expect-error: scroll's component is a scroll view, not a list
+      <Markdown source="x" scroll={{ component: ScrollView }} virtualize />
+    );
+    element(
+      <Markdown
+        source="x"
+        // @ts-expect-error: windowing knobs belong to virtualize
+        scroll={{ windowSize: 5 }}
+      />
+    );
+    element(
+      <Markdown
+        source="x"
+        // @ts-expect-error: no FlatListProps pass-through
+        virtualize={{ maxToRenderPerBatch: 5 }}
+      />
+    );
+    // @ts-expect-error: header is an element (text needs a <Text>)
+    element(<Markdown source="x" scroll={{ header: 'top' }} />);
+    // @ts-expect-error: not a container option
+    element(<Markdown source="x" scroll={{ horizontal: true }} />);
+    // @ts-expect-error: container options need scroll or virtualize
+    element(<Markdown source="x" contentContainerStyle={{ padding: 1 }} />);
+    // @ts-expect-error: virtualize takes no scroll-view component
+    element(<Markdown source="x" virtualize={{ component: 'ScrollView' }} />);
+
+    expectType<Equal<VirtualizeOptions['onScroll'], ScrollOptions['onScroll']>>(
+      true
+    );
+  });
+
+  it('types the list ref, componentRef and autoScroll', () => {
+    const ref = createRef<MarkdownListRef>();
+    const callbackRef = (handle: MarkdownListRef | null) => void handle;
+    element(<Markdown source="x" scroll={{ ref, autoScroll: true }} />);
+    element(
+      <Markdown
+        source="x"
+        virtualize={{ ref: callbackRef, autoScroll: false }}
+      />
+    );
+    element(
+      <Markdown
+        source="x"
+        scroll={{ autoScroll: { threshold: 80 } }}
+        virtualize={{ ref }}
+      />
+    );
+    // componentRef takes refs to the instance, typed or not, and callbacks
+    // (Reanimated's useAnimatedRef() is one of both).
+    function Refs() {
+      const scrollView = useRef<ScrollView>(null);
+      const list = useRef<FlatList<unknown>>(null);
+      const loose = useRef<unknown>(null);
+      element(<Markdown source="x" scroll={{ componentRef: scrollView }} />);
+      element(<Markdown source="x" virtualize={{ componentRef: list }} />);
+      element(
+        <Markdown
+          source="x"
+          scroll={{ component: Animated.ScrollView, componentRef: loose }}
+        />
+      );
+      element(
+        <Markdown
+          source="x"
+          virtualize={{
+            componentRef: (instance: FlatList<unknown> | null) => void instance,
+          }}
+        />
+      );
+      return null;
+    }
+    void Refs;
+
+    // Type checks only: never called.
+    function calls(handle: MarkdownListRef) {
+      handle.scrollToEnd({ animated: false });
+      handle.scrollToOffset(10, { animated: true });
+      handle.scrollToBlock(3, { viewPosition: 0.5, viewOffset: 8 });
+      // @ts-expect-error: the offset is a number, not an options object
+      handle.scrollToOffset({ offset: 10 });
+      // @ts-expect-error: viewPosition is a number
+      handle.scrollToBlock(3, { viewPosition: 'center' });
+    }
+    void calls;
+
+    // List-only: there is no scroll view to control without a container.
+    // @ts-expect-error: ref needs scroll or virtualize
+    element(<Markdown source="x" ref={ref} />);
+    // @ts-expect-error: autoScroll needs scroll or virtualize
+    element(<Markdown source="x" autoScroll />);
+    // @ts-expect-error: componentRef needs scroll or virtualize
+    element(<Markdown source="x" componentRef={ref} />);
+    element(
+      <Markdown
+        source="x"
+        // @ts-expect-error: threshold is a number of pixels
+        scroll={{ autoScroll: { threshold: 'bottom' } }}
+      />
+    );
+    element(
+      <Markdown
+        source="x"
+        // @ts-expect-error: the ref is a MarkdownListRef, not a ScrollView
+        scroll={{ ref: createRef<ScrollView>() }}
+      />
+    );
   });
 });
 
