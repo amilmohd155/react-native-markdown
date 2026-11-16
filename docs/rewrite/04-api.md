@@ -26,7 +26,8 @@ The reasoning behind this design, including the options rejected, is in [08 · D
 | `onImagePress` | `(src, info) => void` | none | |
 | `onTaskToggle` | `(checked, info) => void` | none | Makes task list checkboxes interactive |
 | `onFootnotePress` | `(label, info) => void` | none | Makes footnote references and back-links pressable. `info = { index, direction: 'reference' \| 'definition', reference }`: where to go, and which reference (1-based). The app scrolls; the renderer doesn't own the scroll view ([P1-15](./phase-1/decisions.md#p1-15-footnote-navigation-through-an-onfootnotepress-handler)). |
-| `virtualize` | `boolean \| FlashListProps` | `false` | For long standalone documents |
+| `scroll` | `boolean \| ScrollOptions` | `false` | `<Markdown>` renders its own `ScrollView` instead of a `View` (all blocks mounted). Options: `header`, `footer`, `style`, `contentContainerStyle`, `onScroll`, `scrollEventThrottle`, `autoScroll` (follow-tail: `true` or `{ threshold }` in pixels, default 40), `ref` (a [`MarkdownListRef`](#markdownlistref)), `componentRef` (the scroll component's instance, e.g. Reanimated's `useAnimatedRef()`), and `component`, a stable scroll-view type (e.g. `Animated.ScrollView`) that forwards `ref` ([P3-2](./phase-3/decisions.md#p3-2-markdown-stays-a-view-scroll-and-virtualize-opt-in-to-a-scroll-container), [P3-4](./phase-3/decisions.md#p3-4-scroll-and-virtualize-take-typed-options-with-a-stable-list-component-slot), [P3-5](./phase-3/decisions.md#p3-5-follow-tail-implemented-in-the-library-the-same-on-scrollview-and-flatlist)). |
+| `virtualize` | `boolean \| VirtualizeOptions` | `false` | For long standalone documents: the owned container becomes a `FlatList` (implies `scroll`). Options: those of `scroll` (including `autoScroll`, `ref` and `componentRef`), `initialNumToRender` (default 10), `windowSize` (default 11), and `component`, a stable list type (e.g. `Animated.FlatList`); `removeClippedSubviews` stays off. With `scroll` options too, a field set here wins. For FlashList or full control use the block hook ([P3-3](./phase-3/decisions.md#p3-3-a-headless-block-hook-underneath-scroll-and-virtualize)). |
 | `html` | `'safe' \| 'text' \| 'strip' \| { allow: HtmlTag[] }` | `'safe'` | `'safe'` renders an allowlist of tags as elements and shows the rest as text. See [Raw HTML](#raw-html). |
 | `images` | `'allow' \| 'deny' \| { allowHosts: string[] }` | `'allow'` | Use `'deny'` or an allowlist for untrusted content. A refused image renders as its alt text. `allowHosts` entries are exact hosts or `*.example.com` (subdomains only); relative and `data:` images don't match. See [P1-21](./phase-1/decisions.md#p1-21-images-policy-semantics). |
 | `softBreak` | `'space' \| 'newline'` | `'space'` | How soft line breaks render. `'space'` matches browsers and GitHub ([P1-2](./phase-1/decisions.md#p1-2-soft-line-breaks)). |
@@ -36,6 +37,19 @@ The reasoning behind this design, including the options rejected, is in [08 · D
 | `backend` | `ParserBackend` | JS (markdown-it) | `nativeBackend` from `/native` in phase 4 |
 
 Memoization is internal. Callers don't need to `useMemo` the `theme`, `components` or `plugins` objects. They're compared shallowly, key by key, to decide whether the render context needs rebuilding.
+
+### `MarkdownListRef`
+
+The `ref` option of `scroll` and `virtualize`, the same on both: `scrollToEnd(options?)` (also resumes `autoScroll`), `scrollToOffset(offset, options?)` and `scrollToBlock(index, options?)`. Options: `animated` (default `true`); `scrollToBlock` adds `viewPosition` (0 top, 0.5 middle, 1 bottom) and `viewOffset`. The index is clamped into range; no blocks does nothing. With `scroll`, a `ref` wraps each block in a `View` to record its offset, so the jump is exact once laid out; with `virtualize`, an unmeasured block (and `scrollToEnd` on a list not yet measured to its end) is reached through an estimate and retries that continue while the list measures further; a drag cancels them. `scrollToOffset` and `scrollToBlock` pause `autoScroll` unless they land at the end.
+
+### `useMarkdownBlocks`
+
+```tsx
+const { data, keyExtractor, renderItem, getItemType } = useMarkdownBlocks({ document, theme });
+<FlashList data={data} keyExtractor={keyExtractor} renderItem={renderItem} getItemType={getItemType} />
+```
+
+Takes one options object: `source` or `document` plus the other props of `<Markdown>` except `scroll` and `virtualize`. Returns one item per top-level block for your own list. `data` is a new array per document change (unchanged blocks keep their items); the three functions never change identity. `renderItem` needs no provider, and `getItemType` is the element name, a FlashList recycling hint. No follow-tail: the list does it ([P3-3](./phase-3/decisions.md#p3-3-a-headless-block-hook-underneath-scroll-and-virtualize), [P3-5](./phase-3/decisions.md#p3-5-follow-tail-implemented-in-the-library-the-same-on-scrollview-and-flatlist)).
 
 ## Element catalog
 
@@ -126,6 +140,7 @@ const theme = createTheme(
     spacing: { block: 12, listIndent: 20 },
     radius: { code: 6 },
     listBullets: ['•', '◦', '▪'],          // bullet character by nesting depth
+    imageRatio: 16 / 9,                    // width / height of a block image's box until its size is known
     elements: {                            // per-element overrides: { text?, container? }
       Link: { text: { textDecorationLine: 'none' } },
       Heading: (level) => ({ text: { fontWeight: level <= 2 ? '700' : '600' } }),

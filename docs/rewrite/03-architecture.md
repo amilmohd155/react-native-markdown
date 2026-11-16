@@ -202,18 +202,21 @@ Why only top-level blocks get identity: that's the granularity of memoization an
 ### BlockList
 
 ```tsx
-function BlockList({ doc, ctx, virtualize }) {
+function BlockList({ doc, ctx, scroll, virtualize }) {
   if (virtualize) {
-    return <FlashList data={doc.blocks} keyExtractor={b => b.key}
-                       renderItem={({ item }) => <Block block={item} ctx={ctx} />} />;
+    return <FlatList data={doc.blocks} keyExtractor={b => b.key}
+                     renderItem={({ item }) => <Block block={item} ctx={ctx} />} />;
+  }
+  if (scroll) {
+    return <ScrollView>{doc.blocks.map(b => <Block key={b.key} block={b} ctx={ctx} />)}</ScrollView>;
   }
   return <View>{doc.blocks.map(b => <Block key={b.key} block={b} ctx={ctx} />)}</View>;
   // `doc.blocks` here is a lightweight view over the table's block index: { index, id, key }
 }
 ```
 
-- `virtualize` defaults to off. Chat messages are short, and nesting a virtualized list inside the host app's own `FlatList` is a footgun.
-- FlashList is an optional peer dependency, with a fallback to `FlatList`.
+- The default is a plain `View`: the host app owns scrolling, which suits chat messages and embedded use. `scroll` and `virtualize` opt in to an owned container, with a stable component slot for Reanimated ([P3-2](./phase-3/decisions.md#p3-2-markdown-stays-a-view-scroll-and-virtualize-opt-in-to-a-scroll-container), [phase-3/virtualization.md](./phase-3/virtualization.md)).
+- There is no FlashList dependency. Users who want FlashList use the block hook ([P3-3](./phase-3/decisions.md#p3-3-a-headless-block-hook-underneath-scroll-and-virtualize)).
 
 ### Block (memoized)
 
