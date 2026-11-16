@@ -44,6 +44,7 @@ export function mergeTokens(
     lineHeight: input.lineHeight ?? base.lineHeight,
     spacing: mergeGroup(base.spacing, input.spacing),
     radius: mergeGroup(base.radius, input.radius),
+    imageRatio: input.imageRatio ?? base.imageRatio,
     listBullets:
       input.listBullets === undefined
         ? base.listBullets

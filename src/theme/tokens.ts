@@ -24,6 +24,7 @@ export const lightTheme: ThemeTokens = Object.freeze({
   radius: Object.freeze({ code: 6 }),
   // U+FE0E (text presentation): iOS draws ▪ as an emoji square without it.
   listBullets: Object.freeze(['•', '◦', '▪︎']),
+  imageRatio: 16 / 9,
 });
 
 /**

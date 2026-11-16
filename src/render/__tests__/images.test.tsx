@@ -9,6 +9,7 @@ import {
   clearImageSizeCache,
   loadImageSize,
 } from '../imageSize';
+import { createTheme, resolveTheme } from '../../theme';
 import { tableFor } from './helpers';
 
 let getSize: jest.SpyInstance;
@@ -87,6 +88,29 @@ describe('block Image', () => {
     expect(imageStyle()).toMatchObject({ width: '100%', aspectRatio: 4 });
     // The natural width caps the frame, not the image (Yoga aspect ratio).
     expect(frameMaxWidth()).toBe(400);
+  });
+
+  it('reserves the theme imageRatio box while the size is unknown', async () => {
+    getSize.mockReturnValue(new Promise(() => {}));
+    await mount('![a](photo.png)\n', {
+      theme: resolveTheme(createTheme({ imageRatio: 2 })),
+    });
+    expect(imageStyle()).toMatchObject({
+      aspectRatio: 2,
+      backgroundColor: expect.any(String),
+    });
+    expect(frameMaxWidth()).toBeUndefined();
+  });
+
+  it('shows no placeholder and no second lookup when cached', async () => {
+    getSize.mockResolvedValue({ width: 200, height: 100 });
+    await loadImageSize('warm.png');
+    getSize.mockClear();
+    await mount('![a](warm.png)\n');
+    expect(imageStyle()).toMatchObject({ aspectRatio: 2 });
+    expect(imageStyle()).not.toHaveProperty('backgroundColor');
+    await act(async () => {});
+    expect(getSize).not.toHaveBeenCalled();
   });
 
   it('renders synchronously from the cache on later mounts', async () => {

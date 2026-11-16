@@ -182,8 +182,16 @@ function deriveHeading(t: ThemeTokens, level: HeadingLevel): StyleEntry {
 
 function tokensOf(theme: ThemeTokens | Theme): ThemeTokens {
   if (!('elements' in theme)) return theme;
-  const { colors, fonts, fontSize, lineHeight, spacing, radius, listBullets } =
-    theme;
+  const {
+    colors,
+    fonts,
+    fontSize,
+    lineHeight,
+    spacing,
+    radius,
+    listBullets,
+    imageRatio,
+  } = theme;
   return Object.freeze({
     colors,
     fonts,
@@ -192,6 +200,7 @@ function tokensOf(theme: ThemeTokens | Theme): ThemeTokens {
     spacing,
     radius,
     listBullets,
+    imageRatio,
   });
 }
 
