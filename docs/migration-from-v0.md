@@ -4,6 +4,8 @@ v1 is a rewrite with a new API. The props are different, you no longer see mdast
 
 If you aren't ready, v0.x stays on the `main` branch and keeps getting bug fixes. Pin `@docren/react-native-markdown@^0.8`.
 
+v1 needs React Native 0.82 or later (New Architecture only) and React 18.2 or later.
+
 - [Checklist](#checklist)
 - [`markdown` → `source`](#markdown--source)
 - [`styles` and `mergeStyle` → `theme`](#styles-and-mergestyle--theme)

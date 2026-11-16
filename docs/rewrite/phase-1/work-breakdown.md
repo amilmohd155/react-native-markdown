@@ -31,7 +31,7 @@ M0 Groundwork
 - Dependencies:
   - add `markdown-it` and `markdown-it-footnote`;
   - move `css-to-react-native` to the example app, its only user. `mdast-util-from-markdown` stays until M5, because the v0 code (still the public entry point, so CI and the example keep working) depends on it;
-  - set peer dependencies to real ranges (`react >= 18`, `react-native >= 0.76`; final values chosen in [decisions](./decisions.md)).
+  - set peer dependencies to real ranges (`react >= 18`, `react-native >= 0.76`, since raised to `>= 0.82` by [P3-1](../phase-3/decisions.md); final values chosen in [decisions](./decisions.md)).
 - Vendor the spec fixtures with pinned versions ([testing-harness.md](../testing-harness.md#fixtures)).
 - Move `docs/rewrite/bench` into a `bench/` workspace that can import `src/` (via `tsx`).
 - CI skeleton: lint, typecheck, Jest, plus empty web and Expo Go check jobs ([testing-harness.md](../testing-harness.md#ci-jobs)).

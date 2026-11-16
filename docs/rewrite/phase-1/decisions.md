@@ -49,7 +49,7 @@ Accepted · 2026-11-03 · amended by P1-17
 
 Accepted · 2026-11-03
 
-- **Decision:** `react >= 18.2`, `react-native >= 0.76`; the old architecture is not tested. Confirm against Expo Go's SDK at release (D2).
+- **Decision:** `react >= 18.2`, `react-native >= 0.76`; the old architecture is not tested. Floor raised to `>= 0.82` by [P3-1](../phase-3/decisions.md). Confirm against Expo Go's SDK at release (D2).
 - **Why:** v1 relies on Fabric text behaviour for nested Text and inline views. Older RN stays on v0.x.
 
 ## P1-7: Keep release-it `skipChecks`; gate releases in the release workflow
