@@ -18,6 +18,7 @@ import {
   Inter_700Bold_Italic,
   useFonts,
 } from '@expo-google-fonts/inter';
+import { Lists } from './screens/Lists';
 import { Playground } from './screens/Playground';
 import { StreamBench } from './screens/StreamBench';
 import { WebSmoke } from './screens/WebSmoke';
@@ -39,6 +40,7 @@ const SCREENS: {
 }[] = [
   { name: 'Playground', glyph: '¶', component: Playground },
   { name: 'Stream', glyph: '≈', component: StreamBench },
+  { name: 'Lists', glyph: '☰', component: Lists },
 ];
 
 const SCHEMES = [
