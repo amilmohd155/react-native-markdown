@@ -57,7 +57,7 @@ F3, S25 FE release, medians: `parse` ≤ 100 ms, `firstRender` ≤ 325 ms, `reRe
 
 - **Tail re-parse beats naive by two orders of magnitude** (F2, 20-char chunks: 11× vs 234×). A flush window then divides the cost by flush count (50 ms: 4.4×).
 - **The open-fence fast path matters for code-heavy streams** (56.9× → 7.2× in the spike, flush cost halved on device) ([P2-5](./phase-2/decisions.md#p2-5-open-fence-fast-path)).
-- **Scheduler default:** `raf` on iOS and Android, 16 ms `timeout` on web, `flushIntervalMs` forces a timer. A hidden web tab stalls `raf` (27 s vs 8 s) ([P2-4](./phase-2/decisions.md#p2-4-coalescing-policy)).
+- **Scheduler default:** `raf` on iOS and Android, 16 ms `timeout` on web, the window (`flushIntervalMs`) is internal to the scheduler, not a hook option. A hidden web tab stalls `raf` (27 s vs 8 s) ([P2-4](./phase-2/decisions.md#p2-4-coalescing-policy)).
 - **Splice** costs 0.026 ms per flush (about 3% of flush cost). `done()` costs 16.75 ms on `F4a`. Retained heap grows 39 KB over a 10 KB stream.
 - **`isSameBlock` through `<Block>`** costs 0.15–0.43 ms per flush, at most 0.8% of stream time; gap accepted ([P2-2](./phase-2/decisions.md#p2-2-splice-strategy)).
 - **Background and resume** (Android): no bug, one flush after resume, final document equals `parse(full)` in 20 of 20 runs.

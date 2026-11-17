@@ -49,7 +49,7 @@ Accepted · 2026-11-05
 - **Decision:** the default flush schedule depends on the platform; an explicit window overrides it (`src/stream/scheduler.ts`, `src/api/useMarkdownStream.ts`).
   - **iOS and Android:** one flush per animation frame (`requestAnimationFrame`), no leading flush.
   - **Web:** a 16 ms timer window with a leading flush and a trailing flush, so the last chunk is never stranded.
-  - **`flushIntervalMs` given:** that window on a timer, everywhere.
+  - **`flushIntervalMs`:** no longer a public option (done 2026-11-17, [P2b-7](../phase-2b/decisions.md#p2b-7-flushintervalms-becomes-internal)); the scheduler keeps it internally.
   - Without `requestAnimationFrame` (Node, SSR, tests) the frame schedule falls back to a 16 ms timer. The scheduler stays React-free; the hook picks the default (`Platform.OS`).
   - Cost-adaptive throttling stays deferred: flush p90 was 2.4–5.6 ms for windows up to 50 ms, against a 16.7 ms frame.
 - **Why:** dropped frames (1.6–3.3% on S25 FE) don't separate schedules; latency does: append-to-commit p50 15 ms (`raf`) vs 43 ms (`timeout@50`) on device. Plain `raf` stalls in a hidden browser tab (27 s vs 8 s), which matters for a chat answer arriving while the user is in another tab. On web a flush costs under 1 ms, so a larger window only adds latency.
@@ -69,7 +69,7 @@ Accepted · 2026-11-05
 
 ## P2-6: `hide-incomplete` semantics
 
-Accepted · 2026-11-05 · implemented in S3
+Accepted · 2026-11-05 · implemented in S3 · opt-in part superseded by [P2b-2](../phase-2b/decisions.md#p2b-2-hide-incomplete-is-always-on-the-smoothing-option-is-removed) (2026-11-17)
 
 - **Decision:** hide the dangling marker, applied to the open block's view only ([smoothing](./smoothing.md#semantics)); no extra one-word lag; nested runs cut at the earliest unclosed opener. The core keeps its exact table for resuming and returns the smoothed one, re-parsing the open block from the smoothed text only if smoothing changed it. `done()` and `reset()` return the exact parse.
 - **Why:** "buffers trailing unclosed inline markers" admits two readings (hide vs auto-close). Cost: a second parse of the open block on flushes where a fragment is hidden. It changes what a flush shows, not when.

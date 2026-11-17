@@ -2,7 +2,7 @@
 
 Implementation detail for Phase 3 ([07 · Phase 3](../07-roadmap.md#phase-3-scale--polish)). This folder says *how/when*; the design docs say *what*. If implementation changes the design, update the design doc first. Tasks and issue drafts live in GitHub issues, not here.
 
-> **Status: in progress.** Built: `scroll`, `virtualize`, `useMarkdownBlocks`, scroll control, the component slot, the image placeholder and dev warnings. Device checks and Reanimated verification are open ([virtualization.md](./virtualization.md#covered-by-tests-and-still-open)).
+> **Status: in progress, paused for [Phase 2b](../phase-2b/README.md)** ([P2b-1](../phase-2b/decisions.md#p2b-1-streaming-polish-is-phase-2b-scheduled-before-the-rest-of-phase-3)); it resumes after, and re-runs the follow-tail device pass on a paced stream. Built: `scroll`, `virtualize`, `useMarkdownBlocks`, scroll control, the component slot, the image placeholder and dev warnings. Device checks and Reanimated verification are open ([virtualization.md](./virtualization.md#covered-by-tests-and-still-open)).
 
 ## Scope
 

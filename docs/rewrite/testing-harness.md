@@ -129,18 +129,29 @@ Scheduler (`src/stream/__tests__/scheduler.test.ts`, a hand-written fake clock):
 - **Both schedules:** `done()` flushes buffered text synchronously and equals a full parse; `reset()` drops the buffer and cancels pending work; empty chunks are ignored; `suspend()` keeps the buffer and `resume()` flushes it; appends while suspended are dropped; `flush()` is a no-op when empty.
 - **`timeout`:** leading flush on the first append, one trailing flush per window, idle after a quiet window, `flushIntervalMs` changes the window ([P2-4](./phase-2/decisions.md#p2-4-coalescing-policy)).
 - **`raf`:** no leading flush, one flush per frame, nothing requested when idle; without `requestFrame` it falls back to a 16 ms timer, cancelled on `suspend()` and `done()`.
-- **Smoothing:** intermediate flushes publish the smoothed view with the real `source`; `done()` returns the exact parse; `'none'` equals no option.
+- **Smoothing** (the core's internal `smoothing` option; the hook always passes `'hide-incomplete'`, [P2b-2](./phase-2b/decisions.md#p2b-2-hide-incomplete-is-always-on-the-smoothing-option-is-removed)): intermediate flushes publish the smoothed view with the real `source`; `done()` returns the exact parse; `'none'` equals no option. Tables (`stream-smoothing-tables.test.ts`) are streamed one character at a time against an oracle of the text shown ([smoothing](./phase-2/smoothing.md#tables)).
+
+Pacer (`src/stream/__tests__/pacer.test.ts`, jest fake timers, 16 ms frames, [P2b-4](./phase-2b/decisions.md#p2b-4-smooth-paces-text-before-it-reaches-the-core)):
+
+- A 2 KB burst spreads over several frames and finishes within 1 s; text without spaces still meets the 1000 ms cap; a one-chunk-per-frame trickle goes out the next frame, a word-splitting one lags by the partial word only; a chunk spreads over the learned gap.
+- Slices end at whitespace; each marker waits for its word; a stall releases at 500 ms, not before; a fence, a link and a table pass through, with the partial row hidden.
+- `done()` at once when empty, else drained within 200 ms then exact; append during and after the drain; `reset()` and `suspend()` mid-backlog leave no timer; held text sleeps on one timer; without `requestFrame` the 16 ms timer; `timeout` never requests a frame.
+- **Property:** the targeted cases and 3 KB of F1, random chunk sizes and gaps (same task, frames, stalls), both frame sources, 5 seeds: every flush equals `streamView(released prefix)` (HTML and columns) and the last equals `parse(source)`.
 
 Hook (`src/api/__tests__/useMarkdownStream.test.tsx`, fake timers and frame source):
 
 - Starts empty; `append`, `reset` and `done` keep their identity; a new `document` per flush; `done()` equals `parse(source)`.
 - StrictMode's double effect neither duplicates nor drops text; unmount cancels the pending flush and later appends are silent no-ops.
-- Default schedule: `raf` on iOS and Android, a 16 ms `timeout` with a leading flush on web, `flushIntervalMs` selects the timer everywhere.
-- Dev warning once when `plugins` change (shallow compare), and when `preset` or `smoothing` change.
+- Default schedule: `raf` on iOS and Android, a 16 ms `timeout` with a leading flush on web. The scheduler's own `flushIntervalMs` is tested at scheduler level; hook tests use the default schedule.
+- Hides unfinished syntax while streaming (a dangling marker, a table before its delimiter row, a partial row); `done()` is exact.
+- Dev warning once when `plugins` change (shallow compare), and when `preset` changes.
+- `streamingConfig.smooth`: a burst paced on iOS (`requestAnimationFrame`) and web (timer only), `done()` drains then exact, identity kept; a partial word held; read once (an equal inline object does not warn, a change does and is ignored); `reset()`, StrictMode, and unmount mid-backlog (frame cancelled, no render after). `animation` is compared by value for the warning.
+
+Fade (`streamFade.test.tsx`, `.web.test.tsx`, [P2b-5](./phase-2b/decisions.md#p2b-5-animation-is-a-block-level-fade-none--fade)): off renders the plain tree; on, only blocks new in a live update fade (not at first render, after `done()`, with `reset()`, or scrolled into a `virtualize` window later), in all four containers; duration, driver per platform, Reduce Motion. `onStreamingEnd` (`streamEnd.test.tsx`): once after commit, after the `smooth` drain, per `reset()`; never on unmount; StrictMode; latest callback.
 
 ### Memoization test
 
-`src/api/__tests__/streamMemo.test.tsx`: through spy components passed via `components`, stream a multi-block message (paragraphs, a list, a code fence, a table) and assert that per flush only the open block's elements render. It also asserts the `isSameBlock` prefix fast path is taken for closed blocks; that assertion is an `it.failing`, because the fast path never fires through `<Block>` (accepted gap, [P2-2](./phase-2/decisions.md#p2-2-splice-strategy)). If it is ever fixed the test starts failing, which is the cue to make it a plain `it`.
+`src/api/__tests__/streamMemo.test.tsx`: through spy components passed via `components`, stream a multi-block message (paragraphs, a list, a code fence, a table) and assert that per flush only the open block's elements render, with `animation` off and `'fade'` (the same `isSameBlock` calls). It also asserts the `isSameBlock` prefix fast path is taken for closed blocks; that assertion is an `it.failing`, because the fast path never fires through `<Block>` (accepted gap, [P2-2](./phase-2/decisions.md#p2-2-splice-strategy)). If it is ever fixed the test starts failing, which is the cue to make it a plain `it`.
 
 ### Performance regression tests
 

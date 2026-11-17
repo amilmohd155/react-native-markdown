@@ -7,6 +7,8 @@ How `useMarkdownStream` ([05 · API](../05-streaming.md#api), [04](../04-api.md#
 ```
 useMarkdownStream  (React: state, effects, StrictMode, platform default)
        │
+     pacer         (only with streamingConfig.smooth: backlog, releases per frame)
+       │
    scheduler       (buffers appends, decides when to flush; injectable clock)
        │
  stream core       (pure: append / reset / done, no timers, no React)
@@ -16,7 +18,7 @@ The two lower layers have no React import. That keeps them testable and benchmar
 
 ## Core: `createMarkdownStreamCore(options)`
 
-`src/stream/createMarkdownStream.ts`; types in `src/stream/types.ts`. Takes the parse options and `smoothing` ([smoothing](./smoothing.md)).
+`src/stream/createMarkdownStream.ts`; types in `src/stream/types.ts`. Takes the parse options and an internal `smoothing` (default `'none'`; the hook always passes `'hide-incomplete'`, [P2b-2](../phase-2b/decisions.md#p2b-2-hide-incomplete-is-always-on-the-smoothing-option-is-removed), [smoothing](./smoothing.md)).
 
 ```ts
 interface MarkdownStreamCore {
@@ -56,6 +58,15 @@ Options: the core's, plus `strategy` (`'timeout'` or `'raf'`), `flushIntervalMs`
 - **Clock and timer are injected** (`setTimeout`/`clearTimeout`, optional `requestFrame`/`cancelFrame`), so tests drive a fake clock and the scheduler never needs a global.
 - **Adaptive coalescing: deferred.** Deriving the interval from recent flush cost did nothing in S0, and on the S25 FE the flush p90 stayed under a frame for every window up to 50 ms. Revisit if S5 shows otherwise.
 
+## Pacer
+
+`src/stream/pacer.ts`, used by the hook only with `streamingConfig.smooth` ([P2b-4](../phase-2b/decisions.md#p2b-4-smooth-paces-text-before-it-reaches-the-core)). Same contract as the scheduler (`append`, `done`, `reset`, `suspend`, `resume`), plus `released` and `backlog` for tests. Appends go into a backlog; the pacer owns the scheduler (inert clock) and flushes it once per release, so the core only sees a prefix of the source and `flushIntervalMs` has no effect.
+
+- **Cadence:** one tick per frame (`raf`; the 16 ms timer on web and where frames are missing), only while text is releasable. Held text sleeps on one timer until the stall or the lag cap.
+- **Amount:** each tick adds `ceil(backlog / framesLeft)` to a credit; `framesLeft` counts frames to the earliest of the next expected chunk (moving average of chunk gaps, 250 ms before the first gap, clamped to 16–1000 ms), the oldest unreleased text's arrival plus 1000 ms, and `done()` plus 200 ms. The first release after the view caught up is at least one word.
+- **Bounds:** a slice ends after whitespace; a trailing line of only markers (`-`, `*`, `+`, `1.`, `1)`, `#`…`######`, `>`, `[ ]`, nested) is held. After 500 ms without input, or after `done()`, both rules are lifted. Text that would pass the 1000 ms cap goes out even mid-word (up to the next whitespace if there is one, never inside a surrogate pair).
+- **`done()`:** with an empty backlog, the scheduler's `done()` at once; otherwise drains (text appended meanwhile joins), then the exact parse. **`reset()`** drops the backlog, timers and gap history. **`suspend()`** cancels the tick and keeps the backlog.
+
 ## Hook
 
 ```ts
@@ -67,14 +78,15 @@ function useMarkdownStream(options?: UseMarkdownStreamOptions): {
 };
 ```
 
-- **Default schedule (P2-4):** on iOS and Android, `raf`. On web, `timeout` with a 16 ms window. If `flushIntervalMs` is given, `timeout` with that window on every platform. The choice is made once, at creation, from `Platform.OS` and the option.
+- **Default schedule (P2-4):** on iOS and Android, `raf`. On web, `timeout` with a 16 ms window. The window is internal: the hook has no `flushIntervalMs` option ([P2b-7](../phase-2b/decisions.md#p2b-7-flushintervalms-becomes-internal)); only the scheduler takes it. With `streamingConfig.smooth` the [pacer](#pacer) sets the cadence instead. The choice is made once, at creation, from `Platform.OS`.
 - `append`, `reset` and `done` have **stable identity** for the life of the component, so they are safe in effect dependency lists.
 - `document` is state: it changes once per flush. The initial value is an empty document, so `<Markdown document>` always has something to render.
-- Options (`preset`, `html`, `plugins`, `smoothing`, `flushIntervalMs`) are **read at creation**. Changing them afterwards has no effect. In development a warning fires once if `plugins` (compared by content, shallowly), `preset` or `smoothing` change, so an inline `plugins={[a]}` that stays equal does not warn, as with `<Markdown>`. There is no `backend` option yet: the stream core is markdown-it only.
+- Options (`preset`, `html`, `plugins`, `streamingConfig`) are **read at creation**. Changing them afterwards has no effect. In development a warning fires once if `plugins` (compared by content, shallowly), `preset`, `streamingConfig.smooth` or `streamingConfig.animation` (by resolved duration) change, so an inline `plugins={[a]}` or `{ type: 'fade' }` that stays equal does not warn, as with `<Markdown>`. There is no `backend` option yet: the stream core is markdown-it only.
+- **`onStreamingEnd`** is the exception: the latest function is called, without a warning. It fires once per stream from an effect after the `done()` document commits; documents carry the stream's epoch and end state for this and for the [fade](../phase-2b/decisions.md#p2b-5-animation-is-a-block-level-fade-none--fade) ([P2b-6](../phase-2b/decisions.md#p2b-6-one-streamingconfig-object-and-onstreamingend)).
 - **StrictMode:** effects run twice in development. The scheduler is created lazily once, in the first render, and the effect calls `resume()` on mount and `suspend()` on cleanup. Cleanup does not discard the buffered text: the re-run effect flushes it.
 - **Unmount:** the cleanup suspends, which cancels the pending timer or frame. Later `append`, `reset` and `done` calls do nothing, without a warning.
 - **Concurrent rendering:** the stream lives outside React state, and the hook publishes `document` with a state update. A render that is thrown away does not lose appended text.
-- **`done()`** publishes the exact parse (`parse(source)`), also when smoothing is on; the documents published between flushes are the smoothed view.
+- **`done()`** publishes the exact parse (`parse(source)`); the documents published between flushes are the smoothed view, which the hook always uses.
 
 ## Usage (unchanged from 05)
 
