@@ -100,6 +100,7 @@ function inputEqual(a: ThemeInput, b: ThemeInput): boolean {
       groupEqual(a.fonts, b.fonts) &&
       groupEqual(a.fontSize, b.fontSize) &&
       a.lineHeight === b.lineHeight &&
+      a.imageRatio === b.imageRatio &&
       groupEqual(a.spacing, b.spacing) &&
       groupEqual(a.radius, b.radius) &&
       shallowEqual(a.listBullets, b.listBullets) &&

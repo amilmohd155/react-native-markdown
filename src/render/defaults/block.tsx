@@ -167,13 +167,11 @@ export function HtmlBlock({ html, style }: ElementProps<'HtmlBlock'>) {
   );
 }
 
-/** Aspect ratio of the placeholder box while the image size loads. */
-const PLACEHOLDER_RATIO = 16 / 9;
-
 /**
  * Block image at full width (never wider than its natural size), with its
- * real aspect ratio from the size cache. A placeholder box holds the space
- * while the size loads, so the layout doesn't jump more than once. Images
+ * real aspect ratio from the size cache. While the size is unknown, a quiet
+ * placeholder box (theme `imageRatio`, `codeBg` fill) reserves the space, so
+ * an image of that ratio never moves what is below it. Images
  * that fail to load show their alt text instead.
  */
 export function Image({ src, alt, title, style }: ElementProps<'Image'>) {
@@ -206,7 +204,11 @@ export function Image({ src, alt, title, style }: ElementProps<'Image'>) {
       style={[
         styles.blockImage,
         size === null
-          ? { aspectRatio: PLACEHOLDER_RATIO, backgroundColor: colors.codeBg }
+          ? {
+              aspectRatio: theme.tokens.imageRatio,
+              backgroundColor: colors.codeBg,
+              borderRadius: theme.tokens.radius.code,
+            }
           : { aspectRatio: size.width / size.height },
       ]}
     />

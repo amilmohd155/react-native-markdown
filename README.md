@@ -29,7 +29,7 @@ yarn add @docren/react-native-markdown
 pnpm add @docren/react-native-markdown
 ```
 
-Peer dependencies: `react >= 18.2` and `react-native >= 0.76`.
+Peer dependencies: `react >= 18.2` and `react-native >= 0.82` (New Architecture only; Expo Go needs SDK 55 or later).
 
 ## Usage
 
@@ -46,7 +46,7 @@ export default function App() {
 }
 ```
 
-`<Markdown>` doesn't scroll by itself; put it in the scroll view you already have.
+`<Markdown>` doesn't scroll by itself; put it in the scroll view you already have. For a standalone or long document, see [Scrolling and long documents](#scrolling-and-long-documents).
 
 ### Props
 
@@ -62,6 +62,8 @@ export default function App() {
 | `onImagePress` | `(src, info) => void` | none | Makes images pressable. |
 | `onTaskToggle` | `(checked, info) => void` | none | Makes task list checkboxes interactive. |
 | `onFootnotePress` | `(label, info) => void` | none | Makes footnote references and back-links pressable. You do the scrolling. |
+| `scroll` | `boolean \| ScrollOptions` | `false` | Renders its own `ScrollView`, all blocks mounted. See [Scrolling](#scrolling-and-long-documents). |
+| `virtualize` | `boolean \| VirtualizeOptions` | `false` | Renders its own `FlatList`, for long documents. |
 | `html` | `'safe' \| 'text' \| 'strip' \| { allow: HtmlTag[] }` | `'safe'` | What happens to raw HTML. |
 | `images` | `'allow' \| 'deny' \| { allowHosts: string[] }` | `'allow'` | Which images load. A refused image renders as its alt text. |
 | `softBreak` | `'space' \| 'newline'` | `'space'` | How a single newline inside a paragraph renders. |
@@ -70,6 +72,60 @@ export default function App() {
 | `maxFontSizeMultiplier` | `number` | unset | Caps font scaling for accessibility. |
 
 The full reference, including every element and its props, is in [`docs/rewrite/04-api.md`](docs/rewrite/04-api.md).
+
+### Scrolling and long documents
+
+| Mode | Renders | Use for |
+|---|---|---|
+| default | a `View` | Chat messages, cards, anything inside a scroller you own |
+| `scroll` | a `ScrollView`, every block mounted | Short to medium standalone documents |
+| `virtualize` | a `FlatList`, a window of blocks mounted | Long documents |
+
+`scroll` and `virtualize` take an options object instead of `true`: `header`, `footer`, `style`, `contentContainerStyle`, `onScroll`, `scrollEventThrottle`, `autoScroll`, `ref`, `componentRef` and `component`; `virtualize` adds `initialNumToRender` and `windowSize`. They own a vertical scroll view, so give them a bounded height and never put them inside another vertical scroller: nothing would virtualize, and `autoScroll` and the ref would do nothing. In development, `scroll` warns when it detects this.
+
+`autoScroll` follows the tail of a growing document (a stream) while the user is at the bottom. A drag pauses it; coming back to the end, or `ref.scrollToEnd()`, resumes it. The `ref` is a `MarkdownListRef` with `scrollToEnd`, `scrollToOffset` and `scrollToBlock`.
+
+```tsx
+import { useRef } from 'react';
+import { Button } from 'react-native';
+import { Markdown, type MarkdownListRef } from '@docren/react-native-markdown';
+
+export function Answer({ text }: { text: string }) {
+  const list = useRef<MarkdownListRef>(null);
+  return (
+    <>
+      <Button title="Jump to latest" onPress={() => list.current?.scrollToEnd()} />
+      <Markdown
+        source={text}
+        virtualize={{ autoScroll: true, ref: list, style: { flex: 1 } }}
+      />
+    </>
+  );
+}
+```
+
+`component` swaps in your own scroll view or list, for example `Animated.ScrollView`. Pass a component defined at module level, never one created during render (every block would remount), and it must pass `ref` on to the scroll view, or `ref` and `autoScroll` do nothing. Development builds warn about both. A Reanimated scroll handler can't be passed as `onScroll` to `autoScroll`, which then reads position at the end of each drag and fling only. For the scroll offset, pass Reanimated's `useAnimatedRef()` as `componentRef`. Reanimated is not a dependency, and this integration is not verified on a device yet.
+
+With `virtualize`, blocks outside the window unmount and mount again when scrolled back. Image and table sizes come from caches, but a remount loses state that lives only in the component: the horizontal scroll offset of a code block or table, and state inside a `components` override. Keep that state outside the component.
+
+#### Your own list
+
+`useMarkdownBlocks` returns the blocks for a list you own, and takes the same options as `<Markdown>` (`source` or `document`, `theme`, `components`, ...). The hook has no follow-tail: use the list's own.
+
+```tsx
+import { FlatList } from 'react-native';
+import { useMarkdownBlocks } from '@docren/react-native-markdown';
+
+export function Document({ text }: { text: string }) {
+  const { data, keyExtractor, renderItem } = useMarkdownBlocks({ source: text });
+  return <FlatList data={data} keyExtractor={keyExtractor} renderItem={renderItem} />;
+}
+```
+
+Starting points for other lists. Neither is a dependency, and neither has been tested here; check them against the list's own docs.
+
+- **LegendList** is the first choice for streamed content: it doesn't recycle by default, and `maintainScrollAtEnd` follows the tail.
+- **FlashList:** pass `getItemType` from the hook and keep rows memoized. Recycling reuses a row for another block, so reset per-block state with `useRecyclingState`, or set `maxItemsInRecyclePool={0}`. Follow the tail with `maintainVisibleContentPosition.autoscrollToBottomThreshold`.
 
 ### Links
 
@@ -221,13 +277,13 @@ The props changed (`markdown` → `source`, `styles` → `theme`, `renderRules` 
 
 ## Compatibility
 
-- React Native 0.76+, React 18.2+.
-- Expo Go: no native code, no config plugin. (`yarn check:expo-go` in this repo keeps the main entry free of native imports.)
+- React Native 0.82+ (New Architecture only), React 18.2+.
+- Expo Go (SDK 55 or later): no native code, no config plugin. (`yarn check:expo-go` in this repo keeps the main entry free of native imports.)
 - Web, through `react-native-web`.
 
 ## Roadmap
 
-Planned after v1.0, in order: streaming for LLM output, `virtualize` for long documents, a lazy syntax-highlighting entry point, and an optional native parser backend. Details and the design documents are in [`docs/rewrite`](docs/rewrite/README.md).
+Planned after v1.0, in order: streaming for LLM output, a lazy syntax-highlighting entry point, and an optional native parser backend. Details and the design documents are in [`docs/rewrite`](docs/rewrite/README.md).
 
 ## Acknowledgements
 

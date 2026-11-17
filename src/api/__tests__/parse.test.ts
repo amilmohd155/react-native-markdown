@@ -73,6 +73,7 @@ describe('parse', () => {
       'inlineView',
       'lightTheme',
       'parse',
+      'useMarkdownBlocks',
       'useMarkdownStream',
       'useMarkdownTheme',
       'visit',

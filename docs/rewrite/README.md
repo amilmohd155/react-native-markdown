@@ -20,7 +20,7 @@ markdown ──► Parser backend (pluggable)
                      ▼
          Private flat node table + block index  {type[], parent[], …, blockStart[]}
                      │                                  (same layout from both backends)
-           BlockList  (plain View, or FlashList when `virtualize`)
+           BlockList  (plain View; ScrollView with `scroll`; FlatList with `virtualize`)
                      │
      memo(Block) per top-level block (skipped when its source and context are unchanged)
                      │

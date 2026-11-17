@@ -17,6 +17,7 @@ describe('package entry', () => {
       'inlineView',
       'lightTheme',
       'parse',
+      'useMarkdownBlocks',
       'useMarkdownStream',
       'useMarkdownTheme',
       'visit',

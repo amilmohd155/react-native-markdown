@@ -548,6 +548,7 @@ exports[`element snapshots Image 1`] = `
             {
               "aspectRatio": 1.7777777777777777,
               "backgroundColor": "#f6f8fa",
+              "borderRadius": 6,
             },
           ]
         }

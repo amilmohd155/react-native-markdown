@@ -1,112 +1,45 @@
-import { useMemo } from 'react';
-import type { MarkdownPlugin } from '../plugins/definePlugin';
-import type { Preset } from '../plugins/presets';
-import type { HtmlMode, ParserBackend } from '../parse';
+import { BlockList } from '../render';
 import {
-  BlockList,
-  useRenderCtx,
-  type Components,
-  type FootnotePressInfo,
-  type ImagePressInfo,
-  type ImagesPolicy,
-  type LinkPressInfo,
-  type PluginComponents,
-  type RenderHandlers,
-  type ScriptFallback,
-  type SoftBreak,
-  type TaskToggleInfo,
-} from '../render';
+  listOptions,
+  MarkdownFlatList,
+  MarkdownScrollView,
+} from './containers';
 import {
-  useResolvedTheme,
-  type ElementOverrides,
-  type ThemeProp,
-} from '../theme';
-import { tableOf, type MarkdownDocument } from './document';
-import { mergeComponents } from './mergeComponents';
-import { parse } from './parse';
-import {
-  presetEqual,
-  shallowEqualArray,
-  shallowEqualObject,
-  useStable,
-} from './stable';
+  useMarkdownPipeline,
+  type MarkdownInput,
+  type MarkdownRenderOptions,
+} from './pipeline';
+import type { ScrollOptions, VirtualizeOptions } from './scrollOptions';
 
-/** Where the markdown comes from: raw text, or a document from `parse()`. */
-type MarkdownInput =
+/**
+ * Which container renders the blocks (P3-2): a `View` (default), an owned
+ * `ScrollView` (`scroll`) or an owned `FlatList` (`virtualize`, which
+ * implies `scroll`). `false` is the same as leaving a prop out.
+ */
+type MarkdownContainerProps =
   | {
-      /** Markdown text, parsed at render time (and memoized). */
-      readonly source: string;
-      readonly document?: never;
+      /** Renders an owned `ScrollView` instead of a `View`. */
+      readonly scroll?: boolean | ScrollOptions;
+      readonly virtualize?: false;
     }
   | {
-      /** Pre-parsed with `parse()`: no parsing during render. */
-      readonly document: MarkdownDocument;
-      readonly source?: never;
+      /**
+       * With `virtualize`, these options are merged under `virtualize`'s;
+       * `component` is `virtualize`'s alone (a list, not a scroll view).
+       */
+      readonly scroll?: boolean | Omit<ScrollOptions, 'component'>;
+      /** Renders an owned `FlatList` instead of a `View`. Implies `scroll`. */
+      readonly virtualize: true | VirtualizeOptions;
     };
 
 /**
  * Props of `<Markdown>`. Spec: docs/rewrite/04-api.md#markdown
  */
-export type MarkdownProps = MarkdownInput & {
-  /**
-   * Syntax set to parse. Default `'gfm'`. Ignored with `document`, which was
-   * parsed with its own preset.
-   */
-  readonly preset?: Preset;
-  /**
-   * Added on top of the preset, in order. Their `components` and `theme`
-   * also apply to a `document` (parse it with the same plugins).
-   */
-  readonly plugins?: readonly MarkdownPlugin[];
-  /** Replaces single elements. Merged over the defaults and plugins. */
-  readonly components?: Partial<Components> & PluginComponents;
-  /** Tokens and element overrides, or `'light' | 'dark' | 'auto'`. */
-  readonly theme?: ThemeProp;
-  /** Called first for every link; return `false` to cancel the default. */
-  readonly onLinkPress?: (href: string, info: LinkPressInfo) => boolean | void;
-  readonly onImagePress?: (src: string, info: ImagePressInfo) => void;
-  /**
-   * Which images load; the rest render as their alt text. Default
-   * `'allow'`. Use `'deny'` or `{ allowHosts }` for untrusted content.
-   */
-  readonly images?: ImagesPolicy;
-  /** Makes task list checkboxes interactive. */
-  readonly onTaskToggle?: (checked: boolean, info: TaskToggleInfo) => void;
-  /**
-   * Makes footnote references and back-links pressable. The app scrolls:
-   * `info.direction` says where to go (P1-15).
-   */
-  readonly onFootnotePress?: (label: string, info: FootnotePressInfo) => void;
-  /** Raw HTML handling. Default `'safe'`. Ignored with `document`. */
-  readonly html?: HtmlMode;
-  /** How soft line breaks render. Default `'space'` (P1-2). */
-  readonly softBreak?: SoftBreak;
-  /** Superscript/subscript with no Unicode form. Default `'smaller'`. */
-  readonly scriptFallback?: ScriptFallback;
-  /** Text selection within each block. Default `false`. */
-  readonly selectable?: boolean;
-  /** Accessibility cap on font scaling. Default unset. */
-  readonly maxFontSizeMultiplier?: number;
-  /** Parser backend. Default: JS (markdown-it). Ignored with `document`. */
-  readonly backend?: ParserBackend;
-};
+export type MarkdownProps = MarkdownInput &
+  MarkdownRenderOptions &
+  MarkdownContainerProps;
 
-const NO_PLUGINS: readonly MarkdownPlugin[] = Object.freeze([]);
-
-function imagesEqual(
-  a: ImagesPolicy | undefined,
-  b: ImagesPolicy | undefined
-): boolean {
-  if (a === b) return true;
-  if (typeof a !== 'object' || typeof b !== 'object') return false;
-  return shallowEqualArray(a.allowHosts, b.allowHosts);
-}
-
-function htmlEqual(a: HtmlMode | undefined, b: HtmlMode | undefined): boolean {
-  if (a === b) return true;
-  if (typeof a !== 'object' || typeof b !== 'object') return false;
-  return shallowEqualArray(a.allow, b.allow);
-}
+const NO_SCROLL_OPTIONS: ScrollOptions = Object.freeze({});
 
 /**
  * Renders markdown as native components.
@@ -118,64 +51,24 @@ function htmlEqual(a: HtmlMode | undefined, b: HtmlMode | undefined): boolean {
  * inline callbacks never re-render a block.
  */
 export function Markdown(props: MarkdownProps) {
-  const {
-    source,
-    document,
-    onLinkPress,
-    onImagePress,
-    onTaskToggle,
-    onFootnotePress,
-    softBreak,
-    scriptFallback,
-    selectable,
-    maxFontSizeMultiplier,
-    backend,
-  } = props;
-
-  const plugins = useStable(props.plugins ?? NO_PLUGINS, shallowEqualArray);
-  const preset = useStable(props.preset, presetEqual);
-  const html = useStable(props.html, htmlEqual);
-  const components = useStable(props.components, shallowEqualObject);
-  const images = useStable(props.images, imagesEqual);
-
-  const parsed = useMemo(() => {
-    if (document !== undefined) return document;
-    if (source === undefined) {
-      throw new TypeError('<Markdown> needs a `source` or a `document`.');
-    }
-    return parse(source, { preset, html, plugins, backend });
-  }, [document, source, preset, html, plugins, backend]);
-
-  const mergedComponents = useMemo(
-    () => mergeComponents(plugins, components),
-    [plugins, components]
-  );
-
-  const themeLayers = useMemo(() => {
-    const layers: ElementOverrides[] = [];
-    for (const plugin of plugins) {
-      if (plugin.theme) layers.push(plugin.theme);
-    }
-    return layers;
-  }, [plugins]);
-  const theme = useResolvedTheme(props.theme, themeLayers);
-
-  const handlers: RenderHandlers = {
-    onLinkPress,
-    onImagePress,
-    onTaskToggle,
-    onFootnotePress,
-  };
-  const ctx = useRenderCtx({
-    theme,
-    components: mergedComponents,
-    handlers,
-    softBreak,
-    scriptFallback,
-    images,
-    selectable,
-    maxFontSizeMultiplier,
-  });
-
-  return <BlockList table={tableOf(parsed)} ctx={ctx} />;
+  const { table, ctx } = useMarkdownPipeline(props, '<Markdown>');
+  if (props.virtualize) {
+    return (
+      <MarkdownFlatList
+        table={table}
+        ctx={ctx}
+        options={listOptions(props.scroll, props.virtualize)}
+      />
+    );
+  }
+  if (props.scroll) {
+    return (
+      <MarkdownScrollView
+        table={table}
+        ctx={ctx}
+        options={props.scroll === true ? NO_SCROLL_OPTIONS : props.scroll}
+      />
+    );
+  }
+  return <BlockList table={table} ctx={ctx} />;
 }

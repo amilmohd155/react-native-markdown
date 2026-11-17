@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { blockKey, isSameBlock, type NodeTable } from '../model';
 import { MarkdownThemeContext } from '../theme';
@@ -33,7 +33,40 @@ export function blockPropsEqual(a: BlockProps, b: BlockProps): boolean {
  * render's table, so unchanged blocks can keep an older table alive until
  * they next re-render.
  */
-const Block = memo(BlockImpl, blockPropsEqual);
+export const Block = memo(BlockImpl, blockPropsEqual);
+
+/**
+ * The contexts default elements and `useMarkdownTheme()` read: the render
+ * context and its theme. Every block container renders inside them.
+ */
+export function BlockProviders({
+  ctx,
+  children,
+}: {
+  readonly ctx: RenderCtx;
+  readonly children: ReactNode;
+}) {
+  return (
+    <RenderCtxContext.Provider value={ctx}>
+      <MarkdownThemeContext.Provider value={ctx.theme}>
+        {children}
+      </MarkdownThemeContext.Provider>
+    </RenderCtxContext.Provider>
+  );
+}
+
+/**
+ * One keyed `Block` per top-level block, for a container that mounts every
+ * block (`View`, and the owned `ScrollView`). Keyed by block index (P1-9):
+ * editing a block keeps every later block mounted.
+ */
+export function blockElements(table: NodeTable, ctx: RenderCtx): ReactNode[] {
+  const blocks = new Array<ReactNode>(table.blockCount);
+  for (let i = 0; i < table.blockCount; i++) {
+    blocks[i] = <Block key={blockKey(i)} table={table} index={i} ctx={ctx} />;
+  }
+  return blocks;
+}
 
 export interface BlockListProps {
   readonly table: NodeTable;
@@ -41,22 +74,15 @@ export interface BlockListProps {
 }
 
 /**
- * Every top-level block in a plain `View`, keyed by block index (P1-9):
- * editing a block keeps every later block mounted.
+ * Every top-level block in a plain `View` (the default container, P3-2).
  * Spec: docs/rewrite/03-architecture.md#blocklist
  *
- * Virtualization (`virtualize`, FlashList) is phase 3.
+ * Lists render the same blocks through `useBlockItems` (./blockItems).
  */
 export function BlockList({ table, ctx }: BlockListProps) {
-  const blocks = new Array(table.blockCount);
-  for (let i = 0; i < table.blockCount; i++) {
-    blocks[i] = <Block key={blockKey(i)} table={table} index={i} ctx={ctx} />;
-  }
   return (
-    <RenderCtxContext.Provider value={ctx}>
-      <MarkdownThemeContext.Provider value={ctx.theme}>
-        <View>{blocks}</View>
-      </MarkdownThemeContext.Provider>
-    </RenderCtxContext.Provider>
+    <BlockProviders ctx={ctx}>
+      <View>{blockElements(table, ctx)}</View>
+    </BlockProviders>
   );
 }

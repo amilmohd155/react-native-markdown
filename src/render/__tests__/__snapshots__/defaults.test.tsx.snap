@@ -763,6 +763,7 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
             {
               "aspectRatio": 1.7777777777777777,
               "backgroundColor": "#f6f8fa",
+              "borderRadius": 6,
             },
           ]
         }

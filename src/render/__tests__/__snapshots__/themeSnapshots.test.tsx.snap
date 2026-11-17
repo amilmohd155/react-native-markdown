@@ -548,6 +548,7 @@ exports[`theme snapshots dark element Image 1`] = `
             {
               "aspectRatio": 1.7777777777777777,
               "backgroundColor": "#151b23",
+              "borderRadius": 6,
             },
           ]
         }
@@ -2812,6 +2813,7 @@ exports[`theme snapshots light element Image 1`] = `
             {
               "aspectRatio": 1.7777777777777777,
               "backgroundColor": "#f6f8fa",
+              "borderRadius": 6,
             },
           ]
         }

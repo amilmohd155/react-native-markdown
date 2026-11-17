@@ -98,6 +98,12 @@ export interface ThemeTokens {
   };
   /** Bullet character by list nesting depth, repeating. */
   readonly listBullets: readonly string[];
+  /**
+   * Width / height of the box a block image reserves until its real size is
+   * known (and it isn't cached). Keeps the list from shifting under a
+   * windowed list.
+   */
+  readonly imageRatio: number;
 }
 
 /**
@@ -199,6 +205,7 @@ export interface ThemeInput {
   readonly spacing?: Partial<ThemeTokens['spacing']>;
   readonly radius?: Partial<ThemeTokens['radius']>;
   readonly listBullets?: readonly string[];
+  readonly imageRatio?: number;
   readonly elements?: ElementOverrides;
 }
 
