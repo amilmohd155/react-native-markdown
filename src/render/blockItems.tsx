@@ -1,7 +1,8 @@
 import { useState, type ReactElement } from 'react';
 import { blockKey, NodeType, NONE, type NodeTable } from '../model';
-import { Block, BlockProviders } from './Block';
+import { blockElement, BlockProviders } from './Block';
 import type { RenderCtx } from './context';
+import type { FadePlan } from './fade';
 import { imageAllowed } from './imagePolicy';
 import { pluginNodeOf } from './pluginNodes';
 import { blockImageOf, imageProps } from './props';
@@ -22,14 +23,25 @@ export interface BlockItem {
   readonly key: string;
   readonly table: NodeTable;
   readonly ctx: RenderCtx;
+  /**
+   * The stream's fade plan when the item was made (P2b-5), or null. Null or
+   * not for a stream's whole life, so the rendered type never flips.
+   */
+  readonly fade: FadePlan | null;
 }
 
-function createItem(table: NodeTable, ctx: RenderCtx, index: number) {
+function createItem(
+  table: NodeTable,
+  ctx: RenderCtx,
+  fade: FadePlan | null,
+  index: number
+) {
   const item: BlockItem = Object.freeze({
     index,
     key: blockKey(index),
     table,
     ctx,
+    fade,
   });
   return item;
 }
@@ -37,6 +49,7 @@ function createItem(table: NodeTable, ctx: RenderCtx, index: number) {
 interface ItemsState {
   readonly table: NodeTable;
   readonly ctx: RenderCtx;
+  readonly fade: FadePlan | null;
   readonly items: readonly BlockItem[];
 }
 
@@ -54,13 +67,15 @@ interface ItemsState {
 function buildItems(
   prev: ItemsState | null,
   table: NodeTable,
-  ctx: RenderCtx
+  ctx: RenderCtx,
+  fade: FadePlan | null
 ): readonly BlockItem[] {
   const count = table.blockCount;
   let reused = 0;
   if (
     prev !== null &&
     prev.ctx === ctx &&
+    (prev.fade === null) === (fade === null) &&
     table.prefixId !== undefined &&
     table.prefixId === prev.table.prefixId
   ) {
@@ -73,7 +88,8 @@ function buildItems(
   }
   const items = new Array<BlockItem>(count);
   for (let i = 0; i < reused; i++) items[i] = prev!.items[i]!;
-  for (let i = reused; i < count; i++) items[i] = createItem(table, ctx, i);
+  for (let i = reused; i < count; i++)
+    items[i] = createItem(table, ctx, fade, i);
   return Object.freeze(items);
 }
 
@@ -84,7 +100,8 @@ function buildItems(
  */
 export function useBlockItems(
   table: NodeTable,
-  ctx: RenderCtx
+  ctx: RenderCtx,
+  fade: FadePlan | null
 ): readonly BlockItem[] {
   // The previous items, kept in state and replaced by a render-phase update
   // (React re-runs the component at once, before rendering children), as
@@ -92,13 +109,17 @@ export function useBlockItems(
   const [state, setState] = useState<ItemsState>(() => ({
     table,
     ctx,
-    items: buildItems(null, table, ctx),
+    fade,
+    items: buildItems(null, table, ctx, fade),
   }));
-  if (state.table === table && state.ctx === ctx) return state.items;
+  if (state.table === table && state.ctx === ctx && state.fade === fade) {
+    return state.items;
+  }
   const next: ItemsState = {
     table,
     ctx,
-    items: buildItems(state, table, ctx),
+    fade,
+    items: buildItems(state, table, ctx, fade),
   };
   setState(next);
   return next.items;
@@ -115,7 +136,7 @@ export function renderBlockItem({
 }): ReactElement {
   return (
     <BlockProviders ctx={item.ctx}>
-      <Block table={item.table} index={item.index} ctx={item.ctx} />
+      {blockElement(undefined, item.table, item.index, item.ctx, item.fade)}
     </BlockProviders>
   );
 }

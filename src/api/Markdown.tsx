@@ -51,12 +51,13 @@ const NO_SCROLL_OPTIONS: ScrollOptions = Object.freeze({});
  * inline callbacks never re-render a block.
  */
 export function Markdown(props: MarkdownProps) {
-  const { table, ctx } = useMarkdownPipeline(props, '<Markdown>');
+  const { table, ctx, fade } = useMarkdownPipeline(props, '<Markdown>');
   if (props.virtualize) {
     return (
       <MarkdownFlatList
         table={table}
         ctx={ctx}
+        fade={fade}
         options={listOptions(props.scroll, props.virtualize)}
       />
     );
@@ -66,9 +67,10 @@ export function Markdown(props: MarkdownProps) {
       <MarkdownScrollView
         table={table}
         ctx={ctx}
+        fade={fade}
         options={props.scroll === true ? NO_SCROLL_OPTIONS : props.scroll}
       />
     );
   }
-  return <BlockList table={table} ctx={ctx} />;
+  return <BlockList table={table} ctx={ctx} fade={fade} />;
 }

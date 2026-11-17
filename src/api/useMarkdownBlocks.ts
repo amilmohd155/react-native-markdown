@@ -109,8 +109,11 @@ const getItemType = (item: MarkdownBlock): string =>
 export function useMarkdownBlocks(
   options: UseMarkdownBlocksOptions
 ): UseMarkdownBlocksResult {
-  const { table, ctx } = useMarkdownPipeline(options, 'useMarkdownBlocks()');
-  const data = useBlockItems(table, ctx);
+  const { table, ctx, fade } = useMarkdownPipeline(
+    options,
+    'useMarkdownBlocks()'
+  );
+  const data = useBlockItems(table, ctx, fade);
   return useMemo(
     () => ({ data, keyExtractor, renderItem, getItemType }),
     [data]

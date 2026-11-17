@@ -210,10 +210,74 @@ describe('hideIncomplete: not smoothed', () => {
     );
     expect(hideIncomplete('```\n*x\n```\nafter')).toBe('```\n*x\n```\nafter');
   });
+});
 
-  it('leaves table rows alone', () => {
-    const t = '| a | b |\n|---|---|\n| *x | `y';
-    expect(hideIncomplete(t)).toBe(t);
+describe('hideIncomplete: tables (P2b-3)', () => {
+  const head = '| a | b |\n|---|---|\n';
+
+  it('shows nothing until the delimiter row ends with a newline', () => {
+    for (const t of [
+      '|',
+      '| a | b |',
+      '| a | b |\n',
+      '| a | b |\n|---|',
+      '| a | b |\n|---|-',
+      // A complete delimiter row without its newline would leave a header
+      // that parses as a paragraph of pipes.
+      '| a | b |\n|---|---|',
+    ]) {
+      expect(hideIncomplete(t)).toBe('');
+    }
+    expect(hideIncomplete(head)).toBe(head);
+  });
+
+  it('cuts back to the last newline, dropping a partial row', () => {
+    expect(hideIncomplete(head + '| *x | `y')).toBe(head);
+    expect(hideIncomplete(head + '| 1 | 2 |\n| 3')).toBe(head + '| 1 | 2 |\n');
+    expect(hideIncomplete(head + '| 1 | 2 |\n')).toBe(head + '| 1 | 2 |\n');
+    expect(hideIncomplete(head + '| **1 | 2 |\n')).toBe(head + '| **1 | 2 |\n');
+  });
+
+  it('needs the header column count, as markdown-it does', () => {
+    // Fewer columns, newline: a paragraph, then the next line is awaited.
+    expect(hideIncomplete('| a | b |\n|---|\nx')).toBe('| a | b |\n|---|\nx');
+    // More columns: never a table.
+    expect(hideIncomplete('| a | b |\n|---|---|---|\nx')).toBe(
+      '| a | b |\n|---|---|---|\nx'
+    );
+    expect(hideIncomplete('| a |\n|-')).toBe('');
+    expect(hideIncomplete('| a |\n|-\n')).toBe('| a |\n|-\n');
+  });
+
+  it('waits for the line after any line that starts with a pipe', () => {
+    expect(hideIncomplete('Intro **b**\n| a |')).toBe('Intro **b**\n');
+    expect(hideIncomplete('Intro\n| a |\n|---|\n| 1')).toBe(
+      'Intro\n| a |\n|---|\n'
+    );
+    expect(hideIncomplete('| a |\n| b')).toBe('| a |\n');
+    expect(hideIncomplete('| a |\nb **c')).toBe('| a |\nb ');
+  });
+
+  it('finds tables in list items and quotes', () => {
+    expect(hideIncomplete('- | a |')).toBe('- ');
+    expect(hideIncomplete('- | a |\n  |---|\n  | 1')).toBe(
+      '- | a |\n  |---|\n'
+    );
+    expect(hideIncomplete('> | a |\n> |---|\n> | 1 |\n> | 2')).toBe(
+      '> | a |\n> |---|\n> | 1 |\n'
+    );
+  });
+
+  it('ends a table at a blank line', () => {
+    expect(hideIncomplete(head + '| 1 | 2 |\n\nNext **b')).toBe(
+      head + '| 1 | 2 |\n\nNext '
+    );
+  });
+
+  it('does not detect rows without a leading pipe, or indented code', () => {
+    for (const t of ['a | b\n--|--\n1 | 2', '    | a |', '```\n| a |']) {
+      expect(hideIncomplete(t)).toBe(t);
+    }
   });
 });
 
@@ -269,6 +333,7 @@ describe('hideIncomplete: invariants', () => {
     const start = Date.now();
     hideIncomplete(long);
     hideIncomplete('x_ '.repeat(50000) + '[');
+    hideIncomplete('| a | b |\n|---\n'.repeat(20000) + '| c');
     expect(Date.now() - start).toBeLessThan(1000);
   });
 });

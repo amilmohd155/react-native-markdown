@@ -92,11 +92,13 @@ export interface MarkdownStreamCore {
 }
 
 /**
- * Smoothing of the returned table (P2-6). `'hide-incomplete'` hides the
- * dangling syntax fragment of the open block in the view only; the core's
- * internal state, `source` and `done()` are always exact.
+ * Smoothing of the returned table (P2-6, P2b-3). `'hide-incomplete'` hides
+ * the unfinished syntax of the open block in the view only; the core's
+ * internal state, `source` and `done()` are always exact. Internal:
+ * `useMarkdownStream` always passes `'hide-incomplete'` (P2b-2); `'none'`,
+ * the core default, is for tests and benches.
  */
-export type SmoothingMode = 'none' | 'hide-incomplete';
+type SmoothingMode = 'none' | 'hide-incomplete';
 
 /** Parse options plus the stream-only `smoothing` option (default `'none'`). */
 export type StreamOptions = ParseOptions & {

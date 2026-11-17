@@ -3,8 +3,9 @@
  * 500 chunks of a document with headings, paragraphs, a list, a code block
  * and a table stream into `<Markdown virtualize>` (and `scroll`, and the
  * hook in a plain FlatList). After every flush:
- * - every rendered block equals a fresh render of the text so far (so the
- *   open block is current);
+ * - every rendered block equals a fresh render of the text so far, as the
+ *   stream shows it (the hide-incomplete view, P2b-2), so the open block
+ *   is current;
  * - blocks closed before and after the flush keep their host instance (no
  *   remount) and do not render at all;
  * - with `autoScroll` off the library makes no scroll call; with it on,
@@ -34,7 +35,8 @@ import {
 } from '../../__tests__/tree';
 import { hostComponents } from '../../render/__tests__/helpers';
 import { ELEMENT_NAMES } from '../../theme';
-import { tableOf } from '../document';
+import { createDocument, tableOf } from '../document';
+import { streamView } from '../../../test/stream/harness';
 import { Markdown } from '../Markdown';
 import type { ScrollOptions } from '../scrollOptions';
 import { useMarkdownBlocks } from '../useMarkdownBlocks';
@@ -157,7 +159,7 @@ function Streamed({
   mode: Mode;
   options: Omit<ScrollOptions, 'component'>;
 }) {
-  const stream = useMarkdownStream({ flushIntervalMs: 50 });
+  const stream = useMarkdownStream();
   useEffect(() => {
     probe.current = stream;
   });
@@ -240,7 +242,12 @@ async function streamAll(tree: Tree, report: boolean): Promise<Run> {
     flushes++;
 
     const after = tableOf(probe.current.document);
-    await reference.rerender(<Markdown source={text} components={plain} />);
+    await reference.rerender(
+      <Markdown
+        document={createDocument(streamView(text))}
+        components={plain}
+      />
+    );
     // The open block (and every other) shows the text so far.
     expect(shape(tree)).toEqual(shape(reference));
 
@@ -323,8 +330,11 @@ describe('500-chunk stream', () => {
       expect(topHosts(tree.container)).toHaveLength(24);
       // Kind changes: about one per code block and table (4 each).
       expect(run.kindChanges).toBeLessThanOrEqual(12);
-      // The open table remounts on most of its flushes (known, by design).
-      expect(run.tableRemounts).toBeGreaterThan(40);
+      // The open table is keyed by its content, so it remounts on each
+      // change. A row shows when its line ends (P2b-3): about one remount
+      // per finished row (4 tables of 2 rows), not one per flush.
+      expect(run.tableRemounts).toBeGreaterThanOrEqual(4);
+      expect(run.tableRemounts).toBeLessThanOrEqual(12);
       expect(spies.all()).toEqual({
         scrollTo: 0,
         scrollToEnd: 0,
@@ -344,7 +354,9 @@ describe('500-chunk stream', () => {
         <Streamed mode={mode} options={{ autoScroll: true }} />
       );
       const run = await streamAll(tree, true);
-      expect(run.expectedEnds).toBeGreaterThan(200);
+      // Fewer than the 500 flushes: hidden fragments and table rows that
+      // wait for their newline do not grow the content.
+      expect(run.expectedEnds).toBeGreaterThan(120);
       expect(scrollViewMocks.scrollToEnd).toHaveBeenCalledTimes(
         run.expectedEnds
       );
@@ -364,7 +376,7 @@ describe('500-chunk stream', () => {
 
 describe('500-chunk stream under real windowing', () => {
   function Windowed() {
-    const stream = useMarkdownStream({ flushIntervalMs: 50 });
+    const stream = useMarkdownStream();
     useEffect(() => {
       probe.current = stream;
     });
@@ -428,7 +440,12 @@ describe('500-chunk stream under real windowing', () => {
       });
 
       // The open block is mounted and shows the text so far.
-      await reference.rerender(<Markdown source={text} components={plain} />);
+      await reference.rerender(
+        <Markdown
+          document={createDocument(streamView(text))}
+          components={plain}
+        />
+      );
       const cells = byIndex(root);
       if (count > 0) {
         const tail = cells.get(count - 1);

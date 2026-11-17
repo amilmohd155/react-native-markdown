@@ -16,6 +16,8 @@
  */
 import { act, fireEvent, render } from '@testing-library/react';
 import { useEffect } from 'react';
+import { streamView } from '../../../test/stream/harness';
+import { createDocument } from '../document';
 import { Markdown } from '../Markdown';
 import type { ScrollOptions } from '../scrollOptions';
 import {
@@ -149,7 +151,7 @@ const probe = {} as { current: UseMarkdownStreamResult };
 const componentRef = { current: null as unknown };
 
 function Streamed({ mode, options }: { mode: Mode; options: ScrollOptions }) {
-  const stream = useMarkdownStream({ flushIntervalMs: 50 });
+  const stream = useMarkdownStream();
   useEffect(() => {
     probe.current = stream;
   });
@@ -235,7 +237,9 @@ describe.each(['scroll', 'virtualize'] as const)(
         text += chunk;
         await act(async () => probe.current.append(chunk));
         await advance(60);
-        reference.rerender(<Markdown source={text} />);
+        reference.rerender(
+          <Markdown document={createDocument(streamView(text))} />
+        );
         expect(container.textContent).toBe(reference.container.textContent);
       }
       expect(container.textContent).toContain(
