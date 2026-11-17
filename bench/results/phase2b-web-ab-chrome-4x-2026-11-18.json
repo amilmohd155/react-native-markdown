@@ -1,0 +1,7939 @@
+{
+ "title": "Phase 2b web A/B, Chrome 4x CPU throttle, old (5f7ecd8) vs new (HEAD + uncommitted Phase 2b)",
+ "date": "2026-11-18",
+ "env": {
+  "browser": "Google Chrome (system app, headless, via playwright-core)",
+  "version": "157.0.8103.79",
+  "machine": "MacBookAir10,1",
+  "node": "v24.22.1",
+  "loadBefore": "4.44 3.81 3.97 (00:03)",
+  "loadAfter": "2.20 2.26 2.56 (00:34)"
+ },
+ "commit": "5f7ecd8dc9b7306137f87a6af1285f2bc87993eb",
+ "commitNote": "old = git archive 5f7ecd8 src; new = worktree HEAD plus uncommitted Phase 2b changes",
+ "method": {
+  "harness": "React hook path: real useMarkdownStream + <Markdown document> in react-native-web, one chunk per 16 ms on a real timer, fresh hook per run (not bench/stream-web.mjs, which simulates tail parse and cannot see the pacer or fade)",
+  "bundles": "one harness bundled twice with esbuild (react-native aliased to react-native-web, production, __DEV__ false): old against the old src, new against the current src",
+  "session": "one Chrome session, 4x CPU throttle via CDP Emulation.setCPUThrottlingRate, old and new on separate pages, configs rotated each round, page reloaded per fixture block",
+  "configs": {
+   "old-none": "old hook, smoothing none",
+   "old-hide": "old hook, smoothing hide-incomplete",
+   "new-default": "new hook defaults (hide-incomplete always on)",
+   "new-smooth": "new hook, streamingConfig.smooth",
+   "new-fade": "new hook, streamingConfig.animation fade"
+  },
+  "runs": "2 warm-up (discarded) + 10 measured per config per fixture (the driver ran 12 rounds)",
+  "command": "node drive.mjs raw.json 2 10 F4a,F4b,F4d old-none,old-hide,new-default,new-smooth,new-fade"
+ },
+ "limits": [
+  "the public hook exposes no flush cost: metrics are commit based",
+  "new-smooth and new-fade latency and total are not like for like with old (pacing adds up to about 0.2 s of drain after done())",
+  "a new-core none mode cannot be driven through the hook, so it is not covered",
+  "dropped (frame gap over 20 ms) and frameGapP90 are identical across configs: 4x throttle plus the 16 ms timer pacing saturate them, so they do not discriminate",
+  "harness scripts live in the job tmp dir, not in the repo"
+ ],
+ "integrity": {
+  "runs": 180,
+  "errors": 0,
+  "allFinalEqual": true,
+  "endCallsNewConfigs": "exactly 1 in every run"
+ },
+ "summary": {
+  "summary": {
+   "F4a": {
+    "old-none": {
+     "totalMs": {
+      "median": 7795.5,
+      "p90": 7796.800000011921,
+      "min": 7794.800000011921,
+      "max": 7799.300000011921
+     },
+     "commits": {
+      "median": 468,
+      "p90": 469,
+      "min": 467,
+      "max": 469
+     },
+     "latencyP50": {
+      "median": 8.800000011920929,
+      "p90": 9.199999988079071,
+      "min": 8.399999976158142,
+      "max": 9.800000011920929
+     },
+     "latencyP90": {
+      "median": 15.5,
+      "p90": 15.699999988079071,
+      "min": 15.199999988079071,
+      "max": 15.699999988079071
+     },
+     "frameGapP90": {
+      "median": 33.89999997615814,
+      "p90": 34.60000002384186,
+      "min": 33.69999998807907,
+      "max": 34.60000002384186
+     },
+     "dropped": {
+      "median": 233,
+      "p90": 233,
+      "min": 233,
+      "max": 233
+     },
+     "longTaskN": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMs": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMax": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "doneToFinalMs": {
+      "median": 3.600000023841858,
+      "p90": 4.699999988079071,
+      "min": 2.800000011920929,
+      "max": 7.899999976158142
+     }
+    },
+    "old-hide": {
+     "totalMs": {
+      "median": 7796.100000023842,
+      "p90": 7798.900000035763,
+      "min": 7794.5,
+      "max": 7801.699999988079
+     },
+     "commits": {
+      "median": 468,
+      "p90": 469,
+      "min": 466,
+      "max": 470
+     },
+     "latencyP50": {
+      "median": 8.899999976158142,
+      "p90": 9,
+      "min": 8.5,
+      "max": 9.5
+     },
+     "latencyP90": {
+      "median": 15.5,
+      "p90": 15.799999952316284,
+      "min": 15.199999988079071,
+      "max": 15.800000011920929
+     },
+     "frameGapP90": {
+      "median": 34,
+      "p90": 34.5,
+      "min": 33.80000001192093,
+      "max": 34.80000001192093
+     },
+     "dropped": {
+      "median": 233,
+      "p90": 233,
+      "min": 233,
+      "max": 233
+     },
+     "longTaskN": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMs": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMax": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "doneToFinalMs": {
+      "median": 4.099999964237213,
+      "p90": 6.900000035762787,
+      "min": 3.099999964237213,
+      "max": 8.799999952316284
+     }
+    },
+    "new-default": {
+     "totalMs": {
+      "median": 7795.800000011921,
+      "p90": 7796.400000035763,
+      "min": 7795,
+      "max": 7800.300000011921
+     },
+     "commits": {
+      "median": 467,
+      "p90": 468,
+      "min": 467,
+      "max": 469
+     },
+     "latencyP50": {
+      "median": 8.700000047683716,
+      "p90": 8.900000035762787,
+      "min": 8.300000011920929,
+      "max": 9.199999988079071
+     },
+     "latencyP90": {
+      "median": 15.399999976158142,
+      "p90": 15.699999988079071,
+      "min": 15.299999952316284,
+      "max": 15.699999988079071
+     },
+     "frameGapP90": {
+      "median": 34,
+      "p90": 34.5,
+      "min": 33.80000001192093,
+      "max": 34.59999996423721
+     },
+     "dropped": {
+      "median": 233,
+      "p90": 233,
+      "min": 233,
+      "max": 233
+     },
+     "longTaskN": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMs": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMax": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "doneToFinalMs": {
+      "median": 3.800000011920929,
+      "p90": 4.900000035762787,
+      "min": 3.300000011920929,
+      "max": 5
+     }
+    },
+    "new-smooth": {
+     "totalMs": {
+      "median": 7796.100000023842,
+      "p90": 7799.899999976158,
+      "min": 7794.900000035763,
+      "max": 7806.799999952316
+     },
+     "commits": {
+      "median": 308,
+      "p90": 313,
+      "min": 304,
+      "max": 316
+     },
+     "latencyP50": {
+      "median": 2.400000035762787,
+      "p90": 2.600000023841858,
+      "min": 2.099999964237213,
+      "max": 2.800000011920929
+     },
+     "latencyP90": {
+      "median": 18,
+      "p90": 18.200000047683716,
+      "min": 17.69999998807907,
+      "max": 18.600000023841858
+     },
+     "frameGapP90": {
+      "median": 34.09999996423721,
+      "p90": 34.80000001192093,
+      "min": 33.80000001192093,
+      "max": 34.80000001192093
+     },
+     "dropped": {
+      "median": 233,
+      "p90": 233,
+      "min": 233,
+      "max": 233
+     },
+     "longTaskN": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMs": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMax": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "doneToFinalMs": {
+      "median": 3.5,
+      "p90": 7.899999976158142,
+      "min": 3,
+      "max": 14.199999988079071
+     }
+    },
+    "new-fade": {
+     "totalMs": {
+      "median": 7796.199999988079,
+      "p90": 7797.399999976158,
+      "min": 7794.600000023842,
+      "max": 7798
+     },
+     "commits": {
+      "median": 467,
+      "p90": 468,
+      "min": 463,
+      "max": 468
+     },
+     "latencyP50": {
+      "median": 8.899999976158142,
+      "p90": 9.199999988079071,
+      "min": 8.099999964237213,
+      "max": 9.899999976158142
+     },
+     "latencyP90": {
+      "median": 15.599999964237213,
+      "p90": 15.800000011920929,
+      "min": 15.199999988079071,
+      "max": 15.899999976158142
+     },
+     "frameGapP90": {
+      "median": 34,
+      "p90": 34.799999952316284,
+      "min": 33.80000001192093,
+      "max": 35
+     },
+     "dropped": {
+      "median": 233,
+      "p90": 233,
+      "min": 231,
+      "max": 233
+     },
+     "longTaskN": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMs": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMax": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "doneToFinalMs": {
+      "median": 3.600000023841858,
+      "p90": 4.400000035762787,
+      "min": 3.100000023841858,
+      "max": 5.399999976158142
+     }
+    }
+   },
+   "F4b": {
+    "old-none": {
+     "totalMs": {
+      "median": 804.3999999761581,
+      "p90": 806.3000000119209,
+      "min": 803.1999999880791,
+      "max": 807.0999999642372
+     },
+     "commits": {
+      "median": 48,
+      "p90": 49,
+      "min": 48,
+      "max": 49
+     },
+     "latencyP50": {
+      "median": 8.300000011920929,
+      "p90": 8.900000035762787,
+      "min": 7.5,
+      "max": 9.5
+     },
+     "latencyP90": {
+      "median": 15.5,
+      "p90": 16,
+      "min": 14.5,
+      "max": 16.100000023841858
+     },
+     "frameGapP90": {
+      "median": 34.59999996423721,
+      "p90": 34.700000047683716,
+      "min": 34,
+      "max": 35
+     },
+     "dropped": {
+      "median": 23,
+      "p90": 23,
+      "min": 23,
+      "max": 23
+     },
+     "longTaskN": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMs": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMax": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "doneToFinalMs": {
+      "median": 3.800000011920929,
+      "p90": 5,
+      "min": 2.800000011920929,
+      "max": 5.199999988079071
+     }
+    },
+    "old-hide": {
+     "totalMs": {
+      "median": 803.8999999761581,
+      "p90": 806.3999999761581,
+      "min": 803.5,
+      "max": 808.3999999761581
+     },
+     "commits": {
+      "median": 48,
+      "p90": 49,
+      "min": 47,
+      "max": 49
+     },
+     "latencyP50": {
+      "median": 7.900000035762787,
+      "p90": 10.199999988079071,
+      "min": 7.099999964237213,
+      "max": 12
+     },
+     "latencyP90": {
+      "median": 15.800000011920929,
+      "p90": 16.80000001192093,
+      "min": 14.699999988079071,
+      "max": 17.400000035762787
+     },
+     "frameGapP90": {
+      "median": 34.60000002384186,
+      "p90": 35,
+      "min": 34.10000002384186,
+      "max": 35
+     },
+     "dropped": {
+      "median": 23,
+      "p90": 23,
+      "min": 23,
+      "max": 23
+     },
+     "longTaskN": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMs": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMax": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "doneToFinalMs": {
+      "median": 3.699999988079071,
+      "p90": 4.400000035762787,
+      "min": 3.100000023841858,
+      "max": 7.699999988079071
+     }
+    },
+    "new-default": {
+     "totalMs": {
+      "median": 804.6999999880791,
+      "p90": 807.6999999880791,
+      "min": 803.2999999523163,
+      "max": 809
+     },
+     "commits": {
+      "median": 48,
+      "p90": 49,
+      "min": 48,
+      "max": 49
+     },
+     "latencyP50": {
+      "median": 8.800000011920929,
+      "p90": 9.199999988079071,
+      "min": 7.599999964237213,
+      "max": 9.5
+     },
+     "latencyP90": {
+      "median": 15.200000047683716,
+      "p90": 16,
+      "min": 14.099999964237213,
+      "max": 16.69999998807907
+     },
+     "frameGapP90": {
+      "median": 34.30000001192093,
+      "p90": 34.80000001192093,
+      "min": 33.80000001192093,
+      "max": 35
+     },
+     "dropped": {
+      "median": 23,
+      "p90": 23,
+      "min": 23,
+      "max": 23
+     },
+     "longTaskN": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMs": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMax": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "doneToFinalMs": {
+      "median": 3.599999964237213,
+      "p90": 5.5,
+      "min": 2.800000011920929,
+      "max": 6.300000011920929
+     }
+    },
+    "new-smooth": {
+     "totalMs": {
+      "median": 804.3000000119209,
+      "p90": 808,
+      "min": 803.0999999642372,
+      "max": 808.8999999761581
+     },
+     "commits": {
+      "median": 31,
+      "p90": 32,
+      "min": 30,
+      "max": 33
+     },
+     "latencyP50": {
+      "median": 3.200000047683716,
+      "p90": 4,
+      "min": 3,
+      "max": 4.100000023841858
+     },
+     "latencyP90": {
+      "median": 18.600000023841858,
+      "p90": 19,
+      "min": 18.100000023841858,
+      "max": 19
+     },
+     "frameGapP90": {
+      "median": 34.200000047683716,
+      "p90": 35.19999998807907,
+      "min": 34,
+      "max": 35.19999998807907
+     },
+     "dropped": {
+      "median": 23,
+      "p90": 23,
+      "min": 23,
+      "max": 23
+     },
+     "longTaskN": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMs": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMax": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "doneToFinalMs": {
+      "median": 4.300000011920929,
+      "p90": 7.300000011920929,
+      "min": 3.199999988079071,
+      "max": 8.600000023841858
+     }
+    },
+    "new-fade": {
+     "totalMs": {
+      "median": 804.5,
+      "p90": 807,
+      "min": 803.3999999761581,
+      "max": 808.0999999642372
+     },
+     "commits": {
+      "median": 48,
+      "p90": 49,
+      "min": 47,
+      "max": 49
+     },
+     "latencyP50": {
+      "median": 7.600000023841858,
+      "p90": 9,
+      "min": 6.5,
+      "max": 9.600000023841858
+     },
+     "latencyP90": {
+      "median": 15.700000047683716,
+      "p90": 15.900000035762787,
+      "min": 14.200000047683716,
+      "max": 16.100000023841858
+     },
+     "frameGapP90": {
+      "median": 34.59999996423721,
+      "p90": 35,
+      "min": 34.299999952316284,
+      "max": 35.40000003576279
+     },
+     "dropped": {
+      "median": 23,
+      "p90": 23,
+      "min": 22,
+      "max": 23
+     },
+     "longTaskN": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMs": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMax": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "doneToFinalMs": {
+      "median": 3.800000011920929,
+      "p90": 4.699999988079071,
+      "min": 3.100000023841858,
+      "max": 4.699999988079071
+     }
+    }
+   },
+   "F4d": {
+    "old-none": {
+     "totalMs": {
+      "median": 4496.699999988079,
+      "p90": 4497.699999988079,
+      "min": 4495.899999976158,
+      "max": 4499.699999988079
+     },
+     "commits": {
+      "median": 271,
+      "p90": 272,
+      "min": 270,
+      "max": 272
+     },
+     "latencyP50": {
+      "median": 8,
+      "p90": 8.5,
+      "min": 7.600000023841858,
+      "max": 9.199999988079071
+     },
+     "latencyP90": {
+      "median": 15,
+      "p90": 15.5,
+      "min": 14.599999964237213,
+      "max": 15.5
+     },
+     "frameGapP90": {
+      "median": 34.799999952316284,
+      "p90": 34.80000001192093,
+      "min": 33.80000001192093,
+      "max": 35
+     },
+     "dropped": {
+      "median": 134,
+      "p90": 134,
+      "min": 134,
+      "max": 134
+     },
+     "longTaskN": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMs": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMax": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "doneToFinalMs": {
+      "median": 0.699999988079071,
+      "p90": 2.100000023841858,
+      "min": 0.10000002384185791,
+      "max": 3.199999988079071
+     }
+    },
+    "old-hide": {
+     "totalMs": {
+      "median": 4496.800000011921,
+      "p90": 4497.599999964237,
+      "min": 4495.900000035763,
+      "max": 4497.600000023842
+     },
+     "commits": {
+      "median": 271,
+      "p90": 272,
+      "min": 269,
+      "max": 272
+     },
+     "latencyP50": {
+      "median": 8.199999988079071,
+      "p90": 8.600000023841858,
+      "min": 7.900000035762787,
+      "max": 8.600000023841858
+     },
+     "latencyP90": {
+      "median": 14.800000011920929,
+      "p90": 15.300000011920929,
+      "min": 14.400000035762787,
+      "max": 15.300000011920929
+     },
+     "frameGapP90": {
+      "median": 34.60000002384186,
+      "p90": 34.89999997615814,
+      "min": 33.799999952316284,
+      "max": 35.09999996423721
+     },
+     "dropped": {
+      "median": 134,
+      "p90": 134,
+      "min": 134,
+      "max": 134
+     },
+     "longTaskN": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMs": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMax": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "doneToFinalMs": {
+      "median": 0.800000011920929,
+      "p90": 1.5,
+      "min": 0.30000001192092896,
+      "max": 1.699999988079071
+     }
+    },
+    "new-default": {
+     "totalMs": {
+      "median": 4496.599999964237,
+      "p90": 4497.300000011921,
+      "min": 4495.800000011921,
+      "max": 4498.100000023842
+     },
+     "commits": {
+      "median": 271,
+      "p90": 271,
+      "min": 271,
+      "max": 271
+     },
+     "latencyP50": {
+      "median": 8.199999988079071,
+      "p90": 8.5,
+      "min": 8,
+      "max": 8.5
+     },
+     "latencyP90": {
+      "median": 15,
+      "p90": 15.199999988079071,
+      "min": 14.699999988079071,
+      "max": 15.300000011920929
+     },
+     "frameGapP90": {
+      "median": 34.69999998807907,
+      "p90": 34.90000003576279,
+      "min": 33.80000001192093,
+      "max": 35.09999996423721
+     },
+     "dropped": {
+      "median": 134,
+      "p90": 134,
+      "min": 134,
+      "max": 134
+     },
+     "longTaskN": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMs": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMax": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "doneToFinalMs": {
+      "median": 0.6000000238418579,
+      "p90": 1.5,
+      "min": 0.10000002384185791,
+      "max": 1.600000023841858
+     }
+    },
+    "new-smooth": {
+     "totalMs": {
+      "median": 4497.699999988079,
+      "p90": 4497.900000035763,
+      "min": 4495.900000035763,
+      "max": 4498.400000035763
+     },
+     "commits": {
+      "median": 175,
+      "p90": 177,
+      "min": 169,
+      "max": 178
+     },
+     "latencyP50": {
+      "median": 2.100000023841858,
+      "p90": 2.399999976158142,
+      "min": 1.899999976158142,
+      "max": 2.599999964237213
+     },
+     "latencyP90": {
+      "median": 17.69999998807907,
+      "p90": 18,
+      "min": 17.5,
+      "max": 18
+     },
+     "frameGapP90": {
+      "median": 34.60000002384186,
+      "p90": 34.80000001192093,
+      "min": 33.80000001192093,
+      "max": 34.90000003576279
+     },
+     "dropped": {
+      "median": 134,
+      "p90": 134,
+      "min": 134,
+      "max": 134
+     },
+     "longTaskN": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMs": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMax": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "doneToFinalMs": {
+      "median": 1.199999988079071,
+      "p90": 2.300000011920929,
+      "min": 0.10000002384185791,
+      "max": 3
+     }
+    },
+    "new-fade": {
+     "totalMs": {
+      "median": 4496.600000023842,
+      "p90": 4497.199999988079,
+      "min": 4496.199999988079,
+      "max": 4497.800000011921
+     },
+     "commits": {
+      "median": 271,
+      "p90": 272,
+      "min": 271,
+      "max": 272
+     },
+     "latencyP50": {
+      "median": 8.5,
+      "p90": 8.699999988079071,
+      "min": 8.199999988079071,
+      "max": 9
+     },
+     "latencyP90": {
+      "median": 14.900000035762787,
+      "p90": 15.300000011920929,
+      "min": 14.600000023841858,
+      "max": 15.599999964237213
+     },
+     "frameGapP90": {
+      "median": 34.40000003576279,
+      "p90": 34.80000001192093,
+      "min": 33.80000001192093,
+      "max": 35.09999996423721
+     },
+     "dropped": {
+      "median": 134,
+      "p90": 134,
+      "min": 134,
+      "max": 134
+     },
+     "longTaskN": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMs": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "longTaskMax": {
+      "median": 0,
+      "p90": 0,
+      "min": 0,
+      "max": 0
+     },
+     "doneToFinalMs": {
+      "median": 0.699999988079071,
+      "p90": 1,
+      "min": 0.19999998807907104,
+      "max": 1.600000023841858
+     }
+    }
+   }
+  },
+  "checks": {
+   "F4a": {
+    "old-none": {
+     "runs": 10,
+     "errors": 0,
+     "allFinalEqual": true,
+     "endCalls": null
+    },
+    "old-hide": {
+     "runs": 10,
+     "errors": 0,
+     "allFinalEqual": true,
+     "endCalls": null
+    },
+    "new-default": {
+     "runs": 10,
+     "errors": 0,
+     "allFinalEqual": true,
+     "endCalls": [
+      1
+     ]
+    },
+    "new-smooth": {
+     "runs": 10,
+     "errors": 0,
+     "allFinalEqual": true,
+     "endCalls": [
+      1
+     ]
+    },
+    "new-fade": {
+     "runs": 10,
+     "errors": 0,
+     "allFinalEqual": true,
+     "endCalls": [
+      1
+     ]
+    }
+   },
+   "F4b": {
+    "old-none": {
+     "runs": 10,
+     "errors": 0,
+     "allFinalEqual": true,
+     "endCalls": null
+    },
+    "old-hide": {
+     "runs": 10,
+     "errors": 0,
+     "allFinalEqual": true,
+     "endCalls": null
+    },
+    "new-default": {
+     "runs": 10,
+     "errors": 0,
+     "allFinalEqual": true,
+     "endCalls": [
+      1
+     ]
+    },
+    "new-smooth": {
+     "runs": 10,
+     "errors": 0,
+     "allFinalEqual": true,
+     "endCalls": [
+      1
+     ]
+    },
+    "new-fade": {
+     "runs": 10,
+     "errors": 0,
+     "allFinalEqual": true,
+     "endCalls": [
+      1
+     ]
+    }
+   },
+   "F4d": {
+    "old-none": {
+     "runs": 10,
+     "errors": 0,
+     "allFinalEqual": true,
+     "endCalls": null
+    },
+    "old-hide": {
+     "runs": 10,
+     "errors": 0,
+     "allFinalEqual": true,
+     "endCalls": null
+    },
+    "new-default": {
+     "runs": 10,
+     "errors": 0,
+     "allFinalEqual": true,
+     "endCalls": [
+      1
+     ]
+    },
+    "new-smooth": {
+     "runs": 10,
+     "errors": 0,
+     "allFinalEqual": true,
+     "endCalls": [
+      1
+     ]
+    },
+    "new-fade": {
+     "runs": 10,
+     "errors": 0,
+     "allFinalEqual": true,
+     "endCalls": [
+      1
+     ]
+    }
+   }
+  }
+ },
+ "runs": [
+  {
+   "fixture": "F4a",
+   "kind": "old-none",
+   "round": 0,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7869.299999952316,
+   "doneToFinalMs": 7.099999964237213,
+   "commitCount": 459,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 458,
+    "p50": 16.69999998807907,
+    "p90": 17.400000035762787,
+    "max": 119.30000001192093
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.39999997615814,
+    "p90": 34.10000002384186,
+    "max": 107.69999998807907,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.899999976158142,
+    "p90": 16.30000001192093,
+    "max": 117.40000003576279
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 2,
+    "totalMs": 163,
+    "maxMs": 107
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-hide",
+   "round": 0,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7805.699999988079,
+   "doneToFinalMs": 14.099999964237213,
+   "commitCount": 455,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 454,
+    "p50": 16.80000001192093,
+    "p90": 17.899999976158142,
+    "max": 45.200000047683716
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.39999997615814,
+    "max": 49.09999996423721,
+    "dropped": 231
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.899999976158142,
+    "p90": 16.399999976158142,
+    "max": 38.10000002384186
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-default",
+   "round": 0,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7860.399999976158,
+   "doneToFinalMs": 6.300000011920929,
+   "commitCount": 445,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 444,
+    "p50": 16.700000047683716,
+    "p90": 17.600000023841858,
+    "max": 189
+   },
+   "frames": {
+    "n": 229,
+    "p50": 33.39999997615814,
+    "p90": 34,
+    "max": 176.19999998807907,
+    "dropped": 227
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.300000011920929,
+    "p90": 16.19999998807907,
+    "max": 100.09999996423721
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 5,
+    "totalMs": 534,
+    "maxMs": 172
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-smooth",
+   "round": 0,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7800.100000023842,
+   "doneToFinalMs": 4.300000011920929,
+   "commitCount": 307,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 306,
+    "p50": 30.5,
+    "p90": 32.5,
+    "max": 48.700000047683716
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34,
+    "max": 37,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 3,
+    "p90": 18.600000023841858,
+    "max": 34.19999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-fade",
+   "round": 0,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7797.100000023842,
+   "doneToFinalMs": 4.900000035762787,
+   "commitCount": 459,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 458,
+    "p50": 16.799999952316284,
+    "p90": 17.700000047683716,
+    "max": 44.700000047683716
+   },
+   "frames": {
+    "n": 227,
+    "p50": 33.30000001192093,
+    "p90": 34,
+    "max": 217.80000001192093,
+    "dropped": 227
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.699999988079071,
+    "p90": 16.30000001192093,
+    "max": 37.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-hide",
+   "round": 1,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7816.5,
+   "doneToFinalMs": 12.199999988079071,
+   "commitCount": 459,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 458,
+    "p50": 16.80000001192093,
+    "p90": 17.69999998807907,
+    "max": 55.39999997615814
+   },
+   "frames": {
+    "n": 234,
+    "p50": 33.39999997615814,
+    "p90": 34.299999952316284,
+    "max": 37.19999998807907,
+    "dropped": 234
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.900000035762787,
+    "p90": 16.5,
+    "max": 49.60000002384186
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-default",
+   "round": 1,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.899999976158,
+   "doneToFinalMs": 4.5,
+   "commitCount": 463,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 462,
+    "p50": 16.700000047683716,
+    "p90": 17.5,
+    "max": 22.400000035762787
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34,
+    "max": 36.5,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.199999988079071,
+    "p90": 16.19999998807907,
+    "max": 21.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 1,
+    "totalMs": 54,
+    "maxMs": 54
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-smooth",
+   "round": 1,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7799.599999964237,
+   "doneToFinalMs": 8.099999964237213,
+   "commitCount": 306,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 305,
+    "p50": 30.400000035762787,
+    "p90": 32.39999997615814,
+    "max": 51.69999998807907
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.89999997615814,
+    "max": 35.59999996423721,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 2.800000011920929,
+    "p90": 18.19999998807907,
+    "max": 40.39999997615814
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-fade",
+   "round": 1,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.100000023842,
+   "doneToFinalMs": 3.399999976158142,
+   "commitCount": 466,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 465,
+    "p50": 16.599999964237213,
+    "p90": 17.5,
+    "max": 26
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34,
+    "max": 34.90000003576279,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.200000047683716,
+    "p90": 15.899999976158142,
+    "max": 21.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-none",
+   "round": 1,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7796.899999976158,
+   "doneToFinalMs": 4.399999976158142,
+   "commitCount": 461,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 460,
+    "p50": 16.599999964237213,
+    "p90": 17.19999998807907,
+    "max": 129.19999998807907
+   },
+   "frames": {
+    "n": 231,
+    "p50": 33.30000001192093,
+    "p90": 33.80000001192093,
+    "max": 110.90000003576279,
+    "dropped": 231
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.399999976158142,
+    "p90": 15.800000011920929,
+    "max": 117.19999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 1,
+    "totalMs": 109,
+    "maxMs": 109
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-default",
+   "round": 2,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.800000011921,
+   "doneToFinalMs": 3.5,
+   "commitCount": 468,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 467,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 22
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.90000003576279,
+    "max": 36.40000003576279,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.699999988079071,
+    "p90": 15.5,
+    "max": 21.799999952316284
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-smooth",
+   "round": 2,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7799.799999952316,
+   "doneToFinalMs": 7.899999976158142,
+   "commitCount": 313,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 312,
+    "p50": 30.30000001192093,
+    "p90": 32.19999998807907,
+    "max": 35.19999998807907
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.80000001192093,
+    "max": 35.89999997615814,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 2.300000011920929,
+    "p90": 18,
+    "max": 33.799999952316284
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-fade",
+   "round": 2,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7796.400000035763,
+   "doneToFinalMs": 4,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.599999964237213,
+    "p90": 17.399999976158142,
+    "max": 21.400000035762787
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.80000001192093,
+    "max": 34,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.199999988079071,
+    "p90": 15.800000011920929,
+    "max": 21.899999976158142
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-none",
+   "round": 2,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7794.900000035763,
+   "doneToFinalMs": 3.200000047683716,
+   "commitCount": 469,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 468,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 21.19999998807907
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.69999998807907,
+    "max": 34.10000002384186,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.800000011920929,
+    "p90": 15.400000035762787,
+    "max": 21.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-hide",
+   "round": 2,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7801.699999988079,
+   "doneToFinalMs": 8.799999952316284,
+   "commitCount": 470,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 469,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 22.299999952316284
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.09999996423721,
+    "max": 34.90000003576279,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.899999976158142,
+    "p90": 15.199999988079071,
+    "max": 20.600000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-smooth",
+   "round": 3,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7799.300000011921,
+   "doneToFinalMs": 3.5,
+   "commitCount": 308,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 307,
+    "p50": 30.5,
+    "p90": 32.30000001192093,
+    "max": 35.10000002384186
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.89999997615814,
+    "max": 34.69999998807907,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 2.600000023841858,
+    "p90": 18.19999998807907,
+    "max": 33.90000003576279
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-fade",
+   "round": 3,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7798,
+   "doneToFinalMs": 5.399999976158142,
+   "commitCount": 468,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 467,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 21.30000001192093
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.89999997615814,
+    "max": 34.700000047683716,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.899999976158142,
+    "p90": 15.400000035762787,
+    "max": 20.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-none",
+   "round": 3,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7796.399999976158,
+   "doneToFinalMs": 3.899999976158142,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 31.700000047683716
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.80000001192093,
+    "max": 37.09999996423721,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.800000011920929,
+    "p90": 15.600000023841858,
+    "max": 23.399999976158142
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-hide",
+   "round": 3,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7798.900000035763,
+   "doneToFinalMs": 6.900000035762787,
+   "commitCount": 466,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 465,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 49.59999996423721
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34,
+    "max": 37.10000002384186,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.699999988079071,
+    "p90": 15.5,
+    "max": 48.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-default",
+   "round": 3,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.900000035763,
+   "doneToFinalMs": 4.300000011920929,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.600000023841858,
+    "p90": 17.399999976158142,
+    "max": 21.399999976158142
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34,
+    "max": 40.90000003576279,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.899999976158142,
+    "p90": 15.699999988079071,
+    "max": 21.19999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-fade",
+   "round": 4,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.900000035763,
+   "doneToFinalMs": 3.900000035762787,
+   "commitCount": 463,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 462,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 48.89999997615814
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34,
+    "max": 48.30000001192093,
+    "dropped": 232
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.599999964237213,
+    "p90": 15.799999952316284,
+    "max": 37.39999997615814
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-none",
+   "round": 4,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.199999988079,
+   "doneToFinalMs": 3.600000023841858,
+   "commitCount": 468,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 467,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 24.299999952316284
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.89999997615814,
+    "max": 37.10000002384186,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.899999976158142,
+    "p90": 15.600000023841858,
+    "max": 19.900000035762787
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-hide",
+   "round": 4,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7794.5,
+   "doneToFinalMs": 3.300000011920929,
+   "commitCount": 468,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 467,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 22.19999998807907
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.39999997615814,
+    "p90": 33.89999997615814,
+    "max": 35.10000002384186,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.899999976158142,
+    "p90": 15.5,
+    "max": 18.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-default",
+   "round": 4,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.600000023842,
+   "doneToFinalMs": 3.600000023841858,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 20.30000001192093
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.39999997615814,
+    "p90": 34,
+    "max": 34.89999997615814,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.300000011920929,
+    "p90": 15.300000011920929,
+    "max": 19.600000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-smooth",
+   "round": 4,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7806.799999952316,
+   "doneToFinalMs": 14.199999988079071,
+   "commitCount": 308,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 307,
+    "p50": 30.5,
+    "p90": 32.5,
+    "max": 47.90000003576279
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.09999996423721,
+    "max": 35.80000001192093,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 2.5,
+    "p90": 18,
+    "max": 34.19999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-none",
+   "round": 5,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.5,
+   "doneToFinalMs": 4.399999976158142,
+   "commitCount": 469,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 468,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 22.69999998807907
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.89999997615814,
+    "max": 34.80000001192093,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.600000023841858,
+    "p90": 15.5,
+    "max": 21.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-hide",
+   "round": 5,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7797,
+   "doneToFinalMs": 5.600000023841858,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.599999964237213,
+    "p90": 17.399999976158142,
+    "max": 23.5
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.19999998807907,
+    "max": 34.89999997615814,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.5,
+    "p90": 15.800000011920929,
+    "max": 20.69999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-default",
+   "round": 5,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7796.100000023842,
+   "doneToFinalMs": 3.800000011920929,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 22.5
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.39999997615814,
+    "p90": 34.19999998807907,
+    "max": 38.59999996423721,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.199999988079071,
+    "p90": 15.600000023841858,
+    "max": 21.19999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-smooth",
+   "round": 5,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.599999964237,
+   "doneToFinalMs": 4,
+   "commitCount": 316,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 315,
+    "p50": 29.900000035762787,
+    "p90": 32.19999998807907,
+    "max": 35.19999998807907
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.10000002384186,
+    "max": 36.80000001192093,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 2.5,
+    "p90": 18.100000023841858,
+    "max": 34.09999996423721
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-fade",
+   "round": 5,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7797.399999976158,
+   "doneToFinalMs": 3.600000023841858,
+   "commitCount": 468,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 467,
+    "p50": 16.5,
+    "p90": 17.399999976158142,
+    "max": 24.5
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.39999997615814,
+    "p90": 33.90000003576279,
+    "max": 34.89999997615814,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.900000035762787,
+    "p90": 15.400000035762787,
+    "max": 24
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-hide",
+   "round": 6,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7796.100000023842,
+   "doneToFinalMs": 3.5,
+   "commitCount": 468,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 467,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 21.900000035762787
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.89999997615814,
+    "max": 34.80000001192093,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9,
+    "p90": 15.5,
+    "max": 22.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-default",
+   "round": 6,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7796,
+   "doneToFinalMs": 4.199999988079071,
+   "commitCount": 468,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 467,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 22.399999976158142
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34,
+    "max": 36.30000001192093,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.5,
+    "p90": 15.300000011920929,
+    "max": 21.799999952316284
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-smooth",
+   "round": 6,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7796.100000023842,
+   "doneToFinalMs": 3.399999976158142,
+   "commitCount": 311,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 310,
+    "p50": 30.599999964237213,
+    "p90": 32.39999997615814,
+    "max": 38.5
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.39999997615814,
+    "p90": 34,
+    "max": 36.60000002384186,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 2.200000047683716,
+    "p90": 17.69999998807907,
+    "max": 34.90000003576279
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-fade",
+   "round": 6,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7796.199999988079,
+   "doneToFinalMs": 3.299999952316284,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.599999964237213,
+    "p90": 17.399999976158142,
+    "max": 22.80000001192093
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.19999998807907,
+    "max": 35,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.199999988079071,
+    "p90": 15.600000023841858,
+    "max": 22.399999976158142
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-none",
+   "round": 6,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.399999976158,
+   "doneToFinalMs": 3.199999988079071,
+   "commitCount": 469,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 468,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 21.5
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.89999997615814,
+    "max": 35.10000002384186,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.199999988079071,
+    "p90": 15.699999988079071,
+    "max": 20.19999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-default",
+   "round": 7,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7796.400000035763,
+   "doneToFinalMs": 4.900000035762787,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 21.80000001192093
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.10000002384186,
+    "max": 36.5,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.700000047683716,
+    "p90": 15.699999988079071,
+    "max": 19.899999976158142
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-smooth",
+   "round": 7,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7799.899999976158,
+   "doneToFinalMs": 4.199999988079071,
+   "commitCount": 307,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 306,
+    "p50": 30.69999998807907,
+    "p90": 32.5,
+    "max": 46.90000003576279
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.09999996423721,
+    "max": 36.09999996423721,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 2.600000023841858,
+    "p90": 18.200000047683716,
+    "max": 33.89999997615814
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-fade",
+   "round": 7,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.699999988079,
+   "doneToFinalMs": 3.5,
+   "commitCount": 465,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 464,
+    "p50": 16.599999964237213,
+    "p90": 17.400000035762787,
+    "max": 36.5
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34,
+    "max": 48.19999998807907,
+    "dropped": 231
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.899999976158142,
+    "p90": 15.899999976158142,
+    "max": 22.19999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-none",
+   "round": 7,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7799.300000011921,
+   "doneToFinalMs": 7.899999976158142,
+   "commitCount": 468,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 467,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 21.30000001192093
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34,
+    "max": 34.90000003576279,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.800000011920929,
+    "p90": 15.699999988079071,
+    "max": 20
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-hide",
+   "round": 7,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7796.300000011921,
+   "doneToFinalMs": 4.700000047683716,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.5,
+    "p90": 17.400000035762787,
+    "max": 30.19999998807907
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.30000001192093,
+    "max": 37.10000002384186,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9,
+    "p90": 15.799999952316284,
+    "max": 25.69999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-smooth",
+   "round": 8,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7794.900000035763,
+   "doneToFinalMs": 3.100000023841858,
+   "commitCount": 305,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 304,
+    "p50": 30.5,
+    "p90": 32.30000001192093,
+    "max": 45.60000002384186
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.80000001192093,
+    "max": 37.200000047683716,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 2.800000011920929,
+    "p90": 18.600000023841858,
+    "max": 34.10000002384186
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-fade",
+   "round": 8,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7794.600000023842,
+   "doneToFinalMs": 3.100000023841858,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.600000023841858,
+    "p90": 17.30000001192093,
+    "max": 21.30000001192093
+   },
+   "frames": {
+    "n": 232,
+    "p50": 33.30000001192093,
+    "p90": 34.69999998807907,
+    "max": 36.09999996423721,
+    "dropped": 232
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.800000011920929,
+    "p90": 15.599999964237213,
+    "max": 19.600000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-none",
+   "round": 8,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7796.800000011921,
+   "doneToFinalMs": 4.699999988079071,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.599999964237213,
+    "p90": 17.399999976158142,
+    "max": 28.19999998807907
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.60000002384186,
+    "max": 35.69999998807907,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.5,
+    "p90": 15.5,
+    "max": 25
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-hide",
+   "round": 8,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.899999976158,
+   "doneToFinalMs": 4.099999964237213,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 28.5
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.80000001192093,
+    "max": 37.59999996423721,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.599999964237213,
+    "p90": 15.5,
+    "max": 20.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-default",
+   "round": 8,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7800.300000011921,
+   "doneToFinalMs": 5,
+   "commitCount": 468,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 467,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 29.19999998807907
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.5,
+    "max": 44.60000002384186,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.599999964237213,
+    "p90": 15.399999976158142,
+    "max": 26.100000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-fade",
+   "round": 9,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7796.400000035763,
+   "doneToFinalMs": 4.400000035762787,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 22.69999998807907
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.39999997615814,
+    "p90": 35,
+    "max": 36.200000047683716,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9.199999988079071,
+    "p90": 15.699999988079071,
+    "max": 22
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-none",
+   "round": 9,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.5,
+   "doneToFinalMs": 3.200000047683716,
+   "commitCount": 469,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 468,
+    "p50": 16.5,
+    "p90": 17.200000047683716,
+    "max": 20.899999976158142
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.60000002384186,
+    "max": 35.5,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.399999976158142,
+    "p90": 15.199999988079071,
+    "max": 20.19999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-hide",
+   "round": 9,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7794.699999988079,
+   "doneToFinalMs": 3.099999964237213,
+   "commitCount": 469,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 468,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 21.399999976158142
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.80000001192093,
+    "max": 35,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 9,
+    "p90": 15.300000011920929,
+    "max": 20.19999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-default",
+   "round": 9,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795,
+   "doneToFinalMs": 3.300000011920929,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.600000023841858,
+    "p90": 17.299999952316284,
+    "max": 21.19999998807907
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.80000001192093,
+    "max": 34.799999952316284,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.900000035762787,
+    "p90": 15.5,
+    "max": 20.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-smooth",
+   "round": 9,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.599999964237,
+   "doneToFinalMs": 3,
+   "commitCount": 305,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 304,
+    "p50": 30.69999998807907,
+    "p90": 32.5,
+    "max": 46.799999952316284
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.80000001192093,
+    "max": 34.39999997615814,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 2.400000035762787,
+    "p90": 17.80000001192093,
+    "max": 34.39999997615814
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-none",
+   "round": 10,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7794.800000011921,
+   "doneToFinalMs": 2.800000011920929,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.5,
+    "p90": 17.400000035762787,
+    "max": 22
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.89999997615814,
+    "max": 37.19999998807907,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.400000035762787,
+    "p90": 15.5,
+    "max": 20.099999964237213
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-hide",
+   "round": 10,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795,
+   "doneToFinalMs": 3.100000023841858,
+   "commitCount": 468,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 467,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 21.100000023841858
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 33.80000001192093,
+    "max": 34.30000001192093,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.899999976158142,
+    "p90": 15.400000035762787,
+    "max": 19.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-default",
+   "round": 10,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.800000011921,
+   "doneToFinalMs": 3.800000011920929,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.600000023841858,
+    "p90": 17.400000035762787,
+    "max": 22
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.5,
+    "max": 35.80000001192093,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.899999976158142,
+    "p90": 15.299999952316284,
+    "max": 21.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-smooth",
+   "round": 10,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7796.800000011921,
+   "doneToFinalMs": 5.399999976158142,
+   "commitCount": 308,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 307,
+    "p50": 30.5,
+    "p90": 32.39999997615814,
+    "max": 47.5
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.69999998807907,
+    "max": 35.80000001192093,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 2.099999964237213,
+    "p90": 17.799999952316284,
+    "max": 33.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-fade",
+   "round": 10,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.300000011921,
+   "doneToFinalMs": 3.5,
+   "commitCount": 467,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 466,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 22.600000023841858
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.799999952316284,
+    "max": 36.19999998807907,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.799999952316284,
+    "p90": 15.5,
+    "max": 19.400000035762787
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-hide",
+   "round": 11,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7797.300000011921,
+   "doneToFinalMs": 5.900000035762787,
+   "commitCount": 469,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 468,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 21.100000023841858
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.299999952316284,
+    "p90": 34.5,
+    "max": 35.59999996423721,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.5,
+    "p90": 15.5,
+    "max": 21
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-default",
+   "round": 11,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.700000047684,
+   "doneToFinalMs": 3.800000011920929,
+   "commitCount": 469,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 468,
+    "p50": 16.5,
+    "p90": 17.299999952316284,
+    "max": 21.599999964237213
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.59999996423721,
+    "max": 35.60000002384186,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.899999976158142,
+    "p90": 15.300000011920929,
+    "max": 20.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-smooth",
+   "round": 11,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.199999988079,
+   "doneToFinalMs": 3.099999964237213,
+   "commitCount": 304,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 303,
+    "p50": 30.900000035762787,
+    "p90": 32.30000001192093,
+    "max": 48.39999997615814
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.80000001192093,
+    "max": 35.80000001192093,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 2.100000023841858,
+    "p90": 17.69999998807907,
+    "max": 33.60000002384186
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "new-fade",
+   "round": 11,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7796.200000047684,
+   "doneToFinalMs": 3.800000011920929,
+   "commitCount": 468,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 467,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 20.299999952316284
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.5,
+    "max": 36,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.099999964237213,
+    "p90": 15.199999988079071,
+    "max": 19.599999964237213
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4a",
+   "kind": "old-none",
+   "round": 11,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 487,
+   "totalMs": 7795.599999964237,
+   "doneToFinalMs": 3.899999976158142,
+   "commitCount": 469,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 468,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 21.400000035762787
+   },
+   "frames": {
+    "n": 233,
+    "p50": 33.30000001192093,
+    "p90": 34.59999996423721,
+    "max": 35.40000003576279,
+    "dropped": 233
+   },
+   "latencyMs": {
+    "n": 487,
+    "p50": 8.900000035762787,
+    "p90": 15.5,
+    "max": 20.69999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-none",
+   "round": 0,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 872.6999999880791,
+   "doneToFinalMs": 72.60000002384186,
+   "commitCount": 38,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 37,
+    "p50": 16.69999998807907,
+    "p90": 22.5,
+    "max": 156.39999997615814
+   },
+   "frames": {
+    "n": 21,
+    "p50": 33.30000001192093,
+    "p90": 35.799999952316284,
+    "max": 150.5,
+    "dropped": 20
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 10.900000035762787,
+    "p90": 21,
+    "max": 32.59999996423721
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 3,
+    "totalMs": 270,
+    "maxMs": 150
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-hide",
+   "round": 0,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 818.5,
+   "doneToFinalMs": 12.200000047683716,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.599999964237213,
+    "p90": 17.099999964237213,
+    "max": 21.5
+   },
+   "frames": {
+    "n": 24,
+    "p50": 33.39999997615814,
+    "p90": 34.90000003576279,
+    "max": 35.5,
+    "dropped": 24
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 9.099999964237213,
+    "p90": 16,
+    "max": 21.599999964237213
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-default",
+   "round": 0,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 809.5999999642372,
+   "doneToFinalMs": 5.799999952316284,
+   "commitCount": 45,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 44,
+    "p50": 17,
+    "p90": 19.30000001192093,
+    "max": 38.10000002384186
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.5,
+    "p90": 34.5,
+    "max": 35.59999996423721,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 10.399999976158142,
+    "p90": 18.100000023841858,
+    "max": 36.39999997615814
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 1,
+    "totalMs": 50,
+    "maxMs": 50
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-smooth",
+   "round": 0,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 811.8999999761581,
+   "doneToFinalMs": 11.800000011920929,
+   "commitCount": 29,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 28,
+    "p50": 30.799999952316284,
+    "p90": 33.89999997615814,
+    "max": 34.69999998807907
+   },
+   "frames": {
+    "n": 24,
+    "p50": 33.30000001192093,
+    "p90": 35.19999998807907,
+    "max": 35.80000001192093,
+    "dropped": 24
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 6.300000011920929,
+    "p90": 19.69999998807907,
+    "max": 21.19999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-fade",
+   "round": 0,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 803.8999999761581,
+   "doneToFinalMs": 4.099999964237213,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.69999998807907,
+    "p90": 17.69999998807907,
+    "max": 20.299999952316284
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 33.90000003576279,
+    "max": 35.19999998807907,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 7.899999976158142,
+    "p90": 15.600000023841858,
+    "max": 17.69999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-hide",
+   "round": 1,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 803.5,
+   "doneToFinalMs": 3.200000047683716,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.700000047683716,
+    "p90": 17.30000001192093,
+    "max": 20.5
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.39999997615814,
+    "p90": 35.09999996423721,
+    "max": 35.40000003576279,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.100000023841858,
+    "p90": 14.300000011920929,
+    "max": 18.100000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-default",
+   "round": 1,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 805.6000000238419,
+   "doneToFinalMs": 3.699999988079071,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 19.399999976158142
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.299999952316284,
+    "p90": 34.80000001192093,
+    "max": 35,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 7.400000035762787,
+    "p90": 15.200000047683716,
+    "max": 17.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-smooth",
+   "round": 1,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 807.1000000238419,
+   "doneToFinalMs": 6.199999988079071,
+   "commitCount": 31,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 30,
+    "p50": 30.600000023841858,
+    "p90": 32.69999998807907,
+    "max": 33.19999998807907
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.19999998807907,
+    "p90": 35.19999998807907,
+    "max": 35.80000001192093,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 3.800000011920929,
+    "p90": 18.80000001192093,
+    "max": 21.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-fade",
+   "round": 1,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.3000000119209,
+   "doneToFinalMs": 4.199999988079071,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.600000023841858,
+    "p90": 17.400000035762787,
+    "max": 20
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 35.5,
+    "max": 35.799999952316284,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.900000035762787,
+    "p90": 16.100000023841858,
+    "max": 17.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-none",
+   "round": 1,
+   "warmup": true,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 806.3000000119209,
+   "doneToFinalMs": 3.600000023841858,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.600000023841858,
+    "p90": 17.200000047683716,
+    "max": 20.19999998807907
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.200000047683716,
+    "p90": 35,
+    "max": 35.299999952316284,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 7.799999952316284,
+    "p90": 14.399999976158142,
+    "max": 16.200000047683716
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-default",
+   "round": 2,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 809,
+   "doneToFinalMs": 3.699999988079071,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.69999998807907,
+    "p90": 17.19999998807907,
+    "max": 20.5
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33,
+    "p90": 34.30000001192093,
+    "max": 34.89999997615814,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.899999976158142,
+    "p90": 14.300000011920929,
+    "max": 21.100000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-smooth",
+   "round": 2,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 807,
+   "doneToFinalMs": 7.300000011920929,
+   "commitCount": 31,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 30,
+    "p50": 29.900000035762787,
+    "p90": 31.899999976158142,
+    "max": 37.19999998807907
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 35.19999998807907,
+    "max": 38.39999997615814,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 3.200000047683716,
+    "p90": 19,
+    "max": 21.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-fade",
+   "round": 2,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.5,
+   "doneToFinalMs": 4.699999988079071,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.700000047683716,
+    "p90": 17.5,
+    "max": 20.399999976158142
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.40000003576279,
+    "p90": 34.5,
+    "max": 35,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8,
+    "p90": 15.900000035762787,
+    "max": 17.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-none",
+   "round": 2,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 803.1999999880791,
+   "doneToFinalMs": 2.800000011920929,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.69999998807907,
+    "p90": 17.5,
+    "max": 19.30000001192093
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.39999997615814,
+    "p90": 34.30000001192093,
+    "max": 35.40000003576279,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.200000047683716,
+    "p90": 15.600000023841858,
+    "max": 17.400000035762787
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-hide",
+   "round": 2,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.5,
+   "doneToFinalMs": 4.300000011920929,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 20.099999964237213
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 35,
+    "max": 35.19999998807907,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 7.699999988079071,
+    "p90": 15.800000011920929,
+    "max": 18
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-smooth",
+   "round": 3,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 806.3000000119209,
+   "doneToFinalMs": 6.900000035762787,
+   "commitCount": 31,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 30,
+    "p50": 29.69999998807907,
+    "p90": 32.39999997615814,
+    "max": 34.19999998807907
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 34.80000001192093,
+    "max": 35.30000001192093,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 3.100000023841858,
+    "p90": 18.5,
+    "max": 21.900000035762787
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-fade",
+   "round": 3,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 805.6000000238419,
+   "doneToFinalMs": 3.600000023841858,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.599999964237213,
+    "p90": 17.200000047683716,
+    "max": 19.899999976158142
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.19999998807907,
+    "p90": 34.299999952316284,
+    "max": 35.10000002384186,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.399999976158142,
+    "p90": 15.099999964237213,
+    "max": 18.099999964237213
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-none",
+   "round": 3,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.5,
+   "doneToFinalMs": 4.400000035762787,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.600000023841858,
+    "p90": 17.80000001192093,
+    "max": 20.69999998807907
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.40000003576279,
+    "p90": 34.60000002384186,
+    "max": 35.30000001192093,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.300000011920929,
+    "p90": 14.800000011920929,
+    "max": 19.600000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-hide",
+   "round": 3,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 803.8999999761581,
+   "doneToFinalMs": 4,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.600000023841858,
+    "p90": 17.30000001192093,
+    "max": 20.400000035762787
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 34.10000002384186,
+    "max": 35.200000047683716,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 7.399999976158142,
+    "p90": 15.100000023841858,
+    "max": 17.799999952316284
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-default",
+   "round": 3,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.6999999880791,
+   "doneToFinalMs": 3.099999964237213,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 19.19999998807907
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.200000047683716,
+    "p90": 34.69999998807907,
+    "max": 34.80000001192093,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.899999976158142,
+    "p90": 14.099999964237213,
+    "max": 17.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-fade",
+   "round": 4,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 803.3999999761581,
+   "doneToFinalMs": 3.100000023841858,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.599999964237213,
+    "p90": 17.099999964237213,
+    "max": 19.600000023841858
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.299999952316284,
+    "p90": 34.60000002384186,
+    "max": 35.10000002384186,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 6.800000011920929,
+    "p90": 14.200000047683716,
+    "max": 16.299999952316284
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-none",
+   "round": 4,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.3000000119209,
+   "doneToFinalMs": 3.5,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.80000001192093,
+    "p90": 17.5,
+    "max": 22.30000001192093
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.5,
+    "p90": 34.59999996423721,
+    "max": 35.5,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.900000035762787,
+    "p90": 15.899999976158142,
+    "max": 17.19999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-hide",
+   "round": 4,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 806.3999999761581,
+   "doneToFinalMs": 3.899999976158142,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.80000001192093,
+    "p90": 17.69999998807907,
+    "max": 27.099999964237213
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.39999997615814,
+    "p90": 34.90000003576279,
+    "max": 36.10000002384186,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 10.199999988079071,
+    "p90": 17.400000035762787,
+    "max": 21.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-default",
+   "round": 4,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 805.1000000238419,
+   "doneToFinalMs": 5.100000023841858,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 18.099999964237213
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.39999997615814,
+    "p90": 34.59999996423721,
+    "max": 35.40000003576279,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 9.100000023841858,
+    "p90": 14.5,
+    "max": 16.69999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-smooth",
+   "round": 4,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 808,
+   "doneToFinalMs": 4.699999988079071,
+   "commitCount": 30,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 29,
+    "p50": 30.80000001192093,
+    "p90": 32.200000047683716,
+    "max": 34.299999952316284
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.39999997615814,
+    "p90": 34.200000047683716,
+    "max": 34.89999997615814,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 3,
+    "p90": 18.399999976158142,
+    "max": 24.600000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-none",
+   "round": 5,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.3999999761581,
+   "doneToFinalMs": 4,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.599999964237213,
+    "p90": 17.099999964237213,
+    "max": 20.80000001192093
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.39999997615814,
+    "p90": 34,
+    "max": 34.80000001192093,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.300000011920929,
+    "p90": 14.5,
+    "max": 16.600000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-hide",
+   "round": 5,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 805.0999999642372,
+   "doneToFinalMs": 3.5,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.599999964237213,
+    "p90": 17.100000023841858,
+    "max": 20.80000001192093
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 34.60000002384186,
+    "max": 35.40000003576279,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 7.099999964237213,
+    "p90": 14.699999988079071,
+    "max": 18.19999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-default",
+   "round": 5,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.1999999880791,
+   "doneToFinalMs": 2.800000011920929,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 20.5
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.19999998807907,
+    "p90": 35,
+    "max": 35.69999998807907,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.599999964237213,
+    "p90": 16,
+    "max": 18
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-smooth",
+   "round": 5,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 803.0999999642372,
+   "doneToFinalMs": 3.199999988079071,
+   "commitCount": 31,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 30,
+    "p50": 30,
+    "p90": 32.89999997615814,
+    "max": 33.5
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.19999998807907,
+    "p90": 35.19999998807907,
+    "max": 35.700000047683716,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 3.5,
+    "p90": 18.69999998807907,
+    "max": 22.299999952316284
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-fade",
+   "round": 5,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 808.0999999642372,
+   "doneToFinalMs": 4.699999988079071,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.600000023841858,
+    "p90": 17.19999998807907,
+    "max": 17.80000001192093
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.10000002384186,
+    "p90": 35,
+    "max": 35.10000002384186,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.900000035762787,
+    "p90": 15.799999952316284,
+    "max": 24
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-hide",
+   "round": 6,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 806,
+   "doneToFinalMs": 3.699999988079071,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.599999964237213,
+    "p90": 17.200000047683716,
+    "max": 20.100000023841858
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 34.80000001192093,
+    "max": 35.69999998807907,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 10.100000023841858,
+    "p90": 15.899999976158142,
+    "max": 18
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-default",
+   "round": 6,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 805.6000000238419,
+   "doneToFinalMs": 4.800000011920929,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.700000047683716,
+    "p90": 17.900000035762787,
+    "max": 20.5
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.40000003576279,
+    "p90": 34.30000001192093,
+    "max": 35.19999998807907,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 9.5,
+    "p90": 16.69999998807907,
+    "max": 19.400000035762787
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-smooth",
+   "round": 6,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.3000000119209,
+   "doneToFinalMs": 4.300000011920929,
+   "commitCount": 30,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 29,
+    "p50": 31,
+    "p90": 32.80000001192093,
+    "max": 36.10000002384186
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33,
+    "p90": 34.69999998807907,
+    "max": 35.10000002384186,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 3.699999988079071,
+    "p90": 18.899999976158142,
+    "max": 21.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-fade",
+   "round": 6,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.3000000119209,
+   "doneToFinalMs": 4.100000023841858,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.80000001192093,
+    "p90": 17.69999998807907,
+    "max": 22.30000001192093
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.700000047683716,
+    "p90": 35,
+    "max": 35.30000001192093,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 6.5,
+    "p90": 15.700000047683716,
+    "max": 17.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-none",
+   "round": 6,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 805.3000000119209,
+   "doneToFinalMs": 5,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.700000047683716,
+    "p90": 17.5,
+    "max": 22.400000035762787
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.39999997615814,
+    "p90": 34.700000047683716,
+    "max": 36.799999952316284,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 7.5,
+    "p90": 15.5,
+    "max": 17.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-default",
+   "round": 7,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 805,
+   "doneToFinalMs": 5.5,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 17.600000023841858
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.299999952316284,
+    "p90": 34,
+    "max": 34.799999952316284,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 9.199999988079071,
+    "p90": 15.200000047683716,
+    "max": 20.899999976158142
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-smooth",
+   "round": 7,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 808,
+   "doneToFinalMs": 8.600000023841858,
+   "commitCount": 31,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 30,
+    "p50": 29.5,
+    "p90": 32.69999998807907,
+    "max": 33.39999997615814
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.39999997615814,
+    "p90": 34,
+    "max": 34.59999996423721,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 4.100000023841858,
+    "p90": 19,
+    "max": 21.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-fade",
+   "round": 7,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 807,
+   "doneToFinalMs": 4.199999988079071,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.600000023841858,
+    "p90": 17.100000023841858,
+    "max": 18.5
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.39999997615814,
+    "p90": 34.5,
+    "max": 35.200000047683716,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 9,
+    "p90": 15.799999952316284,
+    "max": 22.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-none",
+   "round": 7,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.1999999880791,
+   "doneToFinalMs": 3.800000011920929,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.80000001192093,
+    "p90": 17.69999998807907,
+    "max": 21.599999964237213
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.200000047683716,
+    "p90": 34.60000002384186,
+    "max": 34.90000003576279,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.400000035762787,
+    "p90": 15.200000047683716,
+    "max": 18.399999976158142
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-hide",
+   "round": 7,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 803.5999999642372,
+   "doneToFinalMs": 3.199999988079071,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.69999998807907,
+    "p90": 17.30000001192093,
+    "max": 20.5
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.19999998807907,
+    "p90": 34.59999996423721,
+    "max": 35.5,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 9.699999988079071,
+    "p90": 16.19999998807907,
+    "max": 17.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-smooth",
+   "round": 8,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.1999999880791,
+   "doneToFinalMs": 3.799999952316284,
+   "commitCount": 33,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 32,
+    "p50": 23.30000001192093,
+    "p90": 31.899999976158142,
+    "max": 33.19999998807907
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.19999998807907,
+    "p90": 34.89999997615814,
+    "max": 36.59999996423721,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 3,
+    "p90": 18.100000023841858,
+    "max": 20.400000035762787
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-fade",
+   "round": 8,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.7000000476837,
+   "doneToFinalMs": 3.800000011920929,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.69999998807907,
+    "p90": 17.600000023841858,
+    "max": 20
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.299999952316284,
+    "p90": 34.59999996423721,
+    "max": 35.5,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 7.600000023841858,
+    "p90": 16.100000023841858,
+    "max": 18.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-none",
+   "round": 8,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 806.3000000119209,
+   "doneToFinalMs": 3.199999988079071,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.599999964237213,
+    "p90": 17.100000023841858,
+    "max": 20.400000035762787
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.40000003576279,
+    "p90": 34.5,
+    "max": 35.39999997615814,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.199999988079071,
+    "p90": 15.5,
+    "max": 17.69999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-hide",
+   "round": 8,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 803.5,
+   "doneToFinalMs": 3.100000023841858,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.69999998807907,
+    "p90": 17.899999976158142,
+    "max": 20.100000023841858
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.40000003576279,
+    "p90": 34.59999996423721,
+    "max": 34.69999998807907,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 7.900000035762787,
+    "p90": 15.600000023841858,
+    "max": 17.100000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-default",
+   "round": 8,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 803.2999999523163,
+   "doneToFinalMs": 3.399999976158142,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.69999998807907,
+    "p90": 17.400000035762787,
+    "max": 19.69999998807907
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 34.10000002384186,
+    "max": 35.19999998807907,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.5,
+    "p90": 15.699999988079071,
+    "max": 17.100000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-fade",
+   "round": 9,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 806,
+   "doneToFinalMs": 3.199999988079071,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.5,
+    "p90": 17.5,
+    "max": 20.700000047683716
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.299999952316284,
+    "p90": 34.40000003576279,
+    "max": 36.80000001192093,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 6.900000035762787,
+    "p90": 14.600000023841858,
+    "max": 19.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-none",
+   "round": 9,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 803.2000000476837,
+   "doneToFinalMs": 3.100000023841858,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.69999998807907,
+    "p90": 17.69999998807907,
+    "max": 20.30000001192093
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.39999997615814,
+    "p90": 34.5,
+    "max": 34.799999952316284,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 9.5,
+    "p90": 16.100000023841858,
+    "max": 18.799999952316284
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-hide",
+   "round": 9,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 803.7999999523163,
+   "doneToFinalMs": 3.599999964237213,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.700000047683716,
+    "p90": 17.400000035762787,
+    "max": 20.100000023841858
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.5,
+    "p90": 35,
+    "max": 35.30000001192093,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 7.100000023841858,
+    "p90": 15.100000023841858,
+    "max": 17.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-default",
+   "round": 9,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 807.6999999880791,
+   "doneToFinalMs": 6.300000011920929,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.600000023841858,
+    "p90": 17.5,
+    "max": 20.400000035762787
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.39999997615814,
+    "p90": 34.80000001192093,
+    "max": 35.69999998807907,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 7.599999964237213,
+    "p90": 15.5,
+    "max": 17.700000047683716
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-smooth",
+   "round": 9,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.3000000119209,
+   "doneToFinalMs": 4.199999988079071,
+   "commitCount": 30,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 29,
+    "p50": 31.19999998807907,
+    "p90": 33.10000002384186,
+    "max": 37.700000047683716
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 34.10000002384186,
+    "max": 35.09999996423721,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 3.699999988079071,
+    "p90": 18.600000023841858,
+    "max": 24.700000047683716
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-none",
+   "round": 10,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 805.3999999761581,
+   "doneToFinalMs": 5.199999988079071,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.600000023841858,
+    "p90": 17.30000001192093,
+    "max": 21.5
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 35,
+    "max": 35.19999998807907,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.799999952316284,
+    "p90": 15.900000035762787,
+    "max": 17.599999964237213
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-hide",
+   "round": 10,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 808.3999999761581,
+   "doneToFinalMs": 7.699999988079071,
+   "commitCount": 47,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 46,
+    "p50": 17,
+    "p90": 17.899999976158142,
+    "max": 20.5
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.40000003576279,
+    "p90": 34.39999997615814,
+    "max": 37.30000001192093,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 12,
+    "p90": 16.80000001192093,
+    "max": 20.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-default",
+   "round": 10,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.6999999880791,
+   "doneToFinalMs": 3.599999964237213,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.599999964237213,
+    "p90": 17.100000023841858,
+    "max": 19.69999998807907
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 34,
+    "max": 34.59999996423721,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.800000011920929,
+    "p90": 14.599999964237213,
+    "max": 17.900000035762787
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-smooth",
+   "round": 10,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 803.8999999761581,
+   "doneToFinalMs": 3.899999976158142,
+   "commitCount": 32,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 31,
+    "p50": 30.30000001192093,
+    "p90": 32.30000001192093,
+    "max": 32.69999998807907
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 34.200000047683716,
+    "max": 35.40000003576279,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 3.100000023841858,
+    "p90": 18.5,
+    "max": 19.799999952316284
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-fade",
+   "round": 10,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 803.6000000238419,
+   "doneToFinalMs": 3.800000011920929,
+   "commitCount": 47,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 46,
+    "p50": 16.69999998807907,
+    "p90": 17.400000035762787,
+    "max": 33.19999998807907
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.09999996423721,
+    "p90": 35.40000003576279,
+    "max": 49.60000002384186,
+    "dropped": 22
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 7.299999952316284,
+    "p90": 14.5,
+    "max": 21.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-hide",
+   "round": 11,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 803.8000000119209,
+   "doneToFinalMs": 4.400000035762787,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.700000047683716,
+    "p90": 17.5,
+    "max": 21.5
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 34.89999997615814,
+    "max": 35.5,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 9,
+    "p90": 15.800000011920929,
+    "max": 17.200000047683716
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-default",
+   "round": 11,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.6000000238419,
+   "doneToFinalMs": 3.300000011920929,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.600000023841858,
+    "p90": 17.100000023841858,
+    "max": 19.799999952316284
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 33.80000001192093,
+    "max": 35.40000003576279,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.399999976158142,
+    "p90": 15.600000023841858,
+    "max": 17.600000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-smooth",
+   "round": 11,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 808.8999999761581,
+   "doneToFinalMs": 5.399999976158142,
+   "commitCount": 30,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 29,
+    "p50": 31,
+    "p90": 32.30000001192093,
+    "max": 34.299999952316284
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 34.19999998807907,
+    "max": 35.69999998807907,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 4,
+    "p90": 18.69999998807907,
+    "max": 25.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "new-fade",
+   "round": 11,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 804.3999999761581,
+   "doneToFinalMs": 3.899999976158142,
+   "commitCount": 48,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 47,
+    "p50": 16.69999998807907,
+    "p90": 17.30000001192093,
+    "max": 20.19999998807907
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.30000001192093,
+    "p90": 34.80000001192093,
+    "max": 35.60000002384186,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 9.600000023841858,
+    "p90": 15.799999952316284,
+    "max": 18
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4b",
+   "kind": "old-none",
+   "round": 11,
+   "warmup": false,
+   "chars": 9724,
+   "chunks": 50,
+   "totalMs": 807.0999999642372,
+   "doneToFinalMs": 4,
+   "commitCount": 49,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 48,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 20.900000035762787
+   },
+   "frames": {
+    "n": 23,
+    "p50": 33.200000047683716,
+    "p90": 34.59999996423721,
+    "max": 35.19999998807907,
+    "dropped": 23
+   },
+   "latencyMs": {
+    "n": 50,
+    "p50": 8.200000047683716,
+    "p90": 16,
+    "max": 19.200000047683716
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-none",
+   "round": 0,
+   "warmup": true,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.600000023842,
+   "doneToFinalMs": 1.5,
+   "commitCount": 267,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 266,
+    "p50": 16.5,
+    "p90": 17.399999976158142,
+    "max": 66.5
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.80000001192093,
+    "max": 53.799999952316284,
+    "dropped": 133
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 9.200000047683716,
+    "p90": 15.400000035762787,
+    "max": 24.899999976158142
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 1,
+    "totalMs": 52,
+    "maxMs": 52
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-hide",
+   "round": 0,
+   "warmup": true,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497,
+   "doneToFinalMs": 1,
+   "commitCount": 272,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 271,
+    "p50": 16.5,
+    "p90": 17.100000023841858,
+    "max": 20
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.89999997615814,
+    "max": 36.19999998807907,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.300000011920929,
+    "p90": 14.600000023841858,
+    "max": 17.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-default",
+   "round": 0,
+   "warmup": true,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.900000035763,
+   "doneToFinalMs": 1.100000023841858,
+   "commitCount": 269,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 268,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 33.5
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.5,
+    "max": 35.39999997615814,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.400000035762787,
+    "p90": 15.300000011920929,
+    "max": 22.899999976158142
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-smooth",
+   "round": 0,
+   "warmup": true,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4499.300000011921,
+   "doneToFinalMs": 3.199999988079071,
+   "commitCount": 172,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 171,
+    "p50": 30.899999976158142,
+    "p90": 32.59999996423721,
+    "max": 48.700000047683716
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.30000001192093,
+    "max": 35.80000001192093,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 2.399999976158142,
+    "p90": 18,
+    "max": 35.09999996423721
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-fade",
+   "round": 0,
+   "warmup": true,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.300000011921,
+   "doneToFinalMs": 0.5,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.599999964237213,
+    "p90": 17.19999998807907,
+    "max": 18.900000035762787
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.299999952316284,
+    "p90": 34.40000003576279,
+    "max": 35.59999996423721,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.600000023841858,
+    "p90": 15.200000047683716,
+    "max": 18.900000035762787
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-hide",
+   "round": 1,
+   "warmup": true,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.399999976158,
+   "doneToFinalMs": 0.19999998807907104,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.100000023841858,
+    "max": 19.799999952316284
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.39999997615814,
+    "max": 35.60000002384186,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.600000023841858,
+    "p90": 14.700000047683716,
+    "max": 17.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-default",
+   "round": 1,
+   "warmup": true,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497,
+   "doneToFinalMs": 1,
+   "commitCount": 269,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 268,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 35.59999996423721
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.39999997615814,
+    "p90": 34.39999997615814,
+    "max": 50.30000001192093,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.800000011920929,
+    "p90": 15,
+    "max": 17.69999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-smooth",
+   "round": 1,
+   "warmup": true,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.5,
+   "doneToFinalMs": 0.6000000238418579,
+   "commitCount": 177,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 176,
+    "p50": 30.799999952316284,
+    "p90": 32.40000003576279,
+    "max": 48.69999998807907
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.39999997615814,
+    "max": 35.80000001192093,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 1.800000011920929,
+    "p90": 17.600000023841858,
+    "max": 33.69999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-fade",
+   "round": 1,
+   "warmup": true,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.599999964237,
+   "doneToFinalMs": 0.5999999642372131,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.599999964237213,
+    "p90": 17.19999998807907,
+    "max": 18.400000035762787
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.30000001192093,
+    "max": 35.5,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 7.699999988079071,
+    "p90": 14.900000035762787,
+    "max": 17.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-none",
+   "round": 1,
+   "warmup": true,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497,
+   "doneToFinalMs": 0.6000000238418579,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 19.30000001192093
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.39999997615814,
+    "p90": 34.69999998807907,
+    "max": 35.59999996423721,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.100000023841858,
+    "p90": 15.5,
+    "max": 18
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-default",
+   "round": 2,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4498.100000023842,
+   "doneToFinalMs": 1.600000023841858,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 18.599999964237213
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 35.09999996423721,
+    "max": 35.700000047683716,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.099999964237213,
+    "p90": 15.100000023841858,
+    "max": 18.799999952316284
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-smooth",
+   "round": 2,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.800000011921,
+   "doneToFinalMs": 2.300000011920929,
+   "commitCount": 171,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 170,
+    "p50": 31,
+    "p90": 32.60000002384186,
+    "max": 48.69999998807907
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.40000003576279,
+    "p90": 34.90000003576279,
+    "max": 35.799999952316284,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 2.300000011920929,
+    "p90": 17.69999998807907,
+    "max": 34.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-fade",
+   "round": 2,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.600000023842,
+   "doneToFinalMs": 0.699999988079071,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.200000047683716,
+    "max": 20
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.299999952316284,
+    "p90": 35.09999996423721,
+    "max": 35.59999996423721,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.5,
+    "p90": 14.799999952316284,
+    "max": 16.899999976158142
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-none",
+   "round": 2,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.900000035763,
+   "doneToFinalMs": 1,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.200000047683716,
+    "max": 19.5
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.19999998807907,
+    "p90": 34.80000001192093,
+    "max": 35.30000001192093,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.5,
+    "p90": 15,
+    "max": 18.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-hide",
+   "round": 2,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.100000023842,
+   "doneToFinalMs": 1.5,
+   "commitCount": 272,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 271,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 18.69999998807907
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.19999998807907,
+    "p90": 34.69999998807907,
+    "max": 35.60000002384186,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8,
+    "p90": 14.400000035762787,
+    "max": 17.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-smooth",
+   "round": 3,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.699999988079,
+   "doneToFinalMs": 1.199999988079071,
+   "commitCount": 170,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 169,
+    "p50": 31,
+    "p90": 32.80000001192093,
+    "max": 47.59999996423721
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.19999998807907,
+    "max": 34.69999998807907,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 2.599999964237213,
+    "p90": 18,
+    "max": 34.39999997615814
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-fade",
+   "round": 3,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.199999988079,
+   "doneToFinalMs": 0.699999988079071,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.200000047683716,
+    "max": 20
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.5,
+    "max": 35.69999998807907,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.699999988079071,
+    "p90": 15.100000023841858,
+    "max": 17.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-none",
+   "round": 3,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.699999988079,
+   "doneToFinalMs": 2.100000023841858,
+   "commitCount": 270,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 269,
+    "p50": 16.5,
+    "p90": 17.5,
+    "max": 19.399999976158142
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.80000001192093,
+    "max": 35.69999998807907,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 9.199999988079071,
+    "p90": 15.5,
+    "max": 17.600000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-hide",
+   "round": 3,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.600000023842,
+   "doneToFinalMs": 1.699999988079071,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 20
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.60000002384186,
+    "max": 35.30000001192093,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.5,
+    "p90": 15.300000011920929,
+    "max": 18
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-default",
+   "round": 3,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.599999964237,
+   "doneToFinalMs": 0.30000001192092896,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 18.80000001192093
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.69999998807907,
+    "max": 35.69999998807907,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8,
+    "p90": 15.100000023841858,
+    "max": 17.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-fade",
+   "round": 4,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.199999988079,
+   "doneToFinalMs": 1,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 18.600000023841858
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.39999997615814,
+    "p90": 34.39999997615814,
+    "max": 35.5,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.199999988079071,
+    "p90": 14.800000011920929,
+    "max": 17.599999964237213
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-none",
+   "round": 4,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.699999988079,
+   "doneToFinalMs": 0.800000011920929,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 18.80000001192093
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 33.89999997615814,
+    "max": 34.69999998807907,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.399999976158142,
+    "p90": 15,
+    "max": 17.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-hide",
+   "round": 4,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.800000011921,
+   "doneToFinalMs": 1.199999988079071,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 18.399999976158142
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.39999997615814,
+    "p90": 33.80000001192093,
+    "max": 34.89999997615814,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8,
+    "p90": 15.300000011920929,
+    "max": 17.69999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-default",
+   "round": 4,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.300000011921,
+   "doneToFinalMs": 0.6000000238418579,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.399999976158142,
+    "max": 19
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 33.80000001192093,
+    "max": 34.19999998807907,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.199999988079071,
+    "p90": 15.199999988079071,
+    "max": 18.19999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-smooth",
+   "round": 4,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.799999952316,
+   "doneToFinalMs": 1.899999976158142,
+   "commitCount": 175,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 174,
+    "p50": 30.80000001192093,
+    "p90": 32.5,
+    "max": 47.5
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 33.90000003576279,
+    "max": 34.89999997615814,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 2.199999988079071,
+    "p90": 17.5,
+    "max": 33.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-none",
+   "round": 5,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496,
+   "doneToFinalMs": 0.2999999523162842,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.299999952316284,
+    "max": 20.600000023841858
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 33.80000001192093,
+    "max": 37.5,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8,
+    "p90": 14.800000011920929,
+    "max": 17
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-hide",
+   "round": 5,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.200000047684,
+   "doneToFinalMs": 0.800000011920929,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 18.30000001192093
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 33.799999952316284,
+    "max": 34.60000002384186,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.300000011920929,
+    "p90": 14.5,
+    "max": 17.400000035762787
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-default",
+   "round": 5,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496,
+   "doneToFinalMs": 0.8999999761581421,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 18.799999952316284
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 33.89999997615814,
+    "max": 34.10000002384186,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.199999988079071,
+    "p90": 15.199999988079071,
+    "max": 17.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-smooth",
+   "round": 5,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.699999988079,
+   "doneToFinalMs": 1.600000023841858,
+   "commitCount": 178,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 177,
+    "p50": 30.599999964237213,
+    "p90": 32.60000002384186,
+    "max": 34.200000047683716
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 33.80000001192093,
+    "max": 34.5,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 2.100000023841858,
+    "p90": 17.69999998807907,
+    "max": 21
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-fade",
+   "round": 5,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.800000011921,
+   "doneToFinalMs": 1.600000023841858,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 18.600000023841858
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 33.80000001192093,
+    "max": 34.39999997615814,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.199999988079071,
+    "p90": 15.300000011920929,
+    "max": 19.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-hide",
+   "round": 6,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.599999964237,
+   "doneToFinalMs": 0.5999999642372131,
+   "commitCount": 272,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 271,
+    "p50": 16.5,
+    "p90": 17.100000023841858,
+    "max": 18.80000001192093
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34,
+    "max": 35.5,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 7.900000035762787,
+    "p90": 14.800000011920929,
+    "max": 17.399999976158142
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-default",
+   "round": 6,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.100000023842,
+   "doneToFinalMs": 1.5,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.299999952316284,
+    "max": 18.299999952316284
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.69999998807907,
+    "max": 35.59999996423721,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.199999988079071,
+    "p90": 14.900000035762787,
+    "max": 17.900000035762787
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-smooth",
+   "round": 6,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.900000035763,
+   "doneToFinalMs": 2.300000011920929,
+   "commitCount": 176,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 175,
+    "p50": 30.799999952316284,
+    "p90": 32.5,
+    "max": 34.90000003576279
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.299999952316284,
+    "p90": 34.80000001192093,
+    "max": 35.80000001192093,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 2.100000023841858,
+    "p90": 17.80000001192093,
+    "max": 20.100000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-fade",
+   "round": 6,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.399999976158,
+   "doneToFinalMs": 0.5,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.599999964237213,
+    "p90": 17.19999998807907,
+    "max": 18.299999952316284
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.40000003576279,
+    "max": 35.30000001192093,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.199999988079071,
+    "p90": 14.600000023841858,
+    "max": 18.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-none",
+   "round": 6,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4495.899999976158,
+   "doneToFinalMs": 0.5999999642372131,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.299999952316284,
+    "max": 19.599999964237213
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.39999997615814,
+    "p90": 34.80000001192093,
+    "max": 35.80000001192093,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 7.600000023841858,
+    "p90": 15.5,
+    "max": 19.100000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-default",
+   "round": 7,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.600000023842,
+   "doneToFinalMs": 0.10000002384185791,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.599999964237213,
+    "p90": 17.30000001192093,
+    "max": 18.899999976158142
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.90000003576279,
+    "max": 36,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.5,
+    "p90": 15.300000011920929,
+    "max": 17.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-smooth",
+   "round": 7,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4495.900000035763,
+   "doneToFinalMs": 0.10000002384185791,
+   "commitCount": 171,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 170,
+    "p50": 30.799999952316284,
+    "p90": 32.69999998807907,
+    "max": 49
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.69999998807907,
+    "max": 36,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 2.399999976158142,
+    "p90": 17.700000047683716,
+    "max": 35.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-fade",
+   "round": 7,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497,
+   "doneToFinalMs": 0.5999999642372131,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.399999976158142,
+    "max": 19.30000001192093
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.69999998807907,
+    "max": 35.89999997615814,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.600000023841858,
+    "p90": 14.800000011920929,
+    "max": 19.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-none",
+   "round": 7,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.699999988079,
+   "doneToFinalMs": 0.6000000238418579,
+   "commitCount": 272,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 271,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 18.69999998807907
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.299999952316284,
+    "p90": 34.69999998807907,
+    "max": 35.5,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 7.699999988079071,
+    "p90": 14.599999964237213,
+    "max": 16.600000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-hide",
+   "round": 7,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.100000023842,
+   "doneToFinalMs": 1,
+   "commitCount": 270,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 269,
+    "p50": 16.600000023841858,
+    "p90": 17.5,
+    "max": 19.200000047683716
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.89999997615814,
+    "max": 35.700000047683716,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8,
+    "p90": 14.800000011920929,
+    "max": 18.400000035762787
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-smooth",
+   "round": 8,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.800000011921,
+   "doneToFinalMs": 0.6000000238418579,
+   "commitCount": 169,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 168,
+    "p50": 30.900000035762787,
+    "p90": 32.799999952316284,
+    "max": 49.40000003576279
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.69999998807907,
+    "max": 35.5,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 2.399999976158142,
+    "p90": 18,
+    "max": 35.09999996423721
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-fade",
+   "round": 8,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.599999964237,
+   "doneToFinalMs": 0.19999998807907104,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.299999952316284,
+    "max": 20.900000035762787
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.39999997615814,
+    "p90": 34.80000001192093,
+    "max": 35.5,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 9,
+    "p90": 15.599999964237213,
+    "max": 17.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-none",
+   "round": 8,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.199999988079,
+   "doneToFinalMs": 0.10000002384185791,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 18.400000035762787
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.799999952316284,
+    "max": 36.09999996423721,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8,
+    "p90": 15,
+    "max": 17.100000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-hide",
+   "round": 8,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4495.900000035763,
+   "doneToFinalMs": 0.30000001192092896,
+   "commitCount": 269,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 268,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 29.099999964237213
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.799999952316284,
+    "max": 40.5,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.600000023841858,
+    "p90": 15,
+    "max": 24.100000023841858
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-default",
+   "round": 8,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.599999964237,
+   "doneToFinalMs": 0.8999999761581421,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 18.599999964237213
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.80000001192093,
+    "max": 35.5,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.5,
+    "p90": 14.699999988079071,
+    "max": 16.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-fade",
+   "round": 9,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.600000023842,
+   "doneToFinalMs": 0.30000001192092896,
+   "commitCount": 272,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 271,
+    "p50": 16.5,
+    "p90": 17.200000047683716,
+    "max": 19
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.60000002384186,
+    "max": 36.09999996423721,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.399999976158142,
+    "p90": 15,
+    "max": 19.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-none",
+   "round": 9,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.800000011921,
+   "doneToFinalMs": 0.699999988079071,
+   "commitCount": 272,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 271,
+    "p50": 16.5,
+    "p90": 17.100000023841858,
+    "max": 18.799999952316284
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.80000001192093,
+    "max": 35.89999997615814,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 7.899999976158142,
+    "p90": 15,
+    "max": 17.900000035762787
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-hide",
+   "round": 9,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.699999988079,
+   "doneToFinalMs": 0.30000001192092896,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 19
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 35.09999996423721,
+    "max": 35.89999997615814,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.600000023841858,
+    "p90": 15.199999988079071,
+    "max": 18
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-default",
+   "round": 9,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.300000011921,
+   "doneToFinalMs": 0.19999998807907104,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 18.700000047683716
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.69999998807907,
+    "max": 35.700000047683716,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.100000023841858,
+    "p90": 15,
+    "max": 18.30000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-smooth",
+   "round": 9,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4498.400000035763,
+   "doneToFinalMs": 3,
+   "commitCount": 175,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 174,
+    "p50": 30.399999976158142,
+    "p90": 32.5,
+    "max": 49.39999997615814
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.60000002384186,
+    "max": 35.5,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 1.9000000357627869,
+    "p90": 17.5,
+    "max": 34.60000002384186
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-none",
+   "round": 10,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.899999976158,
+   "doneToFinalMs": 0.699999988079071,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.399999976158142,
+    "max": 18.899999976158142
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.40000003576279,
+    "max": 35.799999952316284,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 7.800000011920929,
+    "p90": 14.699999988079071,
+    "max": 17.900000035762787
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-hide",
+   "round": 10,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.699999988079,
+   "doneToFinalMs": 0.8999999761581421,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.400000035762787,
+    "p90": 17.30000001192093,
+    "max": 20.200000047683716
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.60000002384186,
+    "max": 35.5,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.199999988079071,
+    "p90": 14.699999988079071,
+    "max": 17.900000035762787
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-default",
+   "round": 10,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497.199999988079,
+   "doneToFinalMs": 1,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.599999964237213,
+    "p90": 17.19999998807907,
+    "max": 18.80000001192093
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.89999997615814,
+    "max": 35.39999997615814,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.199999988079071,
+    "p90": 15,
+    "max": 18.19999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-smooth",
+   "round": 10,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.599999964237,
+   "doneToFinalMs": 0.8999999761581421,
+   "commitCount": 176,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 175,
+    "p50": 30.69999998807907,
+    "p90": 32.5,
+    "max": 49
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.5,
+    "max": 35.5,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 2.099999964237213,
+    "p90": 17.5,
+    "max": 34.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-fade",
+   "round": 10,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.699999988079,
+   "doneToFinalMs": 0.8999999761581421,
+   "commitCount": 272,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 271,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 18.80000001192093
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.39999997615814,
+    "p90": 34.39999997615814,
+    "max": 35.80000001192093,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.599999964237213,
+    "p90": 15,
+    "max": 17.399999976158142
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-hide",
+   "round": 11,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.800000011921,
+   "doneToFinalMs": 0.699999988079071,
+   "commitCount": 272,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 271,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 18.19999998807907
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.39999997615814,
+    "p90": 34.60000002384186,
+    "max": 35.80000001192093,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.400000035762787,
+    "p90": 14.699999988079071,
+    "max": 17.69999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-default",
+   "round": 11,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4495.800000011921,
+   "doneToFinalMs": 0.19999998807907104,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.19999998807907,
+    "max": 18.30000001192093
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.39999997615814,
+    "max": 35.30000001192093,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.5,
+    "p90": 14.700000047683716,
+    "max": 17.69999998807907
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-smooth",
+   "round": 11,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4497,
+   "doneToFinalMs": 1,
+   "commitCount": 177,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 176,
+    "p50": 30.69999998807907,
+    "p90": 32.40000003576279,
+    "max": 34.80000001192093
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.69999998807907,
+    "max": 35.5,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 1.899999976158142,
+    "p90": 17.599999964237213,
+    "max": 20.5
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "new-fade",
+   "round": 11,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4496.199999988079,
+   "doneToFinalMs": 0.699999988079071,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.30000001192093,
+    "max": 18.80000001192093
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 34.10000002384186,
+    "max": 35.19999998807907,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.599999964237213,
+    "p90": 14.900000035762787,
+    "max": 19.399999976158142
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": 1
+  },
+  {
+   "fixture": "F4d",
+   "kind": "old-none",
+   "round": 11,
+   "warmup": false,
+   "chars": 5619,
+   "chunks": 281,
+   "totalMs": 4499.699999988079,
+   "doneToFinalMs": 3.199999988079071,
+   "commitCount": 271,
+   "commitsAfterDone": 1,
+   "commitSpacingMs": {
+    "n": 270,
+    "p50": 16.5,
+    "p90": 17.100000023841858,
+    "max": 19
+   },
+   "frames": {
+    "n": 134,
+    "p50": 33.30000001192093,
+    "p90": 35,
+    "max": 35.80000001192093,
+    "dropped": 134
+   },
+   "latencyMs": {
+    "n": 281,
+    "p50": 8.100000023841858,
+    "p90": 15.199999988079071,
+    "max": 17.80000001192093
+   },
+   "finalEqual": true,
+   "longTasks": {
+    "n": 0,
+    "totalMs": 0,
+    "maxMs": 0
+   },
+   "endCalls": null
+  }
+ ]
+}

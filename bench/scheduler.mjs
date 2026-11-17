@@ -44,6 +44,7 @@ const intervals = flag('intervals', '16,33,50,100').split(',').map(Number);
 const textFile = flag('text', null);
 const transcriptFile = flag('transcript', null); // SYNTHETIC [{t,text}] replay
 const save = args.includes('--save');
+const smoothing = flag('smoothing', 'none'); // 'none' | 'hide-incomplete'
 const transcript = transcriptFile
   ? JSON.parse(readFileSync(transcriptFile, 'utf8'))
   : null;
@@ -186,9 +187,9 @@ console.log(`one full parse(): ${fullMs.toFixed(2)} ms  (x full 1.0)\n`);
 const strategies = [
   ...intervals.map((n) => ({
     label: `timeout@${n}`,
-    options: { strategy: 'timeout', flushIntervalMs: n },
+    options: { strategy: 'timeout', flushIntervalMs: n, smoothing },
   })),
-  { label: 'raf', options: { strategy: 'raf' } },
+  { label: 'raf', options: { strategy: 'raf', smoothing } },
 ];
 
 const workloads = transcript
@@ -263,6 +264,8 @@ for (const workload of workloads) {
 console.log(
   'Frames are simulated (vsync grid, 60 Hz), not measured. Flush cost is real Node time; React commit is not included.'
 );
+
+console.log(`JSON ${JSON.stringify({ jit, smoothing, fullMs, rows })}`);
 
 if (save) {
   const date = new Date().toISOString().slice(0, 10);
