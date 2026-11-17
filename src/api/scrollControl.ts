@@ -18,11 +18,15 @@ import type {
  *
  * Follow-tail state: `pinned` (the user is at the bottom; starts true) and
  * whether the user is touching (`dragging`) or flinging (`momentum`).
- * - While touching or flinging, nothing scrolls by itself, and each event
- *   sets `pinned` to "within `threshold` of the end".
- * - Any other scroll event (ours, a web wheel, the app's own `scrollTo`)
- *   can pin, never unpin, except an upward move with no shrink of the
- *   content: that is never us, since `scrollToEnd` only moves down.
+ * - While touching or flinging, nothing scrolls by itself; when the fling
+ *   ends, a pinned view catches up with what grew meanwhile.
+ * - A scroll event within `threshold` of the end pins. Only an upward move
+ *   with no shrink of the content unpins: that is the user (a drag, a
+ *   fling, a web wheel) or the app's own `scrollTo`, never us, since
+ *   `scrollToEnd` only moves down. Falling behind because the content grew
+ *   does not unpin (seen on iOS: content streamed in during a fling's
+ *   deceleration left the view more than `threshold` short, and following
+ *   never resumed).
  * - Content growth (`onContentSizeChange`) or a viewport resize
  *   (`onLayout`) while pinned and untouched: one non-animated
  *   `scrollToEnd`.
@@ -229,6 +233,8 @@ export class ScrollController {
   readonly onMomentumScrollEnd = (event: ScrollEvent) => {
     this.observe(event);
     this.momentum = false;
+    // Catch up with what streamed in while the fling ran.
+    this.follow();
   };
 
   readonly onContentSizeChange = (_width: number, height: number) => {
@@ -312,8 +318,7 @@ export class ScrollController {
     if (viewport > 0) this.viewport = viewport;
     if (this.threshold === null) return;
     const bottom = this.atBottom(offset, content, this.viewport);
-    if (this.dragging || this.momentum) this.pinned = bottom;
-    else if (bottom) this.pinned = true;
+    if (bottom) this.pinned = true;
     else if (offset < lastOffset - 1 && content >= lastContent) {
       this.pinned = false;
     }

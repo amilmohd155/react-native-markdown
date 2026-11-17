@@ -738,9 +738,91 @@ describe.each(['scroll', 'virtualize'] as const)(
       await fire(root, 'onMomentumScrollBegin', scrollEvent(300, 1200));
       await fire(root, 'onContentSizeChange', 300, 1250); // mid-fling
       expect(scrollViewMocks.scrollToEnd).toHaveBeenCalledTimes(1);
+      // The fling ends at the end: pinned again, and it catches up at once.
       await fire(root, 'onMomentumScrollEnd', scrollEvent(650, 1250));
-      await fire(root, 'onContentSizeChange', 300, 1400);
       expect(scrollViewMocks.scrollToEnd).toHaveBeenCalledTimes(2);
+      await fire(root, 'onContentSizeChange', 300, 1400);
+      expect(scrollViewMocks.scrollToEnd).toHaveBeenCalledTimes(3);
+    });
+
+    // Seen on an iOS simulator: 8 of 9 flings back to the end left the view
+    // paused, because content kept streaming in while the fling slowed
+    // down, so it ended more than the threshold short of the (new) end.
+    it('resumes after a fling to the end even when content grew during it', async () => {
+      const options = { autoScroll: true } as Options;
+      const tree = await renderTree(
+        container === 'scroll' ? (
+          <Markdown
+            source={paragraphs(30)}
+            components={plain}
+            scroll={options}
+          />
+        ) : (
+          <Markdown
+            source={paragraphs(30)}
+            components={plain}
+            virtualize={options}
+          />
+        )
+      );
+      const root = rootOf(tree);
+      await fire(root, 'onLayout', layoutEvent(0, 600));
+      await fire(root, 'onContentSizeChange', 300, 1000);
+      scrollViewMocks.scrollToEnd.mockClear();
+      // Drag up: paused.
+      await fire(root, 'onScrollBeginDrag', scrollEvent(400, 1000));
+      await fire(root, 'onScroll', scrollEvent(100, 1000));
+      await fire(root, 'onScrollEndDrag', scrollEvent(100, 1000));
+      await fire(root, 'onContentSizeChange', 300, 1100);
+      expect(scrollViewMocks.scrollToEnd).not.toHaveBeenCalled();
+      // Fling down: it reaches the end (500 of 1100)...
+      await fire(root, 'onScrollBeginDrag', scrollEvent(100, 1100));
+      await fire(root, 'onScrollEndDrag', scrollEvent(200, 1100));
+      await fire(root, 'onMomentumScrollBegin', scrollEvent(200, 1100));
+      await fire(root, 'onScroll', scrollEvent(500, 1100));
+      // ...and the content grows by 300 while it slows down: nothing
+      // scrolls mid-fling, and the view is now 300 short.
+      await fire(root, 'onContentSizeChange', 300, 1400);
+      await fire(root, 'onScroll', scrollEvent(500, 1400));
+      expect(scrollViewMocks.scrollToEnd).not.toHaveBeenCalled();
+      // The fling ends there: still pinned, so it catches up and follows.
+      await fire(root, 'onMomentumScrollEnd', scrollEvent(500, 1400));
+      expect(scrollViewMocks.scrollToEnd).toHaveBeenCalledTimes(1);
+      await fire(root, 'onContentSizeChange', 300, 1500);
+      expect(scrollViewMocks.scrollToEnd).toHaveBeenCalledTimes(2);
+    });
+
+    it('a fling up from the end still pauses', async () => {
+      const options = { autoScroll: true } as Options;
+      const tree = await renderTree(
+        container === 'scroll' ? (
+          <Markdown
+            source={paragraphs(30)}
+            components={plain}
+            scroll={options}
+          />
+        ) : (
+          <Markdown
+            source={paragraphs(30)}
+            components={plain}
+            virtualize={options}
+          />
+        )
+      );
+      const root = rootOf(tree);
+      await fire(root, 'onLayout', layoutEvent(0, 600));
+      await fire(root, 'onContentSizeChange', 300, 1000);
+      scrollViewMocks.scrollToEnd.mockClear();
+      // Starts within the threshold of the end, and moves up while the
+      // content grows.
+      await fire(root, 'onScrollBeginDrag', scrollEvent(400, 1000));
+      await fire(root, 'onScrollEndDrag', scrollEvent(380, 1000));
+      await fire(root, 'onMomentumScrollBegin', scrollEvent(380, 1000));
+      await fire(root, 'onContentSizeChange', 300, 1100);
+      await fire(root, 'onScroll', scrollEvent(200, 1100));
+      await fire(root, 'onMomentumScrollEnd', scrollEvent(150, 1100));
+      await fire(root, 'onContentSizeChange', 300, 1200);
+      expect(scrollViewMocks.scrollToEnd).not.toHaveBeenCalled();
     });
   }
 );

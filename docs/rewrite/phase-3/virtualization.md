@@ -42,7 +42,7 @@ const { data, keyExtractor, renderItem, getItemType } = useMarkdownBlocks({ docu
 **Follow-tail ([P3-5](./decisions.md#p3-5-follow-tail-implemented-in-the-library-the-same-on-scrollview-and-flatlist)).** `autoScroll` in the options of the owned container; the hook has none, the user's list follows the tail itself.
 
 - A document starts pinned to the end. Content growth or a viewport resize while pinned does one non-animated `scrollToEnd`.
-- Nothing scrolls while the user drags or flings. A drag, or an upward scroll that is not ours (a mouse wheel, your own `scrollTo`), pauses it. Coming back within `threshold` (default 40 px) or `ref.scrollToEnd()` resumes it.
+- Nothing scrolls while the user drags or flings; a pinned view catches up when the fling ends. An upward move (a drag, a fling, a mouse wheel, your own `scrollTo`) pauses it; falling behind because content grew does not. Coming back within `threshold` (default 40 px) or `ref.scrollToEnd()` resumes it.
 - A handler that is not a plain function (`Animated.event` on the native driver, a Reanimated handler) is passed through untouched. Position is then read at the end of each drag and fling only. For the scroll offset, use `componentRef` with an animated ref.
 
 A built-in footnote jump ([P1-15](../phase-1/decisions.md#p1-15-footnote-navigation-through-an-onfootnotepress-handler) option 2) is possible now that we own the scroll view, but is not built.
@@ -63,6 +63,7 @@ A built-in footnote jump ([P1-15](../phase-1/decisions.md#p1-15-footnote-navigat
 ## Covered by tests, and still open
 
 - **Streaming tail and remount:** covered by tests (the open block updates, earlier blocks don't remount, scroll position stays; caches serve a remount with no second measuring pass).
-- **Checked on an Android device (S25 FE, dev build):** follow, pause on drag and resume in both containers, and long `scrollToBlock` / `scrollToEnd` jumps on a fresh list ([P3-5](./decisions.md#p3-5-follow-tail-implemented-in-the-library-the-same-on-scrollview-and-flatlist)).
-- **Still open, needs a device:** iOS, the keyboard resize while pinned, a streaming table (it remounts per flush), blank areas on fast scrolls over mixed-height blocks (Android release build, 1,000 and 5,000 blocks: the [optimization pass](../07-roadmap.md#optimization-pass-after-the-last-feature-phase)), and the web path of the owned container (D1).
+- **Checked on an Android device (S25 FE) and an iOS simulator, dev builds:** follow, pause on drag and resume in both containers, and long `scrollToBlock` / `scrollToEnd` jumps on a fresh list ([P3-5](./decisions.md#p3-5-follow-tail-implemented-in-the-library-the-same-on-scrollview-and-flatlist)).
+- **Known:** a table that is still streaming remounts and re-measures on every flush, and blinks for those frames (seen on the iOS simulator in `scroll`). It is the Phase 1 table keying, not the containers.
+- **Still open, needs a device:** the keyboard resize while pinned, a release build, blank areas on fast scrolls over mixed-height blocks (Android release build, 1,000 and 5,000 blocks: the [optimization pass](../07-roadmap.md#optimization-pass-after-the-last-feature-phase)), and the web path of the owned container (D1).
 - **Reanimated:** `Animated.ScrollView`, `Animated.FlatList`, `useScrollOffset` with `componentRef`, and a Reanimated `onScroll` next to `autoScroll` are typed and unit-tested with stand-ins only. Not verified on a device.
