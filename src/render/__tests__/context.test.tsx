@@ -39,6 +39,7 @@ describe('createRenderCtx', () => {
       interactiveTasks: false,
       interactiveImages: false,
       interactiveFootnotes: false,
+      footnoteFocus: null,
       footnoteLabels: DEFAULT_FOOTNOTE_LABELS,
       footnoteBackLinkMark: DEFAULT_FOOTNOTE_BACK_LINK_MARK,
       scriptFallback: 'smaller',

@@ -29,6 +29,7 @@ import {
   type ElementStyle,
   type FootnoteBackLinkMark,
   type FootnotePressInfo,
+  type FootnoteScrollOffset,
   type HeadingLevel,
   type ImagePressInfo,
   type InlineViewProps,
@@ -144,9 +145,33 @@ describe('<Markdown> props', () => {
     expectType<
       Equal<
         NonNullable<Props['onFootnotePress']>,
-        (label: string, info: FootnotePressInfo) => void | false
+        (
+          label: string,
+          info: FootnotePressInfo,
+          scroll: FootnoteScrollOffset
+        ) => void | false
       >
     >(true);
+    expectType<Equal<FootnoteScrollOffset['offset'], number | undefined>>(true);
+    element(
+      <Markdown
+        source="x"
+        footnotes={{
+          target: 'definition',
+          highlight: { color: '#ff0', duration: 500 },
+        }}
+      />
+    );
+    element(<Markdown source="x" footnotes={{ highlight: true }} />);
+    // @ts-expect-error: the target is 'section' or 'definition'
+    element(<Markdown source="x" footnotes={{ target: 'footer' }} />);
+    element(
+      <Markdown
+        source="x"
+        // @ts-expect-error: a duration is a number
+        footnotes={{ highlight: { duration: '1s' } }}
+      />
+    );
 
     element(
       <Markdown

@@ -71,11 +71,16 @@ describe('onFootnoteScrollTo', () => {
     );
     await fire(reference(tree), 'onPress');
     expect(onFootnoteScrollTo).toHaveBeenCalledTimes(1);
-    expect(onFootnoteScrollTo).toHaveBeenCalledWith(SECTION, '1', {
-      index: 1,
-      direction: 'definition',
-      reference: 1,
-    });
+    expect(onFootnoteScrollTo).toHaveBeenCalledWith(
+      SECTION,
+      '1',
+      {
+        index: 1,
+        direction: 'definition',
+        reference: 1,
+      },
+      { offset: undefined }
+    );
     expect(results.at(-1)!.data).toHaveLength(SECTION + 1);
   });
 
@@ -89,13 +94,15 @@ describe('onFootnoteScrollTo', () => {
     expect(onFootnoteScrollTo).toHaveBeenLastCalledWith(
       1,
       '1',
-      expect.objectContaining({ direction: 'reference', reference: 1 })
+      expect.objectContaining({ direction: 'reference', reference: 1 }),
+      { offset: undefined }
     );
     await fire(backLink(tree, 2), 'onPress');
     expect(onFootnoteScrollTo).toHaveBeenLastCalledWith(
       2,
       '1',
-      expect.objectContaining({ direction: 'reference', reference: 2 })
+      expect.objectContaining({ direction: 'reference', reference: 2 }),
+      { offset: undefined }
     );
   });
 
@@ -108,7 +115,8 @@ describe('onFootnoteScrollTo', () => {
     expect(onFootnoteScrollTo).toHaveBeenCalledWith(
       SECTION,
       '1',
-      expect.anything()
+      expect.anything(),
+      { offset: undefined }
     );
   });
 
@@ -198,7 +206,8 @@ describe('onFootnoteScrollTo', () => {
       expect(onFootnoteScrollTo).toHaveBeenCalledWith(
         SECTION,
         '1',
-        expect.anything()
+        expect.anything(),
+        { offset: undefined }
       );
       expect(results.at(-1)!.data).toHaveLength(SECTION + 1);
     });

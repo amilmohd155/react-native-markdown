@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { NodeTable } from '../model';
 import type { MarkdownPlugin } from '../plugins/definePlugin';
 import type { Preset } from '../plugins/presets';
 import type { HtmlMode, ParserBackend } from '../parse';
 import {
+  createFootnoteFocusStore,
   useRenderCtx,
   type Components,
   type FootnoteBackLinkMark,
@@ -19,6 +20,11 @@ import {
   type TaskToggleInfo,
 } from '../render';
 import type { RenderCtx } from '../render/context';
+import {
+  DEFAULT_FOOTNOTE_HIGHLIGHT_DURATION,
+  type FootnoteFocusConfig,
+  type FootnoteFocusStore,
+} from '../render/footnoteFocus';
 import { footnoteSectionIndex } from '../render/footnoteTargets';
 import type { FadePlan } from '../render/fade';
 import {
@@ -86,11 +92,13 @@ export interface MarkdownRenderOptions {
    * Makes footnote references and back-links pressable (P1-15).
    * `info.direction` says where to go. In `scroll` and `virtualize` the
    * container then jumps there; return `false` to skip the jump (P3-9).
-   * Not called while a stream is running (P3-12).
+   * Not called while a stream is running (P3-12). The third argument is
+   * the definition's offset with `footnotes.target: 'definition'` (P3-15).
    */
   readonly onFootnotePress?: (
     label: string,
-    info: FootnotePressInfo
+    info: FootnotePressInfo,
+    scroll: FootnoteScrollOffset
   ) => void | false;
   /**
    * Footnote text: accessibility labels and the back-link mark (P3-11,
@@ -124,6 +132,38 @@ export interface FootnotesOptions {
    * `() => '↑'`. Default `↩`, then `↩²`, `↩³`...
    */
   readonly backLinkMark?: FootnoteBackLinkMark;
+  /**
+   * Where a reference press lands (P3-15). `'section'` (default): the
+   * footnote section. `'definition'`: its own definition; `onFootnotePress`
+   * and `onFootnoteScrollTo` get the definition's offset in the section.
+   */
+  readonly target?: 'section' | 'definition';
+  /**
+   * Flash the definition a reference press went to, and the reference a
+   * back-link press returned to. Default off; `true` uses the theme's
+   * `footnoteHighlight` colour and a 1500 ms flash (P3-15).
+   */
+  readonly highlight?:
+    | boolean
+    | {
+        /** Default: the theme's. */
+        readonly color?: string;
+        /** Milliseconds of the whole flash. Default 1500. */
+        readonly duration?: number;
+      };
+}
+
+/**
+ * Where the footnote definition sits, for `onFootnotePress` and
+ * `onFootnoteScrollTo` (P3-15).
+ */
+export interface FootnoteScrollOffset {
+  /**
+   * y of the definition inside the footnote section block, to add to the
+   * section's own position. Defined only for a reference press with
+   * `footnotes.target: 'definition'`, once the definition has been measured.
+   */
+  readonly offset: number | undefined;
 }
 
 /** The markdown input plus how it renders. */
@@ -135,7 +175,13 @@ export type MarkdownPipelineProps = MarkdownInput & MarkdownRenderOptions;
  * ref to the pipeline. Internal.
  */
 export interface FootnoteJumpRef {
-  current: ((label: string, info: FootnotePressInfo) => void) | null;
+  current:
+    | ((
+        label: string,
+        info: FootnotePressInfo,
+        scroll: FootnoteScrollOffset
+      ) => void)
+    | null;
 }
 
 /** What every block container renders from. */
@@ -149,6 +195,8 @@ export interface MarkdownPipeline {
    * jump has a target (false while a stream runs, P3-12).
    */
   readonly footnotes: boolean;
+  /** The footnote focus config (P3-15), or null; same as in `ctx.options`. */
+  readonly focus: FootnoteFocusConfig | null;
 }
 
 const NO_PLUGINS: readonly MarkdownPlugin[] = Object.freeze([]);
@@ -166,6 +214,70 @@ function htmlEqual(a: HtmlMode | undefined, b: HtmlMode | undefined): boolean {
   if (a === b) return true;
   if (typeof a !== 'object' || typeof b !== 'object') return false;
   return shallowEqualArray(a.allow, b.allow);
+}
+
+/**
+ * The footnote focus (P3-15): one store per instance, a stable config while
+ * `target` and the highlight don't change (the `footnotes` object may be
+ * inline), and none while a stream runs (P3-12), when the store is cleared.
+ */
+function useFootnoteFocus(
+  footnotes: FootnotesOptions | undefined,
+  streaming: boolean
+): FootnoteFocusConfig | null {
+  const [store] = useState<FootnoteFocusStore>(createFootnoteFocusStore);
+  const target = footnotes?.target ?? 'section';
+  const highlight = footnotes?.highlight;
+  const on = highlight !== undefined && highlight !== false;
+  const color = typeof highlight === 'object' ? highlight.color : undefined;
+  const duration =
+    typeof highlight === 'object' ? highlight.duration : undefined;
+  useEffect(() => {
+    if (streaming) store.clear();
+  }, [store, streaming]);
+  return useMemo(() => {
+    if (streaming || (target === 'section' && !on)) return null;
+    return {
+      store,
+      target,
+      highlight: on
+        ? {
+            color: color ?? null,
+            duration: duration ?? DEFAULT_FOOTNOTE_HIGHLIGHT_DURATION,
+          }
+        : null,
+    };
+  }, [store, streaming, target, on, color, duration]);
+}
+
+/**
+ * The handler of the render context. With a container's jump the handler
+ * always exists, so links are pressable without one; it runs first and
+ * `false` skips the jump and the flash (P3-9, P3-15).
+ */
+function footnotePressOf(
+  onFootnotePress: MarkdownRenderOptions['onFootnotePress'],
+  jump: FootnoteJumpRef | undefined,
+  focus: FootnoteFocusConfig | null
+): RenderHandlers['onFootnotePress'] {
+  if (jump === undefined && onFootnotePress === undefined) return undefined;
+  return (label, info) => {
+    const y =
+      focus?.target === 'definition' && info.direction === 'definition'
+        ? focus.store.getDefinitionY(label)
+        : undefined;
+    const scroll: FootnoteScrollOffset = { offset: y };
+    if (onFootnotePress?.(label, info, scroll) === false) return;
+    if (jump === undefined) return;
+    if (focus?.highlight) {
+      focus.store.flash(
+        info.direction === 'definition'
+          ? { kind: 'definition', label }
+          : { kind: 'reference', label, reference: info.reference }
+      );
+    }
+    jump.current?.(label, info, scroll);
+  };
 }
 
 /**
@@ -248,14 +360,9 @@ export function useMarkdownPipeline(
 
   // With a container's jump the handler always exists, so links are
   // pressable without one; it runs first and `false` skips the jump (P3-9).
-  const footnotePress: RenderHandlers['onFootnotePress'] =
-    jump === undefined
-      ? onFootnotePress
-      : (label, info) => {
-          if (onFootnotePress?.(label, info) === false) return;
-          jump.current?.(label, info);
-        };
   const footnoteLabels = useStable(props.footnotes?.labels, shallowEqualObject);
+  const focus = useFootnoteFocus(props.footnotes, streaming);
+  const footnotePress = footnotePressOf(onFootnotePress, jump, focus);
   const handlers: RenderHandlers = {
     onLinkPress,
     onImagePress,
@@ -273,8 +380,9 @@ export function useMarkdownPipeline(
     maxFontSizeMultiplier,
     footnoteLabels,
     footnoteBackLinkMark: props.footnotes?.backLinkMark,
+    footnoteFocus: focus,
     footnotesInert: streaming,
   });
 
-  return { table, ctx, fade, footnotes: hasSection && !streaming };
+  return { table, ctx, fade, footnotes: hasSection && !streaming, focus };
 }

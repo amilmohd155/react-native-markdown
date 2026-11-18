@@ -8,9 +8,12 @@ import {
 import type { NodeTable } from '../model';
 import { footnoteTarget } from '../render/footnoteTargets';
 import type { FootnotePressInfo } from '../render/context';
+import type { FootnoteFocusConfig } from '../render/footnoteFocus';
+import { refineOnMeasure } from './footnoteRefine';
 import {
   useMarkdownPipeline,
   type FootnoteJumpRef,
+  type FootnoteScrollOffset,
   type MarkdownInput,
   type MarkdownRenderOptions,
 } from './pipeline';
@@ -34,12 +37,18 @@ export type UseMarkdownBlocksOptions = MarkdownInput &
      * scrolls its list, and handles a list that has not measured the target
      * yet (a FlatList without `getItemLayout`: `onScrollToIndexFailed`).
      * Never called, and links stay inert, while a stream runs until `done()`
-     * (P3-12).
+     * (P3-12). With `footnotes.target: 'definition'` (P3-15), `scroll.offset`
+     * is the definition's y inside the section block (a reference press).
+     * When it is not measured yet at the press (`undefined`), this is called
+     * once more with the offset as soon as it is, for at most 5 s: scroll to
+     * the section, then by it, and make the callback safe to run twice.
+     * `footnotes.highlight` flashes the target.
      */
     readonly onFootnoteScrollTo?: (
       index: number,
       label: string,
-      info: FootnotePressInfo
+      info: FootnotePressInfo,
+      scroll: FootnoteScrollOffset
     ) => void;
   };
 
@@ -111,7 +120,8 @@ const getItemType = (item: MarkdownBlock): string =>
 function useFootnoteJump(
   jumpRef: FootnoteJumpRef | undefined,
   table: NodeTable,
-  onFootnoteScrollTo: UseMarkdownBlocksOptions['onFootnoteScrollTo']
+  onFootnoteScrollTo: UseMarkdownBlocksOptions['onFootnoteScrollTo'],
+  focus: FootnoteFocusConfig | null
 ) {
   const latest = useRef(onFootnoteScrollTo);
   useLayoutEffect(() => {
@@ -119,14 +129,33 @@ function useFootnoteJump(
   });
   useLayoutEffect(() => {
     if (jumpRef === undefined) return;
-    jumpRef.current = (label, info) => {
+    let pending: (() => void) | null = null;
+    const cancelPending = () => {
+      pending?.();
+      pending = null;
+    };
+    jumpRef.current = (label, info, scroll) => {
+      cancelPending();
       const target = footnoteTarget(table, label, info);
-      if (target !== undefined) latest.current?.(target, label, info);
+      if (target === undefined) return;
+      latest.current?.(target, label, info, scroll);
+      // The definition is not measured yet (its section may not be mounted):
+      // call again with the offset once it is (P3-15).
+      if (
+        scroll.offset === undefined &&
+        focus?.target === 'definition' &&
+        info.direction === 'definition'
+      ) {
+        pending = refineOnMeasure(focus.store, label, (y) =>
+          latest.current?.(target, label, info, { offset: y })
+        );
+      }
     };
     return () => {
+      cancelPending();
       jumpRef.current = null;
     };
-  }, [jumpRef, table]);
+  }, [jumpRef, table, focus]);
 }
 
 /**
@@ -175,12 +204,12 @@ export function useMarkdownBlocks(
   const jump = useRef<FootnoteJumpRef['current']>(null);
   const jumpRef: FootnoteJumpRef | undefined =
     onFootnoteScrollTo === undefined ? undefined : jump;
-  const { table, ctx, fade } = useMarkdownPipeline(
+  const { table, ctx, fade, focus } = useMarkdownPipeline(
     options,
     'useMarkdownBlocks()',
     jumpRef
   );
-  useFootnoteJump(jumpRef, table, onFootnoteScrollTo);
+  useFootnoteJump(jumpRef, table, onFootnoteScrollTo, focus);
   const data = useBlockItems(table, ctx, fade);
   return useMemo(
     () => ({ data, keyExtractor, renderItem, getItemType }),

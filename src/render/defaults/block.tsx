@@ -1,5 +1,6 @@
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useMemo, useRef, useState } from 'react';
 import {
+  Animated,
   Image as RNImage,
   Pressable,
   ScrollView,
@@ -20,6 +21,7 @@ import {
 } from '../contexts';
 import type { ElementProps } from '../elements';
 import { useImageSize } from '../imageSize';
+import { useFootnoteFlash } from '../useFootnoteFlash';
 import {
   cachedColumnWidths,
   columnWidths,
@@ -348,17 +350,41 @@ export function TableCell({
  * `FootnoteBackLink` elements at the end of the content (P3-13).
  */
 export function FootnoteDefinition({
+  label,
   index,
   style,
   children,
 }: ElementProps<'FootnoteDefinition'>) {
   const inherited = useContext(InheritedTextContext);
-  return (
-    <View style={style.container}>
+  const ref = useRef<View>(null);
+  const flash = useFootnoteFlash(`d:${label}`, ref);
+  const parts = (
+    <>
       <Text style={[inherited, style.text, styles.footnoteLabel]}>
         {`${index}.`}
       </Text>
       <View style={styles.content}>{children}</View>
+    </>
+  );
+  // Animated components force `collapsable={false}`: use one only while flashing.
+  if (flash.style) {
+    return (
+      <Animated.View
+        ref={ref}
+        style={[style.container, flash.style]}
+        accessible={flash.focused ? true : undefined}
+      >
+        {parts}
+      </Animated.View>
+    );
+  }
+  return (
+    <View
+      ref={ref}
+      style={style.container}
+      accessible={flash.focused ? true : undefined}
+    >
+      {parts}
     </View>
   );
 }

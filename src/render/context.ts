@@ -1,6 +1,7 @@
 import { useInsertionEffect, useMemo, useRef } from 'react';
 import { getDefaultTheme, type ResolvedTheme } from '../theme';
 import type { Components } from './elements';
+import type { FootnoteFocusConfig } from './footnoteFocus';
 import type { ImagesPolicy } from './imagePolicy';
 
 /** How soft line breaks render (P1-2). */
@@ -121,6 +122,8 @@ export interface RenderOptions {
   readonly interactiveFootnotes: boolean;
   readonly footnoteLabels: FootnoteA11yLabels;
   readonly footnoteBackLinkMark: FootnoteBackLinkMark;
+  /** P3-15; `null` unless `footnotes.target` or `highlight` is set. */
+  readonly footnoteFocus: FootnoteFocusConfig | null;
   readonly scriptFallback: ScriptFallback;
   /** Which images load; the rest render as their alt text. */
   readonly images: ImagesPolicy;
@@ -137,6 +140,7 @@ const DEFAULT_RENDER_OPTIONS: RenderOptions = Object.freeze({
   interactiveFootnotes: false,
   footnoteLabels: DEFAULT_FOOTNOTE_LABELS,
   footnoteBackLinkMark: DEFAULT_FOOTNOTE_BACK_LINK_MARK,
+  footnoteFocus: null,
   scriptFallback: 'smaller',
   images: 'allow',
 });
@@ -181,6 +185,8 @@ export interface RenderCtxInput {
   readonly footnoteLabels?: FootnoteA11yLabels;
   /** Default `↩`, `↩²`... Keep the reference stable: it is part of `ctx` identity. */
   readonly footnoteBackLinkMark?: FootnoteBackLinkMark;
+  /** P3-15. Keep the reference stable: it is part of `ctx` identity. */
+  readonly footnoteFocus?: FootnoteFocusConfig | null;
   /** A stream is running: footnote links are inert (P3-12). Default `false`. */
   readonly footnotesInert?: boolean;
 }
@@ -201,6 +207,7 @@ function optionsOf(input: RenderCtxInput): RenderOptions {
       input.footnoteLabels ?? DEFAULT_RENDER_OPTIONS.footnoteLabels,
     footnoteBackLinkMark:
       input.footnoteBackLinkMark ?? DEFAULT_RENDER_OPTIONS.footnoteBackLinkMark,
+    footnoteFocus: input.footnoteFocus ?? null,
     scriptFallback:
       input.scriptFallback ?? DEFAULT_RENDER_OPTIONS.scriptFallback,
     images: input.images ?? DEFAULT_RENDER_OPTIONS.images,
@@ -243,6 +250,7 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
     input.footnoteLabels ?? DEFAULT_RENDER_OPTIONS.footnoteLabels;
   const footnoteBackLinkMark =
     input.footnoteBackLinkMark ?? DEFAULT_RENDER_OPTIONS.footnoteBackLinkMark;
+  const footnoteFocus = input.footnoteFocus ?? null;
   const scriptFallback =
     input.scriptFallback ?? DEFAULT_RENDER_OPTIONS.scriptFallback;
   const images = input.images ?? DEFAULT_RENDER_OPTIONS.images;
@@ -258,6 +266,7 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
         interactiveFootnotes,
         footnoteLabels,
         footnoteBackLinkMark,
+        footnoteFocus,
         scriptFallback,
         images,
       }),
@@ -270,6 +279,7 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
       interactiveFootnotes,
       footnoteLabels,
       footnoteBackLinkMark,
+      footnoteFocus,
       scriptFallback,
       images,
     ]

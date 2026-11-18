@@ -95,6 +95,7 @@ function LongDocument() {
       <Markdown
         document={LONG}
         theme={effective}
+        footnotes={FOOTNOTES}
         virtualize={{
           ref,
           style: styles.fill,
@@ -164,23 +165,47 @@ function StreamedAnswer() {
         Drag up to pause following; return to the end to resume.
       </UIText>
       {container === 'scroll' ? (
-        <Markdown document={document} theme={effective} scroll={options} />
+        <Markdown
+          document={document}
+          theme={effective}
+          scroll={options}
+          footnotes={FOOTNOTES}
+        />
       ) : (
-        <Markdown document={document} theme={effective} virtualize={options} />
+        <Markdown
+          document={document}
+          theme={effective}
+          virtualize={options}
+          footnotes={FOOTNOTES}
+        />
       )}
     </>
   );
 }
 
+// Scroll to the single definition and flash it (P3-15).
+const FOOTNOTES = { target: 'definition', highlight: true } as const;
+
 function HookList() {
   const { effective } = useChrome();
   const ref = useRef<FlatList>(null);
+  // The offset of the last press, for the retry in `onScrollToIndexFailed`.
+  const viewOffset = useRef(0);
   const blocks = useMarkdownBlocks({
     document: LONG,
     theme: effective,
     // The library finds the block; the app scrolls its own list (P3-14).
-    onFootnoteScrollTo: (index) =>
-      ref.current?.scrollToIndex({ index, animated: true, viewPosition: 0 }),
+    // `offset` is the definition's y inside the section (P3-15), once measured.
+    footnotes: FOOTNOTES,
+    onFootnoteScrollTo: (index, _label, _info, { offset }) => {
+      viewOffset.current = -(offset ?? 0);
+      ref.current?.scrollToIndex({
+        index,
+        animated: true,
+        viewPosition: 0,
+        viewOffset: viewOffset.current,
+      });
+    },
   });
   return (
     <>
@@ -207,6 +232,7 @@ function HookList() {
                 index,
                 animated: true,
                 viewPosition: 0,
+                viewOffset: viewOffset.current,
               }),
             100
           );

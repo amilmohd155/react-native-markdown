@@ -55,10 +55,18 @@ useMarkdownBlocks({ document: doc, onFootnoteScrollTo: (index, label, info) => l
 
 `onFootnotePress` becomes `void | false`. A handler that returns nothing keeps today's meaning, plus the jump in an owned container.
 
+## Exact definition and highlight (P3-15)
+
+`footnotes={{ target: 'definition', highlight }}`, both off by default ([P3-15](./decisions.md#p3-15-opt-in-exact-definition-jump-and-highlight)). Definitions report their y inside the section to a per-instance store; the pipeline builds one stable config from `target` and `highlight` (none while a stream runs, and the store is cleared then).
+
+- `onFootnotePress(label, info, { offset })` and `onFootnoteScrollTo(index, label, info, { offset })`: `offset` is that y, for a reference press with `target: 'definition'` once measured, else `undefined`. `index` stays the section block.
+- `scroll`: scrolls to the section offset plus `offset`. `virtualize`: lands on the section with the usual retries, then scrolls again by `offset` when it arrives (waits at most 5 s; a new press cancels it).
+- `useMarkdownBlocks`: when `offset` is `undefined` at the press (the section is not mounted in a long list), `onFootnoteScrollTo` is called again with it once measured (at most 5 s later; a new press cancels it), so the callback must be safe to run twice. Checked on a device: the first press lands on the definition. The default `View` has no re-call: `onFootnotePress` runs once.
+- `highlight`: a reference press flashes the definition, a back-link press the reference. `false` from `onFootnotePress` and `jumpToFootnotes: false` skip the flash too.
+
 ## Not built
 
 - A popover or inline preview of the definition on press.
-- Scrolling to the single definition, and a highlight after the jump: proposed in [P3-15](./decisions.md#p3-15-opt-in-exact-definition-jump-and-highlight), not built.
 - A jump in the default `View` mode, where the host owns scrolling (use `onFootnotePress`). An exported pure lookup helper ([P3-14](./decisions.md#p3-14-usemarkdownblocks-takes-onfootnotescrollto-for-the-apps-own-list)).
 - Skipping the definition re-parse while streaming (optimization pass).
 

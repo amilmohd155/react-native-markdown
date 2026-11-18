@@ -26,6 +26,7 @@ import {
 import { useBlockItems } from '../render/blockItems';
 import type { RenderCtx } from '../render/context';
 import type { FadePlan } from '../render/fade';
+import type { FootnoteFocusConfig } from '../render/footnoteFocus';
 import { footnoteTarget } from '../render/footnoteTargets';
 import {
   assignRef,
@@ -47,6 +48,7 @@ import {
   useNestedScrollerWarning,
   useUnstableComponentWarning,
 } from './devWarnings';
+import { refineOnMeasure } from './footnoteRefine';
 import type { FootnoteJumpRef } from './pipeline';
 import { keyExtractor, renderItem } from './useMarkdownBlocks';
 
@@ -289,20 +291,50 @@ function measuredBlockElements(
 function useFootnoteJump(
   jumpRef: FootnoteJumpRef | undefined,
   control: ScrollController,
-  table: NodeTable
+  table: NodeTable,
+  focus: FootnoteFocusConfig | null,
+  list: boolean
 ) {
   useLayoutEffect(() => {
     if (jumpRef === undefined) return;
-    jumpRef.current = (label, info) => {
+    let pending: (() => void) | null = null;
+    const cancelPending = () => {
+      pending?.();
+      pending = null;
+    };
+    jumpRef.current = (label, info, { offset }) => {
+      cancelPending();
       const target = footnoteTarget(table, label, info);
-      if (target !== undefined) {
-        control.scrollToBlock(target, { animated: true, viewPosition: 0 });
+      if (target === undefined) return;
+      const exact = focus?.target === 'definition' && offset !== undefined;
+      // A negative `viewOffset` moves the landing point down by `y`.
+      control.scrollToBlock(target, {
+        animated: true,
+        viewPosition: 0,
+        viewOffset: exact ? -offset : 0,
+      });
+      // A list lands on the section first; the definition's y arrives once
+      // it has mounted and been measured (P3-15).
+      if (
+        list &&
+        !exact &&
+        focus?.target === 'definition' &&
+        info.direction === 'definition'
+      ) {
+        pending = refineOnMeasure(focus.store, label, (y) =>
+          control.scrollToBlock(target, {
+            animated: true,
+            viewPosition: 0,
+            viewOffset: -y,
+          })
+        );
       }
     };
     return () => {
+      cancelPending();
       jumpRef.current = null;
     };
-  }, [jumpRef, control, table]);
+  }, [jumpRef, control, table, focus, list]);
 }
 
 interface ContainerProps<O> {
@@ -336,7 +368,7 @@ export function MarkdownScrollView({
     jump !== undefined
   );
   const { control, measured } = scrollProps;
-  useFootnoteJump(jump, control, table);
+  useFootnoteJump(jump, control, table, ctx.options.footnoteFocus, false);
   const props = useNestedScrollerWarning(scrollProps.props);
   return (
     <BlockProviders ctx={ctx}>
@@ -374,7 +406,7 @@ export function MarkdownFlatList({
     'virtualize',
     jump !== undefined
   );
-  useFootnoteJump(jump, control, table);
+  useFootnoteJump(jump, control, table, ctx.options.footnoteFocus, true);
   return (
     <BlockProviders ctx={ctx}>
       <List

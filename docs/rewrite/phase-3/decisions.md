@@ -147,7 +147,7 @@ Accepted · 2026-11-18
 
 ## P3-15: Opt-in exact-definition jump and highlight
 
-Proposed · 2026-11-18
+Accepted · 2026-11-18
 
 - **Decision:** `footnotes={{ target: 'definition', highlight }}` makes a reference press scroll to its own definition and flash it, and a back-link press flash the reference it returns to. `target` is `'section'` (default, [P3-10](#p3-10-the-jump-lands-on-the-footnote-section-back-links-use-a-lazy-lookup)) or `'definition'`. `highlight` is `true` or `{ color, duration }`, with the colour also a theme entry. Both are off by default.
 - **Offset:** each definition reports its y inside the section to a per-document registry that lives outside `ctx`. `scroll` scrolls to the section plus that y. `virtualize` lands on the section with the existing `scrollToBlock` retries, then refines once the definition is mounted. `onFootnoteScrollTo` and `onFootnotePress` get an extra `{ offset }` argument, relative to the section block and `undefined` until measured, so the default `View` and the app's own list can add it to their own block position.
@@ -155,5 +155,6 @@ Proposed · 2026-11-18
 - **Why:** the section is one block, so landing on it can leave the definition off screen in a long footer, and a jump with no sign of where it landed is easy to lose. No RN markdown library does this, and the web gets it from `:target`. Built in beats a user override: the measurement needs the container's scroll control, which a custom `FootnoteDefinition` cannot reach.
 - **Rejected:** highlight state in `ctx` or `components` (a new identity re-renders every block); highlight through `data` (defeats unchanged-item reuse in `blockItems.tsx`); Reanimated (an optional dependency the core cannot require); a `/footnote-highlight` entry point or a `useFootnoteTarget` hook (the scroll control would have to be exposed, and every app would redo the measuring).
 - **Cost:** one wrapper `View` with `onLayout` per definition, mounted only when `target: 'definition'` is set and the document is not streaming ([P3-12](#p3-12-the-footnote-section-and-its-links-wait-for-done)). Documents with no footnotes pay nothing.
-- **Open (device):** `measureLayout` and the second scroll inside a virtualized item; FlashList and LegendList (they may need the app's retry, as in [P3-14](#p3-14-usemarkdownblocks-takes-onfootnotescrollto-for-the-apps-own-list)); whether the flash survives a remount at `done()`.
+- **Own list:** `offset` is `undefined` at the press when the section is not mounted yet, so `useMarkdownBlocks` calls `onFootnoteScrollTo` again with `{ offset }` once it is measured (5 s at most; a new press cancels). The app's callback must be safe to run twice. The default `View` has no re-call. Seen working on a device (Android, FlatList); 2 s was too short there.
+- **Open (device):** Android FlatList (`virtualize` and the hook) is checked. Not yet: iOS, FlashList and LegendList (they may need the app's retry, as in [P3-14](#p3-14-usemarkdownblocks-takes-onfootnotescrollto-for-the-apps-own-list)), the screen-reader focus move, and whether the flash survives the remount at `done()`. The landing is about 11dp short of the exact top.
 - Design: [footnotes.md](./footnotes.md#design). Builds on [P3-8](#p3-8-built-in-footnote-jump-in-the-owned-containers) to [P3-14](#p3-14-usemarkdownblocks-takes-onfootnotescrollto-for-the-apps-own-list).

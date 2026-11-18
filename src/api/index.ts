@@ -25,7 +25,7 @@
 
 export type { MarkdownDocument } from './document';
 export { Markdown, type MarkdownProps } from './Markdown';
-export type { FootnotesOptions } from './pipeline';
+export type { FootnotesOptions, FootnoteScrollOffset } from './pipeline';
 export { parse, type ParseOptions } from './parse';
 export type {
   MarkdownListComponent,

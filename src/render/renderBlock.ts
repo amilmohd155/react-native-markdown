@@ -8,6 +8,7 @@ import {
   TableKeyContext,
 } from './contexts';
 import { element } from './element';
+import { FootnoteFrame } from './footnoteFrame';
 import { BODY_FONT, HEADING_FONT, TABLE_HEAD_FONT } from '../theme';
 import { imageAllowed } from './imagePolicy';
 import { renderInline } from './inline';
@@ -265,15 +266,25 @@ function renderNode(
       );
     }
 
-    case NodeType.FootnoteDefinition:
-      return element(
+    case NodeType.FootnoteDefinition: {
+      const props = footnoteDefinitionProps(table, id);
+      const definition = element(
         ctx,
         'FootnoteDefinition',
         id,
-        footnoteDefinitionProps(table, id),
+        props,
         elements.FootnoteDefinition,
         renderChildren(table, id, ctx, place)
       );
+      const focus = ctx.options.footnoteFocus;
+      if (focus?.target !== 'definition') return definition;
+      return createElement(FootnoteFrame, {
+        key: id,
+        store: focus.store,
+        label: props.label,
+        children: definition,
+      });
+    }
 
     default: {
       // Plugin block nodes: a leaf (`math_block`) or a container.
