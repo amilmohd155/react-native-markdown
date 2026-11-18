@@ -25,8 +25,9 @@ The reasoning behind this design, including the options rejected, is in [08 · D
 | `onLinkPress` | `(href, info) => boolean \| void` | opens with `Linking` | Called first for every link. Return `false` to cancel the default. The default opens only `http`, `https`, `mailto`, `tel` and relative URLs, so custom-scheme deep links need this handler ([P1-3](./phase-1/decisions.md#p1-3-url-sanitization-layers)). Errors from `openURL` are caught. |
 | `onImagePress` | `(src, info) => void` | none | |
 | `onTaskToggle` | `(checked, info) => void` | none | Makes task list checkboxes interactive |
-| `onFootnotePress` | `(label, info) => void` | none | Makes footnote references and back-links pressable. `info = { index, direction: 'reference' \| 'definition', reference }`: where to go, and which reference (1-based). The app scrolls; the renderer doesn't own the scroll view ([P1-15](./phase-1/decisions.md#p1-15-footnote-navigation-through-an-onfootnotepress-handler)). |
-| `scroll` | `boolean \| ScrollOptions` | `false` | `<Markdown>` renders its own `ScrollView` instead of a `View` (all blocks mounted). Options: `header`, `footer`, `style`, `contentContainerStyle`, `onScroll`, `scrollEventThrottle`, `autoScroll` (follow-tail: `true` or `{ threshold }` in pixels, default 40), `ref` (a [`MarkdownListRef`](#markdownlistref)), `componentRef` (the scroll component's instance, e.g. Reanimated's `useAnimatedRef()`), and `component`, a stable scroll-view type (e.g. `Animated.ScrollView`) that forwards `ref` ([P3-2](./phase-3/decisions.md#p3-2-markdown-stays-a-view-scroll-and-virtualize-opt-in-to-a-scroll-container), [P3-4](./phase-3/decisions.md#p3-4-scroll-and-virtualize-take-typed-options-with-a-stable-list-component-slot), [P3-5](./phase-3/decisions.md#p3-5-follow-tail-implemented-in-the-library-the-same-on-scrollview-and-flatlist)). |
+| `onFootnotePress` | `(label, info) => void \| false` | none | Makes footnote references and back-links pressable. `info = { index, direction: 'reference' \| 'definition', reference }`: where to go, and which reference (1-based). In `scroll` and `virtualize` the container then scrolls there (references to the footnote section, back-links to their reference); return `false` to skip that. In the default `View` the app scrolls, and so does a list of your own with `useMarkdownBlocks` (`onFootnoteScrollTo`, [P3-14](./phase-3/decisions.md#p3-14-usemarkdownblocks-takes-onfootnotejump-for-the-apps-own-list)) ([P1-15](./phase-1/decisions.md#p1-15-footnote-navigation-through-an-onfootnotepress-handler), [P3-9](./phase-3/decisions.md#p3-9-onfootnotepress-runs-first-and-can-skip-the-jump)). Not called, and the footnote section not rendered, while a stream runs until `done()` ([P3-12](./phase-3/decisions.md#p3-12-the-footnote-section-and-its-links-wait-for-done)). |
+| `footnotes` | `{ labels?, backLinkMark? }` | English labels, `↩` | `labels`: `{ reference(index), backLink(index, reference) }`, the accessibility labels of references ("Footnote 1") and back-links ("Back to reference 1") ([P3-11](./phase-3/decisions.md#p3-11-footnote-labels-for-references-and-back-links)). `backLinkMark`: `(reference, total) => string`, the visible text of a back-link; `reference` is which reference it returns to (1-based), `total` how many the footnote has, default `↩`, then `↩²`, `↩³`… ([P3-13](./phase-3/decisions.md#p3-13-footnote-back-links-are-inline-nodes-at-the-end-of-the-definition)). The object may be inline; the functions inside must be module level. |
+| `scroll` | `boolean \| ScrollOptions` | `false` | `<Markdown>` renders its own `ScrollView` instead of a `View` (all blocks mounted). Options: `header`, `footer`, `style`, `contentContainerStyle`, `onScroll`, `scrollEventThrottle`, `autoScroll` (follow-tail: `true` or `{ threshold }` in pixels, default 40), `ref` (a [`MarkdownListRef`](#markdownlistref)), `componentRef` (the scroll component's instance, e.g. Reanimated's `useAnimatedRef()`), `jumpToFootnotes` (default `true`; `false` leaves footnote presses to `onFootnotePress`, [P3-8](./phase-3/decisions.md#p3-8-built-in-footnote-jump-in-the-owned-containers)), and `component`, a stable scroll-view type (e.g. `Animated.ScrollView`) that forwards `ref` ([P3-2](./phase-3/decisions.md#p3-2-markdown-stays-a-view-scroll-and-virtualize-opt-in-to-a-scroll-container), [P3-4](./phase-3/decisions.md#p3-4-scroll-and-virtualize-take-typed-options-with-a-stable-list-component-slot), [P3-5](./phase-3/decisions.md#p3-5-follow-tail-implemented-in-the-library-the-same-on-scrollview-and-flatlist)). |
 | `virtualize` | `boolean \| VirtualizeOptions` | `false` | For long standalone documents: the owned container becomes a `FlatList` (implies `scroll`). Options: those of `scroll` (including `autoScroll`, `ref` and `componentRef`), `initialNumToRender` (default 10), `windowSize` (default 11), and `component`, a stable list type (e.g. `Animated.FlatList`); `removeClippedSubviews` stays off. With `scroll` options too, a field set here wins. For FlashList or full control use the block hook ([P3-3](./phase-3/decisions.md#p3-3-a-headless-block-hook-underneath-scroll-and-virtualize)). |
 | `html` | `'safe' \| 'text' \| 'strip' \| { allow: HtmlTag[] }` | `'safe'` | `'safe'` renders an allowlist of tags as elements and shows the rest as text. See [Raw HTML](#raw-html). |
 | `images` | `'allow' \| 'deny' \| { allowHosts: string[] }` | `'allow'` | Use `'deny'` or an allowlist for untrusted content. A refused image renders as its alt text. `allowHosts` entries are exact hosts or `*.example.com` (subdomains only); relative and `data:` images don't match. See [P1-21](./phase-1/decisions.md#p1-21-images-policy-semantics). |
@@ -40,16 +41,28 @@ Memoization is internal. Callers don't need to `useMemo` the `theme`, `component
 
 ### `MarkdownListRef`
 
-The `ref` option of `scroll` and `virtualize`, the same on both: `scrollToEnd(options?)` (also resumes `autoScroll`), `scrollToOffset(offset, options?)` and `scrollToBlock(index, options?)`. Options: `animated` (default `true`); `scrollToBlock` adds `viewPosition` (0 top, 0.5 middle, 1 bottom) and `viewOffset`. The index is clamped into range; no blocks does nothing. With `scroll`, a `ref` wraps each block in a `View` to record its offset, so the jump is exact once laid out; with `virtualize`, an unmeasured block (and `scrollToEnd` on a list not yet measured to its end) is reached through an estimate and retries that continue while the list measures further; a drag cancels them. `scrollToOffset` and `scrollToBlock` pause `autoScroll` unless they land at the end.
+The `ref` option of `scroll` and `virtualize`, the same on both: `scrollToEnd(options?)` (also resumes `autoScroll`), `scrollToOffset(offset, options?)` and `scrollToBlock(index, options?)`. Options: `animated` (default `true`); `scrollToBlock` adds `viewPosition` (0 top, 0.5 middle, 1 bottom) and `viewOffset`. The index is clamped into range; no blocks does nothing. With `scroll`, a `ref` (or the footnote jump of a document with footnotes) wraps each block in a `View` to record its offset, so the jump is exact once laid out; with `virtualize`, an unmeasured block (and `scrollToEnd` on a list not yet measured to its end) is reached through an estimate and retries that continue while the list measures further; a drag cancels them. `scrollToOffset` and `scrollToBlock` pause `autoScroll` unless they land at the end.
 
 ### `useMarkdownBlocks`
 
 ```tsx
 const { data, keyExtractor, renderItem, getItemType } = useMarkdownBlocks({ document, theme });
 <FlashList data={data} keyExtractor={keyExtractor} renderItem={renderItem} getItemType={getItemType} />
+
+// Footnote jump in your own FlatList: the app scrolls, and retries when the target is not measured yet.
+const ref = useRef<FlatList>(null);
+const blocks = useMarkdownBlocks({
+  document,
+  onFootnoteScrollTo: (index) => ref.current?.scrollToIndex({ index, animated: true, viewPosition: 0 }),
+});
+<FlatList ref={ref} data={blocks.data} keyExtractor={blocks.keyExtractor} renderItem={blocks.renderItem}
+  onScrollToIndexFailed={({ index, averageItemLength }) => {
+    ref.current?.scrollToOffset({ offset: index * averageItemLength, animated: false });
+    setTimeout(() => ref.current?.scrollToIndex({ index, animated: true, viewPosition: 0 }), 100);
+  }} />
 ```
 
-Takes one options object: `source` or `document` plus the other props of `<Markdown>` except `scroll` and `virtualize`. Returns one item per top-level block for your own list. `data` is a new array per document change (unchanged blocks keep their items); the three functions never change identity. `renderItem` needs no provider, and `getItemType` is the element name, a FlashList recycling hint. No follow-tail: the list does it ([P3-3](./phase-3/decisions.md#p3-3-a-headless-block-hook-underneath-scroll-and-virtualize), [P3-5](./phase-3/decisions.md#p3-5-follow-tail-implemented-in-the-library-the-same-on-scrollview-and-flatlist)).
+Takes one options object: `source` or `document` plus the other props of `<Markdown>` except `scroll` and `virtualize`, and `onFootnoteScrollTo(index, label, info)` ([P3-14](./phase-3/decisions.md#p3-14-usemarkdownblocks-takes-onfootnotejump-for-the-apps-own-list)): a footnote press runs `onFootnotePress` first (`false` skips), then calls it with the block to scroll to (the section for a reference, the reference's block for a back-link). `index` is the block index, which is also the position in `data`; add your own offset when one list shows several documents. Nothing is pressable while a stream runs. Returns one item per top-level block for your own list. `data` is a new array per document change (unchanged blocks keep their items); the three functions never change identity. `renderItem` needs no provider, and `getItemType` is the element name, a FlashList recycling hint. No follow-tail: the list does it ([P3-3](./phase-3/decisions.md#p3-3-a-headless-block-hook-underneath-scroll-and-virtualize), [P3-5](./phase-3/decisions.md#p3-5-follow-tail-implemented-in-the-library-the-same-on-scrollview-and-flatlist)).
 
 ## Element catalog
 
@@ -71,7 +84,7 @@ Every component receives the props below, plus `children` (except where noted) a
 | `Divider` | — (no `children`) | Hairline `<View>` |
 | `Image` (block) | `src`, `alt`, `title` (no `children`) | `<Image>` with a cached aspect ratio and a placeholder |
 | `HtmlBlock` | `html: string` (no `children`) | Literal text (block HTML is never in the safe subset) |
-| `FootnoteDefinition` | `label`, `index`, `references` | Collected into a footer section. `references`: how many back-links to render |
+| `FootnoteDefinition` | `label`, `index`, `references` | Collected into a footer section. `references`: how many back-links it ends with (`FootnoteBackLink` elements inside its last paragraph, [P3-13](./phase-3/decisions.md#p3-13-footnote-back-links-are-inline-nodes-at-the-end-of-the-definition)) |
 
 ### Inline elements
 
@@ -91,6 +104,7 @@ Returning a `View` from an undeclared inline element triggers a dev-mode warning
 | `InlineImage` | `src`, `alt`, `title`, `width?`, `height?` |
 | `LineBreak` | `hard: boolean` (no `children`) |
 | `FootnoteReference` | `label`, `index`, `reference` (1-based) |
+| `FootnoteBackLink` | `label`, `index`, `reference` (1-based), `total`. End of a footnote definition's last paragraph, one per reference; the text comes from `footnotes.backLinkMark` |
 | `Underline`, `Highlight` | — (from `<u>`, `<mark>` in the [safe HTML subset](#raw-html)) |
 | `Superscript`, `Subscript` | — (from `<sup>`, `<sub>`) |
 | `Kbd` | — (from `<kbd>`) |

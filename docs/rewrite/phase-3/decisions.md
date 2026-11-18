@@ -84,3 +84,63 @@ Accepted · 2026-11-16
 - **Decision:** in development only, once per mounted `<Markdown>`, warn when `scroll` is as tall as its content above the window height (nested in a vertical scroller), when `component` changes type on three renders in a row, and when `ref`, `componentRef` or `autoScroll` is in use but `component` gave the scroll view no ref.
 - **Why:** each fails silently: nothing virtualizes, every block remounts, or the ref and follow-tail do nothing. The nested check is a layout heuristic on public API (`onLayout`, `onContentSizeChange`, `Dimensions`): it has no false positives for a bounded container, but misses short content, and it is `scroll` only, since React Native warns about a `FlatList` in a `ScrollView`. In dev, `scroll` always passes `onLayout` and `onContentSizeChange`; production passes none.
 - Rule: [virtualization.md](./virtualization.md#design). Code: `src/api/devWarnings.ts`.
+
+## P3-8: Built-in footnote jump in the owned containers
+
+Accepted · 2026-11-18
+
+- **Decision:** in `scroll` and `virtualize`, pressing a footnote reference or back-link scrolls to its target by default. A container option (`jumpToFootnotes: false`) turns it off. The default `View` keeps the handler-only behaviour of P1-15.
+- **Why:** a reference that does nothing in a container we own would look broken, and `scrollToBlock` already exists. In the default `View` the host owns the scroller, so there is nothing to scroll. A popover is a separate feature with its own layout and streaming cost, and is not built.
+- Consequence: `scroll` measures blocks (one wrapper `View` each) while the jump is active, as it does when a `ref` is passed. It is active only for a document that has footnotes and is not streaming, so other documents pay nothing; a stream switches at `done()`.
+- Design: [footnotes.md](./footnotes.md#design). Builds on [P1-15](../phase-1/decisions.md#p1-15-footnote-navigation-through-an-onfootnotepress-handler) and [P3-5](#p3-5-follow-tail-implemented-in-the-library-the-same-on-scrollview-and-flatlist).
+
+## P3-9: `onFootnotePress` runs first and can skip the jump
+
+Accepted · 2026-11-18
+
+- **Decision:** the handler is called first. If it returns `false`, the built-in jump does not run. Any other return value, including none, lets it run. The type becomes `void | false`. The jump animates and puts the target at the top.
+- **Why:** it is backward compatible, because existing handlers return nothing. Apps that want custom behaviour (a sheet, analytics only) can skip the jump per press without losing the rest of the feature. With "a handler replaces the jump", analytics-only handlers would silently switch it off.
+- While a stream is running, references are inert and the handler is not called ([P3-12](#p3-12-the-footnote-section-and-its-links-wait-for-done)).
+
+## P3-10: The jump lands on the footnote section; back-links use a lazy lookup
+
+Accepted · 2026-11-18
+
+- **Decision:** a reference scrolls to the footnote section (the last top-level block). A back-link scrolls to the top-level block holding that label's Nth reference, found by a lookup over the node table built on first use and cached per table. A table is immutable and every stream flush makes a new one, so table identity is the whole cache key.
+- **Why:** a single definition's offset inside the section is not stored, and measuring each one costs layout work. The footer is within a screen or two of the definition. Storing a block index on every reference node would add per-flush work that grows with the document, which the streaming design forbids ([P2-3](../phase-2/decisions.md)). References inside tables, lists and quotes still resolve to their top-level block.
+- Follow-ups, not built: scrolling to the definition itself, and a highlight after the jump.
+
+## P3-11: Footnote labels for references and back-links
+
+Accepted · 2026-11-18
+
+- **Decision:** references get an accessibility label such as "Footnote 1" and back-links "Back to reference 1", both with the role `link`. The strings come from `footnotes.labels` (`reference(index)`, `backLink(index, reference)`), English by default.
+- **Why:** today they have a role but no label, and the jump makes them the main way to use footnotes with a screen reader. Overridable strings cover translation without a localisation dependency. The rest of the accessibility pass, including #20, stays its own item.
+
+## P3-12: The footnote section and its links wait for `done()`
+
+Accepted · 2026-11-18
+
+- **Decision:** while a `useMarkdownStream` stream is running, the footnote section is not rendered and footnote references are inert (no link role, no `onFootnotePress`, no jump). `done()` shows the section and turns the links on; `reset()` starts a new live stream and hides them again. There is no option to show them live. The hiding is a one-block-shorter view of the table made in `useMarkdownPipeline`, driven by the existing `StreamInfo.ended` flag ([P2b-6](../phase-2b/decisions.md)), not a change to the parse and not a new prop.
+- **Why:** a reference whose definition has not arrived is literal text, and definitions usually end the document, so during a stream there is nothing useful to press and the footer is a block rebuilt every flush. Showing it once, at the end, is stable and cheaper to render. The same split already exists for `smoothing`, which is view-only until `done()`.
+- Cost: an app that never calls `done()` never shows footnotes; the docs say so. The re-parse a definition triggers ([P2-3](../phase-2/decisions.md)) stays; avoiding it is optimization-pass work (D9).
+- Design: [footnotes.md](./footnotes.md#design). Refines [P3-8](#p3-8-built-in-footnote-jump-in-the-owned-containers) and [P3-9](#p3-9-onfootnotepress-runs-first-and-can-skip-the-jump).
+
+## P3-13: Footnote back-links are inline nodes at the end of the definition
+
+Accepted · 2026-11-18
+
+- **Decision:** each `footnote_anchor` becomes a `FootnoteBackLink` inline node (id 47; attrs `label`, `index`, `subId`) at the end of the definition's last paragraph. A definition that does not end in a paragraph gets a paragraph holding only the back-links, so they sit on their own line. The renderer puts a space before each link but the first of such a paragraph; the space is not in the document, so `text` stays as written. The element is `FootnoteBackLink` (`label`, `index`, `reference`, `total`) with its own theme entry (link colour). Its text comes from a new `footnotes.backLinkMark(reference, total)` option, default `↩`, then `↩²`, `↩³`.
+- **Why:** the old marks were a separate `Text` under the content, a new line the definition's text style could not reach. A node in the AST is the one way every consumer (renderer, `visit`, custom `FootnoteDefinition` and `Paragraph`, HTML output) sees the same inline links, and it is what GitHub's HTML has. The text option covers a glyph that some Android fonts draw small, without replacing the definition renderer.
+- Cost: one node per reference, built in the tail re-parse that a definition already causes ([P2-3](../phase-2/decisions.md)). A definition whose only content is an image now renders that image inline, since the paragraph holds the back-link too.
+- Design: [footnotes.md](./footnotes.md#design). Refines [P1-15](../phase-1/decisions.md#p1-15-footnote-navigation-through-an-onfootnotepress-handler) and [P3-11](#p3-11-footnote-labels-for-references-and-back-links).
+
+## P3-14: `useMarkdownBlocks` takes `onFootnoteScrollTo` for the app's own list
+
+Accepted · 2026-11-18
+
+- **Decision:** `useMarkdownBlocks` takes `onFootnoteScrollTo(index, label, info)`. A press follows the [P3-9](#p3-9-onfootnotepress-runs-first-and-can-skip-the-jump) flow: `onFootnotePress` first, `false` skips, then the callback gets the block to scroll to (the section for a reference, the reference's block for a back-link). `index` is the block index, which is also the position in `data`. Setting it makes the links pressable; without it they are as before. It is an option of the hook only, not of `<Markdown>`.
+- **Why:** the app owns the scroller, so it must scroll, but the target lookup needs the private node table, and a hook is the one place that has the table that was rendered (no stale table while streaming, and `source` works). A callback keeps the P3-9 flow identical to the containers. While a stream runs nothing is pressable ([P3-12](#p3-12-the-footnote-section-and-its-links-wait-for-done)), so the callback never sees a table without its section.
+- Rejected: an exported pure helper `footnoteTarget(document, label, info)` (needs the private table, has no answer for `source`, and needs a streaming guard because the full table has a section that `data` omits); a `resolveFootnote` returned by the hook (circular: the handler is an input of the call that returns it).
+- The app also handles a list that has not measured the target: a FlatList without `getItemLayout` needs `onScrollToIndexFailed`. When one list shows several documents, `index` is the block index and not the list index: add your own offset.
+- Design: [footnotes.md](./footnotes.md#design). Refines [P3-8](#p3-8-built-in-footnote-jump-in-the-owned-containers) and [P3-9](#p3-9-onfootnotepress-runs-first-and-can-skip-the-jump).

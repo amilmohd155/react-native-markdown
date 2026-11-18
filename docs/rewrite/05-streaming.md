@@ -44,6 +44,7 @@ Partial syntax such as `**bold` or `[link](htt` looks broken while it streams in
 
 - `streamingConfig.animation: 'fade'` (or `{ type: 'fade', duration }`, 200 ms by default) fades in, once, each block that first appears while the stream is live. Blocks shown before, blocks a list mounts later on scroll, and everything after `done()` do not fade; Reduce Motion turns it off. `<Markdown document>`, `scroll`, `virtualize` and `useMarkdownBlocks()` apply it with no extra prop. Per-word fade and a gradient are not planned ([P2b-5](./phase-2b/decisions.md#p2b-5-animation-is-a-block-level-fade-none--fade)).
 - `onStreamingEnd` fires once per stream, from an effect after the exact `done()` document is committed (with `smooth`, after the drain). `reset()` starts a new stream; unmount never fires it ([P2b-6](./phase-2b/decisions.md#p2b-6-one-streamingconfig-object-and-onstreamingend)).
+- While a stream runs, the footnote section is not rendered and footnote references are plain text (no `onFootnotePress`, no jump); `done()` shows both, and `reset()` hides them again. A stream that never calls `done()` never shows footnotes ([P3-12](./phase-3/decisions.md#p3-12-the-footnote-section-and-its-links-wait-for-done)).
 
 ## Rendering
 

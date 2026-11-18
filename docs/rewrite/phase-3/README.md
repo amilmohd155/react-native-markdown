@@ -9,7 +9,7 @@ Implementation detail for Phase 3 ([07 · Phase 3](../07-roadmap.md#phase-3-scal
 - `scroll` and `virtualize` (`FlatList`), a headless block hook, scroll control and Reanimated integration. FlashList is user-side through the hook. Built: [virtualization.md](./virtualization.md).
 - Image aspect-ratio cache and placeholder, table column cache. Basic versions exist (`src/render/imageSize.ts`, `src/render/tableLayout.ts`); this is the polish ([P3-6](./decisions.md#p3-6-the-image-placeholder-ships-with-or-before-virtualize)).
 - `/highlight` entry point (lazy-loaded tokenizer).
-- Footnotes UI, task toggling, accessibility pass (includes #20). Task toggling and `onFootnotePress` already exist.
+- Footnotes UI, task toggling, accessibility pass (includes #20). Task toggling and `onFootnotePress` already exist. The footnote jump is built, in the containers and, through `onFootnoteScrollTo`, in your own list: [footnotes.md](./footnotes.md).
 - Official plugins (`math`, `mentions`, `emoji`).
 
 Not here: F5 `retainedHeap` and the profiling work, which belong to the [optimization pass](../07-roadmap.md#optimization-pass-after-the-last-feature-phase) ([D9](../07-roadmap.md#decisions)); there is no `/mdast` entry point ([P1-20](../phase-1/decisions.md#p1-20-no-tomdast-mdast-interop-is-dropped)).
@@ -19,4 +19,5 @@ Not here: F5 `retainedHeap` and the profiling work, which belong to the [optimiz
 | Document | Contents |
 |---|---|
 | [virtualization.md](./virtualization.md) | The scroll container, `virtualize`, the block hook and follow-tail |
+| [footnotes.md](./footnotes.md) | The footnote jump (containers and `useMarkdownBlocks`) and the footnote section while streaming |
 | [decisions.md](./decisions.md) | Decisions P3-1 onward |
