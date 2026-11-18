@@ -57,18 +57,20 @@ useMarkdownBlocks({ document: doc, onFootnoteScrollTo: (index, label, info) => l
 
 ## Exact definition and highlight (P3-15)
 
-`footnotes={{ target: 'definition', highlight }}`, both off by default ([P3-15](./decisions.md#p3-15-opt-in-exact-definition-jump-and-highlight)). Definitions report their y inside the section to a per-instance store; the pipeline builds one stable config from `target` and `highlight` (none while a stream runs, and the store is cleared then).
+`footnotes={{ target: 'definition', highlight }}`, both off by default ([P3-15](./decisions.md#p3-15-opt-in-exact-definition-jump-and-highlight)). Definitions report their y from the top of the footnote block (the section's top margin included) to a per-instance store; the pipeline builds one stable config from `target` and `highlight` (none while a stream runs, and the store is cleared then).
 
 - `onFootnotePress(label, info, { offset })` and `onFootnoteScrollTo(index, label, info, { offset })`: `offset` is that y, for a reference press with `target: 'definition'` once measured, else `undefined`. `index` stays the section block.
 - `scroll`: scrolls to the section offset plus `offset`. `virtualize`: lands on the section with the usual retries, then scrolls again by `offset` when it arrives (waits at most 5 s; a new press cancels it).
 - `useMarkdownBlocks`: when `offset` is `undefined` at the press (the section is not mounted in a long list), `onFootnoteScrollTo` is called again with it once measured (at most 5 s later; a new press cancels it), so the callback must be safe to run twice. Checked on a device: the first press lands on the definition. The default `View` has no re-call: `onFootnotePress` runs once.
-- `highlight`: a reference press flashes the definition, a back-link press the reference. `false` from `onFootnotePress` and `jumpToFootnotes: false` skip the flash too.
+- `highlight`: a reference press flashes the definition, a back-link press the reference. `false` from `onFootnotePress` and `jumpToFootnotes: false` skip the flash too. A flash plays once, even if its element remounts.
 
-## Not built
+## Deferred
 
-- A popover or inline preview of the definition on press.
-- A jump in the default `View` mode, where the host owns scrolling (use `onFootnotePress`). An exported pure lookup helper ([P3-14](./decisions.md#p3-14-usemarkdownblocks-takes-onfootnotescrollto-for-the-apps-own-list)).
-- Skipping the definition re-parse while streaming (optimization pass).
+Not built, and not scheduled in a phase. Pick them up as new features, or drop them.
+
+- **A popover or inline preview** of the definition on press (a feature of its own: layout, streaming cost, accessibility).
+- **A jump in the default `View` mode**, where the host owns scrolling (use `onFootnotePress`), and an exported pure lookup helper ([P3-14](./decisions.md#p3-14-usemarkdownblocks-takes-onfootnotescrollto-for-the-apps-own-list)).
+- **Skipping the definition re-parse while streaming.** Performance only, so it waits for the [optimization pass](../07-roadmap.md#optimization-pass-after-the-last-feature-phase) ([D9](../07-roadmap.md#decisions)).
 
 ## Open
 

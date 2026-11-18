@@ -1,5 +1,6 @@
 import { act } from 'react';
 import { AccessibilityInfo } from 'react-native';
+import { getDefaultTheme } from '../../theme';
 import { renderTree } from '../../__tests__/tree';
 import { BlockList } from '../Block';
 import { createRenderCtx } from '../context';
@@ -70,6 +71,31 @@ describe('footnote focus store', () => {
   });
 });
 
+describe('claim', () => {
+  it('gives a flash to its first owner only, and to it again', () => {
+    const store = createFootnoteFocusStore();
+    const a = {};
+    const b = {};
+    store.flash({ kind: 'definition', label: '1' });
+    const token = store.getFlashToken('d:1');
+    expect(store.claim(token, a)).toBe(true);
+    expect(store.claim(token, a)).toBe(true);
+    expect(store.claim(token, b)).toBe(false);
+    store.flash({ kind: 'definition', label: '1' });
+    expect(store.claim(store.getFlashToken('d:1'), b)).toBe(true);
+  });
+
+  it('forgets the claim on clear', () => {
+    const store = createFootnoteFocusStore();
+    const a = {};
+    store.flash({ kind: 'definition', label: '1' });
+    const token = store.getFlashToken('d:1');
+    store.claim(token, a);
+    store.clear();
+    expect(store.claim(token, {})).toBe(true);
+  });
+});
+
 describe('definition layout reporting', () => {
   it('reports y on layout and forgets on unmount', async () => {
     const store = createFootnoteFocusStore();
@@ -81,7 +107,10 @@ describe('definition layout reporting', () => {
     await act(async () => {
       frame.props.onLayout({ nativeEvent: { layout: { y: 42 } } });
     });
-    expect(store.getDefinitionY('1')).toBe(42);
+    // The section's top margin is added: a scroll lands on the block's top.
+    expect(store.getDefinitionY('1')).toBe(
+      42 + getDefaultTheme().tokens.spacing.block
+    );
     await root.unmount();
     expect(store.getDefinitionY('1')).toBeUndefined();
   });
@@ -122,6 +151,33 @@ describe('flash', () => {
     await act(async () => store.flash({ kind: 'definition', label: '1' }));
     await flush();
     expect(store.getFlashToken('d:1')).not.toBe(before);
+    expect(colored(root)).toBe(true);
+  });
+
+  it('does not replay a flash on a remount, and plays the next one', async () => {
+    reduceMotion(false);
+    const store = createFootnoteFocusStore();
+    const first = await mount(config(store));
+    await act(async () => store.flash({ kind: 'definition', label: '1' }));
+    await flush();
+    expect(colored(first)).toBe(true);
+    await first.unmount();
+    // A virtualized list mounts the definition again: the flash was shown.
+    const again = await mount(config(store));
+    await flush();
+    expect(colored(again)).toBe(false);
+    // A new press is a new flash.
+    await act(async () => store.flash({ kind: 'definition', label: '1' }));
+    await flush();
+    expect(colored(again)).toBe(true);
+  });
+
+  it('plays a flash whose element mounts after the press', async () => {
+    reduceMotion(false);
+    const store = createFootnoteFocusStore();
+    store.flash({ kind: 'definition', label: '1' });
+    const root = await mount(config(store));
+    await flush();
     expect(colored(root)).toBe(true);
   });
 

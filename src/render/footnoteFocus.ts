@@ -50,6 +50,13 @@ export interface FootnoteFocusStore {
   subscribe(listener: () => void): () => void;
   /** The flash token for `key` (see `footnoteFocusKey`), or 0 when not flashing. */
   getFlashToken(key: string): number;
+  /**
+   * Plays the flash `token` once: the first `owner` to claim it gets `true`
+   * (and again on a re-run of its effect), any other owner `false`. A
+   * definition that unmounts and mounts again in a virtualized list is a new
+   * owner and must not replay a flash that was already shown.
+   */
+  claim(token: number, owner: object): boolean;
 }
 
 export function footnoteFocusKey(target: FootnoteFocusTarget): string {
@@ -64,6 +71,8 @@ export function createFootnoteFocusStore(): FootnoteFocusStore {
   const listeners = new Set<() => void>();
   let flashKey: string | null = null;
   let token = 0;
+  let claimedToken = 0;
+  let claimedOwner: object | null = null;
 
   const notify = () => {
     for (const l of [...listeners]) l();
@@ -92,6 +101,8 @@ export function createFootnoteFocusStore(): FootnoteFocusStore {
     },
     clear() {
       ys.clear();
+      claimedToken = 0;
+      claimedOwner = null;
       if (flashKey !== null) {
         flashKey = null;
         notify();
@@ -104,6 +115,14 @@ export function createFootnoteFocusStore(): FootnoteFocusStore {
       };
     },
     getFlashToken: (key) => (key === flashKey ? token : 0),
+    claim(t, owner) {
+      if (t !== claimedToken) {
+        claimedToken = t;
+        claimedOwner = owner;
+        return true;
+      }
+      return claimedOwner === owner;
+    },
   };
 }
 

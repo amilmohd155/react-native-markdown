@@ -1,5 +1,5 @@
 import { createElement, type ReactNode } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { NodeType, NONE, type NodeTable } from '../model';
 import type { RenderCtx } from './context';
 import {
@@ -53,6 +53,13 @@ interface Place {
  * top-level block renders (document context, block context, source text,
  * as in `isSameBlock`) plus the table's position inside the block.
  */
+/** The top margin of the footnote section: the gap above its first definition. */
+function sectionInset(container: ViewStyle): number {
+  const flat = StyleSheet.flatten(container);
+  const margin = flat?.marginTop ?? flat?.marginVertical ?? flat?.margin;
+  return typeof margin === 'number' ? margin : 0;
+}
+
 function tableKey(table: NodeTable, id: number, place: Place): string {
   const start = table.blockStart[place.block]!;
   const end = table.blockEnd[place.block]!;
@@ -282,6 +289,7 @@ function renderNode(
         key: id,
         store: focus.store,
         label: props.label,
+        inset: sectionInset(theme.footnoteSection.container),
         children: definition,
       });
     }

@@ -45,18 +45,25 @@ export function useFootnoteFlash(
   const highlight = focus?.highlight ?? null;
   const duration = highlight?.duration ?? 0;
   const color = highlight?.color ?? theme.tokens.colors.footnoteHighlight;
+  // Identifies this element to `store.claim`: a remount is a new owner.
+  const [owner] = useState(() => ({}));
+  // The token this element has played; a remount does not replay a flash.
+  const [played, setPlayed] = useState(0);
   const [shown, setShown] = useState(false);
   const [background, setBackground] =
     useState<Animated.AnimatedInterpolation<string> | null>(null);
 
   useEffect(() => {
-    if (token === 0 || highlight === null) return;
+    if (token === 0 || focus === null) return;
+    if (!focus.store.claim(token, owner)) return;
     let active = true;
     let animation: Animated.CompositeAnimation | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const value = new Animated.Value(0);
     const start = (reduce: boolean) => {
       if (!active) return;
+      setPlayed(token);
+      if (highlight === null) return;
       if (reduce) {
         setShown(true);
         timer = setTimeout(() => setShown(false), duration);
@@ -94,7 +101,7 @@ export function useFootnoteFlash(
   }, [token]);
 
   useEffect(() => {
-    if (token === 0 || focusRef === undefined) return;
+    if (token === 0 || focusRef === undefined || played !== token) return;
     let active = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
     AccessibilityInfo.isScreenReaderEnabled().then(
@@ -116,10 +123,10 @@ export function useFootnoteFlash(
       active = false;
       if (timer !== undefined) clearTimeout(timer);
     };
-  }, [token, focusRef]);
+  }, [token, focusRef, played]);
 
   if (focus === null) return NO_FLASH;
-  const focused = token !== 0;
+  const focused = token !== 0 && played === token;
   if (token === 0 || highlight === null) return { style: null, focused };
   if (shown) return { style: { backgroundColor: color }, focused };
   if (background === null) return { style: null, focused };
