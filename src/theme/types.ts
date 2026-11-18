@@ -31,6 +31,7 @@ export const ELEMENT_NAMES = [
   'InlineImage',
   'LineBreak',
   'FootnoteReference',
+  'FootnoteBackLink',
   'Underline',
   'Highlight',
   'Superscript',

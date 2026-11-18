@@ -55,6 +55,14 @@ export interface ScrollOptions {
    * following.
    */
   readonly autoScroll?: boolean | { readonly threshold: number };
+  /**
+   * Pressing a footnote reference scrolls to the footnote section, and a
+   * back-link to its reference (P3-8); `onFootnotePress` runs first and can
+   * return `false` to skip it. `false` here turns the jump off, leaving
+   * only the handler. Default `true`. In `scroll` the jump measures every
+   * block, as `ref` does: one wrapper `View` each.
+   */
+  readonly jumpToFootnotes?: boolean;
   /** Imperative scrolling: see `MarkdownListRef`. */
   readonly ref?: Ref<MarkdownListRef>;
   /**

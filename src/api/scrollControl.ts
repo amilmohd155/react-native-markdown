@@ -360,7 +360,7 @@ export class ScrollController {
     }
   }
 
-  private scrollToBlock(index: number, options?: MarkdownScrollToBlockOptions) {
+  scrollToBlock(index: number, options?: MarkdownScrollToBlockOptions) {
     if (!Number.isFinite(index) || this.blockCount === 0) return;
     const i = Math.min(Math.max(Math.trunc(index), 0), this.blockCount - 1);
     const animated = options?.animated !== false;

@@ -26,6 +26,7 @@ import {
 import { useBlockItems } from '../render/blockItems';
 import type { RenderCtx } from '../render/context';
 import type { FadePlan } from '../render/fade';
+import { footnoteTarget } from '../render/footnoteTargets';
 import {
   assignRef,
   AUTO_SCROLL_THROTTLE,
@@ -46,6 +47,7 @@ import {
   useNestedScrollerWarning,
   useUnstableComponentWarning,
 } from './devWarnings';
+import type { FootnoteJumpRef } from './pipeline';
 import { keyExtractor, renderItem } from './useMarkdownBlocks';
 
 /**
@@ -98,14 +100,23 @@ type ScrollProps = Omit<MarkdownScrollComponentProps, 'children'> &
  * one place scroll event props are assembled. With no `ref`,
  * `componentRef` or `autoScroll`, exactly the user's props (no handler of
  * ours, so no extra events); otherwise the scroll control's handlers
- * (./scrollControl), composed with the user's.
+ * (./scrollControl), composed with the user's. The footnote jump (P3-8)
+ * needs the instance and, in `scroll`, measured blocks, like `ref`; it is
+ * not a reason to warn about a missing ref (P3-7): without one the jump
+ * does nothing.
  */
 function useScrollProps(
   options: Omit<ScrollOptions, 'component'>,
   list: boolean,
   blockCount: number,
-  slot: string
-): { readonly props: ScrollProps; readonly control: ScrollController } {
+  slot: string,
+  jump: boolean
+): {
+  readonly props: ScrollProps;
+  readonly control: ScrollController;
+  /** Blocks are measured (`scroll`: one wrapper `View` each). */
+  readonly measured: boolean;
+} {
   const {
     style,
     contentContainerStyle,
@@ -119,17 +130,18 @@ function useScrollProps(
   const threshold = autoScrollThreshold(autoScroll);
   const follow = threshold !== null;
   const hasRef = ref !== undefined && ref !== null;
-  const attach = follow || hasRef || componentRef !== undefined;
+  const asked = follow || hasRef || componentRef !== undefined;
+  const attach = asked || jump;
   // `scroll` measures blocks for `scrollToBlock`, and both clamp to the
   // content and the viewport.
-  const measure = follow || (hasRef && !list);
+  const measure = follow || ((hasRef || jump) && !list);
 
   useLayoutEffect(() => control.configure(threshold, blockCount));
   useEffect(() => () => control.dispose(), [control]);
   useImperativeHandle(ref, () => control.handle, [control]);
 
   const received = useRef(false);
-  useMissingRefWarning(attach, received, slot);
+  useMissingRefWarning(asked, received, slot);
 
   const setRef = useCallback(
     (instance: unknown) => {
@@ -164,7 +176,7 @@ function useScrollProps(
       own.onMomentumScrollBegin = control.onMomentumScrollBegin;
       own.onMomentumScrollEnd = control.onMomentumScrollEnd;
     }
-    if (list && (hasRef || componentRef !== undefined)) {
+    if (list && (hasRef || componentRef !== undefined || jump)) {
       own.onScrollToIndexFailed = control.onScrollToIndexFailed;
       // A drag ends a pending `scrollToBlock` / `scrollToEnd` retry
       // (follow-tail's own drag handler does the same).
@@ -182,10 +194,11 @@ function useScrollProps(
     hasRef,
     componentRef,
     list,
+    jump,
     control,
     setRef,
   ]);
-  return { props, control };
+  return { props, control, measured: hasRef || jump };
 }
 
 /**
@@ -268,12 +281,41 @@ function measuredBlockElements(
   return blocks;
 }
 
+/**
+ * Registers the footnote jump of a container (P3-8) on `jumpRef` (from
+ * `Markdown`, where the pipeline reads it): a press scrolls to its target in
+ * `table`, the latest one rendered. No ref, no jump.
+ */
+function useFootnoteJump(
+  jumpRef: FootnoteJumpRef | undefined,
+  control: ScrollController,
+  table: NodeTable
+) {
+  useLayoutEffect(() => {
+    if (jumpRef === undefined) return;
+    jumpRef.current = (label, info) => {
+      const target = footnoteTarget(table, label, info);
+      if (target !== undefined) {
+        control.scrollToBlock(target, { animated: true, viewPosition: 0 });
+      }
+    };
+    return () => {
+      jumpRef.current = null;
+    };
+  }, [jumpRef, control, table]);
+}
+
 interface ContainerProps<O> {
   readonly table: NodeTable;
   readonly ctx: RenderCtx;
   /** The stream's fade plan (P2b-5), or null. */
   readonly fade: FadePlan | null;
   readonly options: O;
+  /**
+   * Set while the jump is on (P3-8): not `jumpToFootnotes: false`, and the
+   * document has footnotes to jump between (none while streaming, P3-12).
+   */
+  readonly jump?: FootnoteJumpRef;
 }
 
 /** `<Markdown scroll>`: every block in one scroll view. */
@@ -282,6 +324,7 @@ export function MarkdownScrollView({
   ctx,
   fade,
   options,
+  jump,
 }: ContainerProps<ScrollOptions>) {
   const Scroll: MarkdownScrollComponent = options.component ?? ScrollView;
   useUnstableComponentWarning(options.component, 'scroll');
@@ -289,11 +332,12 @@ export function MarkdownScrollView({
     options,
     false,
     table.blockCount,
-    'scroll'
+    'scroll',
+    jump !== undefined
   );
-  const { control } = scrollProps;
+  const { control, measured } = scrollProps;
+  useFootnoteJump(jump, control, table);
   const props = useNestedScrollerWarning(scrollProps.props);
-  const measured = options.ref !== undefined && options.ref !== null;
   return (
     <BlockProviders ctx={ctx}>
       <Scroll {...props}>
@@ -318,11 +362,19 @@ export function MarkdownFlatList({
   ctx,
   fade,
   options,
+  jump,
 }: ContainerProps<VirtualizeOptions>) {
   const List: MarkdownListComponent = options.component ?? FlatList;
   const data = useBlockItems(table, ctx, fade);
   useUnstableComponentWarning(options.component, 'virtualize');
-  const { props } = useScrollProps(options, true, data.length, 'virtualize');
+  const { props, control } = useScrollProps(
+    options,
+    true,
+    data.length,
+    'virtualize',
+    jump !== undefined
+  );
+  useFootnoteJump(jump, control, table);
   return (
     <BlockProviders ctx={ctx}>
       <List

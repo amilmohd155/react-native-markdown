@@ -27,6 +27,7 @@ import {
   type Components,
   type ElementProps,
   type ElementStyle,
+  type FootnoteBackLinkMark,
   type FootnotePressInfo,
   type HeadingLevel,
   type ImagePressInfo,
@@ -143,7 +144,7 @@ describe('<Markdown> props', () => {
     expectType<
       Equal<
         NonNullable<Props['onFootnotePress']>,
-        (label: string, info: FootnotePressInfo) => void
+        (label: string, info: FootnotePressInfo) => void | false
       >
     >(true);
 
@@ -159,6 +160,16 @@ describe('<Markdown> props', () => {
     expectType<
       Equal<FootnotePressInfo['direction'], 'reference' | 'definition'>
     >(true);
+    expectType<
+      Equal<
+        NonNullable<NonNullable<Props['footnotes']>['backLinkMark']>,
+        (reference: number, total: number) => string
+      >
+    >(true);
+    expectType<
+      Equal<FootnoteBackLinkMark, (reference: number, total: number) => string>
+    >(true);
+    element(<Markdown source="x" footnotes={{ backLinkMark: () => '↑' }} />);
     expectType<Equal<LinkPressInfo['title'], string | null>>(true);
     // @ts-expect-error: handlers receive the href first
     element(<Markdown source="x" onLinkPress={(href: number) => void href} />);
@@ -357,6 +368,7 @@ describe('elements', () => {
     expectType<Equal<ElementProps<'FootnoteReference'>['reference'], number>>(
       true
     );
+    expectType<Equal<ElementProps<'FootnoteBackLink'>['total'], number>>(true);
   });
 
   it('leaves children off leaf elements', () => {

@@ -4,7 +4,12 @@
 // - Stream: a streamed answer with `autoScroll`, in `scroll` or
 //   `virtualize` mode. Drag up while it streams to pause following; come
 //   back to the end (or press End) to resume.
-// - Hook: `useMarkdownBlocks()` in a plain React Native FlatList.
+// - Hook: `useMarkdownBlocks()` in a plain React Native FlatList, with the
+//   footnote jump through `onFootnoteScrollTo` and `onScrollToIndexFailed` (P3-14).
+// - Footnotes (P3-8): the gallery has footnotes, so in Document a reference
+//   in the first copy jumps to the section at the very end (far away,
+//   unmeasured in `virtualize`), and a back-link jumps back. In Stream they
+//   are inert until the stream ends.
 // Each mode renders its own scroll container at the root of the screen,
 // never inside another vertical scroller (P3-2).
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -169,18 +174,43 @@ function StreamedAnswer() {
 
 function HookList() {
   const { effective } = useChrome();
-  const blocks = useMarkdownBlocks({ document: LONG, theme: effective });
+  const ref = useRef<FlatList>(null);
+  const blocks = useMarkdownBlocks({
+    document: LONG,
+    theme: effective,
+    // The library finds the block; the app scrolls its own list (P3-14).
+    onFootnoteScrollTo: (index) =>
+      ref.current?.scrollToIndex({ index, animated: true, viewPosition: 0 }),
+  });
   return (
     <>
       <UIText variant="caption" muted style={styles.note}>
         {`useMarkdownBlocks · FlatList · ${blocks.data.length} blocks`}
       </UIText>
       <FlatList
+        ref={ref}
         style={styles.fill}
         contentContainerStyle={styles.content}
         data={blocks.data}
         keyExtractor={blocks.keyExtractor}
         renderItem={blocks.renderItem}
+        // Without `getItemLayout` a far block is not measured yet: go near
+        // it, then try again once the list has rendered there.
+        onScrollToIndexFailed={({ index, averageItemLength }) => {
+          ref.current?.scrollToOffset({
+            offset: index * averageItemLength,
+            animated: false,
+          });
+          setTimeout(
+            () =>
+              ref.current?.scrollToIndex({
+                index,
+                animated: true,
+                viewPosition: 0,
+              }),
+            100
+          );
+        }}
       />
     </>
   );

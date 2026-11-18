@@ -41,6 +41,53 @@ export interface FootnotePressInfo {
   readonly reference: number;
 }
 
+/**
+ * Accessibility labels of footnote references and back-links (P3-11).
+ * Keep the functions stable (module level): they are part of `ctx` identity.
+ */
+export interface FootnoteA11yLabels {
+  /** A reference `[n]`; `index` is the footnote's number. */
+  readonly reference: (index: number) => string;
+  /**
+   * A back-link; `reference` is which reference it returns to, 1-based
+   * (the marks `↩`, `↩²`, ...).
+   */
+  readonly backLink: (index: number, reference: number) => string;
+}
+
+/** English labels, used unless `footnoteLabels` is set. */
+export const DEFAULT_FOOTNOTE_LABELS: FootnoteA11yLabels = Object.freeze({
+  reference: (index: number) => `Footnote ${index}`,
+  backLink: (index: number, reference: number) =>
+    reference > 1
+      ? `Back to reference ${index} (${reference})`
+      : `Back to reference ${index}`,
+});
+
+/**
+ * The visible text of a footnote back-link (P3-13): `reference` is which
+ * reference it returns to (1-based), `total` how many the footnote has.
+ * Keep the function stable (module level): it is part of `ctx` identity.
+ */
+export type FootnoteBackLinkMark = (reference: number, total: number) => string;
+
+const SUPERSCRIPT_DIGITS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+
+/**
+ * The default text, GitHub's: "↩", then "↩²", "↩³"... for the next
+ * references. U+FE0E asks for text presentation: iOS draws an emoji button
+ * without it.
+ */
+export const DEFAULT_FOOTNOTE_BACK_LINK_MARK: FootnoteBackLinkMark = (
+  reference
+) =>
+  reference > 1
+    ? `↩\uFE0E${String(reference)
+        .split('')
+        .map((d) => SUPERSCRIPT_DIGITS[Number(d)])
+        .join('')}`
+    : '↩\uFE0E';
+
 /** Event handlers. */
 export interface RenderHandlers {
   /** Return `false` to cancel the default handling. */
@@ -48,8 +95,14 @@ export interface RenderHandlers {
   readonly onImagePress?: (src: string, info: ImagePressInfo) => void;
   /** Makes task list checkboxes interactive. */
   readonly onTaskToggle?: (checked: boolean, info: TaskToggleInfo) => void;
-  /** Makes footnote references and back-links pressable. */
-  readonly onFootnotePress?: (label: string, info: FootnotePressInfo) => void;
+  /**
+   * Makes footnote references and back-links pressable. Return `false` to
+   * skip the built-in jump of an owned container (P3-9).
+   */
+  readonly onFootnotePress?: (
+    label: string,
+    info: FootnotePressInfo
+  ) => void | false;
 }
 
 /** Options that change what blocks render. Part of `ctx` identity. */
@@ -61,8 +114,13 @@ export interface RenderOptions {
   readonly interactiveTasks: boolean;
   /** True when `onImagePress` is set: block images are pressable. */
   readonly interactiveImages: boolean;
-  /** True when `onFootnotePress` is set: references and back-links are pressable. */
+  /**
+   * True when `onFootnotePress` is set (or an owned container jumps) and no
+   * stream is running (P3-12): references and back-links are pressable.
+   */
   readonly interactiveFootnotes: boolean;
+  readonly footnoteLabels: FootnoteA11yLabels;
+  readonly footnoteBackLinkMark: FootnoteBackLinkMark;
   readonly scriptFallback: ScriptFallback;
   /** Which images load; the rest render as their alt text. */
   readonly images: ImagesPolicy;
@@ -77,6 +135,8 @@ const DEFAULT_RENDER_OPTIONS: RenderOptions = Object.freeze({
   interactiveTasks: false,
   interactiveImages: false,
   interactiveFootnotes: false,
+  footnoteLabels: DEFAULT_FOOTNOTE_LABELS,
+  footnoteBackLinkMark: DEFAULT_FOOTNOTE_BACK_LINK_MARK,
   scriptFallback: 'smaller',
   images: 'allow',
 });
@@ -117,6 +177,12 @@ export interface RenderCtxInput {
   readonly scriptFallback?: ScriptFallback;
   /** Default `'allow'`. Keep the reference stable: it is part of `ctx` identity. */
   readonly images?: ImagesPolicy;
+  /** Default English. Keep the reference stable: it is part of `ctx` identity. */
+  readonly footnoteLabels?: FootnoteA11yLabels;
+  /** Default `↩`, `↩²`... Keep the reference stable: it is part of `ctx` identity. */
+  readonly footnoteBackLinkMark?: FootnoteBackLinkMark;
+  /** A stream is running: footnote links are inert (P3-12). Default `false`. */
+  readonly footnotesInert?: boolean;
 }
 
 function optionsOf(input: RenderCtxInput): RenderOptions {
@@ -128,7 +194,13 @@ function optionsOf(input: RenderCtxInput): RenderOptions {
       DEFAULT_RENDER_OPTIONS.maxFontSizeMultiplier,
     interactiveTasks: input.handlers?.onTaskToggle !== undefined,
     interactiveImages: input.handlers?.onImagePress !== undefined,
-    interactiveFootnotes: input.handlers?.onFootnotePress !== undefined,
+    interactiveFootnotes:
+      input.handlers?.onFootnotePress !== undefined &&
+      input.footnotesInert !== true,
+    footnoteLabels:
+      input.footnoteLabels ?? DEFAULT_RENDER_OPTIONS.footnoteLabels,
+    footnoteBackLinkMark:
+      input.footnoteBackLinkMark ?? DEFAULT_RENDER_OPTIONS.footnoteBackLinkMark,
     scriptFallback:
       input.scriptFallback ?? DEFAULT_RENDER_OPTIONS.scriptFallback,
     images: input.images ?? DEFAULT_RENDER_OPTIONS.images,
@@ -165,7 +237,12 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
     input.maxFontSizeMultiplier ?? DEFAULT_RENDER_OPTIONS.maxFontSizeMultiplier;
   const interactiveTasks = latest.onTaskToggle !== undefined;
   const interactiveImages = latest.onImagePress !== undefined;
-  const interactiveFootnotes = latest.onFootnotePress !== undefined;
+  const interactiveFootnotes =
+    latest.onFootnotePress !== undefined && input.footnotesInert !== true;
+  const footnoteLabels =
+    input.footnoteLabels ?? DEFAULT_RENDER_OPTIONS.footnoteLabels;
+  const footnoteBackLinkMark =
+    input.footnoteBackLinkMark ?? DEFAULT_RENDER_OPTIONS.footnoteBackLinkMark;
   const scriptFallback =
     input.scriptFallback ?? DEFAULT_RENDER_OPTIONS.scriptFallback;
   const images = input.images ?? DEFAULT_RENDER_OPTIONS.images;
@@ -179,6 +256,8 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
         interactiveTasks,
         interactiveImages,
         interactiveFootnotes,
+        footnoteLabels,
+        footnoteBackLinkMark,
         scriptFallback,
         images,
       }),
@@ -189,6 +268,8 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
       interactiveTasks,
       interactiveImages,
       interactiveFootnotes,
+      footnoteLabels,
+      footnoteBackLinkMark,
       scriptFallback,
       images,
     ]

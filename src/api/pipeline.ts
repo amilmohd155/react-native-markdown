@@ -6,6 +6,8 @@ import type { HtmlMode, ParserBackend } from '../parse';
 import {
   useRenderCtx,
   type Components,
+  type FootnoteBackLinkMark,
+  type FootnoteA11yLabels,
   type FootnotePressInfo,
   type ImagePressInfo,
   type ImagesPolicy,
@@ -17,13 +19,14 @@ import {
   type TaskToggleInfo,
 } from '../render';
 import type { RenderCtx } from '../render/context';
+import { footnoteSectionIndex } from '../render/footnoteTargets';
 import type { FadePlan } from '../render/fade';
 import {
   useResolvedTheme,
   type ElementOverrides,
   type ThemeProp,
 } from '../theme';
-import { tableOf, type MarkdownDocument } from './document';
+import { streamInfoOf, tableOf, type MarkdownDocument } from './document';
 import { useFadePlan } from './fade';
 import { mergeComponents } from './mergeComponents';
 import { parse } from './parse';
@@ -80,10 +83,21 @@ export interface MarkdownRenderOptions {
   /** Makes task list checkboxes interactive. */
   readonly onTaskToggle?: (checked: boolean, info: TaskToggleInfo) => void;
   /**
-   * Makes footnote references and back-links pressable. The app scrolls:
-   * `info.direction` says where to go (P1-15).
+   * Makes footnote references and back-links pressable (P1-15).
+   * `info.direction` says where to go. In `scroll` and `virtualize` the
+   * container then jumps there; return `false` to skip the jump (P3-9).
+   * Not called while a stream is running (P3-12).
    */
-  readonly onFootnotePress?: (label: string, info: FootnotePressInfo) => void;
+  readonly onFootnotePress?: (
+    label: string,
+    info: FootnotePressInfo
+  ) => void | false;
+  /**
+   * Footnote text: accessibility labels and the back-link mark (P3-11,
+   * P3-13). The functions inside must be stable (module level): new ones on
+   * every render rebuild the render context. The object itself may be inline.
+   */
+  readonly footnotes?: FootnotesOptions;
   /** Raw HTML handling. Default `'safe'`. Ignored with `document`. */
   readonly html?: HtmlMode;
   /** How soft line breaks render. Default `'space'` (P1-2). */
@@ -98,8 +112,31 @@ export interface MarkdownRenderOptions {
   readonly backend?: ParserBackend;
 }
 
+/** The `footnotes` prop of `<Markdown>`. */
+export interface FootnotesOptions {
+  /**
+   * Accessibility labels of references and back-links, e.g. to translate
+   * them. Default English.
+   */
+  readonly labels?: FootnoteA11yLabels;
+  /**
+   * The visible text of a back-link: `(reference, total)` to a string, e.g.
+   * `() => '↑'`. Default `↩`, then `↩²`, `↩³`...
+   */
+  readonly backLinkMark?: FootnoteBackLinkMark;
+}
+
 /** The markdown input plus how it renders. */
 export type MarkdownPipelineProps = MarkdownInput & MarkdownRenderOptions;
+
+/**
+ * The built-in footnote jump (P3-8): an owned container sets `current` to a
+ * function that scrolls to the target of a press, and `Markdown` passes the
+ * ref to the pipeline. Internal.
+ */
+export interface FootnoteJumpRef {
+  current: ((label: string, info: FootnotePressInfo) => void) | null;
+}
 
 /** What every block container renders from. */
 export interface MarkdownPipeline {
@@ -107,6 +144,11 @@ export interface MarkdownPipeline {
   readonly ctx: RenderCtx;
   /** Which new blocks fade in (P2b-5); null unless a stream asks for it. */
   readonly fade: FadePlan | null;
+  /**
+   * The document has footnotes and none is hidden: a container's footnote
+   * jump has a target (false while a stream runs, P3-12).
+   */
+  readonly footnotes: boolean;
 }
 
 const NO_PLUGINS: readonly MarkdownPlugin[] = Object.freeze([]);
@@ -140,7 +182,8 @@ function htmlEqual(a: HtmlMode | undefined, b: HtmlMode | undefined): boolean {
  */
 export function useMarkdownPipeline(
   props: MarkdownPipelineProps,
-  caller: string
+  caller: string,
+  jump?: FootnoteJumpRef
 ): MarkdownPipeline {
   const {
     source,
@@ -170,7 +213,24 @@ export function useMarkdownPipeline(
     return parse(source, { preset, html, plugins, backend });
   }, [document, source, preset, html, plugins, backend, caller]);
 
-  const fade = useFadePlan(parsed);
+  // While a stream runs, the footnote section is not rendered and footnote
+  // links are inert (P3-12). The parse is unchanged: the view is the same
+  // table one block shorter, kept per `parsed`, so unchanged blocks still
+  // match by content.
+  const full = tableOf(parsed);
+  const streamInfo = streamInfoOf(parsed);
+  const streaming = streamInfo !== undefined && !streamInfo.ended;
+  const hasSection = footnoteSectionIndex(full) >= 0;
+  const hidden = streaming && hasSection ? 1 : 0;
+  const table = useMemo(
+    () =>
+      hidden === 0
+        ? full
+        : Object.freeze({ ...full, blockCount: full.blockCount - hidden }),
+    [full, hidden]
+  );
+
+  const fade = useFadePlan(parsed, hidden);
 
   const mergedComponents = useMemo(
     () => mergeComponents(plugins, components),
@@ -186,11 +246,21 @@ export function useMarkdownPipeline(
   }, [plugins]);
   const theme = useResolvedTheme(props.theme, themeLayers);
 
+  // With a container's jump the handler always exists, so links are
+  // pressable without one; it runs first and `false` skips the jump (P3-9).
+  const footnotePress: RenderHandlers['onFootnotePress'] =
+    jump === undefined
+      ? onFootnotePress
+      : (label, info) => {
+          if (onFootnotePress?.(label, info) === false) return;
+          jump.current?.(label, info);
+        };
+  const footnoteLabels = useStable(props.footnotes?.labels, shallowEqualObject);
   const handlers: RenderHandlers = {
     onLinkPress,
     onImagePress,
     onTaskToggle,
-    onFootnotePress,
+    onFootnotePress: footnotePress,
   };
   const ctx = useRenderCtx({
     theme,
@@ -201,7 +271,10 @@ export function useMarkdownPipeline(
     images,
     selectable,
     maxFontSizeMultiplier,
+    footnoteLabels,
+    footnoteBackLinkMark: props.footnotes?.backLinkMark,
+    footnotesInert: streaming,
   });
 
-  return { table: tableOf(parsed), ctx, fade };
+  return { table, ctx, fade, footnotes: hasSection && !streaming };
 }

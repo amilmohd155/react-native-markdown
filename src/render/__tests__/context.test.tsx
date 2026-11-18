@@ -2,6 +2,8 @@ import { renderTree } from '../../__tests__/tree';
 import { getDefaultTheme, lightTheme, resolveTheme } from '../../theme';
 import {
   createRenderCtx,
+  DEFAULT_FOOTNOTE_BACK_LINK_MARK,
+  DEFAULT_FOOTNOTE_LABELS,
   useRenderCtx,
   type RenderCtx,
   type RenderCtxInput,
@@ -37,6 +39,8 @@ describe('createRenderCtx', () => {
       interactiveTasks: false,
       interactiveImages: false,
       interactiveFootnotes: false,
+      footnoteLabels: DEFAULT_FOOTNOTE_LABELS,
+      footnoteBackLinkMark: DEFAULT_FOOTNOTE_BACK_LINK_MARK,
       scriptFallback: 'smaller',
       images: 'allow',
     });

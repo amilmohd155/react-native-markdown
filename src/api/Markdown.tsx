@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BlockList } from '../render';
 import {
   listOptions,
@@ -6,6 +7,7 @@ import {
 } from './containers';
 import {
   useMarkdownPipeline,
+  type FootnoteJumpRef,
   type MarkdownInput,
   type MarkdownRenderOptions,
 } from './pipeline';
@@ -51,24 +53,40 @@ const NO_SCROLL_OPTIONS: ScrollOptions = Object.freeze({});
  * inline callbacks never re-render a block.
  */
 export function Markdown(props: MarkdownProps) {
-  const { table, ctx, fade } = useMarkdownPipeline(props, '<Markdown>');
-  if (props.virtualize) {
+  // The owned containers jump on a footnote press (P3-8), unless
+  // `jumpToFootnotes` is `false`; the pipeline needs to know before it builds
+  // the render context.
+  const [jump] = useState<FootnoteJumpRef>(() => ({ current: null }));
+  const listOpts = props.virtualize
+    ? listOptions(props.scroll, props.virtualize)
+    : undefined;
+  const scrollOpts = props.scroll === true ? NO_SCROLL_OPTIONS : props.scroll;
+  const own = listOpts ?? (scrollOpts || undefined);
+  const jumps = own !== undefined && own.jumpToFootnotes !== false;
+  const { table, ctx, fade, footnotes } = useMarkdownPipeline(
+    props,
+    '<Markdown>',
+    jumps ? jump : undefined
+  );
+  if (listOpts) {
     return (
       <MarkdownFlatList
         table={table}
         ctx={ctx}
         fade={fade}
-        options={listOptions(props.scroll, props.virtualize)}
+        options={listOpts}
+        jump={jumps && footnotes ? jump : undefined}
       />
     );
   }
-  if (props.scroll) {
+  if (scrollOpts) {
     return (
       <MarkdownScrollView
         table={table}
         ctx={ctx}
         fade={fade}
-        options={props.scroll === true ? NO_SCROLL_OPTIONS : props.scroll}
+        options={scrollOpts}
+        jump={jumps && footnotes ? jump : undefined}
       />
     );
   }

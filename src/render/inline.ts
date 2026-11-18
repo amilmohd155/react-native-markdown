@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { createElement, Fragment, type ReactNode } from 'react';
 import type { TextStyle } from 'react-native';
 import {
   Flag,
@@ -30,6 +30,7 @@ import {
   pluginStyleOf,
 } from './pluginNodes';
 import {
+  footnoteBackLinkProps,
   footnoteReferenceProps,
   htmlProps,
   imageProps,
@@ -287,6 +288,22 @@ function renderInlineNode(
         footnoteReferenceProps(table, id),
         elements.FootnoteReference
       );
+    case NodeType.FootnoteBackLink: {
+      const link = inline(
+        ctx,
+        dev,
+        blockText,
+        'FootnoteBackLink',
+        id,
+        footnoteBackLinkProps(table, id),
+        elements.FootnoteBackLink
+      );
+      // A space sets each back-link off from the text or link before it; it
+      // is not in the document, so the paragraph's text stays as written.
+      return table.firstChild[table.parent[id]!] === id
+        ? link
+        : createElement(Fragment, { key: id }, ' ', link);
+    }
     default:
       return pluginInline(table, id, ctx, dev, blockText, font);
   }

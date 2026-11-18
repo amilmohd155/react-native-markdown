@@ -122,6 +122,128 @@ exports[`element snapshots Emphasis 1`] = `
 </View>
 `;
 
+exports[`element snapshots FootnoteBackLink 1`] = `
+<View>
+  <Text
+    selectable={false}
+    style={
+      [
+        {
+          "marginBottom": 12,
+        },
+        {
+          "color": "#1f2328",
+          "fontSize": 16,
+          "lineHeight": 24,
+        },
+        null,
+        undefined,
+      ]
+    }
+  >
+    A reference
+    <Text
+      style={
+        {
+          "color": "#0969da",
+          "fontSize": 12,
+        }
+      }
+    >
+      [
+      1
+      ]
+    </Text>
+    .
+  </Text>
+  <View
+    accessibilityLabel="Footnotes"
+    accessibilityRole="summary"
+    style={
+      {
+        "borderTopColor": "#d1d9e0",
+        "borderTopWidth": 0.5,
+        "marginTop": 12,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "color": "#59636e",
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "fontSize": 14,
+              "lineHeight": 21,
+            },
+            {
+              "minWidth": 24,
+            },
+          ]
+        }
+      >
+        1.
+      </Text>
+      <View
+        style={
+          {
+            "flex": 1,
+            "minWidth": 0,
+          }
+        }
+      >
+        <Text
+          selectable={false}
+          style={
+            [
+              {
+                "marginBottom": 12,
+              },
+              {
+                "color": "#1f2328",
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              {
+                "color": "#59636e",
+                "fontSize": 14,
+                "lineHeight": 21,
+              },
+              undefined,
+            ]
+          }
+        >
+          Note.
+           
+          <Text
+            accessible={false}
+            importantForAccessibility="no"
+            style={
+              {
+                "color": "#0969da",
+              }
+            }
+          >
+            ↩︎
+          </Text>
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
 exports[`element snapshots FootnoteDefinition 1`] = `
 <View>
   <Text
@@ -225,29 +347,18 @@ exports[`element snapshots FootnoteDefinition 1`] = `
           }
         >
           The note.
-        </Text>
-        <Text
-          accessible={false}
-          importantForAccessibility="no"
-          style={
-            [
+           
+          <Text
+            accessible={false}
+            importantForAccessibility="no"
+            style={
               {
-                "color": "#59636e",
-                "fontSize": 14,
-                "lineHeight": 21,
-              },
-              {
-                "fontSize": 14,
-                "lineHeight": 21,
-              },
-              {
-                "marginBottom": 6,
-                "marginTop": -6,
-              },
-            ]
-          }
-        >
-          ↩︎
+                "color": "#0969da",
+              }
+            }
+          >
+            ↩︎
+          </Text>
         </Text>
       </View>
     </View>
@@ -358,29 +469,18 @@ exports[`element snapshots FootnoteReference 1`] = `
           }
         >
           Note.
-        </Text>
-        <Text
-          accessible={false}
-          importantForAccessibility="no"
-          style={
-            [
+           
+          <Text
+            accessible={false}
+            importantForAccessibility="no"
+            style={
               {
-                "color": "#59636e",
-                "fontSize": 14,
-                "lineHeight": 21,
-              },
-              {
-                "fontSize": 14,
-                "lineHeight": 21,
-              },
-              {
-                "marginBottom": 6,
-                "marginTop": -6,
-              },
-            ]
-          }
-        >
-          ↩︎
+                "color": "#0969da",
+              }
+            }
+          >
+            ↩︎
+          </Text>
         </Text>
       </View>
     </View>

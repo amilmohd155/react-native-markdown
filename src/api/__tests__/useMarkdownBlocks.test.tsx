@@ -242,4 +242,23 @@ describe('useMarkdownBlocks while streaming', () => {
       expect(after.data[2]).not.toBe(before.data[2]);
     }
   });
+
+  it('has no footnote section in data until done() (P3-12)', async () => {
+    await renderTree(<Streamed />);
+    await flush('One[^n].\n\nTwo.\n\n[^n]: Note.\n');
+    const live = results.at(-1)!;
+    expect(live.data.map((item) => live.getItemType(item))).toEqual([
+      'Paragraph',
+      'Paragraph',
+    ]);
+
+    await act(async () => probe.current.done());
+    await advance(100);
+    const ended = results.at(-1)!;
+    expect(ended.data.map((item) => ended.getItemType(item))).toEqual([
+      'Paragraph',
+      'Paragraph',
+      'FootnoteSection',
+    ]);
+  });
 });

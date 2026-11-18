@@ -187,6 +187,20 @@ export function footnoteReferenceProps(
   return { label, index, reference: subId + 1 };
 }
 
+export function footnoteBackLinkProps(
+  table: NodeTable,
+  id: number
+): SemanticProps<'FootnoteBackLink'> {
+  const { label, index, subId } = attrsOf(table, id, NodeType.FootnoteBackLink);
+  // Paragraph, then definition: the count of references is the definition's.
+  const definition = table.parent[table.parent[id]!]!;
+  const total =
+    table.type[definition] === NodeType.FootnoteDefinition
+      ? attrsOf(table, definition, NodeType.FootnoteDefinition).references
+      : subId + 1;
+  return { label, index, reference: subId + 1, total };
+}
+
 export function footnoteDefinitionProps(
   table: NodeTable,
   id: number

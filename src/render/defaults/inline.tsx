@@ -197,6 +197,7 @@ export function FootnoteReference({
     <Text
       style={style.text}
       accessibilityRole="link"
+      accessibilityLabel={options.footnoteLabels.reference(index)}
       onPress={() =>
         handlers.current.onFootnotePress?.(label, {
           index,
@@ -206,6 +207,49 @@ export function FootnoteReference({
       }
     >
       [{index}]
+    </Text>
+  );
+}
+
+/**
+ * A back-link at the end of a footnote's last paragraph: the text comes from
+ * `footnoteBackLinkMark`. Plain text, hidden from accessibility, unless footnote
+ * links are pressable.
+ */
+export function FootnoteBackLink({
+  label,
+  index,
+  reference,
+  total,
+  style,
+}: ElementProps<'FootnoteBackLink'>) {
+  const { handlers, options } = useRenderContext();
+  const mark = options.footnoteBackLinkMark(reference, total);
+  if (!options.interactiveFootnotes) {
+    return (
+      <Text
+        style={style.text}
+        accessible={false}
+        importantForAccessibility="no"
+      >
+        {mark}
+      </Text>
+    );
+  }
+  return (
+    <Text
+      style={style.text}
+      accessibilityRole="link"
+      accessibilityLabel={options.footnoteLabels.backLink(index, reference)}
+      onPress={() =>
+        handlers.current.onFootnotePress?.(label, {
+          index,
+          direction: 'reference',
+          reference,
+        })
+      }
+    >
+      {mark}
     </Text>
   );
 }

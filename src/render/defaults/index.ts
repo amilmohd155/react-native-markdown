@@ -17,6 +17,7 @@ import {
 import {
   Emphasis,
   FootnoteReference,
+  FootnoteBackLink,
   Highlight,
   HtmlInline,
   InlineCode,
@@ -58,6 +59,7 @@ export const defaultComponents: Components = Object.freeze({
   InlineImage,
   LineBreak,
   FootnoteReference,
+  FootnoteBackLink,
   Underline,
   Highlight,
   Superscript,
