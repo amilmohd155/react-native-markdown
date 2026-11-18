@@ -4,7 +4,12 @@
 // - Stream: a streamed answer with `autoScroll`, in `scroll` or
 //   `virtualize` mode. Drag up while it streams to pause following; come
 //   back to the end (or press End) to resume.
-// - Hook: `useMarkdownBlocks()` in a plain React Native FlatList.
+// - Hook: `useMarkdownBlocks()` in a plain React Native FlatList, with the
+//   footnote jump through `onFootnoteScrollTo` and `onScrollToIndexFailed` (P3-14).
+// - Footnotes (P3-8): the gallery has footnotes, so in Document a reference
+//   in the first copy jumps to the section at the very end (far away,
+//   unmeasured in `virtualize`), and a back-link jumps back. In Stream they
+//   are inert until the stream ends.
 // Each mode renders its own scroll container at the root of the screen,
 // never inside another vertical scroller (P3-2).
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -90,6 +95,7 @@ function LongDocument() {
       <Markdown
         document={LONG}
         theme={effective}
+        footnotes={FOOTNOTES}
         virtualize={{
           ref,
           style: styles.fill,
@@ -159,28 +165,78 @@ function StreamedAnswer() {
         Drag up to pause following; return to the end to resume.
       </UIText>
       {container === 'scroll' ? (
-        <Markdown document={document} theme={effective} scroll={options} />
+        <Markdown
+          document={document}
+          theme={effective}
+          scroll={options}
+          footnotes={FOOTNOTES}
+        />
       ) : (
-        <Markdown document={document} theme={effective} virtualize={options} />
+        <Markdown
+          document={document}
+          theme={effective}
+          virtualize={options}
+          footnotes={FOOTNOTES}
+        />
       )}
     </>
   );
 }
 
+// Scroll to the single definition and flash it (P3-15).
+const FOOTNOTES = { target: 'definition', highlight: true } as const;
+
 function HookList() {
   const { effective } = useChrome();
-  const blocks = useMarkdownBlocks({ document: LONG, theme: effective });
+  const ref = useRef<FlatList>(null);
+  // The offset of the last press, for the retry in `onScrollToIndexFailed`.
+  const viewOffset = useRef(0);
+  const blocks = useMarkdownBlocks({
+    document: LONG,
+    theme: effective,
+    // The library finds the block; the app scrolls its own list (P3-14).
+    // `offset` is the definition's y inside the section (P3-15), once measured.
+    footnotes: FOOTNOTES,
+    onFootnoteScrollTo: (index, _label, _info, { offset }) => {
+      viewOffset.current = -(offset ?? 0);
+      ref.current?.scrollToIndex({
+        index,
+        animated: true,
+        viewPosition: 0,
+        viewOffset: viewOffset.current,
+      });
+    },
+  });
   return (
     <>
       <UIText variant="caption" muted style={styles.note}>
         {`useMarkdownBlocks · FlatList · ${blocks.data.length} blocks`}
       </UIText>
       <FlatList
+        ref={ref}
         style={styles.fill}
         contentContainerStyle={styles.content}
         data={blocks.data}
         keyExtractor={blocks.keyExtractor}
         renderItem={blocks.renderItem}
+        // Without `getItemLayout` a far block is not measured yet: go near
+        // it, then try again once the list has rendered there.
+        onScrollToIndexFailed={({ index, averageItemLength }) => {
+          ref.current?.scrollToOffset({
+            offset: index * averageItemLength,
+            animated: false,
+          });
+          setTimeout(
+            () =>
+              ref.current?.scrollToIndex({
+                index,
+                animated: true,
+                viewPosition: 0,
+                viewOffset: viewOffset.current,
+              }),
+            100
+          );
+        }}
       />
     </>
   );

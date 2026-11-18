@@ -187,7 +187,10 @@ describe('a late definition re-parses the whole document', () => {
             components={plain}
           />
         );
-        expect(shape(tree)).toEqual(shape(reference));
+        // The footnote section waits for done() while streaming (P3-12).
+        expect(shape(tree)).toEqual(
+          shape(reference).filter((line) => !line.startsWith('FootnoteDef'))
+        );
       }
       expect(fullReparses).toBeGreaterThan(0);
       // The first paragraph changed after it closed: no `[^n]` / `[d]` left.

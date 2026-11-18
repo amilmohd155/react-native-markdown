@@ -48,6 +48,7 @@ The `NodeType` enum (`Uint8`). Plugin types are registered from 128 upward.
 | 44 | `Subscript` | `Subscript` | inline |
 | 45 | `Kbd` | `Kbd` | inline |
 | 46 | `FootnoteReference` | `FootnoteReference` | inline |
+| 47 | `FootnoteBackLink` | `FootnoteBackLink` | inline |
 | 128+ | plugin types | plugin element names | per plugin |
 
 ### Flag bits (`Uint8`)
@@ -162,7 +163,7 @@ Known difference: cmark-gfm detects the marker before inline parsing, so `- [x] 
 | `footnote_ref` (inline) | `FootnoteReference` | See the inline table |
 | `footnote_block_open` / `_close` | `FootnoteSection` | **Has `map === null`**, appended after all other blocks |
 | `footnote_open` / `_close` | `FootnoteDefinition` | `label` = `meta.label`, `index` = `meta.id + 1`, `references` = number of `footnote_anchor` tokens inside it |
-| `footnote_anchor` | — (dropped) | One per reference to the definition. Counted into `references`; the back-links are rendered by `FootnoteDefinition` itself |
+| `footnote_anchor` | `FootnoteBackLink` | One per reference to the definition, counted into `references`. `label` = `meta.label`, `index` = `meta.id + 1`, `subId` = `meta.subId`. The plugin puts them before the last `paragraph_close`, so they end that paragraph; with no such paragraph the converter opens one for them ([P3-13](./../phase-3/decisions.md#p3-13-footnote-back-links-are-inline-nodes-at-the-end-of-the-definition)) |
 
 - Definitions come in order of first reference; unused definitions are not emitted. An unresolved `[^x]` stays text.
 - markdown-it-footnote's inline footnotes (`^[text]`) are disabled (`footnote_inline`): GitHub doesn't have them.

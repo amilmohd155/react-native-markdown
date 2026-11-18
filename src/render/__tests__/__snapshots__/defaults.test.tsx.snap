@@ -870,29 +870,18 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
           }
         >
           The note.
-        </Text>
-        <Text
-          accessible={false}
-          importantForAccessibility="no"
-          style={
-            [
+           
+          <Text
+            accessible={false}
+            importantForAccessibility="no"
+            style={
               {
-                "color": "#59636e",
-                "fontSize": 14,
-                "lineHeight": 21,
-              },
-              {
-                "fontSize": 14,
-                "lineHeight": 21,
-              },
-              {
-                "marginBottom": 6,
-                "marginTop": -6,
-              },
-            ]
-          }
-        >
-          ↩︎
+                "color": "#0969da",
+              }
+            }
+          >
+            ↩︎
+          </Text>
         </Text>
       </View>
     </View>

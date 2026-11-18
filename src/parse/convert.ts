@@ -18,7 +18,7 @@ import {
   type PluginRegistry,
 } from '../plugins/registry';
 import type { TaskMeta } from '../plugins/taskLists';
-import type { FootnoteMeta } from '../plugins/footnotes';
+import type { FootnoteMeta, FootnoteRefMeta } from '../plugins/footnotes';
 import { filteredHtmlOf } from '../plugins/tagfilter';
 import type { HtmlMode } from './backend';
 import { InlineConverter } from './convertInline';
@@ -69,6 +69,11 @@ interface OpenFootnote {
   /** Source lines covered by its content, from the tokens' `map`. */
   startLine: number;
   endLine: number;
+  /**
+   * The paragraph synthesized to hold the back-links when the definition
+   * does not end in a paragraph (P3-13), once opened.
+   */
+  tail: boolean;
 }
 
 /** One open container on the conversion stack. */
@@ -312,14 +317,37 @@ export function convertTokens(
         const { id, label } = token.meta as unknown as FootnoteMeta;
         const attrs = { label, index: id + 1, references: 0 };
         const node = open(token, NodeType.FootnoteDefinition, 0, attrs);
-        footnote = { node, attrs, startLine: Infinity, endLine: -1 };
+        footnote = {
+          node,
+          attrs,
+          startLine: Infinity,
+          endLine: -1,
+          tail: false,
+        };
         break;
       }
-      case 'footnote_anchor':
-        // One per reference. The back-links are rendered by the definition.
-        if (footnote) footnote.attrs.references++;
+      case 'footnote_anchor': {
+        // One per reference, in the definition's last paragraph (the plugin
+        // puts them before its `paragraph_close`). A definition that does
+        // not end in a paragraph gets one for them (P3-13).
+        if (!footnote) break;
+        const { id, subId, label } = token.meta as unknown as FootnoteRefMeta;
+        footnote.attrs.references++;
+        if (top().node === footnote.node) {
+          top().childCount++;
+          const node = builder.add(NodeType.Paragraph, footnote.node);
+          stack.push({ node, type: NodeType.Paragraph, childCount: 0 });
+          footnote.tail = true;
+        }
+        builder.add(NodeType.FootnoteBackLink, top().node, 0, null, {
+          label,
+          index: id + 1,
+          subId,
+        });
         break;
+      }
       case 'footnote_close': {
+        if (footnote?.tail) close();
         if (footnote) {
           const { attrs, startLine, endLine } = footnote;
           builder.setAttrs(footnote.node, attrs);

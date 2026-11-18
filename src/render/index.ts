@@ -30,6 +30,8 @@ export type {
 export {
   createRenderCtx,
   useRenderCtx,
+  type FootnoteBackLinkMark,
+  type FootnoteA11yLabels,
   type FootnotePressInfo,
   type ImagePressInfo,
   type LinkPressInfo,
@@ -38,6 +40,11 @@ export {
   type SoftBreak,
   type TaskToggleInfo,
 } from './context';
+export {
+  createFootnoteFocusStore,
+  type FootnoteFocusConfig,
+  type FootnoteFocusStore,
+} from './footnoteFocus';
 export { BlockList } from './Block';
 export { renderBlock } from './renderBlock';
 export {

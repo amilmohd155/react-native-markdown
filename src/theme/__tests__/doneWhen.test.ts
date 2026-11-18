@@ -57,7 +57,7 @@ describe('done when: changing one token restyles every element deriving from it'
     [
       'colors.link',
       (t) => ({ ...t, colors: { ...t.colors, link: '#030303' } }),
-      ['Link', 'FootnoteReference'],
+      ['Link', 'FootnoteReference', 'FootnoteBackLink'],
     ],
     [
       'colors.codeBg',

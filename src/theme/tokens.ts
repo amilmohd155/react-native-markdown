@@ -16,6 +16,7 @@ export const lightTheme: ThemeTokens = Object.freeze({
     border: '#d1d9e0',
     quoteBar: '#d1d9e0',
     highlight: '#fff8c5',
+    footnoteHighlight: '#fff3a3',
   }),
   fonts: Object.freeze({ body: undefined, heading: undefined, mono }),
   fontSize: Object.freeze({ base: 16, scale: 1.2 }),
@@ -41,5 +42,6 @@ export const darkTheme: ThemeTokens = Object.freeze({
     border: '#3d444d',
     quoteBar: '#3d444d',
     highlight: '#5a4a00',
+    footnoteHighlight: 'rgba(212, 167, 44, 0.35)',
   }),
 });

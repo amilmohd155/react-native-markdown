@@ -13,6 +13,10 @@ const ref = (label: string, index: number, subId = 0): Dumped => ({
   type: 'FootnoteReference',
   attrs: { label, index, subId },
 });
+const back = (label: string, index: number, subId = 0): Dumped => ({
+  type: 'FootnoteBackLink',
+  attrs: { label, index, subId },
+});
 const para = (...children: Dumped[]): Dumped => ({
   type: 'Paragraph',
   children,
@@ -47,16 +51,19 @@ describe('footnotes', () => {
             type: 'FootnoteDefinition',
             attrs: { label: 'x', index: 1, references: 2 },
             children: [
-              para(text('X '), {
-                type: 'Emphasis',
-                children: [text('def')],
-              }),
+              // One back-link per reference, at the end of the last paragraph.
+              para(
+                text('X '),
+                { type: 'Emphasis', children: [text('def')] },
+                back('x', 1),
+                back('x', 1, 1)
+              ),
             ],
           },
           {
             type: 'FootnoteDefinition',
             attrs: { label: 'y', index: 2, references: 1 },
-            children: [para(text('Y'))],
+            children: [para(text('Y'), back('y', 2))],
           },
         ],
       },
@@ -90,6 +97,19 @@ describe('footnotes', () => {
       'CodeBlock',
       'Paragraph',
     ]);
+  });
+
+  it('puts the back-links of a definition that does not end in a paragraph in one of their own (P3-13)', () => {
+    const [, section] = blocks(
+      'x[^n] y[^n]\n\n[^n]:\n    Intro.\n\n    - one\n    - two\n'
+    );
+    const children = section!.children![0]!.children!;
+    expect(children.map((c) => c.type)).toEqual([
+      'Paragraph',
+      'List',
+      'Paragraph',
+    ]);
+    expect(children[2]).toEqual(para(back('n', 1), back('n', 1, 1)));
   });
 
   it('indexes the section as a block with an empty range at the end (P1-4)', () => {

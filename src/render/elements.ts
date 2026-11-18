@@ -82,6 +82,14 @@ export interface ElementPropsMap {
     /** Which reference to this footnote this is (1-based, P1-15). */
     readonly reference: number;
   };
+  FootnoteBackLink: {
+    readonly label: string;
+    readonly index: number;
+    /** Which reference it returns to (1-based). */
+    readonly reference: number;
+    /** How many references the footnote has: one back-link each. */
+    readonly total: number;
+  };
   Underline: WithChildren;
   Highlight: WithChildren;
   Superscript: WithChildren;
@@ -116,6 +124,7 @@ export type InlineElementName =
   | 'InlineImage'
   | 'LineBreak'
   | 'FootnoteReference'
+  | 'FootnoteBackLink'
   | 'Underline'
   | 'Highlight'
   | 'Superscript'

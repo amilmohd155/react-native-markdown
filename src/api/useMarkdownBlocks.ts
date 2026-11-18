@@ -1,12 +1,19 @@
-import { useMemo, type ReactElement } from 'react';
+import { useLayoutEffect, useMemo, useRef, type ReactElement } from 'react';
 import {
   blockItemType,
   renderBlockItem,
   useBlockItems,
   type BlockItem,
 } from '../render/blockItems';
+import type { NodeTable } from '../model';
+import { footnoteTarget } from '../render/footnoteTargets';
+import type { FootnotePressInfo } from '../render/context';
+import type { FootnoteFocusConfig } from '../render/footnoteFocus';
+import { refineOnMeasure } from './footnoteRefine';
 import {
   useMarkdownPipeline,
+  type FootnoteJumpRef,
+  type FootnoteScrollOffset,
   type MarkdownInput,
   type MarkdownRenderOptions,
 } from './pipeline';
@@ -17,7 +24,33 @@ import {
  * handlers, images, html, softBreak, scriptFallback, selectable,
  * maxFontSizeMultiplier, backend), with the same internal memoization.
  */
-export type UseMarkdownBlocksOptions = MarkdownInput & MarkdownRenderOptions;
+export type UseMarkdownBlocksOptions = MarkdownInput &
+  MarkdownRenderOptions & {
+    /**
+     * The footnote jump for your own list (P3-14). Setting it makes footnote
+     * references and back-links pressable; a press runs `onFootnotePress`
+     * first (return `false` to skip), then calls this with the block to
+     * scroll to: the footnote section for a reference, the block holding the
+     * reference for a back-link. `index` is that block's index, which is also
+     * its position in `data` (add your own offset when one list shows several
+     * documents). `label` and `info` are those of `onFootnotePress`. The app
+     * scrolls its list, and handles a list that has not measured the target
+     * yet (a FlatList without `getItemLayout`: `onScrollToIndexFailed`).
+     * Never called, and links stay inert, while a stream runs until `done()`
+     * (P3-12). With `footnotes.target: 'definition'` (P3-15), `scroll.offset`
+     * is the definition's y inside the section block (a reference press).
+     * When it is not measured yet at the press (`undefined`), this is called
+     * once more with the offset as soon as it is, for at most 5 s: scroll to
+     * the section, then by it, and make the callback safe to run twice.
+     * `footnotes.highlight` flashes the target.
+     */
+    readonly onFootnoteScrollTo?: (
+      index: number,
+      label: string,
+      info: FootnotePressInfo,
+      scroll: FootnoteScrollOffset
+    ) => void;
+  };
 
 /**
  * One top-level block, as an item of `data`. Opaque apart from these
@@ -80,6 +113,52 @@ const getItemType = (item: MarkdownBlock): string =>
   blockItemType(internal(item));
 
 /**
+ * Registers the jump on `jumpRef` against the latest table and callback, as
+ * the containers do (P3-8): a press resolves in the table that was rendered.
+ * No ref (no `onFootnoteScrollTo`), no jump.
+ */
+function useFootnoteJump(
+  jumpRef: FootnoteJumpRef | undefined,
+  table: NodeTable,
+  onFootnoteScrollTo: UseMarkdownBlocksOptions['onFootnoteScrollTo'],
+  focus: FootnoteFocusConfig | null
+) {
+  const latest = useRef(onFootnoteScrollTo);
+  useLayoutEffect(() => {
+    latest.current = onFootnoteScrollTo;
+  });
+  useLayoutEffect(() => {
+    if (jumpRef === undefined) return;
+    let pending: (() => void) | null = null;
+    const cancelPending = () => {
+      pending?.();
+      pending = null;
+    };
+    jumpRef.current = (label, info, scroll) => {
+      cancelPending();
+      const target = footnoteTarget(table, label, info);
+      if (target === undefined) return;
+      latest.current?.(target, label, info, scroll);
+      // The definition is not measured yet (its section may not be mounted):
+      // call again with the offset once it is (P3-15).
+      if (
+        scroll.offset === undefined &&
+        focus?.target === 'definition' &&
+        info.direction === 'definition'
+      ) {
+        pending = refineOnMeasure(focus.store, label, (y) =>
+          latest.current?.(target, label, info, { offset: y })
+        );
+      }
+    };
+    return () => {
+      cancelPending();
+      jumpRef.current = null;
+    };
+  }, [jumpRef, table, focus]);
+}
+
+/**
  * Headless rendering for your own list (P3-3).
  * Spec: docs/rewrite/phase-3/virtualization.md
  *
@@ -100,6 +179,18 @@ const getItemType = (item: MarkdownBlock): string =>
  * );
  * ```
  *
+ * Footnote jump in your own list (P3-14): pass `onFootnoteScrollTo` and scroll
+ * there. A FlatList without `getItemLayout` needs `onScrollToIndexFailed`:
+ *
+ * ```tsx
+ * const ref = useRef<FlatList>(null);
+ * const blocks = useMarkdownBlocks({
+ *   document,
+ *   onFootnoteScrollTo: (index) =>
+ *     ref.current?.scrollToIndex({ index, animated: true, viewPosition: 0 }),
+ * });
+ * ```
+ *
  * Only `data` changes identity, once per document change; the functions
  * are module-level constants. Each item carries what its block renders
  * from, so no provider is needed and blocks of several documents can share
@@ -109,10 +200,16 @@ const getItemType = (item: MarkdownBlock): string =>
 export function useMarkdownBlocks(
   options: UseMarkdownBlocksOptions
 ): UseMarkdownBlocksResult {
-  const { table, ctx, fade } = useMarkdownPipeline(
+  const { onFootnoteScrollTo } = options;
+  const jump = useRef<FootnoteJumpRef['current']>(null);
+  const jumpRef: FootnoteJumpRef | undefined =
+    onFootnoteScrollTo === undefined ? undefined : jump;
+  const { table, ctx, fade, focus } = useMarkdownPipeline(
     options,
-    'useMarkdownBlocks()'
+    'useMarkdownBlocks()',
+    jumpRef
   );
+  useFootnoteJump(jumpRef, table, onFootnoteScrollTo, focus);
   const data = useBlockItems(table, ctx, fade);
   return useMemo(
     () => ({ data, keyExtractor, renderItem, getItemType }),

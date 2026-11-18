@@ -41,6 +41,7 @@ This is how the renderer turns node table rows ([token-mapping.md](./token-mappi
 | `InlineCode` | `code` | row text |
 | `LineBreak` | `hard` | flag `HARD` |
 | `FootnoteReference` | `label`, `index`, `reference` (which reference to this footnote, 1-based) | attrs `label`, `index`; `reference` = attr `subId + 1` ([P1-15](./decisions.md#p1-15-footnote-navigation-through-an-onfootnotepress-handler)) |
+| `FootnoteBackLink` | `label`, `index`, `reference` (1-based), `total` | attrs `label`, `index`; `reference` = attr `subId + 1`; `total` = the definition's `references` ([P3-13](../phase-3/decisions.md#p3-13-footnote-back-links-are-inline-nodes-at-the-end-of-the-definition)) |
 | `FootnoteDefinition` | `label`, `index`, `references` (how many references point here; one back-link each) | attrs |
 | `HtmlBlock` / `HtmlInline` | `html` | row text (the source; what the default element shows). Internal attr `filteredHtml` (tagfilter, [P1-13](./decisions.md#p1-13-tagfilter-records-filtered-html-instead-of-rewriting-the-text)) is for HTML output, not an element prop |
 | `Strong`, `Emphasis`, `Strikethrough`, `Underline`, `Highlight`, `Superscript`, `Subscript`, `Kbd`, `Paragraph`, `Blockquote` | — | |

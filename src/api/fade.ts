@@ -34,12 +34,16 @@ interface FadeState {
 /** A stream document with animation on: its stream info and fade length. */
 type Animated = StreamInfo & { readonly fade: number };
 
-function baseline(document: MarkdownDocument, info: Animated): FadeState {
+function baseline(
+  document: MarkdownDocument,
+  info: Animated,
+  hidden: number
+): FadeState {
   return {
     document,
     stream: info.stream,
     epoch: info.epoch,
-    count: document.blockCount,
+    count: document.blockCount - hidden,
     plan: { duration: info.fade, births: NO_BIRTHS },
   };
 }
@@ -48,16 +52,17 @@ function advance(
   prev: FadeState | null,
   document: MarkdownDocument,
   info: Animated,
-  motion: boolean
+  motion: boolean,
+  hidden: number
 ): FadeState {
   if (
     prev === null ||
     prev.stream !== info.stream ||
     prev.epoch !== info.epoch
   ) {
-    return baseline(document, info);
+    return baseline(document, info, hidden);
   }
-  const n = document.blockCount;
+  const n = document.blockCount - hidden;
   const count = Math.max(prev.count, n);
   let plan = prev.plan;
   if (info.ended || !motion) {
@@ -109,20 +114,25 @@ export function resetReduceMotionCache(): void {
 /**
  * The fade plan for `document`, or null when it does not come from a
  * stream with `animation` on (then nothing here runs per document).
+ * `hidden` blocks at the end are not rendered (the footnote section while
+ * streaming, P3-12) and do not count as blocks.
  */
-export function useFadePlan(document: MarkdownDocument): FadePlan | null {
+export function useFadePlan(
+  document: MarkdownDocument,
+  hidden = 0
+): FadePlan | null {
   const info = streamInfoOf(document);
   const animated =
     info !== undefined && info.fade !== null ? (info as Animated) : null;
   const motion = useMotionAllowed(animated !== null);
   const [state, setState] = useState<FadeState | null>(() =>
-    animated === null ? null : baseline(document, animated)
+    animated === null ? null : baseline(document, animated, hidden)
   );
   if (animated === null) return null;
   if (state !== null && state.document === document) return state.plan;
   // A render-phase update, as `useStable` does: React re-runs the component
   // at once, before rendering children.
-  const next = advance(state, document, animated, motion);
+  const next = advance(state, document, animated, motion, hidden);
   setState(next);
   return next.plan;
 }

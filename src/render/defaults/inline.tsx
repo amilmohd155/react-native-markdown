@@ -1,5 +1,5 @@
 import { useContext, type ComponentType } from 'react';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Animated, Image, Pressable, Text, View } from 'react-native';
 import { InheritedTextContext, useRenderContext } from '../contexts';
 import type { ElementProps } from '../elements';
 import { useImageSize } from '../imageSize';
@@ -7,6 +7,7 @@ import { markInlineView, type InlineViewProps } from '../inlineView';
 import { pressLink } from '../links';
 import { toSubscript, toSuperscript } from '../scripts';
 import { regularFamily } from '../../theme';
+import { useFootnoteFlash } from '../useFootnoteFlash';
 
 /**
  * Default inline elements: nested <Text> inside the block's single <Text>,
@@ -190,22 +191,74 @@ export function FootnoteReference({
   style,
 }: ElementProps<'FootnoteReference'>) {
   const { handlers, options } = useRenderContext();
+  const flash = useFootnoteFlash(`r:${label}:${reference}`);
+  const interactive = options.interactiveFootnotes;
+  const props = interactive
+    ? {
+        accessibilityRole: 'link' as const,
+        accessibilityLabel: options.footnoteLabels.reference(index),
+        onPress: () =>
+          handlers.current.onFootnotePress?.(label, {
+            index,
+            direction: 'definition',
+            reference,
+          }),
+      }
+    : null;
+  // Animated components force `collapsable={false}`: use one only while flashing.
+  if (flash.style) {
+    return (
+      <Animated.Text style={[style.text, flash.style]} {...props}>
+        [{index}]
+      </Animated.Text>
+    );
+  }
+  return (
+    <Text style={style.text} {...props}>
+      [{index}]
+    </Text>
+  );
+}
+
+/**
+ * A back-link at the end of a footnote's last paragraph: the text comes from
+ * `footnoteBackLinkMark`. Plain text, hidden from accessibility, unless footnote
+ * links are pressable.
+ */
+export function FootnoteBackLink({
+  label,
+  index,
+  reference,
+  total,
+  style,
+}: ElementProps<'FootnoteBackLink'>) {
+  const { handlers, options } = useRenderContext();
+  const mark = options.footnoteBackLinkMark(reference, total);
   if (!options.interactiveFootnotes) {
-    return <Text style={style.text}>[{index}]</Text>;
+    return (
+      <Text
+        style={style.text}
+        accessible={false}
+        importantForAccessibility="no"
+      >
+        {mark}
+      </Text>
+    );
   }
   return (
     <Text
       style={style.text}
       accessibilityRole="link"
+      accessibilityLabel={options.footnoteLabels.backLink(index, reference)}
       onPress={() =>
         handlers.current.onFootnotePress?.(label, {
           index,
-          direction: 'definition',
+          direction: 'reference',
           reference,
         })
       }
     >
-      [{index}]
+      {mark}
     </Text>
   );
 }

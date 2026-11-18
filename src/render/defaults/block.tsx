@@ -1,5 +1,6 @@
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useMemo, useRef, useState } from 'react';
 import {
+  Animated,
   Image as RNImage,
   Pressable,
   ScrollView,
@@ -20,6 +21,7 @@ import {
 } from '../contexts';
 import type { ElementProps } from '../elements';
 import { useImageSize } from '../imageSize';
+import { useFootnoteFlash } from '../useFootnoteFlash';
 import {
   cachedColumnWidths,
   columnWidths,
@@ -343,85 +345,46 @@ export function TableCell({
   );
 }
 
-/** Basic definition row; the footnotes task adds the footer section. */
-const SUPERSCRIPT_DIGITS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
-/** ↩ with U+FE0E (text presentation): iOS draws an emoji button without it. */
-const BACK_LINK = '↩\uFE0E';
-
-/** GitHub-style back-link marks, one per reference: "↩ ↩² ↩³". */
-export function backLinks(references: number): string {
-  return backLinkMarks(references).join(' ');
-}
-
-/** The back-link marks, one per reference. */
-function backLinkMarks(references: number): string[] {
-  const marks: string[] = [];
-  for (let i = 1; i <= references; i++) {
-    marks.push(
-      i === 1
-        ? BACK_LINK
-        : BACK_LINK +
-            String(i)
-              .split('')
-              .map((d) => SUPERSCRIPT_DIGITS[Number(d)])
-              .join('')
-    );
-  }
-  return marks;
-}
-
 /**
- * One footnote: its number, its content, and a back-link mark per
- * reference. The marks aren't pressable yet: jumping to a reference needs
- * the host's scroll view (see the footnotes notes in the plan).
+ * One footnote: its number and its content. The back-links are inline
+ * `FootnoteBackLink` elements at the end of the content (P3-13).
  */
 export function FootnoteDefinition({
   label,
   index,
-  references,
   style,
   children,
 }: ElementProps<'FootnoteDefinition'>) {
   const inherited = useContext(InheritedTextContext);
-  const { handlers, options } = useRenderContext();
-  return (
-    <View style={style.container}>
+  const ref = useRef<View>(null);
+  const flash = useFootnoteFlash(`d:${label}`, ref);
+  const parts = (
+    <>
       <Text style={[inherited, style.text, styles.footnoteLabel]}>
         {`${index}.`}
       </Text>
-      <View style={styles.content}>
-        {children}
-        {references > 0 && options.interactiveFootnotes ? (
-          <Text
-            style={[inherited, style.text, styles.backLinks]}
-            importantForAccessibility="no"
-          >
-            {backLinkMarks(references).map((mark, i) => (
-              <Text
-                key={i}
-                accessibilityRole="link"
-                onPress={() =>
-                  handlers.current.onFootnotePress?.(label, {
-                    index,
-                    direction: 'reference',
-                    reference: i + 1,
-                  })
-                }
-              >
-                {i === 0 ? mark : ` ${mark}`}
-              </Text>
-            ))}
-          </Text>
-        ) : references > 0 ? (
-          <Text
-            style={[inherited, style.text, styles.backLinks]}
-            accessible={false}
-            importantForAccessibility="no"
-          >
-            {backLinks(references)}
-          </Text>
-        ) : null}
-      </View>
+      <View style={styles.content}>{children}</View>
+    </>
+  );
+  // Animated components force `collapsable={false}`: use one only while flashing.
+  if (flash.style) {
+    return (
+      <Animated.View
+        ref={ref}
+        style={[style.container, flash.style]}
+        accessible={flash.focused ? true : undefined}
+      >
+        {parts}
+      </Animated.View>
+    );
+  }
+  return (
+    <View
+      ref={ref}
+      style={style.container}
+      accessible={flash.focused ? true : undefined}
+    >
+      {parts}
     </View>
   );
 }
@@ -440,5 +403,4 @@ const styles = StyleSheet.create({
   measuring: { opacity: 0 },
   cellMeasure: { minWidth: MIN_COLUMN_WIDTH, maxWidth: MAX_COLUMN_WIDTH },
   footnoteLabel: { minWidth: 24 },
-  backLinks: { marginTop: -6, marginBottom: 6 },
 });

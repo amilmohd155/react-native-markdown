@@ -29,6 +29,7 @@ describe('NodeType', () => {
       Text: 32,
       Image: 38,
       FootnoteReference: 46,
+      FootnoteBackLink: 47,
     });
   });
 

@@ -150,6 +150,7 @@ function deriveElements(t: ThemeTokens): Record<ElementName, StyleEntry> {
     InlineImage: {},
     LineBreak: {},
     FootnoteReference: { text: { ...scriptText, color: colors.link } },
+    FootnoteBackLink: { text: { color: colors.link } },
     HtmlInline: { text: {} },
   };
 }

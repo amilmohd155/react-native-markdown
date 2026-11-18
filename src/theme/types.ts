@@ -31,6 +31,7 @@ export const ELEMENT_NAMES = [
   'InlineImage',
   'LineBreak',
   'FootnoteReference',
+  'FootnoteBackLink',
   'Underline',
   'Highlight',
   'Superscript',
@@ -73,6 +74,8 @@ export interface ThemeTokens {
     readonly border: string;
     readonly quoteBar: string;
     readonly highlight: string;
+    /** Flash on a footnote definition or reference a press jumped to. */
+    readonly footnoteHighlight: string;
   };
   readonly fonts: {
     /** `undefined`: the platform's system font. */

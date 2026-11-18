@@ -40,6 +40,7 @@ const FIXTURES: Record<ElementName, string> = {
   InlineImage: 'An ![icon](https://example.com/i.png) inline.',
   LineBreak: 'Line one\\\nline two',
   FootnoteReference: 'A reference[^n].\n\n[^n]: Note.',
+  FootnoteBackLink: 'A reference[^n].\n\n[^n]: Note.',
   Underline: 'Some <u>underlined</u> text.',
   Highlight: 'Some <mark>highlighted</mark> text.',
   Superscript: 'E = mc<sup>2</sup>',

@@ -3,6 +3,7 @@ import {
   blockImageOf,
   codeBlockProps,
   footnoteDefinitionProps,
+  footnoteBackLinkProps,
   footnoteReferenceProps,
   headingProps,
   htmlProps,
@@ -250,6 +251,15 @@ export function visit(document: MarkdownDocument, visitor: Visitor): void {
         call(
           'FootnoteReference',
           footnoteReferenceProps(table, id),
+          id,
+          depth,
+          blockIndex
+        );
+        return;
+      case NodeType.FootnoteBackLink:
+        call(
+          'FootnoteBackLink',
+          footnoteBackLinkProps(table, id),
           id,
           depth,
           blockIndex

@@ -1,5 +1,5 @@
 import { createElement, type ReactNode } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { NodeType, NONE, type NodeTable } from '../model';
 import type { RenderCtx } from './context';
 import {
@@ -8,6 +8,7 @@ import {
   TableKeyContext,
 } from './contexts';
 import { element } from './element';
+import { FootnoteFrame } from './footnoteFrame';
 import { BODY_FONT, HEADING_FONT, TABLE_HEAD_FONT } from '../theme';
 import { imageAllowed } from './imagePolicy';
 import { renderInline } from './inline';
@@ -52,6 +53,13 @@ interface Place {
  * top-level block renders (document context, block context, source text,
  * as in `isSameBlock`) plus the table's position inside the block.
  */
+/** The top margin of the footnote section: the gap above its first definition. */
+function sectionInset(container: ViewStyle): number {
+  const flat = StyleSheet.flatten(container);
+  const margin = flat?.marginTop ?? flat?.marginVertical ?? flat?.margin;
+  return typeof margin === 'number' ? margin : 0;
+}
+
 function tableKey(table: NodeTable, id: number, place: Place): string {
   const start = table.blockStart[place.block]!;
   const end = table.blockEnd[place.block]!;
@@ -265,15 +273,26 @@ function renderNode(
       );
     }
 
-    case NodeType.FootnoteDefinition:
-      return element(
+    case NodeType.FootnoteDefinition: {
+      const props = footnoteDefinitionProps(table, id);
+      const definition = element(
         ctx,
         'FootnoteDefinition',
         id,
-        footnoteDefinitionProps(table, id),
+        props,
         elements.FootnoteDefinition,
         renderChildren(table, id, ctx, place)
       );
+      const focus = ctx.options.footnoteFocus;
+      if (focus?.target !== 'definition') return definition;
+      return createElement(FootnoteFrame, {
+        key: id,
+        store: focus.store,
+        label: props.label,
+        inset: sectionInset(theme.footnoteSection.container),
+        children: definition,
+      });
+    }
 
     default: {
       // Plugin block nodes: a leaf (`math_block`) or a container.

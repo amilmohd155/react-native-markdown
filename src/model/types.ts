@@ -43,6 +43,7 @@ export const NodeType = {
   Subscript: 44,
   Kbd: 45,
   FootnoteReference: 46,
+  FootnoteBackLink: 47,
 } as const;
 
 /** First id available to plugin-registered node types. */
@@ -126,6 +127,8 @@ export interface NodeAttrsMap {
     references: number;
   };
   [NodeType.FootnoteReference]: { label: string; index: number; subId: number };
+  /** End of a definition's last paragraph: one per reference (P3-13). */
+  [NodeType.FootnoteBackLink]: { label: string; index: number; subId: number };
 }
 
 export type NodeTypeWithAttrs = keyof NodeAttrsMap;
