@@ -389,7 +389,7 @@ describe.each([
   const probe = {} as { current: UseMarkdownStreamResult };
 
   function Streamed() {
-    const stream = useMarkdownStream({ flushIntervalMs: 50 });
+    const stream = useMarkdownStream();
     useEffect(() => {
       probe.current = stream;
     });
@@ -1109,7 +1109,7 @@ describe('scroll control', () => {
     const ref = createRef<MarkdownListRef>();
 
     function Streamed() {
-      const stream = useMarkdownStream({ flushIntervalMs: 50 });
+      const stream = useMarkdownStream();
       useEffect(() => {
         probe.current = stream;
       });

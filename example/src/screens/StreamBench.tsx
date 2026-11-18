@@ -10,8 +10,12 @@
 // The S2.9b results, with the flush-cost columns, are in
 // bench/results/scheduler-device-s25fe-release-*.json.
 //
-// "raf" here means the hook default: raf on iOS and Android, a 16 ms timer on
-// web. "timeout" passes `flushIntervalMs`.
+// It runs the hook's default schedule: raf on iOS and Android, a 16 ms timer
+// on web (P2-4). The flush window is not a public option (P2b-7).
+// `streamingConfig` (smooth, animation) is chosen in Options and read once per
+// run (each run mounts a new hook); the defaults (smooth off, no animation)
+// are the baseline. `onStreamingEnd` only writes a ref (no state) and its
+// call count and time are reported with the run.
 //
 // Streams F2 (~10 KB, the F4 text) or the code-heavy fixture (F4d) through
 // useMarkdownStream into <Markdown document>, paced on a timer (F4a: 20 chars
@@ -39,14 +43,22 @@ import {
   useMarkdownStream,
   visit,
   type MarkdownDocument,
+  type StreamAnimation,
+  type StreamingConfig,
 } from '@docren/react-native-markdown';
 import { F2 } from '../../../bench/fixtures';
-import { Button, Card, Field, OptionsSheet, Segmented, UIText } from '../ui';
+import {
+  Button,
+  Card,
+  Field,
+  OptionsSheet,
+  Segmented,
+  Toggle,
+  UIText,
+} from '../ui';
 import { deviceInfo, logChunked } from './benchUtil';
 import { CODE_HEAVY } from './streamBenchFixtures';
 
-type SchedulerChoice = 'timeout' | 'raf';
-type Smoothing = 'none' | 'hide-incomplete';
 type PresetId = 'f4a' | 'f4b' | 'c1' | 'f4d';
 
 /**
@@ -93,27 +105,23 @@ const PRESETS: Record<
   },
 };
 
-const SCHEDULER_NAMES: Record<SchedulerChoice, string> = {
-  timeout: 'Timer',
-  raf: 'Auto',
-};
-const SMOOTHING_NAMES: Record<Smoothing, string> = {
-  'none': 'Off',
-  'hide-incomplete': 'Hide partial',
-};
-
-const INTERVALS = ['16', '33', '50', '100'] as const;
 const DROPPED_FRAME_MS = 20;
 /** Text streamed by a preset: F2, or the code-heavy fixture for F4d. */
 const sourceFor = (preset: PresetId): string =>
   preset === 'f4d' ? CODE_HEAVY : F2;
 
+type AnimationId = 'none' | 'fade';
+
 interface Config {
-  readonly scheduler: SchedulerChoice;
-  readonly flushIntervalMs: number;
-  readonly smoothing: Smoothing;
   readonly preset: PresetId;
+  readonly smooth: boolean;
+  readonly animation: AnimationId;
 }
+
+const streamingConfigFor = (config: Config): StreamingConfig => {
+  const animation: StreamAnimation = config.animation;
+  return { smooth: config.smooth, animation };
+};
 
 interface Dist {
   readonly n: number;
@@ -135,6 +143,10 @@ interface RunResult {
   readonly frames: Dist & { readonly dropped: number };
   readonly latencyMs: Dist;
   readonly finalEqual: boolean;
+  /** `onStreamingEnd` calls during the run (expected 1). */
+  readonly endCalls: number;
+  /** First `onStreamingEnd` call, ms after the first append (null: none). */
+  readonly endedAtMs: number | null;
 }
 
 interface Meter {
@@ -149,6 +161,8 @@ interface Meter {
   latencies: number[];
   chunks: number;
   finished: boolean;
+  endCalls: number;
+  endedAt: number | null;
 }
 
 const newMeter = (): Meter => ({
@@ -162,6 +176,8 @@ const newMeter = (): Meter => ({
   latencies: [],
   chunks: 0,
   finished: false,
+  endCalls: 0,
+  endedAt: null,
 });
 
 function dist(values: readonly number[]): Dist {
@@ -209,13 +225,17 @@ function Run({
     onDoneRef.current = onDone;
   });
 
-  // Public API only. 'timeout' passes the window; 'raf' is the hook default
-  // (raf on iOS and Android, a 16 ms timer on web).
+  // Public API only: the default schedule plus the chosen streamingConfig.
+  // `streamingConfig` and `onStreamingEnd` write no state: the callback
+  // only records into the meter.
   const stream = useMarkdownStream({
-    smoothing: config.smoothing,
-    ...(config.scheduler === 'timeout'
-      ? { flushIntervalMs: config.flushIntervalMs }
-      : {}),
+    streamingConfig: streamingConfigFor(config),
+    onStreamingEnd: () => {
+      const meter = meterRef.current;
+      if (!meter) return;
+      meter.endCalls++;
+      meter.endedAt ??= performance.now() - meter.start;
+    },
   });
   const { append, done, document } = stream;
 
@@ -260,8 +280,19 @@ function Run({
       },
       latencyMs: dist(meter.latencies),
       finalEqual: signature(document) === signature(parse(source)),
+      endCalls: 0,
+      endedAtMs: null,
     };
-    setTimeout(() => onDoneRef.current(result), 0);
+    // The end callback runs after the commit: read it once the run is over.
+    setTimeout(
+      () =>
+        onDoneRef.current({
+          ...result,
+          endCalls: meter.endCalls,
+          endedAtMs: meter.endedAt,
+        }),
+      0
+    );
   }, [document, renderedAt, config, source]);
 
   // The driver: one chunk per tick, scheduled against the run's start so the
@@ -321,6 +352,9 @@ function Run({
 const fmt = (n: number) => (n >= 100 ? n.toFixed(0) : n.toFixed(1));
 const distText = (d: Dist) => `${fmt(d.p50)} / ${fmt(d.p90)} / ${fmt(d.max)}`;
 
+const configLabel = (c: Config) =>
+  `smooth ${c.smooth ? 'on' : 'off'} · animation ${c.animation}`;
+
 function ResultCard({ r, index }: { r: RunResult; index: number }) {
   const c = r.config;
   const lines = [
@@ -329,14 +363,15 @@ function ResultCard({ r, index }: { r: RunResult; index: number }) {
     `frame gap p50/p90/max      ${distText(r.frames)}  dropped ${r.frames.dropped}/${r.frames.n}`,
     `append→commit p50/p90/max  ${distText(r.latencyMs)}`,
     `final == parse(full): ${r.finalEqual ? 'yes' : 'NO'}`,
+    `onStreamingEnd: ${r.endCalls}x${
+      r.endedAtMs === null ? '' : ` at ${fmt(r.endedAtMs)} ms`
+    }`,
   ];
   return (
     <Card style={styles.result}>
-      <UIText variant="label">
-        {`#${index} ${c.scheduler === 'timeout' ? `timeout@${c.flushIntervalMs}` : 'default'} · ${PRESETS[c.preset].label} · ${c.smoothing}`}
-      </UIText>
+      <UIText variant="label">{`#${index} ${PRESETS[c.preset].label} · ${configLabel(c)}`}</UIText>
       <UIText variant="caption" muted>
-        {`${PRESETS[c.preset].name} · ${SCHEDULER_NAMES[c.scheduler]}${c.scheduler === 'timeout' ? ` ${c.flushIntervalMs} ms` : ''} · smoothing ${SMOOTHING_NAMES[c.smoothing].toLowerCase()}`}
+        {PRESETS[c.preset].name}
       </UIText>
       {lines.map((line) => (
         <UIText key={line} variant="mono">
@@ -347,39 +382,22 @@ function ResultCard({ r, index }: { r: RunResult; index: number }) {
   );
 }
 
-/** Order that cancels drift between the two strategies: A B B A A B. */
-const ABBA: readonly SchedulerChoice[] = [
-  'timeout',
-  'raf',
-  'raf',
-  'timeout',
-  'timeout',
-  'raf',
-];
-
 interface Options {
-  readonly scheduler: SchedulerChoice;
-  readonly interval: (typeof INTERVALS)[number];
-  readonly smoothing: Smoothing;
   readonly preset: PresetId;
+  readonly smooth: boolean;
+  readonly animation: AnimationId;
 }
 
 const DEFAULTS: Options = {
-  scheduler: 'timeout',
-  interval: '50',
-  smoothing: 'none',
   preset: 'f4a',
+  smooth: false,
+  animation: 'none',
 };
-
-const schedulerCaption = (o: Options): string =>
-  o.scheduler === 'timeout'
-    ? `timeout · flushIntervalMs ${o.interval}`
-    : 'hook default · frame on iOS/Android, 16 ms timer on web';
 
 export function StreamBench() {
   const [options, setOptions] = useState<Options>(DEFAULTS);
   const [sheet, setSheet] = useState(false);
-  const { scheduler, interval, smoothing, preset } = options;
+  const { preset, smooth, animation } = options;
   const set = <K extends keyof Options>(key: K, value: Options[K]) =>
     setOptions((current) => ({ ...current, [key]: value }));
   const changed = JSON.stringify(options) !== JSON.stringify(DEFAULTS);
@@ -387,38 +405,17 @@ export function StreamBench() {
   const [active, setActive] = useState<{ id: number; config: Config } | null>(
     null
   );
-  const [queue, setQueue] = useState<readonly SchedulerChoice[]>([]);
   const [results, setResults] = useState<readonly RunResult[]>([]);
   const nextId = useRef(0);
-
-  const configFor = (choice: SchedulerChoice): Config => ({
-    scheduler: choice,
-    flushIntervalMs: Number(interval),
-    smoothing,
-    preset,
-  });
-
-  const start = (choice: SchedulerChoice, rest: readonly SchedulerChoice[]) => {
-    setQueue(rest);
-    setActive({ id: nextId.current++, config: configFor(choice) });
-  };
 
   const onDone = (result: RunResult) => {
     const all = [result, ...results];
     setResults(all);
     logChunked('streamBench', result);
-    const [next, ...rest] = queue;
-    if (next) {
-      setQueue(rest);
-      setActive({ id: nextId.current++, config: configFor(next) });
-    } else {
-      setActive(null);
-    }
+    setActive(null);
   };
 
-  const summary = `${PRESETS[preset].name} · ${SCHEDULER_NAMES[scheduler]}${
-    scheduler === 'timeout' ? ` ${interval} ms` : ''
-  } · smoothing ${SMOOTHING_NAMES[smoothing].toLowerCase()}`;
+  const summary = `${PRESETS[preset].name} · ${configLabel({ preset, smooth, animation })}`;
 
   return (
     <View style={styles.root}>
@@ -460,7 +457,7 @@ export function StreamBench() {
         <Card style={styles.stats}>
           <UIText variant="caption" muted numberOfLines={1}>
             {active
-              ? `Running ${SCHEDULER_NAMES[active.config.scheduler].toLowerCase()}… ${queue.length} more queued`
+              ? `Running ${PRESETS[active.config.preset].name.toLowerCase()}…`
               : 'Ready'}
           </UIText>
           <UIText variant="caption" numberOfLines={1}>
@@ -477,17 +474,19 @@ export function StreamBench() {
           <Button
             label="Run"
             disabled={active !== null}
-            onPress={() => start(scheduler, [])}
+            onPress={() =>
+              setActive({
+                id: nextId.current++,
+                config: { preset, smooth, animation },
+              })
+            }
             style={styles.dockButton}
           />
           <Button
             label="Stop"
             tone="quiet"
             disabled={active === null}
-            onPress={() => {
-              setQueue([]);
-              setActive(null);
-            }}
+            onPress={() => setActive(null)}
             style={styles.dockButton}
           />
         </View>
@@ -513,64 +512,26 @@ export function StreamBench() {
             {PRESETS[preset].caption}
           </UIText>
         </Field>
-        <Field label="Updates">
+        <Field label="Smooth">
+          <Toggle
+            label={smooth ? 'Smooth on' : 'Smooth off'}
+            value={smooth}
+            onChange={(v) => set('smooth', v)}
+          />
+        </Field>
+        <Field label="Animation">
           <Segmented
-            label="Scheduler"
-            value={scheduler}
-            onChange={(v) => set('scheduler', v)}
+            label="Stream animation"
+            value={animation}
+            onChange={(v) => set('animation', v)}
             options={[
-              { value: 'timeout', label: SCHEDULER_NAMES.timeout },
-              { value: 'raf', label: SCHEDULER_NAMES.raf },
+              { value: 'none', label: 'None' },
+              { value: 'fade', label: 'Fade' },
             ]}
           />
-          <UIText variant="caption" muted>
-            {schedulerCaption(options)}
-          </UIText>
-        </Field>
-        <Field label="Timer window">
-          <Segmented
-            label="Flush window"
-            value={interval}
-            onChange={(v) => set('interval', v)}
-            options={INTERVALS.map((v) => ({
-              value: v,
-              label: `${v} ms`,
-            }))}
-          />
-          <UIText variant="caption" muted>
-            {`flushIntervalMs ${interval}${
-              scheduler === 'raf' ? ' · ignored by Auto' : ''
-            }`}
-          </UIText>
-        </Field>
-        <Field label="Smoothing">
-          <Segmented
-            label="Smoothing"
-            value={smoothing}
-            onChange={(v) => set('smoothing', v)}
-            options={[
-              { value: 'none', label: SMOOTHING_NAMES.none },
-              {
-                value: 'hide-incomplete',
-                label: SMOOTHING_NAMES['hide-incomplete'],
-              },
-            ]}
-          />
-          <UIText variant="caption" muted>
-            {`smoothing '${smoothing}'`}
-          </UIText>
         </Field>
         <Field label="Runs">
           <View style={styles.buttons}>
-            <Button
-              label="A/B ×3"
-              tone="quiet"
-              disabled={active !== null}
-              onPress={() => {
-                setSheet(false);
-                start(ABBA[0]!, ABBA.slice(1));
-              }}
-            />
             <Button
               label="Log all"
               tone="quiet"
@@ -584,10 +545,6 @@ export function StreamBench() {
               onPress={() => setResults([])}
             />
           </View>
-          <UIText variant="caption" muted>
-            A/B ×3 runs Timer and Auto in the order A B B A A B with the options
-            above.
-          </UIText>
         </Field>
       </OptionsSheet>
     </View>

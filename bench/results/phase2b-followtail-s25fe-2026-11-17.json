@@ -1,0 +1,39 @@
+{
+  "task": "Phase 2b task 6, device half 2: P3-5 follow-tail re-run with smooth + fade",
+  "date": "2026-11-17",
+  "device": {"model": "Samsung S25 FE", "serial": "R5CY83QNZ1Y", "transport": "USB", "refreshRate": "default (untouched)", "low_power": "set 0 for the pass, restored to 1"},
+  "build": "release APK installed by the A/B agent, includes the temporary Lists edit (smooth + animation fade on the streaming demos); Hermes, New Architecture, no Metro",
+  "stream": "Lists tab, Stream mode: gallery + CODE_HEAVY, 8 chars per 16 ms tick, about 25 s per run; the code phase grows about 17 lines/s",
+  "pinnedObservable": "accessibility tree of the list: the footnote list (View 'Footnotes', height > 0.1) is the last block and rests at bottom 0.891; pinned = it stays at 0.85-0.93 while the block above grows; paused = it is off-screen or moved, and the first visible child text is unchanged across samples 1.2 s apart. Screenshots as cross-check.",
+  "caveat": "smooth and fade were taken from the build note, not verified in-app (no on-screen label)",
+  "containers": {
+    "scroll": {
+      "1_follow": {"pass": true, "note": "about 24 samples over one run plus screenshots; tail followed throughout; transient trailing of 0.02 to 0.04 of the screen (one line) in a few samples, caught up by the next"},
+      "2_pause_on_drag": {"pass": true, "tally": "10/10 (strict rerun)"},
+      "3_resume": {"pass": true, "viaFling": "10/10", "viaSlowDrag": "not confirmable while growing: the end was reached only after the stream finished (3/3)"},
+      "4_fling_back_to_end": {"resumed": 10, "of": 10, "secondFlingNeeded": 0, "checkedAtStreamSeconds": "16-19, two samples 1.5 s apart, both at the tail"},
+      "5_end_of_stream": {"pass": true, "note": "view at the end with the Stream button back; scrolling works afterwards"},
+      "6_odd": "none seen: no stutter, no double scrolling, final flush reached the end"
+    },
+    "virtualize": {
+      "1_follow": {"pass": true, "note": "about 28 samples over two runs; the same 0.02-0.04 transient trailing"},
+      "2_pause_on_drag": {"pass": true, "tally": "10/10 (strict rerun)"},
+      "3_resume": {"pass": true, "viaFling": "10/10", "viaSlowDrag": "not confirmable while growing (3/3 reached the end only after the stream finished)"},
+      "4_fling_back_to_end": {"resumed": 10, "of": 10, "secondFlingNeeded": 0, "checkedAtStreamSeconds": "15-19"},
+      "5_end_of_stream": {"pass": true, "note": "view at the end, nothing dim; fling away and back lands at the end again"},
+      "6_odd": "none seen: no scroll jump when fade wrappers mount, no blank gap in screenshots"
+    }
+  },
+  "flingTotals": {"scroll": "20/20 over two 10-run sets (first set loose metric, second strict)", "virtualize": "20/20 over two 10-run sets"},
+  "earlyPauseThenSlowDragBack": "3 runs per container, drag back during the gallery phase never reached the end mid-stream (inconclusive, view stayed paused as expected)",
+  "observations": [
+    "A growing code block outruns a hand drag (about 850 px/s), so a paused view can only be resumed by a fling or the End button while the code streams; follow-tail behaved correctly after every fling.",
+    "Sampling latency is about 1 s per sample, so frame-level jitter would not show up here."
+  ],
+  "deviations": [
+    "Slow-drag resume while streaming could not be verified.",
+    "The first metric matched the 'Footnotes' heading as well as the footnote list; the 10-run sets were repeated with a strict height filter and both sets agree for resume.",
+    "Smooth and fade could not be confirmed from the screen; configuration is as stated by the build note."
+  ],
+  "settings": {"low_power_final": 1}
+}

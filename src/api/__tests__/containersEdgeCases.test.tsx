@@ -27,7 +27,8 @@ import {
 } from '../../__tests__/tree';
 import { hostComponents } from '../../render/__tests__/helpers';
 import { ELEMENT_NAMES } from '../../theme';
-import { tableOf } from '../document';
+import { createDocument, tableOf } from '../document';
+import { streamView } from '../../../test/stream/harness';
 import { Markdown, type MarkdownProps } from '../Markdown';
 import { SCROLL_RETRY_MS } from '../scrollControl';
 import type {
@@ -120,7 +121,7 @@ const mountIds = (tree: Tree) =>
 const probe = {} as { current: UseMarkdownStreamResult };
 
 function Streamed(props: Omit<MarkdownProps, 'document' | 'source'>) {
-  const stream = useMarkdownStream({ flushIntervalMs: 50 });
+  const stream = useMarkdownStream();
   useEffect(() => {
     probe.current = stream;
   });
@@ -180,7 +181,12 @@ describe('a late definition re-parses the whole document', () => {
         await flush(chunk);
         const after = tableOf(probe.current.document);
         if (after.prefixId !== before.prefixId) fullReparses++;
-        await reference.rerender(<Markdown source={text} components={plain} />);
+        await reference.rerender(
+          <Markdown
+            document={createDocument(streamView(text))}
+            components={plain}
+          />
+        );
         expect(shape(tree)).toEqual(shape(reference));
       }
       expect(fullReparses).toBeGreaterThan(0);

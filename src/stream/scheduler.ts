@@ -30,6 +30,12 @@ import type { StreamOptions } from './types';
 
 export type SchedulerStrategy = 'timeout' | 'raf';
 
+/**
+ * What published a table: an appending flush (a view while the stream is
+ * live), `done()` (the exact parse that ends the stream) or `reset()`.
+ */
+export type FlushKind = 'append' | 'done' | 'reset';
+
 /** Default `flushIntervalMs` for the `timeout` strategy: the web default (P2-4). */
 const DEFAULT_FLUSH_INTERVAL_MS = 16;
 
@@ -51,7 +57,7 @@ export interface SchedulerOptions extends StreamOptions {
   /** Window of the `timeout` strategy. Default 16. */
   readonly flushIntervalMs?: number;
   /** Called with the new table after every flush, `done()` and `reset()`. */
-  readonly onFlush: (table: NodeTable) => void;
+  readonly onFlush: (table: NodeTable, kind: FlushKind) => void;
   /** Default: the global timers and `requestAnimationFrame`, looked up at creation. */
   readonly clock?: SchedulerClock;
 }
@@ -77,7 +83,7 @@ export interface MarkdownScheduler {
 }
 
 /** The global timers, looked up now. */
-function defaultClock(): SchedulerClock {
+export function defaultClock(): SchedulerClock {
   const g = globalThis as {
     requestAnimationFrame?: (cb: () => void) => unknown;
     cancelAnimationFrame?: (handle: never) => void;
@@ -132,7 +138,7 @@ export function createMarkdownScheduler(
     const chunk = pending;
     pending = '';
     flushCount++;
-    onFlush(core.append(chunk));
+    onFlush(core.append(chunk), 'append');
   };
 
   // --- timeout strategy -------------------------------------------------
@@ -183,14 +189,14 @@ export function createMarkdownScheduler(
       const text = pending;
       pending = '';
       const table = text ? core.reset(core.source + text) : core.done();
-      onFlush(table);
+      onFlush(table, 'done');
       return table;
     },
     reset(source) {
       cancel();
       pending = '';
       const table = core.reset(source);
-      onFlush(table);
+      onFlush(table, 'reset');
       return table;
     },
     suspend() {

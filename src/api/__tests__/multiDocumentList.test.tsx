@@ -63,7 +63,7 @@ const probe = {} as { current: UseMarkdownStreamResult };
 
 /** A chat: two finished messages and one streaming, in one FlatList. */
 function Chat() {
-  const stream = useMarkdownStream({ flushIntervalMs: 50 });
+  const stream = useMarkdownStream();
   useEffect(() => {
     probe.current = stream;
   });

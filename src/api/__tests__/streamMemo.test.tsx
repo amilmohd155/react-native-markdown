@@ -8,19 +8,25 @@
  * prefix fast path (no source-text comparison).
  */
 import { createElement, useEffect, type ReactNode } from 'react';
+import { Platform, StyleSheet, type ViewStyle } from 'react-native';
 import { act } from '@testing-library/react-native';
-import { renderTree } from '../../__tests__/tree';
+import { renderTree, type Tree } from '../../__tests__/tree';
 import type { NodeTable } from '../../model';
 import type { Components } from '../../render/elements';
 import { Markdown } from '../Markdown';
 import {
   useMarkdownStream,
+  type StreamAnimation,
   type UseMarkdownStreamResult,
 } from '../useMarkdownStream';
 
 interface SameBlockCall {
   readonly index: number;
-  /** The fast-path condition held: same stream prefix, closed block. */
+  /**
+   * The block is closed in the new table of the same stream (same prefix).
+   * The fast path also needs it closed in the table of its last render,
+   * which is the known gap below.
+   */
   readonly closed: boolean;
   /** The comparison read source text, context or offsets (the slow path). */
   readonly touchedSource: boolean;
@@ -46,7 +52,6 @@ jest.mock('../../model', () => {
       const closed =
         a.prefixId !== undefined &&
         a.prefixId === b.prefixId &&
-        i < a.stableCount! &&
         j < b.stableCount! &&
         i === j;
       let touchedSource = false;
@@ -100,11 +105,14 @@ const spies = {
 /** The hook's handle, published after commit (`append` is stable). */
 const probe = {} as { current: UseMarkdownStreamResult };
 
-/** `timeout`: an explicit window. `raf`: the native default (these tests run as iOS). */
-function Streamed({ scheduler }: { scheduler: 'timeout' | 'raf' }) {
-  const stream = useMarkdownStream(
-    scheduler === 'timeout' ? { flushIntervalMs: 50 } : {}
-  );
+/** `streamingConfig.animation` of the next `Streamed` (P2b-5; see `beforeEach`). */
+const config = { animation: 'none' as StreamAnimation };
+
+/** The default schedule: `timeout` is the web default, `raf` the iOS default (see `beforeEach`). */
+function Streamed() {
+  const stream = useMarkdownStream({
+    streamingConfig: { animation: config.animation },
+  });
   useEffect(() => {
     probe.current = stream;
   });
@@ -161,66 +169,113 @@ const STEPS: {
   },
 ];
 
-describe.each(['timeout', 'raf'] as const)(
-  'streaming memoization (%s)',
-  (mode) => {
-    beforeEach(() => {
+/** Host views with an `opacity` style: the fade wrappers of P2b-5. */
+const fadeWrappers = (tree: Tree) =>
+  tree.findAll(
+    (node) =>
+      node.type === 'View' &&
+      typeof (StyleSheet.flatten(node.props.style as ViewStyle) ?? {})
+        .opacity === 'number'
+  );
+
+// With `animation: 'fade'` (P2b-5) the same holds: `FadingBlock` uses
+// `Block`'s comparison and replaces it rather than wrapping it.
+describe.each([
+  ['timeout', 'none'],
+  ['raf', 'none'],
+  ['timeout', 'fade'],
+  ['raf', 'fade'],
+] as const)('streaming memoization (%s, animation %s)', (mode, animation) => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.replaceProperty(Platform, 'OS', mode === 'timeout' ? 'web' : 'ios');
+    config.animation = animation;
+    mockCalls.length = 0;
+    resetRenders();
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.restoreAllMocks();
+  });
+
+  it('renders only the open block per flush', async () => {
+    const tree = await renderTree(<Streamed />);
+    resetRenders();
+
+    for (const [n, step] of STEPS.entries()) {
+      resetRenders();
+      await act(async () => probe.current.append(step.chunk));
+      // 100 ms covers one `timeout` window and one `raf` frame: one flush per step.
+      await advance(100);
+      expect({ step: n, ...renders }).toEqual({ step: n, ...step.expect });
+    }
+    // The wrapper around the real `isSameBlock` is live (so the `it.failing`
+    // below fails for its documented reason, not because the spy is dead)
+    // and closed blocks were compared and found equal.
+    expect(mockCalls.length).toBeGreaterThan(0);
+    expect(mockCalls.some((c) => c.result)).toBe(true);
+    // Fade on: the new blocks are wrapped. Off: nothing is.
+    if (animation === 'fade') {
+      expect(fadeWrappers(tree).length).toBeGreaterThan(0);
+    } else {
+      expect(fadeWrappers(tree)).toHaveLength(0);
+    }
+  });
+
+  // KNOWN GAP (found in S2.5): the `isSameBlock` prefix fast path never fires
+  // through `<Block>`. `Block`'s memo compares the props of its LAST RENDER
+  // with the new ones, and a block last rendered while it was open has
+  // `i >= table.stableCount` in that retained table, so `i < a.stableCount`
+  // is never true. Closed blocks are skipped (first test) but by the slow
+  // source-text comparison (measured on the S25 FE: 0.43 ms p50 per flush at
+  // 862 blocks, not the 6 ms first estimated).
+  // ACCEPTED, not to be fixed now (P2-2, S5, docs/rewrite/phase-2/decisions.md):
+  // the baseline comparator is ~0.8% of stream time at 862 blocks and a fix
+  // saves at most ~0.5% (spikes A/B: 0.49% / 0.42%). If a fix is ever merged
+  // (see the spikes in P2-2) this test starts passing and `it.failing`
+  // fails: change it to `it`.
+  it.failing('skips closed blocks without comparing source text', async () => {
+    await renderTree(<Streamed />);
+
+    for (const step of STEPS) {
+      await act(async () => probe.current.append(step.chunk));
+      await advance(100);
+    }
+
+    const closed = mockCalls.filter((c) => c.closed);
+    // The fast path was actually exercised on a multi-block stream.
+    expect(closed.length).toBeGreaterThan(0);
+    for (const call of closed) {
+      expect(call.touchedSource).toBe(false);
+      expect(call.result).toBe(true);
+    }
+  });
+});
+
+describe('memo comparisons with fade on (P2b-5)', () => {
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.restoreAllMocks();
+  });
+
+  it('compares each block exactly as with animation off', async () => {
+    const run = async (animation: StreamAnimation) => {
       jest.useFakeTimers();
+      jest.replaceProperty(Platform, 'OS', 'web');
+      config.animation = animation;
       mockCalls.length = 0;
-      resetRenders();
-    });
-    afterEach(() => {
-      jest.useRealTimers();
-    });
-
-    it('renders only the open block per flush', async () => {
-      await renderTree(<Streamed scheduler={mode} />);
-      resetRenders();
-
-      for (const [n, step] of STEPS.entries()) {
-        resetRenders();
+      const tree = await renderTree(<Streamed />);
+      for (const step of STEPS) {
         await act(async () => probe.current.append(step.chunk));
-        // 100 ms covers one `timeout` window and one `raf` frame: one flush per step.
         await advance(100);
-        expect({ step: n, ...renders }).toEqual({ step: n, ...step.expect });
       }
-      // The wrapper around the real `isSameBlock` is live (so the `it.failing`
-      // below fails for its documented reason, not because the spy is dead)
-      // and closed blocks were compared and found equal.
-      expect(mockCalls.length).toBeGreaterThan(0);
-      expect(mockCalls.some((c) => c.result)).toBe(true);
-    });
-
-    // KNOWN GAP (found in S2.5): the `isSameBlock` prefix fast path never fires
-    // through `<Block>`. `Block`'s memo compares the props of its LAST RENDER
-    // with the new ones, and a block last rendered while it was open has
-    // `i >= table.stableCount` in that retained table, so `i < a.stableCount`
-    // is never true. Closed blocks are skipped (first test) but by the slow
-    // source-text comparison (measured on the S25 FE: 0.43 ms p50 per flush at
-    // 862 blocks, not the 6 ms first estimated).
-    // ACCEPTED, not to be fixed now (P2-2, S5, docs/rewrite/phase-2/decisions.md):
-    // the baseline comparator is ~0.8% of stream time at 862 blocks and a fix
-    // saves at most ~0.5% (spikes A/B: 0.49% / 0.42%). If a fix is ever merged
-    // (see the spikes in P2-2) this test starts passing and `it.failing`
-    // fails: change it to `it`.
-    it.failing(
-      'skips closed blocks without comparing source text',
-      async () => {
-        await renderTree(<Streamed scheduler={mode} />);
-
-        for (const step of STEPS) {
-          await act(async () => probe.current.append(step.chunk));
-          await advance(100);
-        }
-
-        const closed = mockCalls.filter((c) => c.closed);
-        // The fast path was actually exercised on a multi-block stream.
-        expect(closed.length).toBeGreaterThan(0);
-        for (const call of closed) {
-          expect(call.touchedSource).toBe(false);
-          expect(call.result).toBe(true);
-        }
-      }
-    );
-  }
-);
+      await tree.unmount();
+      jest.useRealTimers();
+      return mockCalls.map((c) => c.index);
+    };
+    const off = await run('none');
+    const on = await run('fade');
+    expect(on.length).toBeGreaterThan(0);
+    expect(on).toEqual(off);
+  });
+});

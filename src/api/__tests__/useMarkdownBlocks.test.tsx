@@ -167,7 +167,7 @@ describe('useMarkdownBlocks while streaming', () => {
   const probe = {} as { current: UseMarkdownStreamResult };
 
   function Streamed() {
-    const stream = useMarkdownStream({ flushIntervalMs: 50 });
+    const stream = useMarkdownStream();
     useEffect(() => {
       probe.current = stream;
     });

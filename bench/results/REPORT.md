@@ -1018,3 +1018,109 @@ F3-cm `parse+firstRender` (ms): v1 `gfm` 240.0 (before 299.0), v1cm 230.1 (befor
 ## Not measured
 
 Low-end Android and iPhone (including iOS background and resume), `F4c` (a real LLM transcript) and images in fixtures are not measured; they are waived or gated in [P1-25](../../docs/rewrite/phase-1/decisions.md#p1-25-the--5-parse-plus-first-render-exit-criterion-is-waived-for-phase-1), [P2-8](../../docs/rewrite/phase-2/decisions.md#p2-8-iphone-run-and-f4c-deferred) and the [v1.0 gate](../../docs/rewrite/07-roadmap.md#v10-release-gate). `retainedHeap` and `droppedFrames` on web and iOS Animation Hitches are also not measured. Memory growth over a 10 KB stream is: [S25 FE heap](#heap).
+
+## Phase 2b baseline (before P2b-2), Node
+
+Unchanged v1 code, commit `5f7ecd8`, Node v24.22.1, `bench/scheduler.mjs` (real scheduler and stream core, virtual clock, `timeout@50`, React commit not included). `--smoothing none` against `hide-incomplete` (the harness flag was added for this run). Each invocation is 5 inner runs; 5 invocations (JIT) or 3 (`--jitless`), `none` and `hide-incomplete` alternated. Medians. The host was loaded (load average 7 to 9), so JIT figures are noisy. Raw: `bench/results/phase2b-baseline-node-2026-11-17.json`.
+
+| Mode | Fixture (flushes) | `none`: x full / total ms / p90 ms | `hide-incomplete`: x full / total ms / p90 ms |
+|---|---|---|---|
+| JIT | `F4a` (157) | 7.17x / 9.6 / 0.10 | 7.48x / 10.5 / 0.10 |
+| JIT | `F4b` (17) | 2.63x / 3.6 / 0.42 | 3.23x / 4.1 / 0.54 |
+| JIT | `F4d` (91) | 9.64x / 1.9 / 0.05 | 10.73x / 2.4 / 0.06 |
+| `--jitless` | `F4a` (157) | 8.46x / 42.3 / 0.44 | 9.37x / 48.7 / 0.49 |
+| `--jitless` | `F4b` (17) | 2.80x / 15.3 / 0.82 | 2.73x / 14.0 / 0.73 |
+| `--jitless` | `F4d` (91) | 13.96x / 7.2 / 0.24 | 17.01x / 8.8 / 0.27 |
+
+- `F4a` and `F4b` are F2 (ends in a footnote definition, so the P2-1 waiver applies; both exceed the 5x / 2x bars here, as on the device) at 1250 and 12187 characters per second (one chunk per 16 ms). `F4d` ratios are noise-prone (a full parse is 0.2 to 0.5 ms); read its total ms.
+- Always-on `hide-incomplete` costs about 10 to 20% more total flush cost on `F4a` and `F4d` (`--jitless` `F4a` +15%, outside the run spread; JIT `F4a` +9% is inside it), and nothing measurable on `F4b` (JIT +13% inside the spread, `--jitless` -8%).
+
+## Phase 2b baseline (before P2b-2), S25 FE
+
+Unchanged v1 code, commit `5f7ecd8`. Example Stream tab, Hermes **release** build (`expo run:android --variant release`, New Architecture, dev off), S25 FE (SM-S731B, Android 17), panel pinned to 120 Hz, hook default schedule (`raf`, no `flushIntervalMs`). `none` against `hide-incomplete`, interleaved A B A B, 2 warm-up runs per fixture then 6 (`F4a`, `F4d`) or 8 (`F4b`) measured runs per config, medians. Raw data: [`phase2b-baseline-device-s25fe-2026-11-17.json`](./phase2b-baseline-device-s25fe-2026-11-17.json). Not comparable with the 50 ms timer figures above.
+
+| Fixture | Config | Commits (of chunks) | Commit spacing p50 / p90 ms | Frame gap p90 ms | Dropped frames (> 20 ms) | Append to commit p50 / p90 ms |
+|---|---|---|---|---|---|---|
+| `F4a` (487) | `none` | 478 | 16.6 / 17.6 | 10.3 | 1.5 of ~897 | 12.8 / 16.6 |
+| `F4a` (487) | `hide-incomplete` | 477 | 16.6 / 17.8 | 10.1 | 2.5 of ~897 | 12.6 / 16.0 |
+| `F4b` (50) | `none` | 47.5 | 16.6 / 22.4 | 13.0 | 1 of ~90 | 12.4 / 16.5 |
+| `F4b` (50) | `hide-incomplete` | 47 | 16.6 / 23.4 | 13.7 | 1 of ~90 | 12.5 / 18.1 |
+| `F4d` (281) | `none` | 281 | 16.6 / 17.2 | 12.2 | 0 of ~539 | 9.4 / 11.5 |
+| `F4d` (281) | `hide-incomplete` | 281 | 16.6 / 17.2 | 12.2 | 0 of ~539 | 9.6 / 11.6 |
+
+- On device, always-on `hide-incomplete` shows no measurable cost at this schedule: every difference is within the run-to-run spread, apart from two sub-millisecond ones (`F4b` frame-gap p90 +0.7 ms, `F4d` latency p50 +0.2 ms) and `F4b` append-to-commit p90 (+1.6 ms, inside the spread). Under `raf` at 120 Hz every 16 ms chunk gets its own commit, so the commit pacing hides flush cost below a frame.
+- Limits: the screen reports commits, not flush cost (that needs the instrumented scratch copy of `src/`), so the "after" run compares the same columns. Battery was 13 to 24% and charging, airplane mode off, 60 to 120 Hz restored; fewer runs than the protocol's 20. Details are in the JSON.
+
+## Phase 2b after (P2b-2..P2b-7), Node
+
+Same harness, flags, fixtures and invocation counts as the baseline above (5 JIT, 3 `--jitless`, `none` and `hide-incomplete` alternated, `timeout@50`). New code is HEAD `5f7ecd8` plus the uncommitted Phase 2b changes (always-on hide-incomplete view, new table rules). Node v24.22.1; load average about 2 to 4 (baseline 7 to 9), so quieter but not idle. Raw: `bench/results/phase2b-after-node-2026-11-17.json`. Medians, baseline to after; x = ratio to one full parse, p90 = per-flush ms.
+
+| Mode | Fixture | `none`: x | `none`: p90 | `hide-incomplete`: x | `hide-incomplete`: p90 | `hide-incomplete`: total ms |
+|---|---|---|---|---|---|---|
+| JIT | `F4a` | 7.17 to 7.16 (0%) | 0.10 to 0.09 | 7.48 to 9.96 (+33%) | 0.10 to 0.16 (+60%) | 10.5 to 13.0 (+24%) |
+| JIT | `F4b` | 2.63 to 2.72 (+3%) | 0.42 to 0.57 | 3.23 to 2.60 (-20%) | 0.54 to 0.34 | 4.1 to 3.7 (-11%) |
+| JIT | `F4d` | 9.64 to 9.72 (+1%) | 0.05 to 0.05 | 10.73 to 12.42 (+16%) | 0.06 to 0.07 | 2.3 to 2.8 (+21%) |
+| `--jitless` | `F4a` | 8.46 to 8.50 (+1%) | 0.44 to 0.46 | 9.37 to 10.89 (+16%) | 0.49 to 0.70 (+44%) | 48.7 to 54.2 (+11%) |
+| `--jitless` | `F4b` | 2.80 to 2.79 (0%) | 0.82 to 0.98 | 2.73 to 3.10 (+14%) | 0.73 to 1.18 (+61%) | 14.0 to 16.5 (+18%) |
+| `--jitless` | `F4d` | 13.96 to 13.62 (-2%) | 0.24 to 0.24 | 17.01 to 16.50 (-3%) | 0.27 to 0.33 | 8.8 to 11.7 (+33%, one outlier run) |
+
+- `none` is unchanged (every ratio within 3%, inside the spread), so the comparison is not skewed by machine drift. `hide-incomplete` is more expensive than the baseline hide-incomplete in 4 of 6 cells (`--jitless` `F4a` +11% total and `F4b` +18%, JIT `F4a` +24% with p90 0.10 to 0.16 ms), but the JIT `F4b` cell went the other way and `F4d` and JIT spreads overlap; only the `--jitless` `F4a` and `F4b` p90 increases sit clearly outside the run spread.
+- The table rules show up as a small p90 rise on `F4a` and `F4b` (F2 holds a table), at most +0.2 to 0.45 ms per flush `--jitless`; in-run, always-on costs about 10 to 25% more total flush time than `none`, in line with the baseline's 10 to 20% on `F4a`. Absolute flush cost stays under 1.2 ms p90 on this host.
+- P2-1 bar: `F4a` and `F4b` (F2) still exceed the 5x and 2x bars (7 to 11x and 2.6 to 3.1x), as before Phase 2b, so the footnote waiver applies; `none` is unchanged.
+
+## Phase 2b after (P2b-2..P2b-7), S25 FE
+
+HEAD `5f7ecd8` plus the uncommitted Phase 2b changes, same device, build route (Hermes **release**, New Architecture), 120 Hz pin, default schedule (`raf`) and method as the baseline above. Four configs interleaved A B C D: A = Smooth off / Animation None (the new default), B = Smooth on, C = Fade, D = Smooth on + Fade. 2 warm-up runs per fixture, then 6 (`F4a`, `F4d`) or 8 (`F4b`) measured runs per config; medians, [min-max] for dropped frames. Raw: [`phase2b-after-device-s25fe-2026-11-17.json`](./phase2b-after-device-s25fe-2026-11-17.json). Battery 21 to 40% and charging, airplane mode off, fewer runs than the protocol (details in the JSON).
+
+| Fixture | Config | Commits | Frame gap p90 ms | Dropped (> 20 ms) | Append to commit p50 / p90 ms | Run end minus `totalMs` ms |
+|---|---|---|---|---|---|---|
+| `F4a` | baseline `none` / `hide-incomplete` | 478 / 477 | 10.2 / 10.1 | 1.5 / 2.5 | 12.8 / 16.6 and 12.6 / 16.0 | n/a |
+| `F4a` | A | 479 | 10.9 | 3.5 [1-7] | 14.0 / 19.4 | 13 |
+| `F4a` | B (smooth)* | 475 | 10.8 | 4 [0-5] | 14.0 / 19.3 | 12 |
+| `F4a` | C (fade) | 478 | 10.8 | 4 [2-30] | 14.0 / 19.5 | 13 |
+| `F4a` | D (both)* | 475 | 10.8 | 3.5 [2-5] | 14.1 / 19.6 | 11 |
+| `F4b` | baseline `none` / `hide-incomplete` | 47.5 / 47 | 13.0 / 13.7 | 1 / 1 | 12.4 / 16.5 and 12.5 / 18.1 | n/a |
+| `F4b` | A | 48 | 12.6 | 0.5 [0-2] | 13.4 / 18.5 | 13 |
+| `F4b` | B* | 50 | 12.9 | 0.5 [0-2] | 13.2 / 17.4 | 12 |
+| `F4b` | C | 48 | 13.5 | 1 [0-3] | 13.1 / 18.3 | 12 |
+| `F4b` | D* | 49 | 13.4 | 1 [0-3] | 12.6 / 18.2 | 13 |
+| `F4d` | baseline `none` / `hide-incomplete` | 281 / 281 | 12.2 / 12.2 | 0 / 0 | 9.4 / 11.5 and 9.6 / 11.6 | n/a |
+| `F4d` | A | 281 | 12.6 | 0 [0-1] | 10.9 / 16.2 | 8 |
+| `F4d` | B* | 271 | 12.7 | 0 [0-1] | 11.8 / 17.5 | 6 |
+| `F4d` | C | 280 | 12.5 | 0 [0-56] | 11.4 / 17.0 | 7 |
+| `F4d` | D* | 271 | 12.6 | 0.5 [0-2] | 11.2 / 17.1 | 5 |
+
+\* Append-to-commit is not comparable under Smooth (text is deliberately delayed). The fair baseline for A is `hide-incomplete` (A = it plus the table rules); `none` is shown for completeness.
+
+- A against `hide-incomplete`: commits and dropped frames are unchanged (inside the spread, `F4b` too). Append-to-commit p50 is +1.4 ms on `F4a` (+11%) and +1.3 ms on `F4d` (+14%), p90 +3.4 ms (+21%) and +4.6 ms (+40%), all outside the run spread (A's minimum is above the baseline maximum); frame gap p90 is +0.7 to +0.8 ms on `F4a` and +0.4 ms on `F4d`, at the edge of the spread. `F4b` is within noise throughout. The panel was at 120 Hz in every run (frame gap p50 8.4 ms), but the baseline ran earlier on a colder, lower-battery phone, so some of the small `F4a`/`F4d` rise may be device drift rather than the new code; a same-session A/B of old against new code would be needed to separate them.
+- Smooth (B, D) commits about 1% fewer on `F4a` and 4% fewer on `F4d` (outside the spread), and the bench run still ends 5 to 13 ms after the last chunk, so the paced drain adds no time past `totalMs`. Fade (C, D) costs no measurable frame gap or dropped frames on `F4a` and `F4d` (the 30 and 56 dropped frames in C are one outlier run each); `F4b` frame gap p90 is +0.8 to +0.9 ms with fade but inside the spread.
+- `onStreamingEnd` fired exactly once in all 86 runs (80 measured plus 6 warm-up, all four configs), and `finalEqual` was true in every run.
+
+## Phase 2b follow-tail re-run, S25 FE (2026-11-17)
+
+Release APK (temporary Lists edit: `smooth` + `animation: 'fade'`), Lists tab Stream demo, `scroll` and `virtualize` with `autoScroll`; raw tallies in `phase2b-followtail-s25fe-2026-11-17.json`. Pinned was read from the accessibility tree: the footnote list that ends the document stays at its resting position while the code block above it grows.
+
+- Pause on drag and a fling back to the end during a stream (code growing about 17 lines/s): `scroll` 10/10 paused, 10/10 resumed; `virtualize` 10/10 paused, 10/10 resumed (20/20 per container over two sets). Follow stays within about one line of the tail; no jitter, jump or dim text after `done()`.
+- Not confirmed: resume by a slow drag while the stream is still growing (the code phase outruns a hand drag); smooth and fade were taken from the build note.
+
+## Phase 2b web A/B (Chrome 4x), old vs new (2026-11-18)
+
+Chrome 157 headless, 4x CPU throttle, the real `useMarkdownStream` + `<Markdown>` in react-native-web (16 ms timer schedule), old code (`5f7ecd8`) and new code (HEAD + uncommitted Phase 2b) as two bundles of one harness in one session, configs interleaved; 10 measured runs per config. Raw: `phase2b-web-ab-chrome-4x-2026-11-18.json`. Load 4.4 before, 2.2 after.
+
+| Fixture | Config | Commits | Latency p50 / p90 ms | Frame gap p90 ms |
+|---|---|---|---|---|
+| `F4a` | old none / old hide-incomplete | 468 / 468 | 8.8 / 15.5 and 8.9 / 15.5 | 33.9 / 34.0 |
+| `F4a` | new default | 467 | 8.7 / 15.4 | 34.0 |
+| `F4a` | new smooth* / new fade | 308 / 467 | 2.4 / 18.0* and 8.9 / 15.6 | 34.1 / 34.0 |
+| `F4b` | old none / old hide-incomplete | 48 / 48 | 8.3 / 15.5 and 7.9 / 15.8 | 34.6 / 34.6 |
+| `F4b` | new default | 48 | 8.8 / 15.2 | 34.3 |
+| `F4b` | new smooth* / new fade | 31 / 48 | 3.2 / 18.6* and 7.6 / 15.7 | 34.2 / 34.6 |
+| `F4d` | old none / old hide-incomplete | 271 / 271 | 8.0 / 15.0 and 8.2 / 14.8 | 34.8 / 34.6 |
+| `F4d` | new default | 271 | 8.2 / 15.0 | 34.7 |
+| `F4d` | new smooth* / new fade | 175 / 271 | 2.1 / 17.7* and 8.5 / 14.9 | 34.6 / 34.4 |
+
+\* Not like for like: smooth paces text on purpose.
+
+- New default against old `hide-incomplete`: commits within 0.2%, latency within 2% on `F4a` and `F4d`, so no web cost from always-on hide-incomplete or the table rules. `F4b` p50 reads +11% (8.8 against 7.9 ms) but sits inside the old config's own spread (7.1-12.0).
+- Smooth commits about 34% fewer on all three fixtures (one release per frame instead of one per chunk); fade costs nothing measurable.
+- Frame gap and dropped frames are identical in every config (the throttle and timer saturate them), and no long tasks occurred, so they do not discriminate. Final document equals `parse(full)` in all 180 runs; `onStreamingEnd` fired exactly once in every new-code run.

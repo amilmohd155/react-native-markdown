@@ -11,8 +11,11 @@
  * One forward pass over the last inline scope, no regexes. A scope starts at
  * the open block's start and restarts after each blank line and after the
  * marker of each list item / quote / heading line, because inline runs do
- * not cross those. Text inside an unclosed fence, and table rows, are
- * returned unchanged.
+ * not cross those. Text inside an unclosed fence is returned unchanged.
+ *
+ * Tables (P2b-3), for rows that start with `|`: a header shows nothing until
+ * its delimiter row has ended with a newline, then the table shows up to its
+ * last `\n`, so a partial trailing row never shows.
  */
 
 const BACKSLASH = 92;
@@ -23,9 +26,20 @@ const LT = 60;
 const STAR = 42;
 const UNDERSCORE = 95;
 const TILDE = 126;
+const PIPE = 124;
+const DASH = 45;
+const COLON = 58;
 
+/**
+ * Where the visible text ends or the inline scan starts. `tableCut >= 0`:
+ * the text is cut there and nothing else is scanned for tables (`rows`
+ * true: a table with its delimiter row, cut after its last `\n`; false: a
+ * table header still waiting for its delimiter row, cut before it).
+ */
 interface Scope {
   readonly start: number;
+  readonly tableCut: number;
+  readonly rows: boolean;
 }
 
 interface Opener {
@@ -126,18 +140,141 @@ function markerPrefix(text: string, from: number, end: number): number {
   }
 }
 
+function isSpaceOrTab(code: number): boolean {
+  return code === 32 || code === 9;
+}
+
 /**
- * Finds where the last inline scope starts. Returns `null` when the text
- * ends inside an open fenced code block or in a table row (not smoothed).
+ * Column count of a table header line `[from, end)`, as markdown-it counts
+ * it (cells split at unescaped `|`, an empty first and last cell dropped).
  */
-function findScope(text: string): Scope | null {
+function headerColumns(text: string, from: number, end: number): number {
+  let last = end;
+  while (last > from && isWhitespace(text.charCodeAt(last - 1))) last--;
+  if (last <= from) return 0;
+  let cells = 1;
+  let escaped = false;
+  for (let i = from; i < last; i++) {
+    const c = text.charCodeAt(i);
+    if (c === PIPE && !escaped) cells++;
+    escaped = c === BACKSLASH;
+  }
+  if (text.charCodeAt(from) === PIPE) cells--;
+  if (
+    text.charCodeAt(last - 1) === PIPE &&
+    (last - 2 < from || text.charCodeAt(last - 2) !== BACKSLASH)
+  ) {
+    cells--;
+  }
+  return Math.max(cells, 0);
+}
+
+/** Whether `[from, end)` is a delimiter cell, `:?-+:?`. */
+function isDelimiterCell(text: string, from: number, end: number): boolean {
+  let i = from;
+  if (text.charCodeAt(i) === COLON) i++;
+  const dashes = runLength(text, i, DASH);
+  i += Math.min(dashes, end - i);
+  if (dashes === 0) return false;
+  if (i < end && text.charCodeAt(i) === COLON) i++;
+  return i === end;
+}
+
+/** The delimiter row is not one and cannot become one. */
+const DELIMITER_NO = 0;
+/** Not one yet, but more text on the line could make it one. */
+const DELIMITER_MAYBE = 1;
+/** A delimiter row for `columns` header columns (markdown-it's rule). */
+const DELIMITER_YES = 2;
+
+/**
+ * Whether line `[from, end)` (from the first non-space) is a table
+ * delimiter row for a header of `columns` columns, as in markdown-it: cells
+ * of `:?-+:?` split by `|`, and exactly as many as the header.
+ */
+function delimiterState(
+  text: string,
+  from: number,
+  end: number,
+  columns: number
+): number {
+  if (from >= end) return DELIMITER_MAYBE;
+  const first = text.charCodeAt(from);
+  if (first !== PIPE && first !== DASH && first !== COLON) return DELIMITER_NO;
+  if (from + 1 < end) {
+    const second = text.charCodeAt(from + 1);
+    if (first === DASH && isSpaceOrTab(second)) return DELIMITER_NO;
+  }
+  for (let i = from; i < end; i++) {
+    const c = text.charCodeAt(i);
+    if (c !== PIPE && c !== DASH && c !== COLON && !isSpaceOrTab(c)) {
+      return DELIMITER_NO;
+    }
+  }
+  let cells = 0;
+  let partial = false;
+  let cellStart = from;
+  for (let index = 0; cellStart <= end; index++) {
+    let cellEnd = cellStart;
+    while (cellEnd < end && text.charCodeAt(cellEnd) !== PIPE) cellEnd++;
+    const isLast = cellEnd === end;
+    const a = skipSpaces(text, cellStart, cellEnd);
+    let b = cellEnd;
+    while (b > a && isSpaceOrTab(text.charCodeAt(b - 1))) b--;
+    if (a === b) {
+      if (index !== 0 && !isLast) return DELIMITER_NO;
+    } else if (isDelimiterCell(text, a, b)) {
+      cells++;
+    } else if (isLast && b - a === 1 && text.charCodeAt(a) === COLON) {
+      cells++;
+      partial = true;
+    } else {
+      return DELIMITER_NO;
+    }
+    cellStart = cellEnd + 1;
+  }
+  if (cells > columns) return DELIMITER_NO;
+  // markdown-it needs a second character on the line.
+  return !partial && cells === columns && from + 1 < end
+    ? DELIMITER_YES
+    : DELIMITER_MAYBE;
+}
+
+/**
+ * Finds where the last inline scope starts, and whether the text ends in a
+ * table (P2b-3). Returns `null` when the text ends inside an open fenced
+ * code block (not smoothed).
+ *
+ * Tables are tracked over a run of lines that blank lines, fences, list
+ * items and headings end but quote markers do not (a quoted table restarts
+ * the inline scope on every line). In that run, a line that starts with `|`
+ * is a header when the next line is its delimiter row: a table can also
+ * interrupt a paragraph, as in markdown-it. With `tables` false, tables are
+ * not looked for (the re-scan of an already cut text).
+ */
+function findScope(text: string, tables: boolean): Scope | null {
   const n = text.length;
   let pos = 0;
   let fenceChar = 0;
   let fenceLen = 0;
   let scopeStart = 0;
   let fresh = true;
-  let table = false;
+  // Table run state.
+  let runFresh = true;
+  /** Content start of the previous line when it can be a table header. */
+  let header = -1;
+  let headerCols = 0;
+  /** Content start of the header of the table the run is in, or -1. */
+  let tableAt = -1;
+  /** Content start of a header still waiting for its delimiter row, or -1. */
+  let pendingAt = -1;
+  let runDepth = 0;
+  const endRun = () => {
+    runFresh = true;
+    header = -1;
+    tableAt = -1;
+    pendingAt = -1;
+  };
 
   while (pos < n) {
     const nl = text.indexOf('\n', pos);
@@ -153,6 +290,7 @@ function findScope(text: string): Scope | null {
           fenceChar = 0;
           scopeStart = next;
           fresh = true;
+          endRun();
         }
       }
       pos = next;
@@ -162,6 +300,8 @@ function findScope(text: string): Scope | null {
     if (first === end) {
       fresh = true;
       scopeStart = next;
+      // Spaces at the very end are not a blank line yet.
+      if (nl >= 0) endRun();
       pos = next;
       continue;
     }
@@ -177,6 +317,7 @@ function findScope(text: string): Scope | null {
       ) {
         fenceChar = c;
         fenceLen = k;
+        endRun();
         pos = next;
         continue;
       }
@@ -185,18 +326,68 @@ function findScope(text: string): Scope | null {
     const prefix = markerPrefix(text, first, end);
     if (prefix > 0) {
       scopeStart = first + prefix;
-      table = text.charCodeAt(scopeStart) === 124;
       fresh = false;
     } else if (fresh) {
       scopeStart = pos;
-      table = c === 124;
       fresh = false;
+    }
+
+    if (tables) {
+      // Quote depth, and whether the prefix holds a list or heading marker.
+      let depth = 0;
+      let marker = false;
+      let heading = false;
+      for (let i = first; i < first + prefix; i++) {
+        const d = text.charCodeAt(i);
+        if (d === 62) depth++;
+        else if (d === 35) heading = true;
+        else if (!isSpaceOrTab(d)) marker = true;
+      }
+      if (marker || heading || depth !== runDepth) endRun();
+      runDepth = depth;
+      if (heading) {
+        // A heading is one line: the next line starts a new run.
+        pos = next;
+        continue;
+      }
+      if (tableAt < 0) {
+        const content = skipSpaces(text, first + prefix, end);
+        const ended = nl >= 0;
+        let isTable = false;
+        if (header >= 0) {
+          const state = delimiterState(text, content, end, headerCols);
+          if (ended ? state === DELIMITER_YES : state !== DELIMITER_NO) {
+            if (ended) tableAt = header;
+            else pendingAt = header;
+            isTable = true;
+          }
+          header = -1;
+        }
+        const code = runFresh && prefix === 0 && indent >= 4;
+        if (!isTable && !code && text.charCodeAt(content) === PIPE) {
+          if (!ended) {
+            pendingAt = content;
+          } else {
+            headerCols = headerColumns(text, content, end);
+            if (headerCols > 0) header = content;
+          }
+        }
+      }
+      runFresh = false;
     }
     pos = next;
   }
 
-  if (fenceChar !== 0 || table) return null;
-  return { start: scopeStart };
+  if (fenceChar !== 0) return null;
+  if (tableAt >= 0) {
+    return {
+      start: scopeStart,
+      tableCut: text.lastIndexOf('\n') + 1,
+      rows: true,
+    };
+  }
+  if (header >= 0) pendingAt = header;
+  return { start: scopeStart, tableCut: pendingAt, rows: false };
 }
 
 /**
@@ -204,10 +395,20 @@ function findScope(text: string): Scope | null {
  * returns the identical string instance when nothing is hidden.
  */
 export function hideIncomplete(text: string): string {
+  return hide(text, true);
+}
+
+function hide(text: string, tables: boolean): string {
   const n = text.length;
   if (n === 0) return text;
-  const scope = findScope(text);
+  const scope = findScope(text, tables);
   if (scope === null) return text;
+  if (scope.tableCut >= 0) {
+    if (scope.rows) {
+      return scope.tableCut < n ? text.slice(0, scope.tableCut) : text;
+    }
+    return hide(text.slice(0, scope.tableCut), false);
+  }
   const start = scope.start;
 
   const stack: Opener[] = [];
@@ -358,5 +559,5 @@ export function hideIncomplete(text: string): string {
     return text.slice(0, open) + text.slice(open + 1, labelEnd);
   }
   // The prefix can expose a bracket whose `]` was already seen (`[a **b]`).
-  return cut < n ? hideIncomplete(text.slice(0, cut)) : text;
+  return cut < n ? hide(text.slice(0, cut), false) : text;
 }

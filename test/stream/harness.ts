@@ -85,6 +85,19 @@ export function diffDocuments(
   return diffTables(actual, expected);
 }
 
+/**
+ * What `useMarkdownStream` shows mid-stream for `text`: the core's
+ * `hide-incomplete` view (always on in the hook, P2b-2), not the exact
+ * parse. The reference for component tests that compare a streamed render
+ * with a fresh one.
+ */
+export function streamView(text: string, options?: ParseOptions): NodeTable {
+  return createMarkdownStreamCoreWith({
+    ...options,
+    smoothing: 'hide-incomplete',
+  }).append(text);
+}
+
 // --- work counter ------------------------------------------------------
 
 /**

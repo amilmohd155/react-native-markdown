@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { blockKey, type NodeTable } from '../model';
 import {
-  Block,
+  blockElement,
   blockElements,
   blockPropsEqual,
   BlockProviders,
@@ -25,6 +25,7 @@ import {
 } from '../render/Block';
 import { useBlockItems } from '../render/blockItems';
 import type { RenderCtx } from '../render/context';
+import type { FadePlan } from '../render/fade';
 import {
   assignRef,
   AUTO_SCROLL_THROTTLE,
@@ -206,6 +207,8 @@ function wrapScroll(
 }
 
 interface MeasuredBlockProps extends BlockProps {
+  /** Read by the inner block at its mount only (P2b-5). */
+  readonly fade: FadePlan | null;
   readonly onBlockLayout: ScrollController['onBlockLayout'];
   readonly onBlockUnmount: ScrollController['forgetBlock'];
 }
@@ -220,6 +223,7 @@ const MeasuredBlock = memo(
     table,
     index,
     ctx,
+    fade,
     onBlockLayout,
     onBlockUnmount,
   }: MeasuredBlockProps) {
@@ -234,7 +238,7 @@ const MeasuredBlock = memo(
     );
     return (
       <View onLayout={onLayout}>
-        <Block table={table} index={index} ctx={ctx} />
+        {blockElement(undefined, table, index, ctx, fade)}
       </View>
     );
   },
@@ -244,6 +248,7 @@ const MeasuredBlock = memo(
 function measuredBlockElements(
   table: NodeTable,
   ctx: RenderCtx,
+  fade: FadePlan | null,
   control: ScrollController
 ): ReactNode[] {
   const blocks = new Array<ReactNode>(table.blockCount);
@@ -254,6 +259,7 @@ function measuredBlockElements(
         table={table}
         index={i}
         ctx={ctx}
+        fade={fade}
         onBlockLayout={control.onBlockLayout}
         onBlockUnmount={control.forgetBlock}
       />
@@ -265,6 +271,8 @@ function measuredBlockElements(
 interface ContainerProps<O> {
   readonly table: NodeTable;
   readonly ctx: RenderCtx;
+  /** The stream's fade plan (P2b-5), or null. */
+  readonly fade: FadePlan | null;
   readonly options: O;
 }
 
@@ -272,6 +280,7 @@ interface ContainerProps<O> {
 export function MarkdownScrollView({
   table,
   ctx,
+  fade,
   options,
 }: ContainerProps<ScrollOptions>) {
   const Scroll: MarkdownScrollComponent = options.component ?? ScrollView;
@@ -290,8 +299,8 @@ export function MarkdownScrollView({
       <Scroll {...props}>
         {options.header}
         {measured
-          ? measuredBlockElements(table, ctx, control)
-          : blockElements(table, ctx)}
+          ? measuredBlockElements(table, ctx, fade, control)
+          : blockElements(table, ctx, fade)}
         {options.footer}
       </Scroll>
     </BlockProviders>
@@ -307,10 +316,11 @@ export function MarkdownScrollView({
 export function MarkdownFlatList({
   table,
   ctx,
+  fade,
   options,
 }: ContainerProps<VirtualizeOptions>) {
   const List: MarkdownListComponent = options.component ?? FlatList;
-  const data = useBlockItems(table, ctx);
+  const data = useBlockItems(table, ctx, fade);
   useUnstableComponentWarning(options.component, 'virtualize');
   const { props } = useScrollProps(options, true, data.length, 'virtualize');
   return (

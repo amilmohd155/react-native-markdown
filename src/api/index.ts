@@ -46,6 +46,8 @@ export {
 } from './useMarkdownBlocks';
 export {
   useMarkdownStream,
+  type StreamAnimation,
+  type StreamingConfig,
   type UseMarkdownStreamOptions,
   type UseMarkdownStreamResult,
 } from './useMarkdownStream';

@@ -48,6 +48,6 @@ The rewrite is allowed to break the API, and does. Users work with **element com
 | 07 | [Roadmap & decisions](./07-roadmap.md) | Phased plan, risks, competing libraries, **decision log (D1–D8)** |
 | 08 | [Data model & public API](./08-model-and-api.md) | Options and measurements behind the private node table and the components/plugins/tokens API |
 
-Implementation detail is in [`phase-1/`](./phase-1/README.md) and [`phase-2/`](./phase-2/README.md) (work breakdown, decisions, and design notes), with the shared [testing harness](./testing-harness.md) and [benchmark protocol](./benchmark-protocol.md).
+Implementation detail is in [`phase-1/`](./phase-1/README.md), [`phase-2/`](./phase-2/README.md) and [`phase-2b/`](./phase-2b/README.md) (work breakdown, decisions, and design notes; Phase 2b runs before the rest of Phase 3), with the shared [testing harness](./testing-harness.md) and [benchmark protocol](./benchmark-protocol.md).
 
 The benchmark scripts are in [`bench/`](../../bench) (a private workspace at the repo root).

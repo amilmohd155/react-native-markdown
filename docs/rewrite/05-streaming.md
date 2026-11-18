@@ -34,13 +34,22 @@ The safe default is that **only the last top-level block is ever re-parsed**. Ev
 
 ### Hiding unfinished syntax
 
-Partial syntax such as `**bold` or `[link](htt` looks broken while it streams in. Optional `smoothing: 'hide-incomplete'` buffers trailing unclosed inline markers. Default off.
+Partial syntax such as `**bold` or `[link](htt` looks broken while it streams in. The hook always hides the open block's unfinished syntax: trailing unclosed inline markers, and for a table everything until its delimiter row ends, then any partial trailing row ([smoothing](./phase-2/smoothing.md), [P2b-2](./phase-2b/decisions.md#p2b-2-hide-incomplete-is-always-on-the-smoothing-option-is-removed), [P2b-3](./phase-2b/decisions.md#p2b-3-tables-wait-for-header-and-delimiter-drop-a-partial-trailing-row)). There is no option. This changes the view only; `done()` is the exact parse.
+
+### Pacing
+
+`streamingConfig.smooth` (off by default) releases appended text a little per frame, so a burst of tokens grows the view steadily. A slice ends after whitespace, and a line that is only a list, heading or quote marker waits for its first word; a stall of 0.5 s releases what waits. The backlog drains over about the gap between chunks, never more than 1 s behind, and `done()` drains the rest within 0.2 s, then publishes the exact parse. The pacer sits in front of the core, which stays append-only, so what is shown is always the view of a prefix of the source ([P2b-4](./phase-2b/decisions.md#p2b-4-smooth-paces-text-before-it-reaches-the-core), [rules](./phase-2/hook-and-scheduler.md#pacer)).
+
+### Animation and end signal
+
+- `streamingConfig.animation: 'fade'` (or `{ type: 'fade', duration }`, 200 ms by default) fades in, once, each block that first appears while the stream is live. Blocks shown before, blocks a list mounts later on scroll, and everything after `done()` do not fade; Reduce Motion turns it off. `<Markdown document>`, `scroll`, `virtualize` and `useMarkdownBlocks()` apply it with no extra prop. Per-word fade and a gradient are not planned ([P2b-5](./phase-2b/decisions.md#p2b-5-animation-is-a-block-level-fade-none--fade)).
+- `onStreamingEnd` fires once per stream, from an effect after the exact `done()` document is committed (with `smooth`, after the drain). `reset()` starts a new stream; unmount never fires it ([P2b-6](./phase-2b/decisions.md#p2b-6-one-streamingconfig-object-and-onstreamingend)).
 
 ## Rendering
 
 - Frozen blocks keep their source text and context, so `isSameBlock` lets their `memo(Block)` bail out (P1-9).
 - Only the last block re-renders.
-- Updates are batched, and tokens that arrive between two flushes are combined into one append ([P2-4](./phase-2/decisions.md#p2-4-coalescing-policy)). The default depends on the platform: on iOS and Android one flush per animation frame; on web a 16 ms window, with a leading flush on the first chunk, at most one flush per window, and a trailing flush so the last chunk always lands (a hidden browser tab throttles animation frames, which stalled a stream in the web run). Passing `flushIntervalMs` selects that window on a timer on every platform. Per-frame batching does not reduce the parse count at one chunk per frame; it was chosen on native for its latency (about 15 ms against 34 to 43 ms for a 33 to 50 ms window on the S25 FE), at about 1.5× the flush cost ([results](../../bench/results/REPORT.md#phase-2-scheduler-s2)).
+- Updates are batched, and tokens that arrive between two flushes are combined into one append ([P2-4](./phase-2/decisions.md#p2-4-coalescing-policy)). The default depends on the platform: on iOS and Android one flush per animation frame; on web a 16 ms window, with a leading flush on the first chunk, at most one flush per window, and a trailing flush so the last chunk always lands (a hidden browser tab throttles animation frames, which stalled a stream in the web run). The window is internal, not an option ([P2b-7](./phase-2b/decisions.md#p2b-7-flushintervalms-becomes-internal)); with `streamingConfig.smooth` the pacer sets the cadence. Per-frame batching does not reduce the parse count at one chunk per frame; it was chosen on native for its latency (about 15 ms against 34 to 43 ms for a 33 to 50 ms window on the S25 FE), at about 1.5× the flush cost ([results](../../bench/results/REPORT.md#phase-2-scheduler-s2)).
 
 ## API
 
@@ -50,8 +59,11 @@ function useMarkdownStream(options?: {
   html?: HtmlMode;
   plugins?: MarkdownPlugin[];
   backend?: ParserBackend;      // not implemented yet: the stream core is markdown-it only
-  smoothing?: 'none' | 'hide-incomplete';
-  flushIntervalMs?: number;     // timer window on every platform; default: per frame on native, 16 ms on web
+  streamingConfig?: {
+    smooth?: boolean;                                                   // P2b-4
+    animation?: 'none' | 'fade' | { type: 'fade'; duration?: number }; // P2b-5
+  };
+  onStreamingEnd?: () => void;  // P2b-6: the latest one is called
 }): {
   append(chunk: string): void;
   reset(source?: string): void;
@@ -60,7 +72,7 @@ function useMarkdownStream(options?: {
 };
 ```
 
-Options are read when the hook is created.
+Options are read when the hook is created, except `onStreamingEnd`.
 
 ```tsx
 const stream = useMarkdownStream({ plugins });

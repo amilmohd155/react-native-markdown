@@ -17,12 +17,14 @@ import {
   type TaskToggleInfo,
 } from '../render';
 import type { RenderCtx } from '../render/context';
+import type { FadePlan } from '../render/fade';
 import {
   useResolvedTheme,
   type ElementOverrides,
   type ThemeProp,
 } from '../theme';
 import { tableOf, type MarkdownDocument } from './document';
+import { useFadePlan } from './fade';
 import { mergeComponents } from './mergeComponents';
 import { parse } from './parse';
 import {
@@ -103,6 +105,8 @@ export type MarkdownPipelineProps = MarkdownInput & MarkdownRenderOptions;
 export interface MarkdownPipeline {
   readonly table: NodeTable;
   readonly ctx: RenderCtx;
+  /** Which new blocks fade in (P2b-5); null unless a stream asks for it. */
+  readonly fade: FadePlan | null;
 }
 
 const NO_PLUGINS: readonly MarkdownPlugin[] = Object.freeze([]);
@@ -166,6 +170,8 @@ export function useMarkdownPipeline(
     return parse(source, { preset, html, plugins, backend });
   }, [document, source, preset, html, plugins, backend, caller]);
 
+  const fade = useFadePlan(parsed);
+
   const mergedComponents = useMemo(
     () => mergeComponents(plugins, components),
     [plugins, components]
@@ -197,5 +203,5 @@ export function useMarkdownPipeline(
     maxFontSizeMultiplier,
   });
 
-  return { table: tableOf(parsed), ctx };
+  return { table: tableOf(parsed), ctx, fade };
 }

@@ -226,7 +226,7 @@ useEffect(() => llm.onToken(stream.append), []);
 return <Markdown document={stream.document} />;
 ```
 
-See [05](./05-streaming.md).
+See [05](./05-streaming.md) for what `streamingConfig` and `onStreamingEnd` do.
 
 ## Migration from v0.x
 

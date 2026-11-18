@@ -4,7 +4,7 @@ Implementation detail for Phase 2: how it is built, in what order, and how "done
 
 ## Scope
 
-Streaming on the Phase 1 core ([07 · Phase 2](../07-roadmap.md#phase-2-streaming)): `useMarkdownStream` feeding `<Markdown document>` on a React-free stream core; tail re-parse with node-table splicing (`parseFrom`); batching (a per-frame flush on native, a 16 ms window on web, [P2-4](./decisions.md#p2-4-coalescing-policy)); optional `smoothing: 'hide-incomplete'`; randomized-chunking equivalence tests, perf CI additions and the F4 device benchmark. Out of scope: virtualization and polish (Phase 3), the native backend (Phase 4).
+Streaming on the Phase 1 core ([07 · Phase 2](../07-roadmap.md#phase-2-streaming)): `useMarkdownStream` feeding `<Markdown document>` on a React-free stream core; tail re-parse with node-table splicing (`parseFrom`); batching (a per-frame flush on native, a 16 ms window on web, [P2-4](./decisions.md#p2-4-coalescing-policy)); optional `smoothing: 'hide-incomplete'` (always on since [P2b-2](../phase-2b/decisions.md#p2b-2-hide-incomplete-is-always-on-the-smoothing-option-is-removed)); randomized-chunking equivalence tests, perf CI additions and the F4 device benchmark. Out of scope: virtualization and polish (Phase 3), the native backend (Phase 4).
 
 ## Exit criteria
 
