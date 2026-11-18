@@ -14,7 +14,7 @@ The renderer cannot scroll a host's scroller, which is why P1-15 stopped at the 
 
 **Where ([P3-8](./decisions.md#p3-8-built-in-footnote-jump-in-the-owned-containers)).** `scroll` and `virtualize` only. The default `View` keeps the handler-only behaviour. In an owned container the jump is on by default and a container option turns it off.
 
-**Your own list ([P3-14](./decisions.md#p3-14-usemarkdownblocks-takes-onfootnotejump-for-the-apps-own-list)).** `useMarkdownBlocks` takes `onFootnoteScrollTo(index, label, info)`: the same flow and targets as the containers, but the app scrolls. The hook registers the jump against the latest table, so `source`, a `parse()` document and a stream all work, and nothing is pressable while a stream runs. `index` is also the position in `data`.
+**Your own list ([P3-14](./decisions.md#p3-14-usemarkdownblocks-takes-onfootnotescrollto-for-the-apps-own-list)).** `useMarkdownBlocks` takes `onFootnoteScrollTo(index, label, info)`: the same flow and targets as the containers, but the app scrolls. The hook registers the jump against the latest table, so `source`, a `parse()` document and a stream all work, and nothing is pressable while a stream runs. `index` is also the position in `data`.
 
 **Press flow ([P3-9](./decisions.md#p3-9-onfootnotepress-runs-first-and-can-skip-the-jump)).**
 
@@ -58,8 +58,8 @@ useMarkdownBlocks({ document: doc, onFootnoteScrollTo: (index, label, info) => l
 ## Not built
 
 - A popover or inline preview of the definition on press.
-- Scrolling to the single definition, and a highlight after the jump. Both need a per-definition layout measure.
-- A jump in the default `View` mode, where the host owns scrolling (use `onFootnotePress`). An exported pure lookup helper ([P3-14](./decisions.md#p3-14-usemarkdownblocks-takes-onfootnotejump-for-the-apps-own-list)).
+- Scrolling to the single definition, and a highlight after the jump: proposed in [P3-15](./decisions.md#p3-15-opt-in-exact-definition-jump-and-highlight), not built.
+- A jump in the default `View` mode, where the host owns scrolling (use `onFootnotePress`). An exported pure lookup helper ([P3-14](./decisions.md#p3-14-usemarkdownblocks-takes-onfootnotescrollto-for-the-apps-own-list)).
 - Skipping the definition re-parse while streaming (optimization pass).
 
 ## Open
