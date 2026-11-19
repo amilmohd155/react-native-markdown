@@ -19,8 +19,8 @@ import {
   type ThemeInput,
   type ThemeProp,
 } from '@docren/react-native-markdown';
-import { mentions } from '@docren/react-native-markdown/mentions';
 import { MentionChip } from '../components/MentionChip';
+import { PLUGINS } from '../plugins';
 import {
   LinkChip,
   LoweredSubscript,
@@ -57,9 +57,6 @@ const CHIP_COMPONENTS = {
   Superscript: RaisedSuperscript,
   Subscript: LoweredSubscript,
 };
-
-// Module-level so `parse` and `<Markdown>` share one plugin identity.
-const PLUGINS = [mentions({ schemes: ['user', 'channel'] })];
 
 interface Options {
   readonly font: 'system' | 'inter';

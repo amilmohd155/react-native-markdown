@@ -3,7 +3,9 @@
  * Each is run at every two-chunk split position, plus the fixed and seeded
  * chunkers, by equivalence.test.ts.
  */
+import { admonitionRule, kindOf } from '../../src/admonitions/rule';
 import type { ParseOptions } from '../../src/parse';
+import { definePlugin } from '../../src/plugins/definePlugin';
 import type { ExpectedPath } from './harness';
 
 export interface TargetedCase {
@@ -21,6 +23,20 @@ export interface TargetedCase {
    */
   expectedPath?: ExpectedPath;
 }
+
+// The admonitions parse rule and node, without the React Native component
+// (this project runs in plain Node).
+const alerts = definePlugin({
+  name: 'admonitions',
+  syntax: { markdownIt: admonitionRule },
+  nodes: {
+    Admonition: {
+      kind: 'block',
+      token: 'admonition',
+      from: (token) => ({ kind: kindOf(token.meta) ?? 'note' }),
+    },
+  },
+});
 
 const fence = (marker: string, body: string, close = marker) =>
   `${marker}\n${body}\n${close}\n`;
@@ -194,5 +210,16 @@ export const targetedCases: TargetedCase[] = [
       '\u{1F600}'.repeat(5),
       'tab\tseparated\n\n\tcode with tab\n',
     ],
+  },
+  {
+    name: 'admonitions (plugin)',
+    sources: [
+      '> [!NOTE]\n> a\n\n> [!TIP]\n> b\n',
+      '> [!WARNING]\n> one\n>\n> - x\n> - y\n\nafter\n',
+      '> [!NOTE]\n\n> [!FOO]\n> x\n',
+      '- item\n\n  > [!CAUTION]\n  > inner\n',
+      '> intro\n>\n> > [!IMPORTANT]\n> > deep\n',
+    ],
+    parse: { plugins: [alerts] },
   },
 ];

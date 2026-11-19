@@ -20,6 +20,7 @@ const shared = {
 const library = '<rootDir>/src/index.tsx';
 const emoji = '<rootDir>/src/emoji/index.ts';
 const mentions = '<rootDir>/src/mentions/index.ts';
+const admonitions = '<rootDir>/src/admonitions/index.ts';
 
 // Projects that run React Native code through its own preset.
 const reactNative = {
@@ -29,6 +30,7 @@ const reactNative = {
     '^@docren/react-native-markdown$': library,
     '^@docren/react-native-markdown/emoji$': emoji,
     '^@docren/react-native-markdown/mentions$': mentions,
+    '^@docren/react-native-markdown/admonitions$': admonitions,
   },
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?)/)',
@@ -54,6 +56,7 @@ module.exports = {
         '^@docren/react-native-markdown$': library,
         '^@docren/react-native-markdown/emoji$': emoji,
         '^@docren/react-native-markdown/mentions$': mentions,
+        '^@docren/react-native-markdown/admonitions$': admonitions,
         '^react-native$': 'react-native-web',
       },
       transform: { '^.+\\.[jt]sx?$': 'babel-jest' },

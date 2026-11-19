@@ -103,6 +103,29 @@ Footnotes link both ways[^1], and a named one works too[^note]. The first again[
 
 A link with a configured scheme is a mention: [@Alice](user://alice) and [#general](channel://general), with a **[bold label](user://bob%20smith)** and a path id like [@Team](user://team/ops). Other links stay links: [Docs](https://example.com), [no slashes](user:dan) and <user://eve>. The *Custom mention* option swaps in a tinted chip.
 
+## Admonitions
+
+> [!NOTE]
+> Useful information that readers should know, with **inline** formatting.
+
+> [!TIP]
+> Helpful advice, with a list:
+>
+> - one
+> - two
+
+> [!IMPORTANT]
+> Key information.
+
+> [!WARNING]
+> Urgent: needs attention.
+
+> [!CAUTION]
+> Negative consequences ahead.
+
+> [!FOO]
+> An unknown kind stays a plain blockquote.
+
 ## Inline HTML
 
 A safe subset of tags becomes real formatting: H<sub>2</sub>O and E = mc<sup>2</sup>, <u>underline</u>, <mark>highlight</mark>, press <kbd>Ctrl</kbd> + <kbd>C</kbd>, a line<br>break. Scripts with no Unicode form fall back to smaller text, as in Brand<sup>TM</sup>; the *Superscript fallback* option raises it.

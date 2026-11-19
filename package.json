@@ -20,6 +20,11 @@
       "types": "./lib/typescript/src/mentions/index.d.ts",
       "default": "./lib/module/mentions/index.js"
     },
+    "./admonitions": {
+      "source": "./src/admonitions/index.ts",
+      "types": "./lib/typescript/src/admonitions/index.d.ts",
+      "default": "./lib/module/admonitions/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

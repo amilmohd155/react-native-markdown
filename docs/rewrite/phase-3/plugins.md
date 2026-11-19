@@ -1,6 +1,6 @@
 # Phase 3 · Official plugins
 
-Emoji, mentions and admonitions as official plugins; math is deferred. Emoji and mentions are built; admonitions is design only. Decisions: [P3-21 to P3-27](./decisions.md). Reference: [04 · Plugins](../04-api.md#plugins).
+Emoji, mentions and admonitions as official plugins; math is deferred. All three are built. Decisions: [P3-21 to P3-27](./decisions.md). Reference: [04 · Plugins](../04-api.md#plugins).
 
 ## Packaging
 
@@ -38,14 +38,15 @@ A mention in a source without the plugin is still a working link.
 
 GitHub alerts: `> [!NOTE]` as the first line of a blockquote; kinds `note`, `tip`, `important`, `warning`, `caution` ([P3-25](./decisions.md#p3-25-admonitions-are-github-alerts-an-opt-in-non-gfm-plugin)). Not in CommonMark or GFM, so it is opt-in and works under the `'commonmark'` preset too.
 
-- A block container `Admonition { kind }`. `titles` overrides the default title per kind.
-- `theme.admonition`, per kind. `components.Admonition` replaces the render.
-- A11y: a role and a label prefixed with the title; wording in the accessibility pass.
-- Open: the marker sits inside a `blockquote_open`. Retype that token to an admonition container in a markdown-it core rule, because `registry.ts` rejects a token type mapped twice (so the plugin cannot map `blockquote` itself).
+- A block container `Admonition { kind, title }`. `titles` overrides the default title per kind. The title is stored on the node (so `components.Admonition` receives it) and is the plugin's `contextKey`.
+- The marker `[!KIND]` must be alone on the first line, any case, at any depth (lists, nested blockquotes). Text after it, or an unknown kind, leaves a plain blockquote. A bare marker is an empty alert.
+- Theme: `elements.Admonition` styles every kind, `AdmonitionNote`/`Tip`/`Important`/`Warning`/`Caution` one kind (theme-only elements, no component). Defaults: the `Blockquote` layout, a per-kind accent bar and tint, light or dark by the text color. `components.Admonition` replaces the render.
+- A11y: the container has `accessibilityRole="summary"` and the title as its label. It is not `accessible` (that would fold the body into one stop); wording and grouping are for the accessibility pass.
+- Implementation: a core rule after `block` retypes the matching `blockquote_open`/`blockquote_close` to `admonition_open`/`admonition_close` and strips the marker, because `registry.ts` rejects a token type mapped twice.
 
 ## Streaming
 
-`hideIncomplete` knows only the built-in delimiters. A half-typed `:smi` or `> [!NO` shows raw, then swaps to the emoji or the alert when it completes. Accepted for now ([P3-26](./decisions.md#p3-26-no-plugin-incomplete-tail-streaming-hook-yet)); no hook.
+`hideIncomplete` knows only the built-in delimiters. A half-typed `:smi` shows raw; `> [!NO` shows as a blockquote with the unclosed `[` hidden but the rest (`!NO`) visible, and `> [!NOTE]` becomes an empty alert before any body arrives. Both swap to the emoji or the alert when they complete. Accepted for now ([P3-26](./decisions.md#p3-26-no-plugin-incomplete-tail-streaming-hook-yet)); no hook.
 
 ## Deferred
 

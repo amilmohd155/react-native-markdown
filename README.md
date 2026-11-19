@@ -273,6 +273,20 @@ import { mentions } from '@docren/react-native-markdown/mentions';
 />;
 ```
 
+The `admonitions` plugin (`@docren/react-native-markdown/admonitions`) renders GitHub alerts: a blockquote whose first line is `[!NOTE]` (also `TIP`, `IMPORTANT`, `WARNING`, `CAUTION`, any case) becomes an `Admonition` with a title above its content. The marker must be alone on its line; an unknown kind or text after the marker stays a blockquote. Works under the `'commonmark'` preset. `titles` renames kinds. Style every kind with the `Admonition` theme element, or one with `AdmonitionNote`, `AdmonitionTip`, `AdmonitionImportant`, `AdmonitionWarning` and `AdmonitionCaution`; `components.Admonition` replaces the render and gets `kind`, `title`, `children` and `style`.
+
+```tsx
+import { admonitions } from '@docren/react-native-markdown/admonitions';
+
+<Markdown
+  source={'> [!WARNING]\n> Back up first.'}
+  plugins={[admonitions({ titles: { warning: 'Heads up' } })]}
+  theme={{
+    elements: { AdmonitionWarning: { container: { borderLeftColor: 'orange' } } },
+  }}
+/>;
+```
+
 ### Raw HTML
 
 With the default `html="safe"`, these inline tags become elements: `<br>`, `<b>`, `<strong>`, `<i>`, `<em>`, `<s>`, `<del>`, `<u>`, `<mark>`, `<sup>`, `<sub>`, `<kbd>`. Attributes are ignored. Everything else, including block-level HTML, is shown as text. Use `html="text"` to show all HTML as text, `html="strip"` to remove tags, or `html={{ allow: [...] }}` for your own subset.
