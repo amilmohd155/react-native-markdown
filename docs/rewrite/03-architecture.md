@@ -262,7 +262,7 @@ The full catalog with props is in [04](./04-api.md#element-catalog).
 | Element | Default rendering |
 |---|---|
 | `Heading` / `Paragraph` | One `<Text>` via the inline flattener. `Heading` gets `accessibilityRole="header"`. |
-| `List` / `ListItem` | `View` rows with a marker column. Ordered markers use `start`. Task items render a checkbox glyph (read-only by default, interactive with `onTaskToggle`). Nesting depth comes from context, not a parent-stack copy. |
+| `List` / `ListItem` | `View` rows with a marker column. Ordered markers use `start`. Task items render a checkbox glyph (toggled by the library on tap, reported by `onTaskToggle`). Nesting depth comes from context, not a parent-stack copy. |
 | `Blockquote` | `View` with a container style, rendering its child blocks recursively (not memoized individually). |
 | `CodeBlock` | `ScrollView horizontal` + one `<Text>`. Syntax highlighting is a plugin (or a user `CodeBlock`), loaded lazily and outside the core bundle. |
 | `Table` / `TableRow` / `TableCell` | `ScrollView horizontal`. Column widths are computed once per table (max cell intrinsic width, capped) and cached per table. |

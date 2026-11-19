@@ -691,7 +691,7 @@ export function LiteralHtml({ text }: { text: string }) {
 - **GFM on by default.** In v0, tables, task lists, strikethrough, autolinks and footnotes were plain text. Content that contained, say, `~~x~~` or a pipe table now renders as elements. Use `preset="commonmark"` to keep the old text output.
 - **Soft line breaks.** A single newline inside a paragraph renders as a space, like browsers and GitHub. Set `softBreak="newline"` to keep line breaks.
 - **Superscript and subscript** from `<sup>` and `<sub>` use Unicode characters where one exists (`mc²`, `H₂O`). `scriptFallback` controls the rest.
-- **Interactive callbacks are opt-in.** `onTaskToggle` makes task checkboxes pressable, `onFootnotePress` makes footnote references and back-links pressable (the app does the scrolling).
+- **Interactive callbacks are opt-in.** Task checkboxes toggle on their own (`enableTaskListItemToggle={false}` for read-only) and `onTaskToggle({ index, checked, text })` reports it; `onFootnotePress` makes footnote references and back-links pressable (the app does the scrolling).
 - **Keys.** Never add `key` to a component's output. v1 handles keys.
 
 ## There is no `renderRules` adapter
