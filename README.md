@@ -253,6 +253,14 @@ export function Chat({ text }: { text: string }) {
 }
 ```
 
+The `emoji` plugin is a separate entry point, so apps that do not use it do not bundle it. It turns `:name:` into the character, using `resolve`, then `map`, then about 50 built-in names (`defaults: false` drops them). Unknown names, code spans and URLs are left alone.
+
+```tsx
+import { emoji } from '@docren/react-native-markdown/emoji';
+
+const plugins = [emoji({ map: { shipit: '🚢' } })];
+```
+
 ### Raw HTML
 
 With the default `html="safe"`, these inline tags become elements: `<br>`, `<b>`, `<strong>`, `<i>`, `<em>`, `<s>`, `<del>`, `<u>`, `<mark>`, `<sup>`, `<sub>`, `<kbd>`. Attributes are ignored. Everything else, including block-level HTML, is shown as text. Use `html="text"` to show all HTML as text, `html="strip"` to remove tags, or `html={{ allow: [...] }}` for your own subset.

@@ -196,6 +196,7 @@ const definePlugin: <N>(p: MarkdownPlugin<N>) => MarkdownPlugin<N>;
 
 - **Built-in GFM plugins:** `tables`, `taskLists`, `strikethrough`, `autolinks`, `footnotes`, `tagfilter`. `preset="gfm"` includes all of them.
 - **Planned official plugins:** `emoji`, `mentions`, `admonitions`, each a separate entry point (`/emoji`, `/mentions`, `/admonitions`) so it can be tree-shaken; see [phase-3/plugins.md](./phase-3/plugins.md). `math` is deferred.
+- **`emoji({ resolve?, map?, defaults? })`** (`@docren/react-native-markdown/emoji`): turns `:name:` into the Unicode character at parse time. The result is plain text, not a node. Lookup order: `resolve`, then `map`, then about 50 built-in names (`defaults: false` drops them). An unknown name stays literal; code spans, escapes and URLs are untouched. `resolve` must be sync and pure and is not part of the parse cache key. While streaming, a half-typed `:smi` shows raw until the closing colon arrives ([P3-26](./phase-3/decisions.md#p3-26-no-plugin-incomplete-tail-streaming-hook-yet)).
 - **Order:** the preset's plugins first, then `plugins` in array order. A later plugin's components and theme override an earlier one's. The `components` and `theme` props override all plugins.
 
 ## Raw HTML

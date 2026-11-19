@@ -10,6 +10,11 @@
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
     },
+    "./emoji": {
+      "source": "./src/emoji/index.ts",
+      "types": "./lib/typescript/src/emoji/index.d.ts",
+      "default": "./lib/module/emoji/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
