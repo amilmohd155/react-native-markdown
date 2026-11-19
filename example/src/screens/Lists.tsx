@@ -22,6 +22,7 @@ import {
   type MarkdownListRef,
 } from '@docren/react-native-markdown';
 import { gallery } from '../gallery';
+import { PLUGINS } from '../plugins';
 import { Button, Segmented, UIText, useChrome } from '../ui';
 import { CODE_HEAVY } from './streamBenchFixtures';
 
@@ -29,7 +30,8 @@ import { CODE_HEAVY } from './streamBenchFixtures';
 const LONG = parse(
   Array.from({ length: 12 }, (_, i) => `# Copy ${i + 1}\n\n${gallery}`).join(
     '\n\n'
-  )
+  ),
+  { plugins: PLUGINS }
 );
 
 const ANSWER = `${gallery}\n\n${CODE_HEAVY}`;
@@ -94,6 +96,7 @@ function LongDocument() {
       </UIText>
       <Markdown
         document={LONG}
+        plugins={PLUGINS}
         theme={effective}
         footnotes={FOOTNOTES}
         virtualize={{
@@ -113,7 +116,9 @@ function StreamedAnswer() {
   const ref = useRef<MarkdownListRef>(null);
   // `append`, `reset` and `done` keep their identity; the result object does
   // not (its `document` changes per flush), so the effect depends on them.
-  const { append, reset, done, document } = useMarkdownStream();
+  const { append, reset, done, document } = useMarkdownStream({
+    plugins: PLUGINS,
+  });
 
   const start = useCallback(() => {
     reset();
@@ -167,6 +172,7 @@ function StreamedAnswer() {
       {container === 'scroll' ? (
         <Markdown
           document={document}
+          plugins={PLUGINS}
           theme={effective}
           scroll={options}
           footnotes={FOOTNOTES}
@@ -174,6 +180,7 @@ function StreamedAnswer() {
       ) : (
         <Markdown
           document={document}
+          plugins={PLUGINS}
           theme={effective}
           virtualize={options}
           footnotes={FOOTNOTES}
@@ -193,6 +200,7 @@ function HookList() {
   const viewOffset = useRef(0);
   const blocks = useMarkdownBlocks({
     document: LONG,
+    plugins: PLUGINS,
     theme: effective,
     // The library finds the block; the app scrolls its own list (P3-14).
     // `offset` is the definition's y inside the section (P3-15), once measured.
