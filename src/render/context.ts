@@ -1,8 +1,9 @@
-import { useInsertionEffect, useMemo, useRef } from 'react';
+import { useInsertionEffect, useMemo, useRef, useState } from 'react';
 import { getDefaultTheme, type ResolvedTheme } from '../theme';
 import type { Components } from './elements';
 import type { FootnoteFocusConfig } from './footnoteFocus';
 import type { ImagesPolicy } from './imagePolicy';
+import { createTaskStore, type TaskStore } from './taskStore';
 
 /** How soft line breaks render (P1-2). */
 export type SoftBreak = 'space' | 'newline';
@@ -22,9 +23,14 @@ export interface ImagePressInfo {
   readonly alt: string;
   readonly title: string | null;
 }
+/** What `onTaskToggle` receives (P3-16). */
 export interface TaskToggleInfo {
-  /** Position of the item in its list. */
+  /** Global, 0-based position of the task item in the document (P3-17). */
   readonly index: number;
+  /** The new state of the box. */
+  readonly checked: boolean;
+  /** The item's own text, formatting flattened, nested lists excluded. */
+  readonly text: string;
 }
 /**
  * Where a footnote press should go (P1-15). The app scrolls; the renderer
@@ -94,8 +100,8 @@ export interface RenderHandlers {
   /** Return `false` to cancel the default handling. */
   readonly onLinkPress?: (href: string, info: LinkPressInfo) => boolean | void;
   readonly onImagePress?: (src: string, info: ImagePressInfo) => void;
-  /** Makes task list checkboxes interactive. */
-  readonly onTaskToggle?: (checked: boolean, info: TaskToggleInfo) => void;
+  /** Called after a task checkbox is toggled by a tap (P3-16). */
+  readonly onTaskToggle?: (info: TaskToggleInfo) => void;
   /**
    * Makes footnote references and back-links pressable. Return `false` to
    * skip the built-in jump of an owned container (P3-9).
@@ -111,7 +117,10 @@ export interface RenderOptions {
   readonly softBreak: SoftBreak;
   readonly selectable: boolean;
   readonly maxFontSizeMultiplier: number | null;
-  /** True when `onTaskToggle` is set: task checkboxes are pressable. */
+  /**
+   * Task checkboxes are pressable: `enableTaskListItemToggle` and no stream
+   * running (P3-18). Independent of `onTaskToggle`.
+   */
   readonly interactiveTasks: boolean;
   /** True when `onImagePress` is set: block images are pressable. */
   readonly interactiveImages: boolean;
@@ -135,7 +144,7 @@ const DEFAULT_RENDER_OPTIONS: RenderOptions = Object.freeze({
   softBreak: 'space',
   selectable: false,
   maxFontSizeMultiplier: null,
-  interactiveTasks: false,
+  interactiveTasks: true,
   interactiveImages: false,
   interactiveFootnotes: false,
   footnoteLabels: DEFAULT_FOOTNOTE_LABELS,
@@ -167,6 +176,11 @@ export interface RenderCtx {
   readonly components: Components;
   readonly handlers: HandlersRef;
   readonly options: RenderOptions;
+  /**
+   * Task toggle overrides (P3-19). A stable object that is never part of
+   * `ctx` identity: a tap changes the store, not `ctx`.
+   */
+  readonly tasks: TaskStore;
 }
 
 export interface RenderCtxInput {
@@ -189,6 +203,16 @@ export interface RenderCtxInput {
   readonly footnoteFocus?: FootnoteFocusConfig | null;
   /** A stream is running: footnote links are inert (P3-12). Default `false`. */
   readonly footnotesInert?: boolean;
+  /**
+   * Task checkboxes are pressable (P3-18): `enableTaskListItemToggle` and no
+   * stream running. Default `true`.
+   */
+  readonly interactiveTasks?: boolean;
+  /**
+   * `useRenderCtx` only. The task overrides are cleared when this changes
+   * (P3-19): the source string, or a stream's `prefixId`.
+   */
+  readonly taskResetKey?: unknown;
 }
 
 function optionsOf(input: RenderCtxInput): RenderOptions {
@@ -198,7 +222,8 @@ function optionsOf(input: RenderCtxInput): RenderOptions {
     maxFontSizeMultiplier:
       input.maxFontSizeMultiplier ??
       DEFAULT_RENDER_OPTIONS.maxFontSizeMultiplier,
-    interactiveTasks: input.handlers?.onTaskToggle !== undefined,
+    interactiveTasks:
+      input.interactiveTasks ?? DEFAULT_RENDER_OPTIONS.interactiveTasks,
     interactiveImages: input.handlers?.onImagePress !== undefined,
     interactiveFootnotes:
       input.handlers?.onFootnotePress !== undefined &&
@@ -221,6 +246,7 @@ export function createRenderCtx(input: RenderCtxInput): RenderCtx {
     components: input.components,
     handlers: Object.freeze({ current: input.handlers ?? {} }),
     options: optionsOf(input),
+    tasks: createTaskStore(),
   });
 }
 
@@ -242,7 +268,8 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
   const selectable = input.selectable ?? DEFAULT_RENDER_OPTIONS.selectable;
   const maxFontSizeMultiplier =
     input.maxFontSizeMultiplier ?? DEFAULT_RENDER_OPTIONS.maxFontSizeMultiplier;
-  const interactiveTasks = latest.onTaskToggle !== undefined;
+  const interactiveTasks =
+    input.interactiveTasks ?? DEFAULT_RENDER_OPTIONS.interactiveTasks;
   const interactiveImages = latest.onImagePress !== undefined;
   const interactiveFootnotes =
     latest.onFootnotePress !== undefined && input.footnotesInert !== true;
@@ -285,12 +312,28 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
     ]
   );
 
+  // One store per `<Markdown>`, above every row, so an override survives a
+  // virtualized row unmounting. A new reset key swaps in an empty store
+  // during render (the documented "adjust state on prop change" pattern:
+  // React discards this pass and re-renders at once), so no item, new or
+  // old, ever reads an override from the previous source, and a discarded
+  // concurrent render leaves the committed store alone.
+  const [held, setHeld] = useState(() => ({
+    key: input.taskResetKey,
+    tasks: createTaskStore(),
+  }));
+  let { tasks } = held;
+  if (!Object.is(held.key, input.taskResetKey)) {
+    tasks = createTaskStore();
+    setHeld({ key: input.taskResetKey, tasks });
+  }
+
   const { components } = input;
   // Not frozen: passing the ref into a call during render counts as reading
   // it for the React Compiler. The object is internal (reached through
   // context only) and never mutated.
   return useMemo(
-    () => ({ theme, components, handlers, options }),
-    [theme, components, options]
+    () => ({ theme, components, handlers, options, tasks }),
+    [theme, components, options, tasks]
   );
 }

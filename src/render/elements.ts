@@ -36,6 +36,10 @@ export interface ElementPropsMap {
     readonly ordered: boolean;
     readonly marker: string;
     readonly checked: boolean | null;
+    /** Global 0-based task index in document order (P3-17), or null. */
+    readonly taskIndex: number | null;
+    /** A task item's own text, flattened, sub-lists excluded; else null. */
+    readonly text: string | null;
   };
   CodeBlock: {
     readonly code: string;

@@ -36,7 +36,7 @@ describe('createRenderCtx', () => {
       softBreak: 'space',
       selectable: false,
       maxFontSizeMultiplier: null,
-      interactiveTasks: false,
+      interactiveTasks: true,
       interactiveImages: false,
       interactiveFootnotes: false,
       footnoteFocus: null,
@@ -48,12 +48,12 @@ describe('createRenderCtx', () => {
     expect(Object.isFrozen(ctx)).toBe(true);
   });
 
-  it('makes tasks interactive only with onTaskToggle', () => {
-    const ctx = createRenderCtx({
-      components,
-      handlers: { onTaskToggle: () => {} },
-    });
-    expect(ctx.options.interactiveTasks).toBe(true);
+  it('makes tasks interactive by default, with or without onTaskToggle', () => {
+    expect(createRenderCtx({ components }).options.interactiveTasks).toBe(true);
+    expect(
+      createRenderCtx({ components, interactiveTasks: false }).options
+        .interactiveTasks
+    ).toBe(false);
   });
 });
 
@@ -89,10 +89,24 @@ describe('useRenderCtx', () => {
     expect(new Set(seen).size).toBe(3);
   });
 
-  it('changes ctx when onTaskToggle is added', async () => {
+  it('changes ctx when interactiveTasks flips, keeping the task store', async () => {
+    const { seen, update } = await renderCtx({ components });
+    await update({ components, interactiveTasks: false });
+    expect(seen[1]).not.toBe(seen[0]);
+    expect(seen[1]!.options.interactiveTasks).toBe(false);
+    expect(seen[1]!.tasks).toBe(seen[0]!.tasks);
+  });
+
+  it('keeps ctx when onTaskToggle is added', async () => {
     const { seen, update } = await renderCtx({ components });
     await update({ components, handlers: { onTaskToggle: () => {} } });
+    expect(new Set(seen).size).toBe(1);
+  });
+
+  it('swaps the task store, and so ctx, when the reset key changes', async () => {
+    const { seen, update } = await renderCtx({ components });
+    await update({ components, taskResetKey: 'x' });
     expect(seen[1]).not.toBe(seen[0]);
-    expect(seen[1]!.options.interactiveTasks).toBe(true);
+    expect(seen[1]!.tasks).not.toBe(seen[0]!.tasks);
   });
 });

@@ -122,7 +122,7 @@ function sweep(source: string, reps: number) {
       const bucket = buckets[(b + rep) % buckets.length]!;
       const t0 = now();
       for (const index of bucket.blocks)
-        sink.push(renderBlock(table, index, ctx));
+        sink.push(renderBlock(table, index, ctx, 0));
       const ms = now() - t0 - overhead;
       sink.length = 0;
       total += ms;
@@ -172,7 +172,7 @@ jest.setTimeout(30 * 60 * 1000);
     const doc = parse('# a\n\n| a | b |\n|---|---|\n| 1 | 2 |\n');
     const table = tableOf(doc);
     const ctx = createRenderCtx({ components: stubComponents });
-    renderBlock(table, 0, ctx);
+    renderBlock(table, 0, ctx, 0);
     resolveTheme(lightTheme);
     await act(async () => createRoot().render(<Markdown document={doc} />));
   }

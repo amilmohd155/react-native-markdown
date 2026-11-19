@@ -20,6 +20,7 @@ describe('package entry', () => {
       'useMarkdownBlocks',
       'useMarkdownStream',
       'useMarkdownTheme',
+      'useTaskState',
       'visit',
     ]);
   });

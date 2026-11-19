@@ -125,6 +125,8 @@ function textOf(table: NodeTable, id: number): string {
  */
 export function visit(document: MarkdownDocument, visitor: Visitor): void {
   const table = tableOf(document);
+  // The global index of the next task item (P3-17), in visit order.
+  let tasks = 0;
   const callbacks = visitor as Readonly<Record<string, Callback | undefined>>;
 
   const call = (
@@ -198,16 +200,19 @@ export function visit(document: MarkdownDocument, visitor: Visitor): void {
         call('List', listProps(table, id), id, depth, blockIndex);
         children(id, depth + 1, listDepth + 1, blockIndex);
         return;
-      case NodeType.ListItem:
-        call(
-          'ListItem',
-          // Items sit in their list's depth: 0 for a top-level list.
-          listItemProps(table, id, listDepth - 1, DEFAULT_BULLETS),
+      case NodeType.ListItem: {
+        // Items sit in their list's depth: 0 for a top-level list.
+        const props = listItemProps(
+          table,
           id,
-          depth,
-          blockIndex
+          listDepth - 1,
+          DEFAULT_BULLETS,
+          tasks
         );
+        if (props.taskIndex !== null) tasks++;
+        call('ListItem', props, id, depth, blockIndex);
         break;
+      }
       case NodeType.CodeBlock:
         call('CodeBlock', codeBlockProps(table, id), id, depth, blockIndex);
         return;

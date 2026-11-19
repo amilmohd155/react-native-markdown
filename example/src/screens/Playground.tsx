@@ -169,11 +169,9 @@ export function Playground() {
               scriptFallback={options.scriptFallback}
               onLinkPress={(href) => setEvent(`link · ${href}`)}
               onImagePress={(src) => setEvent(`image · ${src}`)}
-              onTaskToggle={
-                options.tasks
-                  ? (checked, { index }) =>
-                      setEvent(`task #${index} · ${checked ? 'done' : 'open'}`)
-                  : undefined
+              enableTaskListItemToggle={options.tasks}
+              onTaskToggle={({ index, checked }) =>
+                setEvent(`task #${index} · ${checked ? 'done' : 'open'}`)
               }
             />
           </View>

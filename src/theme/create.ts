@@ -28,6 +28,30 @@ function mergeGroup<T extends object>(
 }
 
 /**
+ * `checkbox` merges key by key; an object `checkedText` merges onto the
+ * base's (so `{ opacity: 1 }` keeps the line-through), `false` disables it.
+ */
+function mergeCheckbox(
+  base: ThemeTokens['checkbox'],
+  patch: ThemeInput['checkbox']
+): ThemeTokens['checkbox'] {
+  if (patch === undefined) return base;
+  const merged = mergeGroup(base, patch);
+  const { checkedText } = patch;
+  if (
+    typeof checkedText === 'object' &&
+    checkedText !== null &&
+    typeof base.checkedText === 'object'
+  ) {
+    return Object.freeze({
+      ...merged,
+      checkedText: Object.freeze({ ...base.checkedText, ...checkedText }),
+    });
+  }
+  return merged;
+}
+
+/**
  * Merges user tokens onto a base token set (layers 1 and 2 of the merge
  * order). Groups merge key by key, scalars and `listBullets` replace.
  * Spec: docs/rewrite/phase-1/theme-resolution.md#merge-order
@@ -45,6 +69,7 @@ export function mergeTokens(
     spacing: mergeGroup(base.spacing, input.spacing),
     radius: mergeGroup(base.radius, input.radius),
     imageRatio: input.imageRatio ?? base.imageRatio,
+    checkbox: mergeCheckbox(base.checkbox, input.checkbox),
     listBullets:
       input.listBullets === undefined
         ? base.listBullets

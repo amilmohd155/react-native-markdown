@@ -217,6 +217,22 @@ describe('cache key edge cases', () => {
     );
   });
 
+  it('compares checkbox, and its checkedText, by value', () => {
+    const a = resolve({
+      checkbox: { color: 'red', checkedText: { opacity: 0.5 } },
+    });
+    expect(
+      resolve({ checkbox: { color: 'red', checkedText: { opacity: 0.5 } } })
+    ).toBe(a);
+    expect(
+      resolve({ checkbox: { color: 'red', checkedText: { opacity: 0.4 } } })
+    ).not.toBe(a);
+    expect(
+      resolve({ checkbox: { color: 'red', checkedText: false } })
+    ).not.toBe(a);
+    expect(resolve({ checkbox: { size: 20 } })).not.toBe(resolve({}));
+  });
+
   it('compares listBullets by value', () => {
     const a = resolve({ listBullets: ['-', '*'] });
     expect(resolve({ listBullets: ['-', '*'] })).toBe(a);

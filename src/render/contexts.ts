@@ -1,4 +1,9 @@
-import { createContext, useContext } from 'react';
+import {
+  createContext,
+  createElement,
+  useContext,
+  type ReactNode,
+} from 'react';
 import type { TextStyle } from 'react-native';
 import type { RenderCtx } from './context';
 
@@ -28,10 +33,37 @@ export function useRenderContext(): RenderCtx {
 export const InheritedTextContext = createContext<TextStyle | null>(null);
 
 /**
+ * The `InheritedTextContext` value to restore for nested lists: set by a
+ * checked task item, which adds its checked-text style for its own content.
+ * A sub-list is its own set of tasks, so `InheritedTextReset` (around every
+ * nested `List`) puts the outer value back. `undefined`: nothing to reset.
+ */
+export const TextResetContext = createContext<TextStyle | null | undefined>(
+  undefined
+);
+
+/** Restores the inherited text style a checked task item replaced. */
+export function InheritedTextReset({ children }: { children: ReactNode }) {
+  const base = useContext(TextResetContext);
+  if (base === undefined) return children;
+  return createElement(
+    TextResetContext.Provider,
+    { value: undefined },
+    createElement(InheritedTextContext.Provider, { value: base }, children)
+  );
+}
+
+/**
  * Characters in the longest marker of the enclosing list ("10." → 3), so
  * every item's marker column has the same width and ordered markers align.
  */
 export const ListMarkerContext = createContext(1);
+
+/**
+ * Space between the items of the enclosing list: 0 when tight, else the
+ * block spacing. Caps the vertical `hitSlop` of task boxes.
+ */
+export const ListGapContext = createContext(0);
 
 /**
  * Identity of the enclosing table's content (its block's source text and

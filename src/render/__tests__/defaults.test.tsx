@@ -141,12 +141,21 @@ describe('default elements', () => {
 describe('task list items', () => {
   const checkboxes = (root: Tree) =>
     root.findAll(
-      (n) => n.type === 'Text' && n.props.accessibilityRole === 'checkbox'
+      (n) => n.type === 'View' && n.props.accessibilityRole === 'checkbox'
     );
 
-  it('are read-only without onTaskToggle', async () => {
+  it('are pressable without onTaskToggle', async () => {
     const [box] = checkboxes(await render('- [ ] open\n'));
-    expect(box!.props.onPress).toBeUndefined();
+    expect(box!.props.accessibilityState).toEqual({
+      checked: false,
+      disabled: false,
+    });
+  });
+
+  it('are read-only when not interactive', async () => {
+    const [box] = checkboxes(
+      await render('- [ ] open\n', { interactiveTasks: false })
+    );
     expect(box!.props.accessibilityState).toEqual({
       checked: false,
       disabled: true,
@@ -162,8 +171,8 @@ describe('task list items', () => {
     await fireEvent.press(first!);
     await fireEvent.press(second!);
     expect(onTaskToggle.mock.calls).toEqual([
-      [false, { index: 0 }],
-      [true, { index: 1 }],
+      [{ index: 0, checked: false, text: 'a' }],
+      [{ index: 1, checked: true, text: 'b' }],
     ]);
   });
 });

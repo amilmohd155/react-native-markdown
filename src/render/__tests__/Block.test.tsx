@@ -169,23 +169,42 @@ describe('Block memoization (P1-9)', () => {
     expect(renders).toEqual([]);
   });
 
+  it('blockPropsEqual compares the task base', () => {
+    const ctx = createRenderCtx({ components: hostComponents() });
+    const a = tableFor('- [ ] x\n');
+    const props = { table: a, index: 0, ctx };
+    expect(
+      blockPropsEqual({ ...props, taskBase: 0 }, { ...props, taskBase: 1 })
+    ).toBe(false);
+    expect(
+      blockPropsEqual({ ...props, taskBase: 2 }, { ...props, taskBase: 2 })
+    ).toBe(true);
+  });
+
   it('blockPropsEqual compares ctx identity and block identity', () => {
     const ctx = createRenderCtx({ components: hostComponents() });
     const a = tableFor('x\n\ny\n');
     const b = tableFor('x\n\nz\n');
     expect(
-      blockPropsEqual({ table: a, index: 0, ctx }, { table: b, index: 0, ctx })
+      blockPropsEqual(
+        { table: a, index: 0, ctx, taskBase: 0 },
+        { table: b, index: 0, ctx, taskBase: 0 }
+      )
     ).toBe(true);
     expect(
-      blockPropsEqual({ table: a, index: 1, ctx }, { table: b, index: 1, ctx })
+      blockPropsEqual(
+        { table: a, index: 1, ctx, taskBase: 0 },
+        { table: b, index: 1, ctx, taskBase: 0 }
+      )
     ).toBe(false);
     expect(
       blockPropsEqual(
-        { table: a, index: 0, ctx },
+        { table: a, index: 0, ctx, taskBase: 0 },
         {
           table: a,
           index: 0,
           ctx: createRenderCtx({ components: hostComponents() }),
+          taskBase: 0,
         }
       )
     ).toBe(false);
