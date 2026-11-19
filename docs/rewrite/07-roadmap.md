@@ -38,7 +38,7 @@ Implementation detail: [`phase-3/`](./phase-3/README.md). **Paused after its bui
 - `/highlight` entry point (lazy-loaded tokenizer).
 - Footnotes UI, task toggling, accessibility pass.
 - F5 `retainedHeap` moves to the [optimization pass](#optimization-pass-after-the-last-feature-phase) ([D9](#decisions)): measure it once, after `virtualize` has landed.
-- Official plugins (`math`, `mentions`, `emoji`). There is no mdast interop entry point ([P1-20](./phase-1/decisions.md#p1-20-no-tomdast-mdast-interop-is-dropped)).
+- Official plugins: `emoji`, `mentions`, `admonitions`, each a subpath entry ([P3-21](./phase-3/decisions.md#p3-21-official-plugins-emoji-mentions-admonitions-math-deferred), [design](./phase-3/plugins.md)). `math` is deferred: it needs a renderer and the incomplete-tail hook. There is no mdast interop entry point ([P1-20](./phase-1/decisions.md#p1-20-no-tomdast-mdast-interop-is-dropped)).
 
 ### Optimization pass (after the last feature phase)
 Added by D9. Not a feature phase. Runs once Phases 1–3 are complete and before the v1.0 gate, so performance work is done against the final feature set instead of being redone as features land.

@@ -179,13 +179,13 @@ interface MarkdownPlugin<N extends Record<string, object> = {}> {
   name: string;
   syntax?: {
     markdownIt?: (md: MarkdownIt) => void;  // JS backend
-    native?: NativeExtensionId;             // native backend (phase 4)
+    // native?: NativeExtensionId;          // planned for Phase 4, not in the code yet
   };
   nodes?: { [K in keyof N]: {
     kind: 'block' | 'inline';
     inlineView?: boolean;     // inline only: may render a View as an inline attachment (decision D8)
     token: string;
-    from: (tok: Token) => N[K];
+    from: (tok: PluginToken) => N[K];
   } };
   components?: { [K in keyof N]?: ComponentType<N[K] & { children?: ReactNode; style: ElementStyle }> };
   theme?: Partial<ElementOverrides<keyof N>>;
@@ -195,7 +195,7 @@ const definePlugin: <N>(p: MarkdownPlugin<N>) => MarkdownPlugin<N>;
 ```
 
 - **Built-in GFM plugins:** `tables`, `taskLists`, `strikethrough`, `autolinks`, `footnotes`, `tagfilter`. `preset="gfm"` includes all of them.
-- **Planned official plugins:** `math`, `mentions`, `emoji`, `admonitions`. Each is a separate entry point so it can be tree-shaken.
+- **Planned official plugins:** `emoji`, `mentions`, `admonitions`, each a separate entry point (`/emoji`, `/mentions`, `/admonitions`) so it can be tree-shaken; see [phase-3/plugins.md](./phase-3/plugins.md). `math` is deferred.
 - **Order:** the preset's plugins first, then `plugins` in array order. A later plugin's components and theme override an earlier one's. The `components` and `theme` props override all plugins.
 
 ## Raw HTML
