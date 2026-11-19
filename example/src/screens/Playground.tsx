@@ -19,6 +19,8 @@ import {
   type ThemeInput,
   type ThemeProp,
 } from '@docren/react-native-markdown';
+import { mentions } from '@docren/react-native-markdown/mentions';
+import { MentionChip } from '../components/MentionChip';
 import {
   LinkChip,
   LoweredSubscript,
@@ -56,6 +58,9 @@ const CHIP_COMPONENTS = {
   Subscript: LoweredSubscript,
 };
 
+// Module-level so `parse` and `<Markdown>` share one plugin identity.
+const PLUGINS = [mentions({ schemes: ['user', 'channel'] })];
+
 interface Options {
   readonly font: 'system' | 'inter';
   readonly size: 'default' | 'large';
@@ -64,6 +69,7 @@ interface Options {
   readonly softBreak: SoftBreak;
   readonly scriptFallback: ScriptFallback;
   readonly inlineViews: boolean;
+  readonly mentionChip: boolean;
   readonly tasks: boolean;
 }
 
@@ -75,6 +81,7 @@ const DEFAULTS: Options = {
   softBreak: 'space',
   scriptFallback: 'smaller',
   inlineViews: false,
+  mentionChip: false,
   tasks: true,
 };
 
@@ -118,7 +125,7 @@ type Mode = 'preview' | 'edit';
 /** Parses `source` and times it (outside render: the clock is impure). */
 function build(source: string) {
   const start = performance.now();
-  const document = parse(source);
+  const document = parse(source, { plugins: PLUGINS });
   return { source, document, ms: performance.now() - start };
 }
 
@@ -139,6 +146,16 @@ export function Playground() {
     setOptions((current) => ({ ...current, [key]: value }));
 
   const theme = useMemo(() => themeFor(setting, options), [setting, options]);
+  const components = useMemo(
+    () =>
+      options.inlineViews || options.mentionChip
+        ? {
+            ...(options.inlineViews ? CHIP_COMPONENTS : null),
+            ...(options.mentionChip ? { Mention: MentionChip } : null),
+          }
+        : undefined,
+    [options.inlineViews, options.mentionChip]
+  );
   const changed = JSON.stringify(options) !== JSON.stringify(DEFAULTS);
 
   return (
@@ -163,11 +180,15 @@ export function Playground() {
           <View style={styles.column}>
             <Markdown
               document={parsed.document}
+              plugins={PLUGINS}
               theme={theme}
-              components={options.inlineViews ? CHIP_COMPONENTS : undefined}
+              components={components}
               softBreak={options.softBreak}
               scriptFallback={options.scriptFallback}
               onLinkPress={(href) => setEvent(`link · ${href}`)}
+              onMentionPress={({ scheme, id }) =>
+                setEvent(`mention · ${scheme}:${id}`)
+              }
               onImagePress={(src) => setEvent(`image · ${src}`)}
               enableTaskListItemToggle={options.tasks}
               onTaskToggle={({ index, checked }) =>
@@ -297,6 +318,11 @@ export function Playground() {
               label="Inline views"
               value={options.inlineViews}
               onChange={(v) => set('inlineViews', v)}
+            />
+            <Toggle
+              label="Custom mention"
+              value={options.mentionChip}
+              onChange={(v) => set('mentionChip', v)}
             />
             <Toggle
               label="Interactive tasks"

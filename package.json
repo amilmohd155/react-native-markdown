@@ -15,6 +15,11 @@
       "types": "./lib/typescript/src/emoji/index.d.ts",
       "default": "./lib/module/emoji/index.js"
     },
+    "./mentions": {
+      "source": "./src/mentions/index.ts",
+      "types": "./lib/typescript/src/mentions/index.d.ts",
+      "default": "./lib/module/mentions/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

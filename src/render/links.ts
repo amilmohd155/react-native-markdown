@@ -1,5 +1,5 @@
 import { Linking } from 'react-native';
-import type { HandlersRef, LinkPressInfo } from './context';
+import type { HandlersRef, LinkPressInfo, MentionPressInfo } from './context';
 
 /** Schemes the default link handler opens (P1-3). */
 const OPENABLE = /^(https?|mailto|tel):/i;
@@ -35,4 +35,18 @@ export function pressLink(
   } catch {
     // Some platforms throw synchronously (e.g. an unsupported URL).
   }
+}
+
+/**
+ * A mention press: `onMentionPress` when set, else the link path with the
+ * raw url (`onLinkPress`; the default opens only allowlisted schemes, so a
+ * custom scheme like `user://` is a no-op).
+ */
+export function pressMention(
+  handlers: HandlersRef,
+  info: MentionPressInfo
+): void {
+  const onMentionPress = handlers.current.onMentionPress;
+  if (onMentionPress) onMentionPress(info);
+  else pressLink(handlers, info.url, { title: null });
 }

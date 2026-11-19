@@ -76,6 +76,7 @@ export type {
   InlineBaseline,
   InlineViewProps,
   LinkPressInfo,
+  MentionPressInfo,
   PluginComponents,
   ScriptFallback,
   SoftBreak,

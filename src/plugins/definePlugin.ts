@@ -87,6 +87,13 @@ export interface MarkdownPlugin<
 > {
   /** Unique per parse. Part of the document context (P1-9). */
   readonly name: string;
+  /**
+   * Parse options that change the tree, as a plain string (e.g. the sorted
+   * schemes). Part of the document context with `name`, so changing it
+   * invalidates a cached parse (P1-9). Leave it out for options that do not
+   * affect the parse.
+   */
+  readonly contextKey?: string;
   readonly syntax?: {
     /** JS backend: called once on a fresh markdown-it instance. */
     readonly markdownIt?: (md: MarkdownIt) => void;

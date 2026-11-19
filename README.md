@@ -261,6 +261,18 @@ import { emoji } from '@docren/react-native-markdown/emoji';
 const plugins = [emoji({ map: { shipit: '🚢' } })];
 ```
 
+The `mentions` plugin (`@docren/react-native-markdown/mentions`) turns `[@Alice](user://alice)` into a `Mention` with `scheme`, `id` (decoded), `label` and `url`. Only `scheme://` links for the listed schemes convert; autolinks and bare URLs stay links. Style it with the `Mention` theme element (falls back to `Link`) or `components.Mention`. `onMentionPress` handles the press; without it the press goes to `onLinkPress`, which ignores `user://`. A custom `components.Mention` presses through the `useMentionPress()` hook from the same entry.
+
+```tsx
+import { mentions } from '@docren/react-native-markdown/mentions';
+
+<Markdown
+  source="Hi [@Alice](user://alice)"
+  plugins={[mentions({ schemes: ['user', 'channel'] })]}
+  onMentionPress={({ id }) => openProfile(id)}
+/>;
+```
+
 ### Raw HTML
 
 With the default `html="safe"`, these inline tags become elements: `<br>`, `<b>`, `<strong>`, `<i>`, `<em>`, `<s>`, `<del>`, `<u>`, `<mark>`, `<sup>`, `<sub>`, `<kbd>`. Attributes are ignored. Everything else, including block-level HTML, is shown as text. Use `html="text"` to show all HTML as text, `html="strip"` to remove tags, or `html={{ allow: [...] }}` for your own subset.

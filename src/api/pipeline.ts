@@ -10,6 +10,7 @@ import {
   type FootnoteBackLinkMark,
   type FootnoteA11yLabels,
   type FootnotePressInfo,
+  type MentionPressInfo,
   type ImagePressInfo,
   type ImagesPolicy,
   type LinkPressInfo,
@@ -81,6 +82,11 @@ export interface MarkdownRenderOptions {
   /** Called first for every link; return `false` to cancel the default. */
   readonly onLinkPress?: (href: string, info: LinkPressInfo) => boolean | void;
   readonly onImagePress?: (src: string, info: ImagePressInfo) => void;
+  /**
+   * Called for a press on a mention (the `mentions` plugin). When absent the
+   * press goes to `onLinkPress` with the raw url.
+   */
+  readonly onMentionPress?: (info: MentionPressInfo) => void;
   /**
    * Which images load; the rest render as their alt text. Default
    * `'allow'`. Use `'deny'` or `{ allowHosts }` for untrusted content.
@@ -310,6 +316,7 @@ export function useMarkdownPipeline(
     document,
     onLinkPress,
     onImagePress,
+    onMentionPress,
     onTaskToggle,
     enableTaskListItemToggle,
     onFootnotePress,
@@ -375,6 +382,7 @@ export function useMarkdownPipeline(
   const handlers: RenderHandlers = {
     onLinkPress,
     onImagePress,
+    onMentionPress,
     onTaskToggle,
     onFootnotePress: footnotePress,
   };

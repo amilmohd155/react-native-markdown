@@ -94,7 +94,8 @@ const host =
 // `theme.elements` accept them.
 declare module '@docren/react-native-markdown' {
   interface PluginElementPropsMap {
-    Mention: { userId: string };
+    // `Mention` itself is declared by src/mentions/Mention.tsx.
+    TestChip: { userId: string };
   }
 }
 

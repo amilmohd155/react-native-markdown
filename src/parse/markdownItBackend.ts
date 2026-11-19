@@ -3,6 +3,7 @@ import { computeLineOffsets, NodeType } from '../model';
 import type { CarriedContext, ParseFromResult } from '../stream/types';
 import type { MarkdownPlugin } from '../plugins/definePlugin';
 import { resolvePreset } from '../plugins/presets';
+import type { PluginRegistry } from '../plugins/registry';
 import type { HtmlMode, ParseOptions, ParserBackendImpl } from './backend';
 import {
   convertTokens,
@@ -24,7 +25,7 @@ export function parseWithMarkdownIt(
   return convertTokens(md, tokens, source, {
     html,
     registry,
-    context: documentContext(html, registry.names, env.references),
+    context: documentContext(html, registry.context, env.references),
   });
 }
 
@@ -42,7 +43,7 @@ function pluginList(options: ParseOptions): readonly MarkdownPlugin[] {
  */
 function documentContext(
   html: HtmlMode,
-  plugins: readonly string[],
+  plugins: PluginRegistry['context'],
   references: unknown
 ): string {
   return JSON.stringify([html, plugins, references ?? null]);
@@ -184,7 +185,7 @@ function parseFromMarkdownIt(
   const { table } = convertTokens(md, tokens, tokenized, {
     html,
     registry,
-    context: documentContext(html, registry.names, references),
+    context: documentContext(html, registry.context, references),
     offset: base,
     fullSource: source,
     slugger: new Slugger(seed.slugs),
