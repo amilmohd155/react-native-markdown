@@ -29,7 +29,7 @@ const press = (node: Node) => fireEvent.press(node);
 describe('onLinkPress', () => {
   let openURL: jest.SpyInstance;
   beforeEach(() => {
-    openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue();
   });
   afterEach(() => openURL.mockRestore());
 
@@ -195,7 +195,7 @@ describe('handlers stay behind the ref', () => {
     );
     const view = await render(element(first));
     await view.rerender(element(second));
-    jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    jest.spyOn(Linking, 'openURL').mockResolvedValue();
     await press(links()[0]!);
     expect(first).not.toHaveBeenCalled();
     expect(second).toHaveBeenCalledTimes(1);

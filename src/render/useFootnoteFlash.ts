@@ -1,10 +1,5 @@
-import { useEffect, useState, type RefObject } from 'react';
-import {
-  AccessibilityInfo,
-  Animated,
-  InteractionManager,
-  type View,
-} from 'react-native';
+import { useEffect, useState, type ComponentRef, type RefObject } from 'react';
+import { AccessibilityInfo, Animated, View } from 'react-native';
 import { useRenderContext } from './contexts';
 import { useFootnoteFlashToken } from './footnoteFocus';
 
@@ -37,7 +32,7 @@ const NO_FLASH: FootnoteFlash = { style: null, focused: false };
  */
 export function useFootnoteFlash(
   key: string,
-  focusRef?: RefObject<View | null>
+  focusRef?: RefObject<ComponentRef<typeof View> | null>
 ): FootnoteFlash {
   const { options, theme } = useRenderContext();
   const focus = options.footnoteFocus;
@@ -107,15 +102,12 @@ export function useFootnoteFlash(
     AccessibilityInfo.isScreenReaderEnabled().then(
       (on) => {
         if (!on || !active) return;
-        InteractionManager.runAfterInteractions(() => {
-          if (!active) return;
-          timer = setTimeout(() => {
-            const node = focusRef.current;
-            if (node !== null) {
-              AccessibilityInfo.sendAccessibilityEvent(node, 'focus');
-            }
-          }, FOCUS_DELAY);
-        });
+        timer = setTimeout(() => {
+          const node = focusRef.current;
+          if (node !== null) {
+            AccessibilityInfo.sendAccessibilityEvent(node, 'focus');
+          }
+        }, FOCUS_DELAY);
       },
       () => {}
     );

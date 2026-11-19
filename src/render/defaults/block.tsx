@@ -1,4 +1,10 @@
-import { useContext, useMemo, useRef, useState } from 'react';
+import {
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentRef,
+} from 'react';
 import {
   Animated,
   Image as RNImage,
@@ -408,7 +414,7 @@ export function FootnoteDefinition({
   children,
 }: ElementProps<'FootnoteDefinition'>) {
   const inherited = useContext(InheritedTextContext);
-  const ref = useRef<View>(null);
+  const ref = useRef<ComponentRef<typeof View>>(null);
   const flash = useFootnoteFlash(`d:${label}`, ref);
   const parts = (
     <>

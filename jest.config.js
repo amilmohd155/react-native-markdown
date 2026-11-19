@@ -22,7 +22,7 @@ const library = '<rootDir>/src/index.tsx';
 // Projects that run React Native code through its own preset.
 const reactNative = {
   ...shared,
-  preset: 'react-native',
+  preset: '@react-native/jest-preset',
   moduleNameMapper: { '^@docren/react-native-markdown$': library },
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?)/)',

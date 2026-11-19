@@ -180,7 +180,7 @@ describe('task list items', () => {
 describe('links', () => {
   let openURL: jest.SpyInstance;
   beforeEach(() => {
-    openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue();
   });
   afterEach(() => openURL.mockRestore());
 
