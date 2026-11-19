@@ -115,25 +115,49 @@ describe('override store', () => {
     expect(renders).toBe(before);
   });
 
-  it('keeps the same store while the reset key holds, swaps it when it changes', async () => {
+  it('keeps ctx and the store across a source change', async () => {
     const seen: unknown[] = [];
     const Probe = (props: ElementProps<'ListItem'>) => {
-      seen.push(useRenderContext().tasks);
+      const ctx = useRenderContext();
+      seen.push(ctx, ctx.tasks);
       const Default = defaultComponents.ListItem;
       return <Default {...props} />;
     };
-    const el = (source: string, softBreak: 'space' | 'newline' = 'space') => (
+    const el = (source: string) => (
       <Markdown
         source={source}
-        softBreak={softBreak}
         components={{ ListItem: Probe } as Partial<Components>}
       />
     );
     const view = await render(el('- [ ] a'));
-    await view.rerender(el('- [ ] a', 'newline'));
-    expect(new Set(seen).size).toBe(1);
     await view.rerender(el('- [ ] a\n- [ ] b'));
-    expect(new Set(seen).size).toBe(2);
+    expect(new Set(seen).size).toBe(2); // one ctx, one store
+  });
+
+  it('re-renders only the edited block on a source change', async () => {
+    const renders: Record<string, number> = {};
+    const Counting = (props: ElementProps<'Paragraph'>) => {
+      const Default = defaultComponents.Paragraph;
+      const key = String(
+        (props.children as unknown[] | string) instanceof Array
+          ? (props.children as unknown[]).join('')
+          : props.children
+      );
+      renders[key] = (renders[key] ?? 0) + 1;
+      return <Default {...props} />;
+    };
+    const el = (second: string) => (
+      <Markdown
+        source={`one\n\n${second}\n\nthree\n\n- [ ] t`}
+        components={{ Paragraph: Counting } as Partial<Components>}
+      />
+    );
+    const view = await render(el('two'));
+    expect(renders).toMatchObject({ one: 1, two: 1, three: 1 });
+    await view.rerender(el('two!'));
+    expect(renders.one).toBe(1);
+    expect(renders.three).toBe(1);
+    expect(renders['two!']).toBe(1);
   });
 });
 

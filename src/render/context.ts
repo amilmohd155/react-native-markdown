@@ -1,4 +1,10 @@
-import { useInsertionEffect, useMemo, useRef, useState } from 'react';
+import {
+  useInsertionEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { getDefaultTheme, type ResolvedTheme } from '../theme';
 import type { Components } from './elements';
 import type { FootnoteFocusConfig } from './footnoteFocus';
@@ -209,8 +215,9 @@ export interface RenderCtxInput {
    */
   readonly interactiveTasks?: boolean;
   /**
-   * `useRenderCtx` only. The task overrides are cleared when this changes
-   * (P3-19): the source string, or a stream's `prefixId`.
+   * `useRenderCtx` only. The task overrides are dropped when this changes
+   * (P3-19): the source string, or a stream's `prefixId`. `ctx` identity
+   * does not change with it.
    */
   readonly taskResetKey?: unknown;
 }
@@ -312,21 +319,20 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
     ]
   );
 
-  // One store per `<Markdown>`, above every row, so an override survives a
-  // virtualized row unmounting. A new reset key swaps in an empty store
-  // during render (the documented "adjust state on prop change" pattern:
-  // React discards this pass and re-renders at once), so no item, new or
-  // old, ever reads an override from the previous source, and a discarded
-  // concurrent render leaves the committed store alone.
-  const [held, setHeld] = useState(() => ({
-    key: input.taskResetKey,
-    tasks: createTaskStore(),
-  }));
-  let { tasks } = held;
-  if (!Object.is(held.key, input.taskResetKey)) {
-    tasks = createTaskStore();
-    setHeld({ key: input.taskResetKey, tasks });
-  }
+  // One stable store per `<Markdown>`, above every row, so an override
+  // survives a virtualized row unmounting and `ctx` never changes with the
+  // source (that would re-render every block on each edit). The reset key
+  // is assigned during render: it is a plain, idempotent field write, done
+  // before any child renders, so an item mounted by a source change never
+  // reads an override of the old key (no stale frame). A discarded
+  // concurrent render can only hide overrides for a moment: render never
+  // deletes them. After commit, the layout effect purges the old-key
+  // overrides and notifies the mounted items that held one.
+  const [tasks] = useState(createTaskStore);
+  tasks.expect(input.taskResetKey);
+  useLayoutEffect(() => {
+    tasks.purge();
+  }, [tasks, input.taskResetKey]);
 
   const { components } = input;
   // Not frozen: passing the ref into a call during render counts as reading

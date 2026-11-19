@@ -103,10 +103,10 @@ describe('useRenderCtx', () => {
     expect(new Set(seen).size).toBe(1);
   });
 
-  it('swaps the task store, and so ctx, when the reset key changes', async () => {
+  it('keeps ctx and its task store when the reset key changes', async () => {
     const { seen, update } = await renderCtx({ components });
     await update({ components, taskResetKey: 'x' });
-    expect(seen[1]).not.toBe(seen[0]);
-    expect(seen[1]!.tasks).not.toBe(seen[0]!.tasks);
+    expect(seen[1]).toBe(seen[0]);
+    expect(seen[1]!.tasks).toBe(seen[0]!.tasks);
   });
 });
