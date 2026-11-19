@@ -204,3 +204,60 @@ Accepted · 2026-11-19
 - **Deferred:** no `toggleTask(source, info)` helper and no controlled `checked` or `initialChecked` prop; persistence is the app's job.
 - **Built:** the touch target is a `hitSlop`: measured box 10.7 x 19.6dp (Android, 420dpi), so the slop is asymmetric, right = floor(marker column - glyph) = 9dp (the item content, a later sibling, covers the rest) and left = 25dp into the gutter, total width at least 44 and vertical `min(ceil((44 - h) / 2), floor(gap / 2))` with `gap` the space between items (0 tight, 12 loose by default). 44pt tall is not reachable in a tight list without overlapping the next row. `checkedText` merges onto line-through and dim, or `false` turns it off. A nested List resets the inherited checked text style. Inside a checked item a Link's underline replaces the line-through. A custom `ListItem` gets the displayed state and a toggle from the `useTaskState` hook (props stay plain values, `checked` stays the source value).
 - Design: [task-toggling.md](./task-toggling.md#design).
+
+## P3-21: Official plugins: emoji, mentions, admonitions; math deferred
+
+Accepted · 2026-11-19
+
+- **Decision:** Phase 3 ships `emoji`, `mentions` and `admonitions`, built in that order. Each is opt-in: in no preset, listed apart from `gfm`. `math` is deferred: it needs a renderer decision (no verified maintained pure-JS React Native option; WebView plus KaTeX cannot sit on the text baseline) and a plugin incomplete-tail streaming hook ([P3-26](#p3-26-no-plugin-incomplete-tail-streaming-hook-yet)).
+- **Why:** the roadmap listed math, mentions and emoji; admonitions was only in `04-api.md`. Math is the riskiest and nothing else depends on it.
+- Design: [plugins.md](./plugins.md#emoji), [mentions](./plugins.md#mentions), [admonitions](./plugins.md#admonitions).
+
+## P3-22: Plugins are subpath entries of one package, pure JS
+
+Accepted · 2026-11-19
+
+- **Decision:** `@docren/react-native-markdown/emoji`, `/mentions`, `/admonitions`, as `package.json` `exports` keys `./emoji` etc. (same form for `/highlight` later). Every plugin entry stays pure JS and Expo Go safe, extending D2 from the main entry to plugin entries. `scripts/check-no-native.mjs` and `scripts/check-public-types.mjs` iterate over all `exports` subpaths instead of one entry, and `.fallowrc.json` is checked so new `src/<plugin>/` entries are not reported unused.
+- **Why:** the tree-shaking intent of `04-api.md`; bob already compiles all of `src/`; one package keeps Release-it and CI as they are.
+- Design: [plugins.md](./plugins.md#packaging).
+
+## P3-23: Emoji is parse-time text substitution with a pluggable resolver
+
+Accepted · 2026-11-19
+
+- **Decision:** `:name:` becomes the Unicode character during parse; no node, no component. `emoji({ resolve?: (name) => string | undefined, map?: Record<string, string>, defaults?: boolean })`: a `map` is wrapped into a resolver; the user resolver is consulted first, then a small curated default table (about 50 names); `defaults: false` disables it. Unknown names stay text, which also keeps `10:30:00` and `http://` untouched. The resolver is sync and pure and must not enter the parse-context string (`src/parse/markdownItBackend.ts` context).
+- **Why:** any library plugs in with a one-liner; a node per emoji costs an inline node while streaming; the size of the full gemoji set is unverified.
+- Design: [plugins.md](./plugins.md#emoji).
+
+## P3-24: Mentions are scheme links converted to a Mention node
+
+Accepted · 2026-11-19
+
+- **Decision:** following [enriched-markdown](https://docs.swmansion.com/enriched-markdown/rich-text-formatting/mentions), a mention is an ordinary link with a custom scheme, `[@Alice](user://alice)`. `mentions({ schemes: ['user', 'channel'] })` converts matching links to an inline `Mention` node `{ scheme, id, label }`. There is no bare `@handle` parsing, so email, code and trailing-punctuation boundaries and a streaming raw-then-jump flicker do not arise. Style: `theme.mention` per scheme, falling back to `theme.link`; `components.Mention` slot (may be an inlineView). Press: `onMentionPress({ scheme, id, url, label })`, falling back to `onLinkPress` with the raw URL when unset.
+- **Why:** reuses link parsing and streaming; degrades to a normal link in other renderers.
+- Design: [plugins.md](./plugins.md#mentions).
+
+## P3-25: Admonitions are GitHub alerts, an opt-in non-GFM plugin
+
+Accepted · 2026-11-19
+
+- **Decision:** syntax is `> [!NOTE]` (also TIP, IMPORTANT, WARNING, CAUTION). It is not part of CommonMark or the GFM spec (a GitHub.com feature) and works under the `'commonmark'` preset because it is a blockquote. One block container `Admonition` node `{ kind }`; an unknown kind stays a plain blockquote. Container fences (`::: note`) are not supported now. Titles come from an option map `admonitions({ titles: { note: 'Note', ... } })` with English defaults; no per-instance titles. Style: `theme.admonition` per kind and a `components.Admonition` slot; the default look is an accent bar, tinted background and text title, no icon assets (pure JS). Any block content is allowed inside. The container gets an accessibility role and a label prefixed with the title; final wording is settled in the accessibility pass.
+- **Why:** degrades to a normal blockquote elsewhere; reuses the blockquote absorb logic in the stream.
+- **Open check:** an alert is a built-in `blockquote`, so the plugin probably needs a markdown-it core rule that retypes the matching `blockquote_open` to an admonition token (`registry.ts` rejects a token mapped twice). Verify against the converter before building.
+- Design: [plugins.md](./plugins.md#admonitions).
+
+## P3-26: No plugin incomplete-tail streaming hook yet
+
+Accepted · 2026-11-19
+
+- **Decision:** `hideIncomplete` (`src/stream/smoothing.ts`) knows only CommonMark and GFM delimiters and is not given the plugins. Emoji `:smi` shows raw until the closing colon, and `> [!NO` shows as a blockquote until `]`; both then swap, a minor visible jump. A `streaming.incompleteTail` hook is deferred and is a prerequisite for `math` ([P3-21](#p3-21-official-plugins-emoji-mentions-admonitions-math-deferred)). Also, `absorbs()` in `createMarkdownStream.ts` does not know plugin block rules, so a plugin container block spanning blank lines is unsupported (admonitions are blockquotes and unaffected).
+- **Why:** the hook touches the Phase 2 stream core and none of the three plugins needs it.
+- Design: [plugins.md](./plugins.md#streaming).
+
+## P3-27: Plugins are tested with unit fixtures, outside the spec runner
+
+Accepted · 2026-11-19
+
+- **Decision:** per plugin, parse-level fixtures plus one render test; the CommonMark/GFM spec runner is untouched. Emoji: `10:30:00`, `http://`, unknown names, user resolver. Mentions: scheme match, non-matching scheme stays a link, code spans, email text. Admonitions: five kinds, nested content, plain-blockquote fallback, under the `'commonmark'` preset. Device checks follow the other Phase 3 items.
+- **Why:** plugin syntax is outside the vendored spec files, which must not be edited by hand.
+- Design: [plugins.md](./plugins.md#packaging).
