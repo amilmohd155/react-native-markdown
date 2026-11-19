@@ -26,6 +26,8 @@ export interface PluginRegistry {
   readonly info: readonly PluginNodeInfo[];
   /** Plugin names in order, for the document context (P1-9). */
   readonly names: readonly string[];
+  /** `names`, with a plugin's `contextKey` when it has one (P1-9). */
+  readonly context: readonly (string | readonly [string, string])[];
   /** Block node for a token's base type, if registered. */
   block(baseType: string): RegisteredNode | undefined;
   /** Inline node for a token's base type, if registered. */
@@ -109,6 +111,9 @@ export function createRegistry(
       )
     ),
     names: plugins.map((p) => p.name),
+    context: plugins.map((p) =>
+      p.contextKey === undefined ? p.name : ([p.name, p.contextKey] as const)
+    ),
     block: (baseType) => blockMap.get(baseType),
     inline: (baseType) => inlineMap.get(baseType),
   };

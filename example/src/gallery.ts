@@ -99,6 +99,10 @@ Footnotes link both ways[^1], and a named one works too[^note]. The first again[
 
     It can hold a second paragraph.
 
+## Mentions
+
+A link with a configured scheme is a mention: [@Alice](user://alice) and [#general](channel://general), with a **[bold label](user://bob%20smith)** and a path id like [@Team](user://team/ops). Other links stay links: [Docs](https://example.com), [no slashes](user:dan) and <user://eve>. The *Custom mention* option swaps in a tinted chip.
+
 ## Inline HTML
 
 A safe subset of tags becomes real formatting: H<sub>2</sub>O and E = mc<sup>2</sup>, <u>underline</u>, <mark>highlight</mark>, press <kbd>Ctrl</kbd> + <kbd>C</kbd>, a line<br>break. Scripts with no Unicode form fall back to smaller text, as in Brand<sup>TM</sup>; the *Superscript fallback* option raises it.

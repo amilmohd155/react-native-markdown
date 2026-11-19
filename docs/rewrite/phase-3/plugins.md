@@ -1,6 +1,6 @@
 # Phase 3 · Official plugins
 
-Emoji, mentions and admonitions as official plugins; math is deferred. Emoji is built; the others are design only. Decisions: [P3-21 to P3-27](./decisions.md). Reference: [04 · Plugins](../04-api.md#plugins).
+Emoji, mentions and admonitions as official plugins; math is deferred. Emoji and mentions are built; admonitions is design only. Decisions: [P3-21 to P3-27](./decisions.md). Reference: [04 · Plugins](../04-api.md#plugins).
 
 ## Packaging
 
@@ -25,12 +25,12 @@ import nodeEmoji from 'node-emoji';
 
 ## Mentions
 
-`[@Alice](user://alice)` is an ordinary link whose scheme the plugin recognizes; it becomes an inline `Mention { scheme, id, label }` ([P3-24](./decisions.md#p3-24-mentions-are-scheme-links-converted-to-a-mention-node)). Model: [enriched-markdown mentions](https://docs.swmansion.com/enriched-markdown/rich-text-formatting/mentions).
+`[@Alice](user://alice)` is an ordinary link whose scheme the plugin recognizes; it becomes an inline `Mention { scheme, id, label, url }` ([P3-24](./decisions.md#p3-24-mentions-are-scheme-links-converted-to-a-mention-node)). Model: [enriched-markdown mentions](https://docs.swmansion.com/enriched-markdown/rich-text-formatting/mentions).
 
-- `mentions({ schemes })`: the schemes to convert (`['user', 'channel']`). Other links are untouched.
-- `theme.mention`, per scheme, falling back to `theme.link`.
-- `components.Mention` replaces the render (a chip, an avatar).
-- `onMentionPress({ scheme, id, url, label })`, falling back to `onLinkPress` when absent.
+- `mentions({ schemes })`: the schemes to convert (`['user', 'channel']`), matched case-insensitively against `[text](scheme://rest)` links. `label` is the link text flattened to plain text; `id` is everything after `scheme://`, percent-decoded (a malformed `%` is kept raw). `user:alice` (no `//`), autolinks `<user://alice>`, bare linkified URLs and links with an empty or image label stay normal links. The id keeps any `?query#hash`; `url` is the raw link. Other links are untouched. `schemes` are part of the parse-context key, so cached parses never mix schemes.
+- `theme.Mention` ([D5](../07-roadmap.md#decisions)): one element for all schemes, falling back to `Link`. No per-scheme map.
+- `components.Mention` replaces the render (a chip, an avatar); it receives `scheme`, so it can branch per scheme. It gets no press handler: call `useMentionPress()` (from `/mentions`) inside it and pass the `{ scheme, id, url, label }` it already has, which reaches `onMentionPress` or the `onLinkPress` fallback like the default.
+- `onMentionPress({ scheme, id, url, label })` returns void. When set it fully handles the press; when unset the press goes to `onLinkPress` with the raw url. The default `onLinkPress` opens only http/https/mailto/tel, so `user://` does nothing.
 
 A mention in a source without the plugin is still a working link.
 

@@ -231,10 +231,10 @@ Accepted · 2026-11-19
 
 ## P3-24: Mentions are scheme links converted to a Mention node
 
-Accepted · 2026-11-19
+Accepted · 2026-11-19 · Amended 2026-11-19
 
-- **Decision:** following [enriched-markdown](https://docs.swmansion.com/enriched-markdown/rich-text-formatting/mentions), a mention is an ordinary link with a custom scheme, `[@Alice](user://alice)`. `mentions({ schemes: ['user', 'channel'] })` converts matching links to an inline `Mention` node `{ scheme, id, label }`. There is no bare `@handle` parsing, so email, code and trailing-punctuation boundaries and a streaming raw-then-jump flicker do not arise. Style: `theme.mention` per scheme, falling back to `theme.link`; `components.Mention` slot (may be an inlineView). Press: `onMentionPress({ scheme, id, url, label })`, falling back to `onLinkPress` with the raw URL when unset.
-- **Why:** reuses link parsing and streaming; degrades to a normal link in other renderers.
+- **Decision:** following [enriched-markdown](https://docs.swmansion.com/enriched-markdown/rich-text-formatting/mentions), a mention is an ordinary link with a custom scheme, `[@Alice](user://alice)`. `mentions({ schemes: ['user', 'channel'] })` converts matching `[text](scheme://rest)` links (scheme case-insensitive) to an inline `Mention` node `{ scheme, id, label, url }`; `label` is the flattened link text, `id` the percent-decoded part after `scheme://`; `user:alice`, autolinks, bare URLs and links whose label is empty or contains an image are not converted (they stay links, so an image still renders); the id keeps any `?query#hash`. There is no bare `@handle` parsing, so email, code and trailing-punctuation boundaries and a streaming raw-then-jump flicker do not arise. Style: one `Mention` theme element falling back to `Link`; per-scheme styling is left to `components.Mention` (which receives `scheme`) and later to P3-28 `linkVariants`; `components.Mention` slot (may be an inlineView); a replacement component presses through `useMentionPress()` (exported from `/mentions`), the same path as the default, because it receives no handler prop. Press: `onMentionPress({ scheme, id, url, label })`, returns void; when set it replaces (does not chain to) `onLinkPress`, which gets the raw URL when it is unset.
+- **Why:** reuses link parsing and streaming; degrades to a normal link in other renderers. Link variants alone (enriched-markdown's only mechanism) were rejected: no node, no component slot, no typed press ([P3-28](#p3-28-themelinkvariants-styles-links-by-scheme-in-core)).
 - Design: [plugins.md](./plugins.md#mentions).
 
 ## P3-25: Admonitions are GitHub alerts, an opt-in non-GFM plugin
@@ -261,3 +261,11 @@ Accepted · 2026-11-19
 - **Decision:** per plugin, parse-level fixtures plus one render test; the CommonMark/GFM spec runner is untouched. Emoji: `10:30:00`, `http://`, unknown names, user resolver. Mentions: scheme match, non-matching scheme stays a link, code spans, email text. Admonitions: five kinds, nested content, plain-blockquote fallback, under the `'commonmark'` preset. Device checks follow the other Phase 3 items.
 - **Why:** plugin syntax is outside the vendored spec files, which must not be edited by hand.
 - Design: [plugins.md](./plugins.md#packaging).
+
+## P3-28: `theme.linkVariants` styles links by scheme, in core
+
+Proposed · 2026-11-19
+
+- **Decision:** a core theme token `linkVariants`, a map from URL scheme (`mailto`, `tel`, `user`) to a link style, falling back to the `Link` element style; the key type (scheme map vs also a `(url) => style` function) is open until review. Style only: no node, no new press API. Mentions ([P3-24](#p3-24-mentions-are-scheme-links-converted-to-a-mention-node)) do not depend on it and ship first; later the chain is the `Mention` element, then `linkVariants[scheme]`, then `Link`.
+- **Why:** it also styles `mailto:`, `tel:` and deep links, which no plugin covers, and it is cheap. enriched-markdown keys by regex, where first match wins and order matters; a scheme map is deterministic.
+- Needs a public-types check (`check:public-types`). Issue: #65.

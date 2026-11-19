@@ -25,6 +25,14 @@ export type ScriptFallback = 'smaller' | 'raised';
 export interface LinkPressInfo {
   readonly title: string | null;
 }
+/** What `onMentionPress` receives: a mention link `[label](scheme://id)`. */
+export interface MentionPressInfo {
+  readonly scheme: string;
+  readonly id: string;
+  /** The raw link destination. */
+  readonly url: string;
+  readonly label: string;
+}
 export interface ImagePressInfo {
   readonly alt: string;
   readonly title: string | null;
@@ -106,6 +114,11 @@ export interface RenderHandlers {
   /** Return `false` to cancel the default handling. */
   readonly onLinkPress?: (href: string, info: LinkPressInfo) => boolean | void;
   readonly onImagePress?: (src: string, info: ImagePressInfo) => void;
+  /**
+   * A press on a mention. When set it handles the press alone; when absent
+   * the press goes through `onLinkPress` with the raw url.
+   */
+  readonly onMentionPress?: (info: MentionPressInfo) => void;
   /** Called after a task checkbox is toggled by a tap (P3-16). */
   readonly onTaskToggle?: (info: TaskToggleInfo) => void;
   /**

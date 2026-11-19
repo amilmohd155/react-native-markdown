@@ -35,6 +35,7 @@ export {
   type FootnotePressInfo,
   type ImagePressInfo,
   type LinkPressInfo,
+  type MentionPressInfo,
   type RenderHandlers,
   type ScriptFallback,
   type SoftBreak,

@@ -3,7 +3,8 @@
     "rootDir": ".",
     "paths": {
       "@docren/react-native-markdown": ["./src/index"],
-      "@docren/react-native-markdown/emoji": ["./src/emoji/index"]
+      "@docren/react-native-markdown/emoji": ["./src/emoji/index"],
+      "@docren/react-native-markdown/mentions": ["./src/mentions/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
