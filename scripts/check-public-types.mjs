@@ -12,9 +12,16 @@
 // `NodeTable`). File reachability would flag harmless imports and miss
 // inferred types; type reachability flags exactly what a consumer can touch.
 //
+// Without an entry argument it checks the `types` file of every `exports`
+// subpath of package.json (except ./package.json), one run per entry, and fails
+// if any run fails (P3-22).
+//
 // Usage: yarn prepare && node scripts/check-public-types.mjs [--list] [entry.d.ts]
 //   --list   print every reachable named type, grouped by location.
+//   entry.d.ts   check only that declaration file.
 
+import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
@@ -22,10 +29,28 @@ import ts from 'typescript';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 const list = args.includes('--list');
-const entry = resolve(
-  root,
-  args.find((a) => !a.startsWith('--')) ?? 'lib/typescript/src/index.d.ts'
-);
+const entryArg = args.find((a) => !a.startsWith('--'));
+
+if (!entryArg) {
+  const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
+  let failed = false;
+  for (const [subpath, target] of Object.entries(pkg.exports ?? {})) {
+    if (subpath === './package.json') continue;
+    if (typeof target?.types !== 'string') {
+      console.error(`exports["${subpath}"] has no "types" field.`);
+      process.exit(1);
+    }
+    const run = spawnSync(
+      process.execPath,
+      [fileURLToPath(import.meta.url), ...args, target.types],
+      { stdio: 'inherit', cwd: root }
+    );
+    if (run.status !== 0) failed = true;
+  }
+  process.exit(failed ? 1 : 0);
+}
+
+const entry = resolve(root, entryArg);
 
 // -- Rules --------------------------------------------------------------------
 //

@@ -1,14 +1,16 @@
 #!/usr/bin/env node
-// Decision D2: the default package must run in Expo Go, so the main entry
-// point's import graph must not reach native code.
+// Decision D2 (extended to plugin entries by P3-22): the package must run in
+// Expo Go, so the import graph of every entry point must not reach native code.
 //
-// Walks every module reachable from src/index.tsx through relative imports,
+// Checks the `source` file of every `exports` subpath of package.json
+// (except ./package.json). For each, walks every module reachable through
+// relative imports,
 // then fails if:
 //   - a source file references a native-module API, or
 //   - a third-party package it imports ships native code (android/ or ios/
 //     directories, a podspec, or a codegen config).
 //
-// Usage: node scripts/check-no-native.mjs [entry]
+// Usage: node scripts/check-no-native.mjs [entry]   (entry: check only that file)
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -16,7 +18,27 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const entry = resolve(root, process.argv[2] ?? 'src/index.tsx');
+
+/** Source files of every `exports` subpath, or the one given on the command line. */
+function entries() {
+  if (process.argv[2]) return [resolve(root, process.argv[2])];
+  const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+  const out = [];
+  for (const [subpath, target] of Object.entries(pkg.exports ?? {})) {
+    if (subpath === './package.json') continue;
+    if (typeof target?.source !== 'string') {
+      console.error(`exports["${subpath}"] has no "source" field.`);
+      process.exit(1);
+    }
+    const file = resolve(root, target.source);
+    if (!existsSync(file)) {
+      console.error(`exports["${subpath}"].source ${target.source} does not exist.`);
+      process.exit(1);
+    }
+    out.push(file);
+  }
+  return out;
+}
 
 const NATIVE_APIS =
   /\b(TurboModuleRegistry|requireNativeComponent|codegenNativeComponent|NativeModules)\b|react-native-nitro-modules/;
@@ -138,30 +160,37 @@ function shipsNativeCode(name, importer, seen = new Set(), chain = [name]) {
   return false;
 }
 
-walk(entry);
-const checked = new Set();
-for (const [name, importer] of packages) {
-  const found = shipsNativeCode(name, importer, checked);
-  if (found) {
-    const [reason, chain] = found;
-    problems.push(
-      `${relative(root, importer)}: imports "${name}", ${
-        chain.length > 1
-          ? `which depends on ${chain.slice(1).join(' → ')}: `
-          : ''
-      }${reason}`
+let failed = false;
+for (const entry of entries()) {
+  problems.length = 0;
+  visited.clear();
+  packages.clear();
+  walk(entry);
+  const checked = new Set();
+  for (const [name, importer] of packages) {
+    const found = shipsNativeCode(name, importer, checked);
+    if (found) {
+      const [reason, chain] = found;
+      problems.push(
+        `${relative(root, importer)}: imports "${name}", ${
+          chain.length > 1
+            ? `which depends on ${chain.slice(1).join(' → ')}: `
+            : ''
+        }${reason}`
+      );
+    }
+  }
+
+  console.log(
+    `Checked ${visited.size} modules and ${packages.size} third-party packages (and their dependencies) reachable from ${relative(root, entry)}.`
+  );
+  if (problems.length) {
+    failed = true;
+    console.error(
+      `Native code is reachable from ${relative(root, entry)} (breaks Expo Go, decision D2):`
     );
+    for (const p of problems) console.error(`  - ${p}`);
   }
 }
-
-console.log(
-  `Checked ${visited.size} modules and ${packages.size} third-party packages (and their dependencies) reachable from ${relative(root, entry)}.`
-);
-if (problems.length) {
-  console.error(
-    'Native code is reachable from the main entry point (breaks Expo Go, decision D2):'
-  );
-  for (const p of problems) console.error(`  - ${p}`);
-  process.exit(1);
-}
+if (failed) process.exit(1);
 console.log('OK: no native code reachable (Expo Go safe).');

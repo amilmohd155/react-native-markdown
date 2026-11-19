@@ -18,12 +18,16 @@ const shared = {
 // The package name resolves to the sources, so tests and perf import it as a
 // user would.
 const library = '<rootDir>/src/index.tsx';
+const emoji = '<rootDir>/src/emoji/index.ts';
 
 // Projects that run React Native code through its own preset.
 const reactNative = {
   ...shared,
   preset: '@react-native/jest-preset',
-  moduleNameMapper: { '^@docren/react-native-markdown$': library },
+  moduleNameMapper: {
+    '^@docren/react-native-markdown$': library,
+    '^@docren/react-native-markdown/emoji$': emoji,
+  },
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?)/)',
   ],
@@ -46,6 +50,7 @@ module.exports = {
       testMatch: ['<rootDir>/src/**/__tests__/**/*.web.test.[jt]s?(x)'],
       moduleNameMapper: {
         '^@docren/react-native-markdown$': library,
+        '^@docren/react-native-markdown/emoji$': emoji,
         '^react-native$': 'react-native-web',
       },
       transform: { '^.+\\.[jt]sx?$': 'babel-jest' },

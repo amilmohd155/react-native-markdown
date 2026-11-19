@@ -1,6 +1,6 @@
 # Phase 3 · Official plugins
 
-Emoji, mentions and admonitions as official plugins; math is deferred. Design only, not built. Decisions: [P3-21 to P3-27](./decisions.md). Reference: [04 · Plugins](../04-api.md#plugins).
+Emoji, mentions and admonitions as official plugins; math is deferred. Emoji is built; the others are design only. Decisions: [P3-21 to P3-27](./decisions.md). Reference: [04 · Plugins](../04-api.md#plugins).
 
 ## Packaging
 
@@ -21,7 +21,7 @@ import nodeEmoji from 'node-emoji';
 <Markdown plugins={[emoji({ resolve: (n) => nodeEmoji.get(n) })]} />
 ```
 
-`emoji({ resolve?, map?, defaults? })`: the user `resolve` runs first, then `map`, then the built-in table of about 50 common names (`defaults: false` drops it). An unknown name stays as literal text. The resolver must be sync and pure: it is not part of the parse-context string, so a changed resolver does not invalidate a cached parse.
+`emoji({ resolve?, map?, defaults? })`: the user `resolve` runs first, then `map`, then the built-in table of about 50 common names (`defaults: false` drops it). An unknown name stays as literal text, as do code spans, escapes and autolinked URLs: the rule runs after core `linkify` (so URLs are already link tokens) and before `text_join`. The resolver must be sync and pure: it is not part of the parse-context string, so a changed resolver does not invalidate a cached parse.
 
 ## Mentions
 
