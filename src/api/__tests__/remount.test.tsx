@@ -140,7 +140,7 @@ it('remounts a table and an image from the caches, with no second pass', async (
   expect(tableCells(tree).every((c) => c.props.onLayout === undefined)).toBe(
     true
   );
-  expect(JSON.stringify(tree.toJSON())).not.toContain('"opacity":0');
+  expect(JSON.stringify(tree.toJSON())).not.toMatch(/"opacity":0(?![.\d])/);
   const image = flat(imageHost(tree)[0]!);
   expect(image).toMatchObject({ aspectRatio: 2 });
   expect(image).not.toHaveProperty('backgroundColor'); // no placeholder

@@ -88,8 +88,8 @@ describe('task lists', () => {
     fireEvent.click(first!);
     fireEvent.click(second!);
     expect(onTaskToggle.mock.calls).toEqual([
-      [true, { index: 0 }],
-      [false, { index: 1 }],
+      [{ index: 0, checked: true, text: 'a' }],
+      [{ index: 1, checked: false, text: 'b' }],
     ]);
   });
 });

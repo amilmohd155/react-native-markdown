@@ -25,6 +25,8 @@ exports[`BlockList renders every block through the component map 1`] = `
       index={0}
       marker="•"
       ordered={false}
+      taskIndex={null}
+      text={null}
     >
       <Paragraph>
         a
@@ -35,6 +37,8 @@ exports[`BlockList renders every block through the component map 1`] = `
       index={1}
       marker="•"
       ordered={false}
+      taskIndex={null}
+      text={null}
     >
       <Paragraph>
         b

@@ -13,14 +13,18 @@ import {
 import type { ElementStyle } from '../../theme';
 import {
   InheritedTextContext,
+  ListGapContext,
   ListMarkerContext,
+  TextResetContext,
   TableKeyContext,
   TableLayoutContext,
   useRenderContext,
   type TableLayout,
 } from '../contexts';
+import { checkboxHitSlop } from '../checkbox';
 import type { ElementProps } from '../elements';
 import { useImageSize } from '../imageSize';
+import { useTaskState } from '../useTaskState';
 import { useFootnoteFlash } from '../useFootnoteFlash';
 import {
   cachedColumnWidths,
@@ -63,9 +67,13 @@ export function Paragraph({ style, children }: ElementProps<'Paragraph'>) {
 export function Blockquote({ style, children }: ElementProps<'Blockquote'>) {
   return (
     <View style={style.container}>
-      <InheritedTextContext.Provider value={style.text}>
-        {children}
-      </InheritedTextContext.Provider>
+      {/* Replaces the inherited text style, so a checked item's reset (for
+          sub-lists) no longer applies: a list in here keeps this style. */}
+      <TextResetContext.Provider value={undefined}>
+        <InheritedTextContext.Provider value={style.text}>
+          {children}
+        </InheritedTextContext.Provider>
+      </TextResetContext.Provider>
     </View>
   );
 }
@@ -82,15 +90,18 @@ const UNCHECKED = '☐\uFE0E';
 const MARKER_GAP = 6;
 
 export function ListItem({
-  index,
   ordered,
   marker,
   checked,
+  taskIndex,
+  text,
   style,
   children,
 }: ElementProps<'ListItem'>) {
-  const { theme, handlers, options } = useRenderContext();
+  const { theme } = useRenderContext();
+  const task = useTaskState(taskIndex, checked, text);
   const markerChars = useContext(ListMarkerContext);
+  const gap = useContext(ListGapContext);
   const inherited = useContext(InheritedTextContext);
 
   // Same width for every item of the list, from its longest marker, so
@@ -99,6 +110,18 @@ export function ListItem({
   const width = Math.max(
     spacing.listIndent,
     Math.ceil(markerChars * fontSize.base * 0.6) + MARKER_GAP
+  );
+
+  const { checkbox } = theme.tokens;
+  const shown = task.checked;
+
+  // A checked item's own text, never its sub-lists' (`InheritedTextReset`).
+  const checkedText = useMemo(
+    () =>
+      shown && checkbox.checkedText !== false
+        ? { ...inherited, ...checkbox.checkedText }
+        : null,
+    [shown, checkbox.checkedText, inherited]
   );
 
   let markerNode;
@@ -112,26 +135,55 @@ export function ListItem({
       </Text>
     );
   } else {
-    const toggle = options.interactiveTasks
-      ? () => handlers.current.onTaskToggle?.(!checked, { index })
-      : undefined;
+    // The glyph is the visual; the Pressable is the touch target. Its
+    // box is the glyph by one line, so `hitSlop` tops it up (44pt wide,
+    // as tall as the gap to the next item allows: see `checkboxHitSlop`)
+    // without moving the first-line alignment with the item text.
+    const glyphSize = checkbox.size ?? style.text.fontSize ?? fontSize.base;
+    const lineHeight =
+      style.text.lineHeight ?? glyphSize * theme.tokens.lineHeight;
+    const color = shown
+      ? (checkbox.checkedColor ?? checkbox.color)
+      : checkbox.color;
     markerNode = (
-      <Text
-        style={[style.text, inherited]}
+      <Pressable
+        style={styles.checkbox}
         accessibilityRole="checkbox"
-        accessibilityState={{ checked, disabled: toggle === undefined }}
-        onPress={toggle}
-        suppressHighlighting
+        accessibilityLabel={text ? text : undefined}
+        accessibilityState={{ checked: shown, disabled: !task.interactive }}
+        disabled={!task.interactive}
+        onPress={task.interactive ? task.toggle : undefined}
+        hitSlop={checkboxHitSlop(glyphSize, lineHeight, gap, width)}
       >
-        {checked ? CHECKED : UNCHECKED}
-      </Text>
+        <Text
+          style={[
+            style.text,
+            inherited,
+            checkbox.size !== undefined && { fontSize: checkbox.size },
+            color !== undefined && { color },
+          ]}
+          accessible={false}
+        >
+          {shown ? CHECKED : UNCHECKED}
+        </Text>
+      </Pressable>
     );
   }
 
   return (
     <View style={style.container}>
       <View style={[styles.markerColumn, { width }]}>{markerNode}</View>
-      <View style={styles.content}>{children}</View>
+      <View style={styles.content}>
+        {checkedText === null ? (
+          children
+        ) : (
+          <TextResetContext.Provider value={inherited}>
+            <InheritedTextContext.Provider value={checkedText}>
+              {children}
+            </InheritedTextContext.Provider>
+          </TextResetContext.Provider>
+        )}
+      </View>
     </View>
   );
 }
@@ -392,6 +444,7 @@ export function FootnoteDefinition({
 const styles = StyleSheet.create({
   markerColumn: { paddingRight: MARKER_GAP },
   markerOrdered: { textAlign: 'right' },
+  checkbox: { alignSelf: 'flex-start' },
   content: { flex: 1, minWidth: 0 },
   imageFrame: { width: '100%' },
   blockImage: { width: '100%' },

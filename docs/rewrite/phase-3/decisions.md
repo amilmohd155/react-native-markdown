@@ -158,3 +158,49 @@ Accepted · 2026-11-18
 - **Own list:** `offset` is `undefined` at the press when the section is not mounted yet, so `useMarkdownBlocks` calls `onFootnoteScrollTo` again with `{ offset }` once it is measured (5 s at most; a new press cancels). The app's callback must be safe to run twice. The default `View` has no re-call. Seen working on a device (Android, FlatList); 2 s was too short there.
 - **Open (device):** Android is checked: FlatList (`virtualize` and the hook), and a `scroll` stream after `done()` (links turn on, the first flash on a definition and a reference works). Not yet: iOS, FlashList and LegendList (they may need the app's retry, as in [P3-14](#p3-14-usemarkdownblocks-takes-onfootnotescrollto-for-the-apps-own-list)), the screen-reader focus move, and the flash on a `virtualize` stream.
 - Design: [footnotes.md](./footnotes.md#design). Builds on [P3-8](#p3-8-built-in-footnote-jump-in-the-owned-containers) to [P3-14](#p3-14-usemarkdownblocks-takes-onfootnotescrollto-for-the-apps-own-list).
+
+## P3-16: Library-owned task toggle with an `{ index, checked, text }` payload
+
+Accepted · 2026-11-19
+
+- **Decision:** the library owns the toggle and the strikethrough. The app gets `onTaskToggle({ index, checked, text })`, replacing `(checked, { index })` (`src/api/pipeline.ts`, `TaskToggleInfo` in `src/render/context.ts`). `text` is the item's own content as plain text with inline formatting flattened and nested sub-lists excluded.
+- **Why:** enriched-markdown shows that library-owned is simpler for apps: no source edit just to see the box flip. The object payload also leaves room to grow. This replaces the earlier uncontrolled, handler-only choice. Breaking, accepted before 1.0 on `v1`.
+- **Built:** the item also gets `taskIndex` and `text` slot props; the per-list `index` is unchanged.
+- Design: [task-toggling.md](./task-toggling.md#design).
+
+## P3-17: Global task index from lazy per-block prefix sums
+
+Accepted · 2026-11-19
+
+- **Decision:** `index` is global, 0-based, in document order (depth-first inside a block). `buildItems` (`src/render/blockItems.tsx`) derives it lazily from per-block task counts as prefix sums.
+- **Why:** an app maps `index` to its own source, and a per-list index is ambiguous across lists. Putting it in `blockContext` would make `isSameBlock` invalidate every later block when a task is added above. Doing it at convert or splice time adds parse cost for a render-only need.
+- **Built:** the global index also covers blockquote and footnote definition bodies; `scroll` and `virtualize` pass each block's base from `blockTaskCount`.
+- Design: [task-toggling.md](./task-toggling.md#design).
+
+## P3-18: Interactive by default with `enableTaskListItemToggle`, inert while streaming
+
+Accepted · 2026-11-19
+
+- **Decision:** boxes toggle by default. `enableTaskListItemToggle` (boolean, default `true`) on `<Markdown>` and `useMarkdownBlocks`; `false` means read-only, no callback, no visual toggle. While a stream runs the boxes are inert (`accessibilityState.disabled`) until the end signal.
+- **Why:** library-owned state ([P3-16](#p3-16-library-owned-task-toggle-with-an-index-checked-text-payload)) makes interactive the useful default, and an opt-out keeps display-only uses simple. Mid-stream the item set and indexes still move, so a toggle could hit the wrong task; enriched-markdown resets toggles on the next update, disabling is cleaner.
+- **Built:** `useMarkdownBlocks` takes the same option and is inert until `done()`.
+- Design: [task-toggling.md](./task-toggling.md#design).
+
+## P3-19: Per-`<Markdown>` override store keyed by global index
+
+Accepted · 2026-11-19
+
+- **Decision:** a map `index -> checked` in the render context. It is cleared on any source change: the `source` string for `<Markdown>`; the stream's `prefixId` for streams and `useMarkdownBlocks` (not `document` identity, which changes every flush).
+- **Why:** state in the row would be lost when a virtualized row unmounts. Keying by the global index ([P3-17](#p3-17-global-task-index-from-lazy-per-block-prefix-sums)) needs no per-item id. Resetting on source change means an app that persists by editing its source gets the new truth, not stale overrides.
+- **Built:** the reset key is `source`, else the stream's `prefixId`, else the document's text (a re-parse of the same text keeps the overrides). `done()` and `reset()` give a new `prefixId`, but no override can exist while inert. Preset and plugin changes do not reset.
+- Design: [task-toggling.md](./task-toggling.md#design).
+
+## P3-20: Built-in checked style, `theme.checkbox`, and a touch target and label
+
+Accepted · 2026-11-19
+
+- **Decision:** checked items get line-through and a dim, the same for items checked in the source and by tap. `theme.checkbox` takes `color`, `checkedColor`, `size` and a checked-text style (override or disable). The checkbox has a touch target of at least 44pt (or `hitSlop`) and an `accessibilityLabel` from the item text, overridable through the `ListItem` slot.
+- **Why:** a toggle with no visible result is unfinished, and today the box has no label and a tiny target. The rest of the accessibility pass, including #20, stays its own item.
+- **Deferred:** no `toggleTask(source, info)` helper and no controlled `checked` or `initialChecked` prop; persistence is the app's job.
+- **Built:** the touch target is a `hitSlop`: measured box 10.7 x 19.6dp (Android, 420dpi), so the slop is asymmetric, right = floor(marker column - glyph) = 9dp (the item content, a later sibling, covers the rest) and left = 25dp into the gutter, total width at least 44 and vertical `min(ceil((44 - h) / 2), floor(gap / 2))` with `gap` the space between items (0 tight, 12 loose by default). 44pt tall is not reachable in a tight list without overlapping the next row. `checkedText` merges onto line-through and dim, or `false` turns it off. A nested List resets the inherited checked text style. Inside a checked item a Link's underline replaces the line-through. A custom `ListItem` gets the displayed state and a toggle from the `useTaskState` hook (props stay plain values, `checked` stays the source value).
+- Design: [task-toggling.md](./task-toggling.md#design).

@@ -6,6 +6,7 @@ import type { FadePlan } from './fade';
 import { imageAllowed } from './imagePolicy';
 import { pluginNodeOf } from './pluginNodes';
 import { blockImageOf, imageProps } from './props';
+import { blockTaskCount } from './tasks';
 
 /**
  * One top-level block as a list item: the table and render context it
@@ -28,13 +29,20 @@ export interface BlockItem {
    * not for a stream's whole life, so the rendered type never flips.
    */
   readonly fade: FadePlan | null;
+  /**
+   * Task items in the blocks before this one (P3-17): the prefix sum of the
+   * per-block counts, so a task's global index is this plus its offset
+   * inside the block.
+   */
+  readonly taskBase: number;
 }
 
 function createItem(
   table: NodeTable,
   ctx: RenderCtx,
   fade: FadePlan | null,
-  index: number
+  index: number,
+  taskBase: number
 ) {
   const item: BlockItem = Object.freeze({
     index,
@@ -42,6 +50,7 @@ function createItem(
     table,
     ctx,
     fade,
+    taskBase,
   });
   return item;
 }
@@ -61,8 +70,13 @@ interface ItemsState {
  * re-parse or a `ctx` change); `Block`'s memo still skips the unchanged ones
  * among those.
  *
+ * `taskBase` (P3-17) is a prefix sum of per-block task counts. A reused
+ * item keeps its base: the stable prefix is identical in both tables, so
+ * the blocks before it, and their counts, cannot have changed. Only the
+ * tail is counted; the last block's own count is never needed.
+ *
  * Cost per streaming flush: one array of `blockCount` pointers plus one item
- * per changed block. No source text is compared here.
+ * and one task count per changed block. No source text is compared here.
  */
 function buildItems(
   prev: ItemsState | null,
@@ -88,8 +102,15 @@ function buildItems(
   }
   const items = new Array<BlockItem>(count);
   for (let i = 0; i < reused; i++) items[i] = prev!.items[i]!;
-  for (let i = reused; i < count; i++)
-    items[i] = createItem(table, ctx, fade, i);
+  // The base after the reused prefix: its last block's base plus its count.
+  let base =
+    reused === 0
+      ? 0
+      : items[reused - 1]!.taskBase + blockTaskCount(table, reused - 1);
+  for (let i = reused; i < count; i++) {
+    items[i] = createItem(table, ctx, fade, i, base);
+    if (i + 1 < count) base += blockTaskCount(table, i);
+  }
   return Object.freeze(items);
 }
 
@@ -136,7 +157,14 @@ export function renderBlockItem({
 }): ReactElement {
   return (
     <BlockProviders ctx={item.ctx}>
-      {blockElement(undefined, item.table, item.index, item.ctx, item.fade)}
+      {blockElement(
+        undefined,
+        item.table,
+        item.index,
+        item.ctx,
+        item.fade,
+        item.taskBase
+      )}
     </BlockProviders>
   );
 }

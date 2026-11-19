@@ -34,7 +34,7 @@ function depthOf(table: NodeTable, item: number): number {
 function markers(source: string): string[] {
   const table = tableFor(source);
   return nodesOfType(table, NodeType.ListItem).map(
-    (id) => listItemProps(table, id, depthOf(table, id), bullets).marker
+    (id) => listItemProps(table, id, depthOf(table, id), bullets, 0).marker
   );
 }
 
@@ -74,12 +74,33 @@ describe('element props', () => {
     const table = tableFor('- [x] done\n- [ ] todo\n- plain\n');
     expect(
       nodesOfType(table, NodeType.ListItem).map((id) =>
-        listItemProps(table, id, 0, bullets)
+        listItemProps(table, id, 0, bullets, 0)
       )
     ).toEqual([
-      { index: 0, ordered: false, marker: '•', checked: true },
-      { index: 1, ordered: false, marker: '•', checked: false },
-      { index: 2, ordered: false, marker: '•', checked: null },
+      {
+        index: 0,
+        ordered: false,
+        marker: '•',
+        checked: true,
+        taskIndex: 0,
+        text: 'done',
+      },
+      {
+        index: 1,
+        ordered: false,
+        marker: '•',
+        checked: false,
+        taskIndex: 0,
+        text: 'todo',
+      },
+      {
+        index: 2,
+        ordered: false,
+        marker: '•',
+        checked: null,
+        taskIndex: null,
+        text: null,
+      },
     ]);
   });
 
@@ -226,7 +247,7 @@ describe('props contract', () => {
     const builders: [number, (id: number) => object][] = [
       [NodeType.Heading, (id) => headingProps(table, id)],
       [NodeType.List, (id) => listProps(table, id)],
-      [NodeType.ListItem, (id) => listItemProps(table, id, 0, bullets)],
+      [NodeType.ListItem, (id) => listItemProps(table, id, 0, bullets, 0)],
       [NodeType.CodeBlock, (id) => codeBlockProps(table, id)],
       [NodeType.Table, (id) => tableProps(table, id)],
       [NodeType.TableRow, (id) => tableRowProps(table, id)],

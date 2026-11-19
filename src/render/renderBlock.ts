@@ -4,6 +4,8 @@ import { NodeType, NONE, type NodeTable } from '../model';
 import type { RenderCtx } from './context';
 import {
   InheritedTextContext,
+  InheritedTextReset,
+  ListGapContext,
   ListMarkerContext,
   TableKeyContext,
 } from './contexts';
@@ -46,6 +48,11 @@ interface Place {
   readonly block: number;
   /** Node id of that block. */
   readonly root: number;
+  /**
+   * The global index of the next task item (P3-17): the block's `taskBase`,
+   * advanced in document order as items render.
+   */
+  readonly tasks: { next: number };
 }
 
 /**
@@ -165,25 +172,48 @@ function renderNode(
       const markerChars = props.ordered
         ? String(props.start + items.length - 1).length + 1
         : 1;
-      return element(
+      const list = element(
         ctx,
         'List',
         id,
         props,
         place.depth > 0 ? theme.nestedList : elements.List,
-        createElement(ListMarkerContext.Provider, { value: markerChars }, items)
+        createElement(
+          ListGapContext.Provider,
+          { value: props.tight ? 0 : theme.tokens.spacing.block },
+          createElement(
+            ListMarkerContext.Provider,
+            { value: markerChars },
+            items
+          )
+        )
       );
+      // A sub-list's tasks are their own: a checked parent's text style
+      // stops here.
+      return place.depth > 0
+        ? createElement(InheritedTextReset, { key: id, children: list })
+        : list;
     }
 
-    case NodeType.ListItem:
+    case NodeType.ListItem: {
+      // Before its children: an item's index precedes its sub-tasks'.
+      const props = listItemProps(
+        table,
+        id,
+        place.depth,
+        theme.tokens.listBullets,
+        place.tasks.next
+      );
+      if (props.taskIndex !== null) place.tasks.next++;
       return element(
         ctx,
         'ListItem',
         id,
-        listItemProps(table, id, place.depth, theme.tokens.listBullets),
+        props,
         elements.ListItem,
         renderChildren(table, id, ctx, { ...place, depth: place.depth + 1 })
       );
+    }
 
     case NodeType.CodeBlock:
       return element(
@@ -315,11 +345,15 @@ function renderNode(
   }
 }
 
-/** Renders top-level block `index` through the components in `ctx`. */
+/**
+ * Renders top-level block `index` through the components in `ctx`.
+ * `taskBase` is the number of task items in the blocks before it (P3-17).
+ */
 export function renderBlock(
   table: NodeTable,
   index: number,
-  ctx: RenderCtx
+  ctx: RenderCtx,
+  taskBase: number
 ): ReactNode {
   const root = table.blocks[index]!;
   return renderNode(table, root, ctx, {
@@ -327,5 +361,6 @@ export function renderBlock(
     tight: false,
     block: index,
     root,
+    tasks: { next: taskBase },
   });
 }

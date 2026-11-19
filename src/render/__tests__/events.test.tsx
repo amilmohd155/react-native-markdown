@@ -119,8 +119,8 @@ describe('onTaskToggle', () => {
     await press(boxes[0]!);
     await press(boxes[1]!);
     expect(onTaskToggle.mock.calls).toEqual([
-      [true, { index: 0 }],
-      [false, { index: 1 }],
+      [{ index: 0, checked: true, text: 'a' }],
+      [{ index: 1, checked: false, text: 'b' }],
     ]);
   });
 });
@@ -203,10 +203,10 @@ describe('handlers stay behind the ref', () => {
 });
 
 describe('interactive options', () => {
-  it('flip with the presence of each handler only', () => {
+  it('flip with the presence of each handler only (tasks are interactive by default)', () => {
     const none = createRenderCtx({ components: defaultComponents });
     expect(none.options).toMatchObject({
-      interactiveTasks: false,
+      interactiveTasks: true,
       interactiveImages: false,
       interactiveFootnotes: false,
     });

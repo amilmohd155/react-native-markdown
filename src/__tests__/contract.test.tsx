@@ -137,10 +137,7 @@ describe('<Markdown> props', () => {
       >
     >(true);
     expectType<
-      Equal<
-        NonNullable<Props['onTaskToggle']>,
-        (checked: boolean, info: TaskToggleInfo) => void
-      >
+      Equal<NonNullable<Props['onTaskToggle']>, (info: TaskToggleInfo) => void>
     >(true);
     expectType<
       Equal<

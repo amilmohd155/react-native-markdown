@@ -6,25 +6,36 @@ import type { RenderCtx } from './context';
 import { RenderCtxContext } from './contexts';
 import { FadeIn, fadeOnMount, type FadePlan } from './fade';
 import { renderBlock } from './renderBlock';
+import { blockTaskCount } from './tasks';
 
 export interface BlockProps {
   readonly table: NodeTable;
   /** Position in the table's block index (not a node id). */
   readonly index: number;
   readonly ctx: RenderCtx;
+  /**
+   * Task items in the blocks before this one (P3-17). A real prop, compared
+   * by the memo: `isSameBlock` only sees this block's own content, so a task
+   * inserted above must still re-render the tasks below it.
+   */
+  readonly taskBase: number;
 }
 
-function BlockImpl({ table, index, ctx }: BlockProps) {
-  return renderBlock(table, index, ctx);
+function BlockImpl({ table, index, ctx, taskBase }: BlockProps) {
+  return renderBlock(table, index, ctx, taskBase);
 }
 
 /**
  * Whether a block can skip re-rendering (P1-9): same render context, and
  * the block renders identically in both tables (document context, block
- * context, source text).
+ * context, source text), and the same task base.
  */
 export function blockPropsEqual(a: BlockProps, b: BlockProps): boolean {
-  return a.ctx === b.ctx && isSameBlock(a.table, a.index, b.table, b.index);
+  return (
+    a.ctx === b.ctx &&
+    a.taskBase === b.taskBase &&
+    isSameBlock(a.table, a.index, b.table, b.index)
+  );
 }
 
 /**
@@ -40,10 +51,16 @@ interface FadingBlockProps extends BlockProps {
   readonly fade: FadePlan;
 }
 
-function FadingBlockImpl({ table, index, ctx, fade }: FadingBlockProps) {
+function FadingBlockImpl({
+  table,
+  index,
+  ctx,
+  taskBase,
+  fade,
+}: FadingBlockProps) {
   // Decided once, at mount: a later plan never re-renders or unwraps it.
   const [duration] = useState(() => fadeOnMount(fade, index));
-  const block = renderBlock(table, index, ctx);
+  const block = renderBlock(table, index, ctx, taskBase);
   return duration > 0 ? <FadeIn duration={duration}>{block}</FadeIn> : block;
 }
 
@@ -64,12 +81,26 @@ export function blockElement(
   table: NodeTable,
   index: number,
   ctx: RenderCtx,
-  fade: FadePlan | null
+  fade: FadePlan | null,
+  taskBase: number
 ): ReactElement {
   return fade === null ? (
-    <Block key={key} table={table} index={index} ctx={ctx} />
+    <Block
+      key={key}
+      table={table}
+      index={index}
+      ctx={ctx}
+      taskBase={taskBase}
+    />
   ) : (
-    <FadingBlock key={key} table={table} index={index} ctx={ctx} fade={fade} />
+    <FadingBlock
+      key={key}
+      table={table}
+      index={index}
+      ctx={ctx}
+      taskBase={taskBase}
+      fade={fade}
+    />
   );
 }
 
@@ -104,8 +135,10 @@ export function blockElements(
   fade: FadePlan | null
 ): ReactNode[] {
   const blocks = new Array<ReactNode>(table.blockCount);
+  let taskBase = 0;
   for (let i = 0; i < table.blockCount; i++) {
-    blocks[i] = blockElement(blockKey(i), table, i, ctx, fade);
+    blocks[i] = blockElement(blockKey(i), table, i, ctx, fade, taskBase);
+    if (i + 1 < table.blockCount) taskBase += blockTaskCount(table, i);
   }
   return blocks;
 }

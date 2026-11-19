@@ -107,6 +107,19 @@ export interface ThemeTokens {
    * windowed list.
    */
   readonly imageRatio: number;
+  /**
+   * The task-list checkbox (P3-20). `color`, `checkedColor` and `size` style
+   * the marker glyph; unset, it inherits the item's text color and font
+   * size. `checkedText` is the style of a checked item's own text (never its
+   * sub-items'): an object merged onto the default (line-through, dimmed),
+   * or `false` for none.
+   */
+  readonly checkbox: {
+    readonly color?: string;
+    readonly checkedColor?: string;
+    readonly size?: number;
+    readonly checkedText: TextStyle | false;
+  };
 }
 
 /**
@@ -209,6 +222,7 @@ export interface ThemeInput {
   readonly radius?: Partial<ThemeTokens['radius']>;
   readonly listBullets?: readonly string[];
   readonly imageRatio?: number;
+  readonly checkbox?: Partial<ThemeTokens['checkbox']>;
   readonly elements?: ElementOverrides;
 }
 

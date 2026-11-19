@@ -76,6 +76,7 @@ describe('parse', () => {
       'useMarkdownBlocks',
       'useMarkdownStream',
       'useMarkdownTheme',
+      'useTaskState',
       'visit',
     ]);
   });

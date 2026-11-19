@@ -12,6 +12,7 @@ import {
 } from '../model';
 import type { ElementName } from '../theme';
 import type { ElementPropsMap } from './elements';
+import { taskText } from './tasks';
 
 /**
  * Node table rows → the public semantic props of each element.
@@ -65,13 +66,16 @@ export function listProps(table: NodeTable, id: number): SemanticProps<'List'> {
 
 /**
  * `depth` is the item's list nesting depth (0 for a top-level list); it
- * picks the bullet character, repeating through `bullets`.
+ * picks the bullet character, repeating through `bullets`. `taskIndex` is
+ * the global index (P3-17) the item takes if it is a task; the caller
+ * advances its counter when `taskIndex` comes back non-null.
  */
 export function listItemProps(
   table: NodeTable,
   id: number,
   depth: number,
-  bullets: readonly string[]
+  bullets: readonly string[],
+  taskIndex: number
 ): SemanticProps<'ListItem'> {
   const { index } = attrsOf(table, id, NodeType.ListItem);
   const ordered = flag(table, id, Flag.ORDERED);
@@ -82,11 +86,15 @@ export function listItemProps(
   } else {
     marker = bullets.length === 0 ? '' : bullets[depth % bullets.length]!;
   }
+  const task = flag(table, id, Flag.TASK);
   return {
     index,
     ordered,
     marker,
-    checked: flag(table, id, Flag.TASK) ? flag(table, id, Flag.CHECKED) : null,
+    checked: task ? flag(table, id, Flag.CHECKED) : null,
+    taskIndex: task ? taskIndex : null,
+    // Flattened here: element props are plain values.
+    text: task ? taskText(table, id) : null,
   };
 }
 

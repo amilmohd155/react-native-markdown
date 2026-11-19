@@ -86,8 +86,16 @@ export interface MarkdownRenderOptions {
    * `'allow'`. Use `'deny'` or `{ allowHosts }` for untrusted content.
    */
   readonly images?: ImagesPolicy;
-  /** Makes task list checkboxes interactive. */
-  readonly onTaskToggle?: (checked: boolean, info: TaskToggleInfo) => void;
+  /**
+   * Called after a task checkbox is toggled by a tap (P3-16). The library
+   * flips the box itself; persist the state in your source if you need it.
+   */
+  readonly onTaskToggle?: (info: TaskToggleInfo) => void;
+  /**
+   * Task checkboxes toggle on tap. Default `true`; `false` is read-only: no
+   * press, no callback. Boxes are also inert while a stream runs (P3-18).
+   */
+  readonly enableTaskListItemToggle?: boolean;
   /**
    * Makes footnote references and back-links pressable (P1-15).
    * `info.direction` says where to go. In `scroll` and `virtualize` the
@@ -303,6 +311,7 @@ export function useMarkdownPipeline(
     onLinkPress,
     onImagePress,
     onTaskToggle,
+    enableTaskListItemToggle,
     onFootnotePress,
     softBreak,
     scriptFallback,
@@ -382,6 +391,14 @@ export function useMarkdownPipeline(
     footnoteBackLinkMark: props.footnotes?.backLinkMark,
     footnoteFocus: focus,
     footnotesInert: streaming,
+    interactiveTasks: enableTaskListItemToggle !== false && !streaming,
+    // P3-19: the source text, or the stream's prefix (not `document`
+    // identity, which changes on every flush). A pre-parsed document keys on
+    // its text, so a re-parse of the same text keeps the overrides.
+    taskResetKey:
+      document === undefined
+        ? source
+        : (tableOf(parsed).prefixId ?? tableOf(parsed).source),
   });
 
   return { table, ctx, fade, footnotes: hasSection && !streaming, focus };

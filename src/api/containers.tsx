@@ -24,6 +24,7 @@ import {
   type BlockProps,
 } from '../render/Block';
 import { useBlockItems } from '../render/blockItems';
+import { blockTaskCount } from '../render/tasks';
 import type { RenderCtx } from '../render/context';
 import type { FadePlan } from '../render/fade';
 import type { FootnoteFocusConfig } from '../render/footnoteFocus';
@@ -238,6 +239,7 @@ const MeasuredBlock = memo(
     table,
     index,
     ctx,
+    taskBase,
     fade,
     onBlockLayout,
     onBlockUnmount,
@@ -253,7 +255,7 @@ const MeasuredBlock = memo(
     );
     return (
       <View onLayout={onLayout}>
-        {blockElement(undefined, table, index, ctx, fade)}
+        {blockElement(undefined, table, index, ctx, fade, taskBase)}
       </View>
     );
   },
@@ -267,6 +269,7 @@ function measuredBlockElements(
   control: ScrollController
 ): ReactNode[] {
   const blocks = new Array<ReactNode>(table.blockCount);
+  let taskBase = 0;
   for (let i = 0; i < table.blockCount; i++) {
     blocks[i] = (
       <MeasuredBlock
@@ -274,11 +277,13 @@ function measuredBlockElements(
         table={table}
         index={i}
         ctx={ctx}
+        taskBase={taskBase}
         fade={fade}
         onBlockLayout={control.onBlockLayout}
         onBlockUnmount={control.forgetBlock}
       />
     );
+    if (i + 1 < table.blockCount) taskBase += blockTaskCount(table, i);
   }
   return blocks;
 }

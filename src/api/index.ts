@@ -62,7 +62,7 @@ export {
 export type { HtmlMode, Preset } from '../parse';
 
 // Elements
-export { defaults, inlineView } from '../render';
+export { defaults, inlineView, useTaskState } from '../render';
 export type {
   AnyElementName,
   Components,
@@ -79,6 +79,7 @@ export type {
   PluginComponents,
   ScriptFallback,
   SoftBreak,
+  TaskState,
   TaskToggleInfo,
 } from '../render';
 

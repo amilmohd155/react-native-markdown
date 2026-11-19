@@ -60,7 +60,7 @@ export default function App() {
 | `theme` | `ThemeInput \| 'light' \| 'dark' \| 'auto'` | `'auto'` | See [Theme](#theme). |
 | `onLinkPress` | `(href, info) => boolean \| void` | opens with `Linking` | Called first for every link. Return `false` to skip the default. |
 | `onImagePress` | `(src, info) => void` | none | Makes images pressable. |
-| `onTaskToggle` | `(checked, info) => void` | none | Makes task list checkboxes interactive. |
+| `onTaskToggle` | `({ index, checked, text }) => void` | none | Called after a tap flips a task checkbox (the library owns the box state). `enableTaskListItemToggle={false}` makes it read-only. |
 | `onFootnotePress` | `(label, info) => void` | none | Makes footnote references and back-links pressable. You do the scrolling. |
 | `scroll` | `boolean \| ScrollOptions` | `false` | Renders its own `ScrollView`, all blocks mounted. See [Scrolling](#scrolling-and-long-documents). |
 | `virtualize` | `boolean \| VirtualizeOptions` | `false` | Renders its own `FlatList`, for long documents. |

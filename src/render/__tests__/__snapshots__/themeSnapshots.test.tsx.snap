@@ -1011,28 +1011,70 @@ exports[`theme snapshots dark element ListItem 1`] = `
           ]
         }
       >
-        <Text
+        <View
+          accessibilityLabel="done"
           accessibilityRole="checkbox"
           accessibilityState={
             {
+              "busy": undefined,
               "checked": true,
-              "disabled": true,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
             }
           }
-          style={
-            [
-              {
-                "color": "#e6edf3",
-                "fontSize": 16,
-                "lineHeight": 24,
-              },
-              null,
-            ]
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
           }
-          suppressHighlighting={true}
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 0,
+              "left": 25,
+              "right": 9,
+              "top": 0,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+            }
+          }
         >
-          ☑︎
-        </Text>
+          <Text
+            accessible={false}
+            style={
+              [
+                {
+                  "color": "#e6edf3",
+                  "fontSize": 16,
+                  "lineHeight": 24,
+                },
+                null,
+                false,
+                false,
+              ]
+            }
+          >
+            ☑︎
+          </Text>
+        </View>
       </View>
       <View
         style={
@@ -1054,7 +1096,10 @@ exports[`theme snapshots dark element ListItem 1`] = `
                 "fontSize": 16,
                 "lineHeight": 24,
               },
-              null,
+              {
+                "opacity": 0.6,
+                "textDecorationLine": "line-through",
+              },
               undefined,
             ]
           }
@@ -2239,28 +2284,70 @@ exports[`theme snapshots dark plugin taskLists 1`] = `
           ]
         }
       >
-        <Text
+        <View
+          accessibilityLabel="open"
           accessibilityRole="checkbox"
           accessibilityState={
             {
+              "busy": undefined,
               "checked": false,
-              "disabled": true,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
             }
           }
-          style={
-            [
-              {
-                "color": "#e6edf3",
-                "fontSize": 16,
-                "lineHeight": 24,
-              },
-              null,
-            ]
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
           }
-          suppressHighlighting={true}
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 0,
+              "left": 25,
+              "right": 9,
+              "top": 0,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+            }
+          }
         >
-          ☐︎
-        </Text>
+          <Text
+            accessible={false}
+            style={
+              [
+                {
+                  "color": "#e6edf3",
+                  "fontSize": 16,
+                  "lineHeight": 24,
+                },
+                null,
+                false,
+                false,
+              ]
+            }
+          >
+            ☐︎
+          </Text>
+        </View>
       </View>
       <View
         style={
@@ -2310,28 +2397,70 @@ exports[`theme snapshots dark plugin taskLists 1`] = `
           ]
         }
       >
-        <Text
+        <View
+          accessibilityLabel="done"
           accessibilityRole="checkbox"
           accessibilityState={
             {
+              "busy": undefined,
               "checked": true,
-              "disabled": true,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
             }
           }
-          style={
-            [
-              {
-                "color": "#e6edf3",
-                "fontSize": 16,
-                "lineHeight": 24,
-              },
-              null,
-            ]
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
           }
-          suppressHighlighting={true}
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 0,
+              "left": 25,
+              "right": 9,
+              "top": 0,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+            }
+          }
         >
-          ☑︎
-        </Text>
+          <Text
+            accessible={false}
+            style={
+              [
+                {
+                  "color": "#e6edf3",
+                  "fontSize": 16,
+                  "lineHeight": 24,
+                },
+                null,
+                false,
+                false,
+              ]
+            }
+          >
+            ☑︎
+          </Text>
+        </View>
       </View>
       <View
         style={
@@ -2353,7 +2482,10 @@ exports[`theme snapshots dark plugin taskLists 1`] = `
                 "fontSize": 16,
                 "lineHeight": 24,
               },
-              null,
+              {
+                "opacity": 0.6,
+                "textDecorationLine": "line-through",
+              },
               undefined,
             ]
           }
@@ -3377,28 +3509,70 @@ exports[`theme snapshots light element ListItem 1`] = `
           ]
         }
       >
-        <Text
+        <View
+          accessibilityLabel="done"
           accessibilityRole="checkbox"
           accessibilityState={
             {
+              "busy": undefined,
               "checked": true,
-              "disabled": true,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
             }
           }
-          style={
-            [
-              {
-                "color": "#1f2328",
-                "fontSize": 16,
-                "lineHeight": 24,
-              },
-              null,
-            ]
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
           }
-          suppressHighlighting={true}
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 0,
+              "left": 25,
+              "right": 9,
+              "top": 0,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+            }
+          }
         >
-          ☑︎
-        </Text>
+          <Text
+            accessible={false}
+            style={
+              [
+                {
+                  "color": "#1f2328",
+                  "fontSize": 16,
+                  "lineHeight": 24,
+                },
+                null,
+                false,
+                false,
+              ]
+            }
+          >
+            ☑︎
+          </Text>
+        </View>
       </View>
       <View
         style={
@@ -3420,7 +3594,10 @@ exports[`theme snapshots light element ListItem 1`] = `
                 "fontSize": 16,
                 "lineHeight": 24,
               },
-              null,
+              {
+                "opacity": 0.6,
+                "textDecorationLine": "line-through",
+              },
               undefined,
             ]
           }
@@ -4605,28 +4782,70 @@ exports[`theme snapshots light plugin taskLists 1`] = `
           ]
         }
       >
-        <Text
+        <View
+          accessibilityLabel="open"
           accessibilityRole="checkbox"
           accessibilityState={
             {
+              "busy": undefined,
               "checked": false,
-              "disabled": true,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
             }
           }
-          style={
-            [
-              {
-                "color": "#1f2328",
-                "fontSize": 16,
-                "lineHeight": 24,
-              },
-              null,
-            ]
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
           }
-          suppressHighlighting={true}
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 0,
+              "left": 25,
+              "right": 9,
+              "top": 0,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+            }
+          }
         >
-          ☐︎
-        </Text>
+          <Text
+            accessible={false}
+            style={
+              [
+                {
+                  "color": "#1f2328",
+                  "fontSize": 16,
+                  "lineHeight": 24,
+                },
+                null,
+                false,
+                false,
+              ]
+            }
+          >
+            ☐︎
+          </Text>
+        </View>
       </View>
       <View
         style={
@@ -4676,28 +4895,70 @@ exports[`theme snapshots light plugin taskLists 1`] = `
           ]
         }
       >
-        <Text
+        <View
+          accessibilityLabel="done"
           accessibilityRole="checkbox"
           accessibilityState={
             {
+              "busy": undefined,
               "checked": true,
-              "disabled": true,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
             }
           }
-          style={
-            [
-              {
-                "color": "#1f2328",
-                "fontSize": 16,
-                "lineHeight": 24,
-              },
-              null,
-            ]
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
           }
-          suppressHighlighting={true}
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 0,
+              "left": 25,
+              "right": 9,
+              "top": 0,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+            }
+          }
         >
-          ☑︎
-        </Text>
+          <Text
+            accessible={false}
+            style={
+              [
+                {
+                  "color": "#1f2328",
+                  "fontSize": 16,
+                  "lineHeight": 24,
+                },
+                null,
+                false,
+                false,
+              ]
+            }
+          >
+            ☑︎
+          </Text>
+        </View>
       </View>
       <View
         style={
@@ -4719,7 +4980,10 @@ exports[`theme snapshots light plugin taskLists 1`] = `
                 "fontSize": 16,
                 "lineHeight": 24,
               },
-              null,
+              {
+                "opacity": 0.6,
+                "textDecorationLine": "line-through",
+              },
               undefined,
             ]
           }

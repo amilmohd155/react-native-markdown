@@ -35,6 +35,26 @@ describe('createTheme', () => {
     expect(theme.listBullets).toEqual(['-', '*']);
   });
 
+  it('merges checkbox key by key, checkedText onto the default or off', () => {
+    const a = createTheme({
+      checkbox: { color: 'red', checkedText: { opacity: 0.2 } },
+    });
+    expect(a.checkbox).toEqual({
+      color: 'red',
+      checkedText: { textDecorationLine: 'line-through', opacity: 0.2 },
+    });
+    expect(
+      createTheme({ checkbox: { checkedText: false } }).checkbox.checkedText
+    ).toBe(false);
+    // a later layer starting from `false` takes the new object as is
+    const off = createTheme({ checkbox: { checkedText: false } });
+    expect(
+      createTheme({ checkbox: { checkedText: { opacity: 0.5 } } }, off).checkbox
+        .checkedText
+    ).toEqual({ opacity: 0.5 });
+    expect(createTheme({}).checkbox).toBe(lightTheme.checkbox);
+  });
+
   it('builds on any base: a built-in theme or another created theme', () => {
     const dark = createTheme({ fontSize: { base: 15 } }, darkTheme);
     expect(dark.colors).toBe(darkTheme.colors);

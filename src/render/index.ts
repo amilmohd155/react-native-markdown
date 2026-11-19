@@ -45,6 +45,7 @@ export {
   type FootnoteFocusConfig,
   type FootnoteFocusStore,
 } from './footnoteFocus';
+export { useTaskState, type TaskState } from './useTaskState';
 export { BlockList } from './Block';
 export { renderBlock } from './renderBlock';
 export {
