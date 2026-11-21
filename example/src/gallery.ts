@@ -71,6 +71,30 @@ function greet(name: string): string {
 
     an indented code block
 
+## Syntax highlighting
+
+The highlight plugin colours \`ts\`/\`js\`, \`json\`, \`bash\`, \`diff\` and \`python\` fences (the one above too) and follows the theme. Other languages stay plain.
+
+\`\`\`json
+{ "name": "@docren/react-native-markdown", "version": 1, "private": false, "tags": ["markdown", null] }
+\`\`\`
+
+\`\`\`bash
+# install, then run the example
+yarn add @docren/react-native-markdown && echo "done: $HOME"
+\`\`\`
+
+\`\`\`diff
+@@ -1,2 +1,2 @@
+-const plugins = [mentions()];
++const plugins = [mentions(), highlight()];
+\`\`\`
+
+\`\`\`python
+def greet(name: str) -> str:
+    return f"Hello, {name}!"  # a comment
+\`\`\`
+
 ## Tables
 
 | Left | Center | Right |

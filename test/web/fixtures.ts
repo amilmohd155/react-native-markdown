@@ -12,6 +12,41 @@ export interface WebFixture {
   readonly images?: readonly string[];
 }
 
+/**
+ * A small closed `ts` fence for the smoke screen's `highlight()` block (not
+ * in {@link WEB_FIXTURES}, which render without plugins): one `Text` of
+ * colour spans whose text is the code exactly.
+ */
+export const HIGHLIGHT_CODE =
+  'const greet = (name: string): string => {\n' +
+  '  // a comment\n' +
+  '  return `Hello, ${name}!`;\n' +
+  '};\n' +
+  '\n' +
+  'export default greet(42);';
+
+/**
+ * A closed `ts` fence of 3 KB, over the single-Text limit, so it renders as
+ * one Text per 2 lines. Blank lines fall at chunk ends, inside chunks, as a
+ * whole chunk, and in the final chunk (`\n// end`). Selecting the block
+ * must yield this exactly.
+ */
+export const HIGHLIGHT_LARGE_CODE = (() => {
+  const lines: string[] = [];
+  for (let i = 0; i < 52; i++) {
+    lines.push(`function f${i}(a: number): number {`, `  return a * ${i};`);
+    lines.push('}', '');
+    // Every third group moves the next blank lines inside a chunk.
+    if (i % 3 === 0) lines.push(`// note ${i}`);
+    // Some groups add a chunk of two blank lines.
+    if (i % 5 === 0 && lines.length % 2 === 0) lines.push('', '');
+  }
+  if (lines.length % 2 === 1) lines.push('// tail');
+  // The last two chunks: `}` + blank, then blank + `// end`.
+  lines.push('}', '', '', '// end');
+  return lines.join('\n');
+})();
+
 export const WEB_FIXTURES: readonly WebFixture[] = [
   { name: 'heading', source: '# Title\n\n## Sub', text: ['Title', 'Sub'] },
   {
