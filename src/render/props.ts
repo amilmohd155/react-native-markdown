@@ -104,10 +104,12 @@ export function codeBlockProps(
 ): SemanticProps<'CodeBlock'> {
   const { language, meta } = attrsOf(table, id, NodeType.CodeBlock);
   const text = getText(table, id) ?? '';
+  const open = table.openFenceBlock;
   return {
     code: text.endsWith('\n') ? text.slice(0, -1) : text,
     language,
     meta,
+    open: open !== undefined && table.blocks[open] === id,
   };
 }
 

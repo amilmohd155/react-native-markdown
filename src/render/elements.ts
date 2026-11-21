@@ -45,6 +45,12 @@ export interface ElementPropsMap {
     readonly code: string;
     readonly language: string | null;
     readonly meta: string | null;
+    /**
+     * True only while this fence is the tail block of a stream and has no
+     * closing fence yet (P3-33). False for static documents and after
+     * `done()`.
+     */
+    readonly open: boolean;
   };
   Table: WithChildren & { readonly align: readonly Align[] };
   TableRow: WithChildren & { readonly header: boolean; readonly index: number };

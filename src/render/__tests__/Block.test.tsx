@@ -181,6 +181,22 @@ describe('Block memoization (P1-9)', () => {
     ).toBe(true);
   });
 
+  it('blockPropsEqual compares the open-fence state (P3-33)', () => {
+    const ctx = createRenderCtx({ components: hostComponents() });
+    const closed = tableFor('x\n\n```\ncode\n');
+    const open = { ...closed, openFenceBlock: 1 };
+    const at = (table: NodeTable, index: number) => ({
+      table,
+      index,
+      ctx,
+      taskBase: 0,
+    });
+    // The text is the same; only `done()` dropped the open state.
+    expect(blockPropsEqual(at(open, 1), at(closed, 1))).toBe(false);
+    expect(blockPropsEqual(at(open, 1), at(open, 1))).toBe(true);
+    expect(blockPropsEqual(at(open, 0), at(closed, 0))).toBe(true);
+  });
+
   it('blockPropsEqual compares ctx identity and block identity', () => {
     const ctx = createRenderCtx({ components: hostComponents() });
     const a = tableFor('x\n\ny\n');
