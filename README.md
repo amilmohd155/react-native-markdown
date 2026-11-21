@@ -208,7 +208,7 @@ Block elements: `Heading`, `Paragraph`, `Blockquote`, `List`, `ListItem`, `CodeB
 
 Inline elements normally return text. To return a `View` (a chip, a badge), wrap the component in `inlineView()`.
 
-There is no built-in syntax highlighter. Bring your own in a `CodeBlock` component, as above.
+For syntax highlighting, use the `highlight` plugin (below) or bring your own in a `CodeBlock` component, as above.
 
 ### Plugins
 
@@ -287,6 +287,14 @@ import { admonitions } from '@docren/react-native-markdown/admonitions';
 />;
 ```
 
+The `highlight` plugin (`@docren/react-native-markdown/highlight`) colours fenced code in JavaScript, TypeScript, JSON, shell, diff and Python, also while it streams. `languages` adds or replaces a tokenizer per fence tag and `tokenize` handles other tags; colours come from `theme.syntax`, with light and dark defaults. Blocks over `maxLength` (50,000 characters) render plain. Details: [`docs/rewrite/04-api.md`](docs/rewrite/04-api.md#highlight).
+
+```tsx
+import { highlight } from '@docren/react-native-markdown/highlight';
+
+const plugins = [highlight()]; // create once, outside the component
+```
+
 ### Raw HTML
 
 With the default `html="safe"`, these inline tags become elements: `<br>`, `<b>`, `<strong>`, `<i>`, `<em>`, `<s>`, `<del>`, `<u>`, `<mark>`, `<sup>`, `<sub>`, `<kbd>`. Attributes are ignored. Everything else, including block-level HTML, is shown as text. Use `html="text"` to show all HTML as text, `html="strip"` to remove tags, or `html={{ allow: [...] }}` for your own subset.
@@ -317,7 +325,7 @@ The props changed (`markdown` → `source`, `styles` → `theme`, `renderRules` 
 
 ## Roadmap
 
-Planned after v1.0, in order: streaming for LLM output, a lazy syntax-highlighting entry point, and an optional native parser backend. Details and the design documents are in [`docs/rewrite`](docs/rewrite/README.md).
+Before v1.0: the rest of Phase 3 (an accessibility pass, image and table cache polish, virtualization leftovers), then an optimization pass. After it, only if profiling justifies it: an optional native parser backend. Details and the design documents are in [`docs/rewrite`](docs/rewrite/README.md).
 
 ## Acknowledgements
 

@@ -1,6 +1,6 @@
 # Phase 3 · Official plugins
 
-Emoji, mentions and admonitions as official plugins; math is deferred. All three are built. Decisions: [P3-21 to P3-27](./decisions.md). Reference: [04 · Plugins](../04-api.md#plugins).
+Emoji, mentions and admonitions as official plugins; math is deferred. All three are built. [Highlight](#highlight) is built too (P3-29 to P3-34). Decisions: [P3-21 to P3-27](./decisions.md). Reference: [04 · Plugins](../04-api.md#plugins).
 
 ## Packaging
 
@@ -43,6 +43,56 @@ GitHub alerts: `> [!NOTE]` as the first line of a blockquote; kinds `note`, `tip
 - Theme: `elements.Admonition` styles every kind, `AdmonitionNote`/`Tip`/`Important`/`Warning`/`Caution` one kind (theme-only elements, no component). Defaults: the `Blockquote` layout, a per-kind accent bar and tint, light or dark by the text color. `components.Admonition` replaces the render.
 - A11y: the container has `accessibilityRole="summary"` and the title as its label. It is not `accessible` (that would fold the body into one stop); wording and grouping are for the accessibility pass.
 - Implementation: a core rule after `block` retypes the matching `blockquote_open`/`blockquote_close` to `admonition_open`/`admonition_close` and strips the marker, because `registry.ts` rejects a token type mapped twice.
+
+## Highlight
+
+Built and verified ([P3-29 to P3-34](./decisions.md#p3-29-hand-rolled-tokenizers-with-a-stateless-replaceable-contract); device checks in [REPORT.md](../../../bench/results/REPORT.md#phase-3-highlight-implementation-check-s25-fe)). Syntax highlighting for fenced code, as `@docren/react-native-markdown/highlight`: a subpath entry like the plugins above, pure JS, so it is not in the main bundle.
+
+- `highlight({ languages?, tokenize?, maxLength? })`, passed in `plugins`. It supplies only `components.CodeBlock`, no `syntax` rules, so the open-fence stream fast path stays on ([P3-32](./decisions.md#p3-32-the-open-fence-fast-path-is-gated-on-syntax-not-on-any-plugin)).
+- `languages` maps a fence tag to a tokenizer and extends or overrides the built-ins (JavaScript, TypeScript, JSON, shell, diff, Python; tags in [04 · `/highlight`](../04-api.md#highlight)); `tokenize` is the fallback for other tags; unknown tags render plain. A tokenizer is `(code, lang) => { type, text }[]`, sync and stateless, tokens concatenating to the input; a throw or a mismatch renders plain, with a dev-only warning ([P3-29](./decisions.md#p3-29-hand-rolled-tokenizers-with-a-stateless-replaceable-contract)).
+- Colours come from the core `tokens.syntax` (13 types, light and dark defaults, following the `theme` prop; a partial override merges onto them) ([P3-33](./decisions.md#p3-33-syntax-colours-are-a-core-theme-token-that-follows-the-theme-mode)).
+- Streaming and size: highlighted as it arrives, as memoised Texts of 2 lines (more past blank lines) in one accessible, labelled View; once closed, a block of up to 800 characters is one Text, so selection covers it all (on larger blocks it stays inside one chunk on Android, crosses chunks exactly on web, and iOS copies one whole Text); above `maxLength` (default 50,000 characters) the block is plain ([P3-30](./decisions.md#p3-30-highlighted-code-renders-as-one-text-per-2-lines), [P3-31](./decisions.md#p3-31-highlight-up-to-maxlength-50000-characters-then-plain)).
+- Core changes in the same PR: the fast-path gate, a `CodeBlock` `open` prop, `tokens.syntax` ([P3-34](./decisions.md#p3-34-highlight-scope-core-changes-and-exit-criteria)).
+- Deferred: line numbers, highlighted lines, titles, copy button.
+
+Bring your own tokenizer (about 25 lines, no shipped adapter or peer dependency; typechecked with `lowlight@3` and `@types/hast`):
+
+```ts
+import { createLowlight, common } from 'lowlight';
+import type { ElementContent, RootContent } from 'hast';
+import { highlight, type SyntaxTokenType, type Token } from '@docren/react-native-markdown/highlight';
+
+const lowlight = createLowlight(common);
+const TYPES: Record<string, SyntaxTokenType> = {
+  'hljs-keyword': 'keyword', 'hljs-meta': 'keyword', 'hljs-string': 'string',
+  'hljs-regexp': 'string', 'hljs-number': 'number', 'hljs-comment': 'comment',
+  'hljs-title': 'function', 'hljs-title.class_': 'type', 'hljs-type': 'type',
+  'hljs-built_in': 'type', 'hljs-attr': 'property', 'hljs-property': 'property',
+  'hljs-literal': 'constant', 'hljs-operator': 'operator', 'hljs-punctuation': 'punctuation',
+  'hljs-addition': 'inserted', 'hljs-deletion': 'deleted',
+};
+
+function tokenize(code: string, lang: string): Token[] {
+  const out: Token[] = [];
+  const walk = (nodes: (RootContent | ElementContent)[], type: SyntaxTokenType) => {
+    for (const n of nodes) {
+      const last = out[out.length - 1];
+      if (n.type === 'text' && last?.type === type) out[out.length - 1] = { type, text: last.text + n.value };
+      else if (n.type === 'text' && n.value) out.push({ type, text: n.value });
+      else if (n.type === 'element') {
+        const cls = [n.properties.className].flat().join('.'); // 'hljs-title.function_'
+        walk(n.children, TYPES[cls] ?? TYPES[cls.split('.')[0] ?? ''] ?? type);
+      }
+    }
+  };
+  try {
+    if (lowlight.registered(lang)) walk(lowlight.highlight(lang, code).children, 'plain');
+  } catch { out.length = 0; }
+  return out.length || !code ? out : [{ type: 'plain', text: code }];
+}
+
+highlight({ tokenize });
+```
 
 ## Streaming
 

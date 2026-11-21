@@ -9,7 +9,7 @@ Tapping a GFM task checkbox, owned by the library. Built. Decisions: [P3-16 to P
 
 ## Design
 
-**Ownership ([P3-16](./decisions.md#p3-16-library-owned-task-toggle-with-an-index-checked-text-payload)).** The library flips the box and strikes the text. The app gets `onTaskToggle({ index, checked, text })` and persists if it wants. `text` is the item's own content as plain text, formatting flattened, nested sub-lists excluded (they are their own tasks).
+**Ownership ([P3-16](./decisions.md#p3-16-library-owned-task-toggle-with-an--index-checked-text--payload)).** The library flips the box and strikes the text. The app gets `onTaskToggle({ index, checked, text })` and persists if it wants. `text` is the item's own content as plain text, formatting flattened, nested sub-lists excluded (they are their own tasks).
 
 **Index ([P3-17](./decisions.md#p3-17-global-task-index-from-lazy-per-block-prefix-sums)).** Global, 0-based, document order, depth-first inside a block. Per-block task counts become prefix sums in `buildItems` (`src/render/blockItems.tsx`), computed lazily. Not in `blockContext` (`isSameBlock` would invalidate every later block) and not at convert or splice time.
 
