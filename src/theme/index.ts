@@ -20,6 +20,7 @@
 
 export {
   ELEMENT_NAMES,
+  SYNTAX_TOKEN_TYPES,
   type ElementName,
   type ElementOverride,
   type ElementOverrides,
@@ -28,6 +29,7 @@ export {
   type FontFamily,
   type HeadingLevel,
   type ResolvedTheme,
+  type SyntaxTokenType,
   type Theme,
   type ThemeInput,
   type ThemeTokens,
