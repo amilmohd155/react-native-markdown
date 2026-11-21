@@ -83,7 +83,7 @@ describe('visit', () => {
     });
     expect(props).toEqual([
       { href: 'https://a.b', title: 't' },
-      { code: 'code', language: 'ts', meta: 'meta' },
+      { code: 'code', language: 'ts', meta: 'meta', open: false },
     ]);
     expect(props.every((p) => Object.isFrozen(p))).toBe(true);
   });

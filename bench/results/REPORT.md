@@ -1124,3 +1124,61 @@ Chrome 157 headless, 4x CPU throttle, the real `useMarkdownStream` + `<Markdown>
 - New default against old `hide-incomplete`: commits within 0.2%, latency within 2% on `F4a` and `F4d`, so no web cost from always-on hide-incomplete or the table rules. `F4b` p50 reads +11% (8.8 against 7.9 ms) but sits inside the old config's own spread (7.1-12.0).
 - Smooth commits about 34% fewer on all three fixtures (one release per frame instead of one per chunk); fade costs nothing measurable.
 - Frame gap and dropped frames are identical in every config (the throttle and timer saturate them), and no long tasks occurred, so they do not discriminate. Final document equals `parse(full)` in all 180 runs; `onStreamingEnd` fired exactly once in every new-code run.
+
+## Phase 3 highlight implementation check (S25 FE)
+
+The shipped `highlight()` (2-line chunks, `maxLength` 50,000) against plain code blocks ([P3-30, P3-31](../../docs/rewrite/phase-3/decisions.md#p3-30-highlighted-code-renders-as-one-text-per-2-lines)). Numbers: [`highlight-impl/results.json`](./highlight-impl/results.json). The harness was throwaway and is not kept.
+
+- **Method:** S25 FE, Android 16, Hermes, Expo Go SDK 58, a `--no-dev --minify` bundle. One `ts` fence of TS source. Streaming: `useMarkdownStream`, 40 characters every 16 ms, `smooth` off, fast path on; `commit` is render start to layout effect. Static: pre-parsed document, `setState` to 2 rAFs after the layout effect. Fresh launch per run, 2 runs per cell (mean shown), arms interleaved.
+- **Caveats:** a single device; Expo Go with a release-ish bundle (served through a proxy for the re-checks), not a true release build; heap is `dumpsys` Native Heap Size after the run, not at peak. 50 KB (51,200 characters) is over `maxLength` and renders plain, so 48 KB is the largest highlighted cell.
+
+**Streaming, per flush:**
+
+| KB | plain p50 / p95, ms | hl p50 / p95, ms | total s, plain / hl | heap MB, plain / hl |
+|---|---|---|---|---|
+| 10 | 6.9 / 9.4 | 9.6 / 12.6 | 4.4 / 4.3 | 130 / 145 |
+| 20 | 8.6 / 19.1 | 10.6 / 14.3 | 9.3 / 8.6 | 150 / 254 |
+| 48 | 22.0 / 51.4 | 19.3 / 39.0 | 38.8 / 30.2 | 240 / 514 |
+
+**Static mount, ms:** plain / hl at 10 KB 67 / 220, 20 KB 98 / 367, 48 KB 143 / 738; at 50 and 100 KB hl falls back to plain and matches it (159 / 150, 264 / 267).
+
+- Highlighting adds about 3 ms per flush at 10 and 20 KB. At 48 KB it is below plain, because only the tail chunk re-lays out while plain re-lays the whole `Text`; native heap is about 2.1x plain. 100 KB streaming hit the 120 s cap on both arms.
+- Static 48 KB is about 5.2x plain. Light and dark follow the theme mode, chunks scroll sideways together, and selection stays inside one chunk on a chunked block.
+
+### Single-`Text` threshold (2026-11-21)
+
+Same device at font scale 0.8, arms forced to one `Text` or 2-line chunks, median of 3, ms.
+
+| chars | one block: one `Text` / chunked | ten blocks: one `Text` / chunked |
+|---|---|---|
+| 200 | 65 / 64 | |
+| 500 | 97 / 97 | 214 / 173 |
+| 750 | | 292 / 216 |
+| 850 | | 340 / 229 |
+| 1,000 | 121 / 129 | 471 / 246 |
+| 1,500 | | 827 / 313 |
+| 2,000 | 211 / 98 | |
+| 3,000 | 354 / 119 | |
+
+One `Text` grows faster than linearly on Android. `SINGLE_TEXT_MAX_LENGTH` is 800: ten 850-character blocks add 111 ms over chunked, ten of 1,000 add 225 ms (criterion: at most about 150 ms). Selection and "Select all" cover an 800-character block.
+
+### Seams after the blank-line grouping rule (2026-11-21)
+
+A chunk takes 2 lines and extends past blank lines, so no chunk but the last ends blank ([P3-30](../../docs/rewrite/phase-3/decisions.md#p3-30-highlighted-code-renders-as-one-text-per-2-lines)). Block height from `onLayout`, chunked minus plain, dp; one launch per font scale.
+
+| font scale | `alt` / `big` / `tail` | close swap |
+|---|---|---|
+| 0.8 | 0.00 / 0.00 / 0.00 | +0.38 |
+| 1.0 | −0.38 / 0.00 / 0.00 | 0 |
+| 1.3 | −0.38 / 0.00 / 0.00 | 0 |
+| 2.0 | 0.00 / 0.00 / 0.00 | +0.38 |
+
+`alt` is 12 lines each followed by a blank, `big` 3,012 characters of TS, `tail` ends in 4 blank lines; the swap is a streamed 740-character block at `done()`. 0.38 dp is 1 px, the same rounding one `Text` shows against plain; no visible gaps.
+
+### iOS simulator and web
+
+- **iOS method:** iPhone 18 Pro simulator, iOS 27.2, Apple M1, Expo Go 58, `--no-dev --minify` bundle, an in-app runner (static median of 5, streaming median of 4). A simulator runs on the Mac CPU: read **ratios** only. It ran with the earlier 1,000-character single-`Text` threshold.
+- **Static 48 KB:** hl 666 ms, 8.0x plain (S25 FE 5.2x). A bench single `Text` mounts linearly (81, 132, 216, 400 ms at 3, 10, 20, 48 KB): no quadratic span cost. Streaming one `Text` costs about 1.8x 2-line `Text`s, so N=2 stays on every platform.
+- **iOS streaming p50 / p95, ms:** plain against hl at 10 KB 6.8 / 11.8 against 9.1 / 15.0, 20 KB 11.7 / 23.1 against 16.1 / 27.5, 48 KB 17.7 / 39.0 against 24.4 / 49.1 (total 24.3 against 27.6 s).
+- **iOS behaviour:** colours follow the appearance; no range selection on any `Text`, so long-press Copy takes one whole `Text` (a chunk on a chunked block); a chunked block is one `AXGroup` labelled with the full code (VoiceOver not run); it is 5.67 pt taller than plain per 3.3 KB from pixel rounding of the fractional code `lineHeight`, at most 1 px per seam; the close swap changed no pixels.
+- **Web** (Playwright Chromium): the smoke project passes with a `highlight` block (one element whose text is exactly the code, at least 3 colours); a 3.3 KB block is as tall as plain (3,642 px); selection across chunks returns the code exactly.

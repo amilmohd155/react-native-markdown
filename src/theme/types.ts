@@ -43,6 +43,29 @@ export const ELEMENT_NAMES = [
 export type ElementName = (typeof ELEMENT_NAMES)[number];
 
 /**
+ * Syntax token types shared by `theme.tokens.syntax` and the `/highlight`
+ * entry. Defined in core so the theme never imports from a subpath.
+ * Spec: docs/rewrite/phase-3/decisions.md (P3-29, P3-33)
+ */
+export const SYNTAX_TOKEN_TYPES = [
+  'keyword',
+  'string',
+  'number',
+  'comment',
+  'function',
+  'type',
+  'operator',
+  'punctuation',
+  'property',
+  'constant',
+  'plain',
+  'inserted',
+  'deleted',
+] as const;
+
+export type SyntaxTokenType = (typeof SYNTAX_TOKEN_TYPES)[number];
+
+/**
  * One font family per face, for fonts loaded with `expo-font`'s `useFonts`
  * (which registers each face as its own family). Missing faces fall back to
  * `fontWeight`/`fontStyle` on the nearest face.
@@ -120,6 +143,16 @@ export interface ThemeTokens {
     readonly size?: number;
     readonly checkedText: TextStyle | false;
   };
+  /**
+   * Code highlighting colors by syntax token type (P3-33), read by the
+   * `/highlight` entry. The built-in themes define every type, for their
+   * mode's `codeBg`; `plain` is the code text color. A theme input's
+   * partial `syntax` merges key by key onto the built-in palette of the
+   * resolved scheme, so an unset type keeps that default. The defaults do
+   * not follow a custom `colors.text`: set `syntax.plain` (and the rest)
+   * alongside it.
+   */
+  readonly syntax: { readonly [T in SyntaxTokenType]: string };
 }
 
 /**
@@ -223,6 +256,7 @@ export interface ThemeInput {
   readonly listBullets?: readonly string[];
   readonly imageRatio?: number;
   readonly checkbox?: Partial<ThemeTokens['checkbox']>;
+  readonly syntax?: Partial<ThemeTokens['syntax']>;
   readonly elements?: ElementOverrides;
 }
 

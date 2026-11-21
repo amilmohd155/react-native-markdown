@@ -1,0 +1,369 @@
+{
+ "what": "Phase 3 /highlight device checks (see REPORT.md, \"Phase 3 highlight implementation check (S25 FE)\"). Expo Go SDK 58, Hermes, --no-dev --minify bundle (release-ish, not a release build). Raw runs and harness not kept.",
+ "s25fe": {
+  "device": "Samsung S25 FE (SM-S731B), Android 16",
+  "streamPerFlush": {
+   "note": "one ts fence, 40 chars every 16 ms, commit = render start to layout effect; p50/p95 per run (2 runs); heap = dumpsys Native Heap Size after the run",
+   "rows": [
+    {
+     "kb": 10,
+     "arm": "plain",
+     "commitP50Ms": [
+      6.8,
+      7
+     ],
+     "commitP95Ms": [
+      9.5,
+      9.3
+     ],
+     "totalS": 4.4,
+     "nativeHeapSizeMB": [
+      130,
+      129
+     ]
+    },
+    {
+     "kb": 10,
+     "arm": "hl",
+     "commitP50Ms": [
+      9.5,
+      9.7
+     ],
+     "commitP95Ms": [
+      12.6,
+      12.6
+     ],
+     "totalS": 4.3,
+     "nativeHeapSizeMB": [
+      145,
+      145
+     ]
+    },
+    {
+     "kb": 20,
+     "arm": "plain",
+     "commitP50Ms": [
+      8.7,
+      8.4
+     ],
+     "commitP95Ms": [
+      18.4,
+      19.8
+     ],
+     "totalS": 9.3,
+     "nativeHeapSizeMB": [
+      150,
+      149
+     ]
+    },
+    {
+     "kb": 20,
+     "arm": "hl",
+     "commitP50Ms": [
+      10.5,
+      10.6
+     ],
+     "commitP95Ms": [
+      14.3,
+      14.3
+     ],
+     "totalS": 8.6,
+     "nativeHeapSizeMB": [
+      253,
+      255
+     ]
+    },
+    {
+     "kb": 48,
+     "arm": "plain",
+     "commitP50Ms": [
+      23.2,
+      20.7
+     ],
+     "commitP95Ms": [
+      52.5,
+      50.2
+     ],
+     "totalS": 38.8,
+     "nativeHeapSizeMB": [
+      240,
+      241
+     ]
+    },
+    {
+     "kb": 48,
+     "arm": "hl",
+     "commitP50Ms": [
+      19.3,
+      19.3
+     ],
+     "commitP95Ms": [
+      38.9,
+      39
+     ],
+     "totalS": 30.2,
+     "nativeHeapSizeMB": [
+      520,
+      508
+     ]
+    }
+   ]
+  },
+  "staticMountMs": {
+   "note": "setState to 2 rAFs after the layout effect, 2 runs; 50 and 100 KB exceed maxLength, so hl renders plain",
+   "rows": [
+    {
+     "kb": 10,
+     "plainMs": [
+      69.6,
+      64.7
+     ],
+     "hlMs": [
+      217.7,
+      222.7
+     ]
+    },
+    {
+     "kb": 20,
+     "plainMs": [
+      96.9,
+      98.1
+     ],
+     "hlMs": [
+      368,
+      366.1
+     ]
+    },
+    {
+     "kb": 48,
+     "plainMs": [
+      149.1,
+      137.5
+     ],
+     "hlMs": [
+      730,
+      746.7
+     ]
+    },
+    {
+     "kb": 50,
+     "plainMs": [
+      150.7,
+      166.6
+     ],
+     "hlMs": [
+      144.1,
+      156.7
+     ]
+    },
+    {
+     "kb": 100,
+     "plainMs": [
+      255.5,
+      272
+     ],
+     "hlMs": [
+      264.3,
+      270.2
+     ]
+    }
+   ]
+  },
+  "singleTextThreshold": {
+   "note": "font scale 0.8, median of 3, ms; one = one Text, chunked = 2-line Texts",
+   "oneBlock": [
+    {
+     "chars": 200,
+     "oneTextMs": 65,
+     "chunkedMs": 64
+    },
+    {
+     "chars": 500,
+     "oneTextMs": 97,
+     "chunkedMs": 97
+    },
+    {
+     "chars": 1000,
+     "oneTextMs": 121,
+     "chunkedMs": 129
+    },
+    {
+     "chars": 2000,
+     "oneTextMs": 211,
+     "chunkedMs": 98
+    },
+    {
+     "chars": 3000,
+     "oneTextMs": 354,
+     "chunkedMs": 119
+    }
+   ],
+   "tenBlocks": [
+    {
+     "charsEach": 500,
+     "oneTextMs": 214,
+     "chunkedMs": 173
+    },
+    {
+     "charsEach": 750,
+     "oneTextMs": 292,
+     "chunkedMs": 216
+    },
+    {
+     "charsEach": 850,
+     "oneTextMs": 340,
+     "chunkedMs": 229
+    },
+    {
+     "charsEach": 1000,
+     "oneTextMs": 471,
+     "chunkedMs": 246
+    },
+    {
+     "charsEach": 1500,
+     "oneTextMs": 827,
+     "chunkedMs": 313
+    }
+   ]
+  },
+  "seamsAfterGrouping": {
+   "note": "onLayout heights, one launch per scale; alt = 12 lines each followed by a blank, big = 3,012 chars of TS, tail ends in 4 blank lines; 0.38 dp = 1 px",
+   "rows": [
+    {
+     "fontScale": 0.8,
+     "chunkedMinusPlainDp": {
+      "alt": 0,
+      "big": 0,
+      "tail": 0
+     },
+     "closeSwapDp": 0.38
+    },
+    {
+     "fontScale": 1,
+     "chunkedMinusPlainDp": {
+      "alt": -0.38,
+      "big": 0,
+      "tail": 0
+     },
+     "closeSwapDp": 0
+    },
+    {
+     "fontScale": 1.3,
+     "chunkedMinusPlainDp": {
+      "alt": -0.38,
+      "big": 0,
+      "tail": 0
+     },
+     "closeSwapDp": 0
+    },
+    {
+     "fontScale": 2,
+     "chunkedMinusPlainDp": {
+      "alt": 0,
+      "big": 0,
+      "tail": 0
+     },
+     "closeSwapDp": 0.38
+    }
+   ]
+  }
+ },
+ "iosSimulator": {
+  "device": "iPhone 18 Pro simulator, iOS 27.2, Apple M1; compare ratios only",
+  "staticMountMs": {
+   "note": "median of 5; bench* arms = one tokenize, N lines per Text",
+   "rows": [
+    {
+     "kb": 3,
+     "plain": 33,
+     "hl": 82,
+     "hlSingle": 67,
+     "benchN2": 68,
+     "benchN5": 83,
+     "benchSingle": 81
+    },
+    {
+     "kb": 10,
+     "plain": 33,
+     "hl": 135,
+     "hlSingle": 133,
+     "benchN2": 133,
+     "benchN5": 100,
+     "benchSingle": 132
+    },
+    {
+     "kb": 20,
+     "plain": 33,
+     "hl": 282,
+     "hlSingle": 183,
+     "benchN2": 216,
+     "benchN5": 215,
+     "benchSingle": 216
+    },
+    {
+     "kb": 48,
+     "plain": 83,
+     "hl": 666,
+     "hlSingle": 416,
+     "benchN2": 600,
+     "benchN5": 617,
+     "benchSingle": 400
+    }
+   ]
+  },
+  "streamPerFlush": {
+   "note": "median of 4 runs",
+   "rows": [
+    {
+     "kb": 10,
+     "arm": "plain",
+     "commitP50Ms": 6.8,
+     "commitP95Ms": 11.8,
+     "totalS": 4.4
+    },
+    {
+     "kb": 10,
+     "arm": "hl",
+     "commitP50Ms": 9.1,
+     "commitP95Ms": 15,
+     "totalS": 4.4
+    },
+    {
+     "kb": 20,
+     "arm": "plain",
+     "commitP50Ms": 11.7,
+     "commitP95Ms": 23.1,
+     "totalS": 8.7
+    },
+    {
+     "kb": 20,
+     "arm": "hl",
+     "commitP50Ms": 16.1,
+     "commitP95Ms": 27.5,
+     "totalS": 8.9
+    },
+    {
+     "kb": 48,
+     "arm": "plain",
+     "commitP50Ms": 17.7,
+     "commitP95Ms": 39,
+     "totalS": 24.3
+    },
+    {
+     "kb": 48,
+     "arm": "hl",
+     "commitP50Ms": 24.4,
+     "commitP95Ms": 49.1,
+     "totalS": 27.6
+    }
+   ]
+  }
+ },
+ "web": {
+  "device": "Playwright Chromium headless, Metro web dev bundle",
+  "block3kbHeightPx": {
+   "highlighted": 3642,
+   "plain": 3642
+  }
+ }
+}

@@ -69,4 +69,11 @@ export interface NodeTable {
   readonly prefixId?: object;
   /** Blocks [0, stableCount) came from the prefix identified by `prefixId`. */
   readonly stableCount?: number;
+  /**
+   * Block index of a top-level fenced code block that is the stream's tail
+   * and has no closing fence yet (P3-33, CodeBlock `open`). Set only on
+   * tables a stream returns from `append`; absent after `done`/`reset` and
+   * on ordinary parses.
+   */
+  readonly openFenceBlock?: number;
 }

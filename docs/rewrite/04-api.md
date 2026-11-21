@@ -24,7 +24,7 @@ The reasoning behind this design, including the options rejected, is in [08 · D
 | `theme` | `ThemeInput \| 'light' \| 'dark' \| 'auto'` | `'auto'` | See [Theme](#theme) |
 | `onLinkPress` | `(href, info) => boolean \| void` | opens with `Linking` | Called first for every link. Return `false` to cancel the default. The default opens only `http`, `https`, `mailto`, `tel` and relative URLs, so custom-scheme deep links need this handler ([P1-3](./phase-1/decisions.md#p1-3-url-sanitization-layers)). Errors from `openURL` are caught. |
 | `onImagePress` | `(src, info) => void` | none | |
-| `onTaskToggle` | `({ index, checked, text }) => void` | none | Called after a tap flips a task checkbox ([P3-16](./phase-3/decisions.md#p3-16-library-owned-task-toggle-with-an-index-checked-text-payload)). `index` is global and 0-based; `text` is the item's own plain text. The library owns the box state (cleared when `source` changes); persisting is the app's job. |
+| `onTaskToggle` | `({ index, checked, text }) => void` | none | Called after a tap flips a task checkbox ([P3-16](./phase-3/decisions.md#p3-16-library-owned-task-toggle-with-an--index-checked-text--payload)). `index` is global and 0-based; `text` is the item's own plain text. The library owns the box state (cleared when `source` changes); persisting is the app's job. |
 | `enableTaskListItemToggle` | `boolean` | `true` | `false`: read-only checkboxes, no callback. Boxes are also inert while a stream runs ([P3-18](./phase-3/decisions.md#p3-18-interactive-by-default-with-enabletasklistitemtoggle-inert-while-streaming)). |
 | `onFootnotePress` | `(label, info, { offset }) => void \| false` | none | Makes footnote references and back-links pressable. `info = { index, direction: 'reference' \| 'definition', reference }`: where to go, and which reference (1-based). `offset`: with `footnotes.target: 'definition'`, the definition's y inside the section block (`number \| undefined`, [P3-15](./phase-3/decisions.md#p3-15-opt-in-exact-definition-jump-and-highlight)). In `scroll` and `virtualize` the container then scrolls there (references to the footnote section, back-links to their reference); return `false` to skip that. In the default `View` the app scrolls, and so does a list of your own with `useMarkdownBlocks` (`onFootnoteScrollTo`, [P3-14](./phase-3/decisions.md#p3-14-usemarkdownblocks-takes-onfootnotescrollto-for-the-apps-own-list)) ([P1-15](./phase-1/decisions.md#p1-15-footnote-navigation-through-an-onfootnotepress-handler), [P3-9](./phase-3/decisions.md#p3-9-onfootnotepress-runs-first-and-can-skip-the-jump)). Not called, and the footnote section not rendered, while a stream runs until `done()` ([P3-12](./phase-3/decisions.md#p3-12-the-footnote-section-and-its-links-wait-for-done)). |
 | `footnotes` | `{ labels?, backLinkMark?, target?, highlight? }` | English labels, `↩` | `labels`: `{ reference(index), backLink(index, reference) }`, the accessibility labels of references ("Footnote 1") and back-links ("Back to reference 1") ([P3-11](./phase-3/decisions.md#p3-11-footnote-labels-for-references-and-back-links)). `backLinkMark`: `(reference, total) => string`, the visible text of a back-link; `reference` is which reference it returns to (1-based), `total` how many the footnote has, default `↩`, then `↩²`, `↩³`… ([P3-13](./phase-3/decisions.md#p3-13-footnote-back-links-are-inline-nodes-at-the-end-of-the-definition)). `target`: `'section'` (default) or `'definition'`: a reference press scrolls to its own definition. `highlight`: `true` or `{ color?, duration? }` flashes the definition (reference press) or reference (back-link press); off by default ([P3-15](./phase-3/decisions.md#p3-15-opt-in-exact-definition-jump-and-highlight)). The object may be inline; the functions inside must be module level. |
@@ -78,7 +78,7 @@ Every component receives the props below, plus `children` (except where noted) a
 | `Blockquote` | — | `<View>` with a bar |
 | `List` | `ordered: boolean`, `start: number`, `tight: boolean` | `<View>` |
 | `ListItem` | `index`, `ordered`, `marker: string`, `checked: boolean \| null` | Row with a marker column. A checkbox when `checked !== null`. `checked` is the source value; a custom slot calls `useTaskState(taskIndex, checked, text)` for `{ checked, interactive, toggle }` (displayed state, shared store, fires `onTaskToggle`). |
-| `CodeBlock` | `code: string`, `language: string \| null`, `meta: string \| null` (no `children`) | Horizontal `ScrollView` + `<Text>` |
+| `CodeBlock` | `code: string`, `language: string \| null`, `meta: string \| null`, `open: boolean` (true only while a stream's tail fence is unclosed; no `children`) | Horizontal `ScrollView` + `<Text>` |
 | `Table` | `align: ('left' \| 'center' \| 'right' \| null)[]` | Horizontal `ScrollView`, cached column widths |
 | `TableRow` | `header: boolean`, `index` | `<View>` row |
 | `TableCell` | `align`, `header: boolean`, `column` | `<View>` + `<Text>` |
@@ -157,6 +157,7 @@ const theme = createTheme(
     listBullets: ['•', '◦', '▪'],          // bullet character by nesting depth
     imageRatio: 16 / 9,                    // width / height of a block image's box until its size is known
     checkbox: { color, checkedColor, size, checkedText },  // task checkbox glyph; checked item's own text style (merged onto line-through + dim, or false for none)
+    syntax: { keyword: '#cf222e' },        // code highlighting color by token type (13 types, P3-33); merges onto the scheme's built-in palette, unset types keep it
     elements: {                            // per-element overrides: { text?, container? }
       Link: { text: { textDecorationLine: 'none' } },
       Heading: (level) => ({ text: { fontWeight: level <= 2 ? '700' : '600' } }),
@@ -195,9 +196,27 @@ const definePlugin: <N>(p: MarkdownPlugin<N>) => MarkdownPlugin<N>;
 ```
 
 - **Built-in GFM plugins:** `tables`, `taskLists`, `strikethrough`, `autolinks`, `footnotes`, `tagfilter`. `preset="gfm"` includes all of them.
-- **Planned official plugins:** `emoji`, `mentions`, `admonitions`, each a separate entry point (`/emoji`, `/mentions`, `/admonitions`) so it can be tree-shaken; see [phase-3/plugins.md](./phase-3/plugins.md). `math` is deferred.
+- **Official plugins:** `emoji`, `mentions`, `admonitions`, `highlight`, each a separate entry point (`/emoji`, `/mentions`, `/admonitions`, [`/highlight`](#highlight)) so it can be tree-shaken; see [phase-3/plugins.md](./phase-3/plugins.md). `math` is deferred.
 - **`emoji({ resolve?, map?, defaults? })`** (`@docren/react-native-markdown/emoji`): turns `:name:` into the Unicode character at parse time. The result is plain text, not a node. Lookup order: `resolve`, then `map`, then about 50 built-in names (`defaults: false` drops them). An unknown name stays literal; code spans, escapes and URLs are untouched. `resolve` must be sync and pure and is not part of the parse cache key. While streaming, a half-typed `:smi` shows raw until the closing colon arrives ([P3-26](./phase-3/decisions.md#p3-26-no-plugin-incomplete-tail-streaming-hook-yet)).
 - **Order:** the preset's plugins first, then `plugins` in array order. A later plugin's components and theme override an earlier one's. The `components` and `theme` props override all plugins.
+
+### `/highlight`
+
+```tsx
+import { highlight } from '@docren/react-native-markdown/highlight';
+
+const plugins = [highlight()];   // once, at module scope: each call makes a new CodeBlock, which remounts code blocks
+<Markdown source={md} plugins={plugins} />;
+```
+
+- **Options:** `highlight({ languages?, tokenize?, maxLength? })`. `languages` maps a fence tag to a `Tokenizer`, adding to or overriding the built-ins; `tokenize` is the catch-all for other tags; an untagged block, or a tag nothing knows, renders plain. Tags are trimmed and matched case-insensitively ([P3-29](./phase-3/decisions.md#p3-29-hand-rolled-tokenizers-with-a-stateless-replaceable-contract)).
+- **Built-in languages:** `js` `jsx` `javascript` `mjs` `cjs`, `ts` `tsx` `typescript`, `json` `jsonc`, `sh` `bash` `shell` `zsh`, `diff` `patch`, `py` `python`.
+- **Tokenizer:** `(code: string, language: string) => readonly Token[]`, with `Token = { type: SyntaxTokenType; text: string }`. Sync and stateless; the token texts joined in order equal `code`. A throw, or (checked in dev only) a mismatch, renders the block plain with a dev warning. The 13 types: `keyword`, `string`, `number`, `comment`, `function`, `type`, `operator`, `punctuation`, `property`, `constant`, `plain`, `inserted`, `deleted`. Bring your own (a lowlight recipe of about 20 lines): [plugins.md](./phase-3/plugins.md#highlight).
+- **Colours:** `theme.syntax` ([Theme](#theme)). `lightTheme` and `darkTheme` define every type and follow `theme="auto"`; a partial `syntax` in a theme input merges onto the current scheme's palette. The defaults ignore a custom `colors.text`: set `syntax.plain` with it ([P3-33](./phase-3/decisions.md#p3-33-syntax-colours-are-a-core-theme-token-that-follows-the-theme-mode)).
+- **`open`:** the `CodeBlock` prop that is true only while a stream's tail fence is unclosed. While open, finished lines are frozen and colours may be approximate; on close the block is re-tokenized once.
+- **Size cap:** a block longer than `maxLength` characters (default 50,000, exported as `DEFAULT_MAX_LENGTH`) renders as the default `CodeBlock`, streaming or not, and stays plain ([P3-31](./phase-3/decisions.md#p3-31-highlight-up-to-maxlength-50000-characters-then-plain)).
+- **Selection:** a closed block of up to 800 characters is one `Text`, so selection and copy cover all of it. A larger or open block is one `Text` per 2 lines: selection stays inside one chunk on Android, crosses chunks exactly on web, and iOS (no range selection anywhere) copies one chunk. The block is one accessible element labelled with the code ([P3-30](./phase-3/decisions.md#p3-30-highlighted-code-renders-as-one-text-per-2-lines)).
+- **Streaming fast path:** the plugin supplies only `components.CodeBlock`, no `syntax`, so the open-fence fast path stays on; any plugin with `syntax` (`emoji`, `mentions`, `admonitions`) turns it off. A custom highlighting `CodeBlock` should be components-only too ([P3-32](./phase-3/decisions.md#p3-32-the-open-fence-fast-path-is-gated-on-syntax-not-on-any-plugin)).
 
 ## Raw HTML
 

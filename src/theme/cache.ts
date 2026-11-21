@@ -102,6 +102,7 @@ function inputEqual(a: ThemeInput, b: ThemeInput): boolean {
       a.lineHeight === b.lineHeight &&
       a.imageRatio === b.imageRatio &&
       groupEqual(a.checkbox, b.checkbox) &&
+      shallowEqual(a.syntax, b.syntax) &&
       groupEqual(a.spacing, b.spacing) &&
       groupEqual(a.radius, b.radius) &&
       shallowEqual(a.listBullets, b.listBullets) &&

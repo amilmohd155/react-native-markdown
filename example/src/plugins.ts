@@ -1,4 +1,5 @@
 import { admonitions } from '@docren/react-native-markdown/admonitions';
+import { highlight } from '@docren/react-native-markdown/highlight';
 import { mentions } from '@docren/react-native-markdown/mentions';
 
 /**
@@ -6,8 +7,11 @@ import { mentions } from '@docren/react-native-markdown/mentions';
  * `useMarkdownStream()` and the `<Markdown>` or `useMarkdownBlocks()` that
  * renders their document share one plugin identity: a document parsed with a
  * plugin must be rendered with it too, or its nodes have no component.
+ * `highlight()` especially: each call makes a new `CodeBlock`, which remounts
+ * every code block.
  */
 export const PLUGINS = [
   mentions({ schemes: ['user', 'channel'] }),
   admonitions(),
+  highlight(),
 ];

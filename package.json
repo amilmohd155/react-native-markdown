@@ -25,6 +25,11 @@
       "types": "./lib/typescript/src/admonitions/index.d.ts",
       "default": "./lib/module/admonitions/index.js"
     },
+    "./highlight": {
+      "source": "./src/highlight/index.ts",
+      "types": "./lib/typescript/src/highlight/index.d.ts",
+      "default": "./lib/module/highlight/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

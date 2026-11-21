@@ -182,7 +182,7 @@ Accepted · 2026-11-19
 Accepted · 2026-11-19
 
 - **Decision:** boxes toggle by default. `enableTaskListItemToggle` (boolean, default `true`) on `<Markdown>` and `useMarkdownBlocks`; `false` means read-only, no callback, no visual toggle. While a stream runs the boxes are inert (`accessibilityState.disabled`) until the end signal.
-- **Why:** library-owned state ([P3-16](#p3-16-library-owned-task-toggle-with-an-index-checked-text-payload)) makes interactive the useful default, and an opt-out keeps display-only uses simple. Mid-stream the item set and indexes still move, so a toggle could hit the wrong task; enriched-markdown resets toggles on the next update, disabling is cleaner.
+- **Why:** library-owned state ([P3-16](#p3-16-library-owned-task-toggle-with-an--index-checked-text--payload)) makes interactive the useful default, and an opt-out keeps display-only uses simple. Mid-stream the item set and indexes still move, so a toggle could hit the wrong task; enriched-markdown resets toggles on the next update, disabling is cleaner.
 - **Built:** `useMarkdownBlocks` takes the same option and is inert until `done()`.
 - Design: [task-toggling.md](./task-toggling.md#design).
 
@@ -217,7 +217,7 @@ Accepted · 2026-11-19
 
 Accepted · 2026-11-19
 
-- **Decision:** `@docren/react-native-markdown/emoji`, `/mentions`, `/admonitions`, as `package.json` `exports` keys `./emoji` etc. (same form for `/highlight` later). Every plugin entry stays pure JS and Expo Go safe, extending D2 from the main entry to plugin entries. `scripts/check-no-native.mjs` and `scripts/check-public-types.mjs` iterate over all `exports` subpaths instead of one entry, and `.fallowrc.json` is checked so new `src/<plugin>/` entries are not reported unused.
+- **Decision:** `@docren/react-native-markdown/emoji`, `/mentions`, `/admonitions`, as `package.json` `exports` keys `./emoji` etc. (same form for `/highlight`). Every plugin entry stays pure JS and Expo Go safe, extending D2 from the main entry to plugin entries. `scripts/check-no-native.mjs` and `scripts/check-public-types.mjs` iterate over all `exports` subpaths instead of one entry, and `.fallowrc.json` is checked so new `src/<plugin>/` entries are not reported unused.
 - **Why:** the tree-shaking intent of `04-api.md`; bob already compiles all of `src/`; one package keeps Release-it and CI as they are.
 - Design: [plugins.md](./plugins.md#packaging).
 
@@ -269,3 +269,58 @@ Proposed · 2026-11-19
 - **Decision:** a core theme token `linkVariants`, a map from URL scheme (`mailto`, `tel`, `user`) to a link style, falling back to the `Link` element style; the key type (scheme map vs also a `(url) => style` function) is open until review. Style only: no node, no new press API. Mentions ([P3-24](#p3-24-mentions-are-scheme-links-converted-to-a-mention-node)) do not depend on it and ship first; later the chain is the `Mention` element, then `linkVariants[scheme]`, then `Link`.
 - **Why:** it also styles `mailto:`, `tel:` and deep links, which no plugin covers, and it is cheap. enriched-markdown keys by regex, where first match wins and order matters; a scheme map is deterministic.
 - Needs a public-types check (`check:public-types`). Issue: #65.
+
+## P3-29: Hand-rolled tokenizers, with a stateless replaceable contract
+
+Accepted · 2026-11-21
+
+- **Decision:** `highlight({ languages?, tokenize?, maxLength? })` bundles hand-rolled tokenizers for JavaScript (`js`, `jsx`, `javascript`, `mjs`, `cjs`), TypeScript (`ts`, `tsx`, `typescript`), JSON (`json`, `jsonc`), shell (`sh`, `bash`, `shell`, `zsh`), diff (`diff`, `patch`) and Python (`py`, `python`); tags are trimmed and matched case-insensitively. `languages` maps a tag to a tokenizer and extends or overrides that set; `tokenize` is the catch-all for other tags; a missing or unknown tag renders plain. A tokenizer is stateless and sync: `(code, language) => { type, text }[]`, tokens concatenating to the input. The library freezes completed lines itself and re-feeds the last committed line as left context, so there is no resumable-state API. Types (13): `keyword`, `string`, `number`, `comment`, `function`, `type`, `operator`, `punctuation`, `property`, `constant`, `plain`, plus `inserted` and `deleted`. If a tokenizer throws, or its tokens do not concatenate to the input, the block renders plain; dev builds warn, and the concatenation check runs in dev only. Bring-your-own is a short `lowlight` recipe in [plugins.md](./plugins.md#highlight): no shipped subpath, no peer dependency.
+- **Why:** about 5 KB (2.4 KB gzip) against about 15 KB gzip for lowlight with the same six languages, about 7x faster on Hermes (50 KB JS: 39 against 269 ms), cold start about 2.5 against about 60 ms.
+- Open: quality was checked on four cycled snippets per language; known gaps are `${}` in template strings, `$var` in bash double quotes and lowercase TS types.
+- Evidence: spike code and logs were not kept (throwaway).
+
+## P3-30: Highlighted code renders as one Text per 2 lines
+
+Accepted · 2026-11-21
+
+- **Decision:** a highlighted block is a column of memoised `Text`s of 2 lines each, extended past blank lines (internal, not an option), spans merged by colour, in a wrapper View that is one accessible element labelled with the full code (children hidden). A finished chunk never re-renders while streaming; only the tail does. Rejected: one Text per large block, plain until the fence closes, full or throttled re-tokenize, single-Text incremental, nested unmerged spans, one Text per line.
+- **Small closed blocks are one Text** (2026-11-20): a closed block of at most `SINGLE_TEXT_MAX_LENGTH` (800 characters, internal; set on the S25 FE, where ten 1,000-character blocks as one `Text` each mounted 225 ms slower than chunked and ten 850-character ones 111 ms: [REPORT](../../../bench/results/REPORT.md#phase-3-highlight-implementation-check-s25-fe)) is one `Text` of colour spans, so selection and copy cover the whole block as on a plain block. It swaps in once when the fence closes; the wrapper stays mounted. Known limit: on a larger or open block, selection ("Select all" included) stays inside one 2-line chunk on Android.
+- **Why:** native Android layout of one Text is about quadratic in its span count (10 KB: 1.85 s, 20 KB: 6.8 s; the close commit of plain-until-closed at 20 KB took 32 s). N=2 is the only size verified at 50 KB streaming, where it matched plain; N=1 doubles the Text count (about 1.1 GB native heap); N of 5 or more has 100 to 130 ms spikes. N=3 has a cheaper static mount but was not run at 50 KB.
+- Colours while streaming may differ from the static render (one line of left context; a TypeScript member key depends on the enclosing brace). When `open` turns false the block re-tokenizes once in full (about 40 to 60 ms for 50 KB on Hermes) and keeps every unchanged chunk object, so only recoloured chunks re-render.
+- **Platforms** (2026-11-21): native drops each non-final chunk's last `\n`. A chunk extends past blank lines until a non-blank line, so no chunk but the last ends blank: Android draws an empty last line at font-metrics height and scales it non-linearly, which a `minHeight` (removed) could not match. Chunked, one `Text` and plain now agree within 1 px at font scale 0.8 to 2.0, and the close swap moves under 1 px ([REPORT](../../../bench/results/REPORT.md#seams-after-the-blank-line-grouping-rule-2026-11-21)); web keeps chunks whole, since `pre-wrap` draws no trailing newline, so selection across chunks is the code exactly. iOS chunk heights pixel-round with the fractional code `lineHeight` (`src/theme/resolve.ts:109`), so a chunked block drifts taller than plain (5.7 pt per 3.3 KB, at most 1 px per seam): accepted, not fixed. iOS has no range selection on any block; long-press copies one whole `Text`, so a chunked block copies one chunk.
+- VoiceOver and TalkBack checks of the labelled element are waived by name in [P3-34](#p3-34-highlight-scope-core-changes-and-exit-criteria).
+- Evidence: spike code and logs were not kept (throwaway); shipped checks: [REPORT.md](../../../bench/results/REPORT.md#phase-3-highlight-implementation-check-s25-fe).
+
+## P3-31: Highlight up to `maxLength` (50,000 characters), then plain
+
+Accepted · 2026-11-21
+
+- **Decision:** `maxLength` (characters per code block, default 50,000: `DEFAULT_MAX_LENGTH`) applies to streaming and static blocks alike: above it the block renders as the default `CodeBlock`, and stays plain for its lifetime. Below it a fence is highlighted as it streams ([P3-30](#p3-30-highlighted-code-renders-as-one-text-per-2-lines)). `smooth` makes no difference.
+- **Why:** per flush, a 48 KB block streams as fast as plain (p50 19.3 against 22.0 ms on the S25 FE). What grows with size is Text count and native heap (about 2.1x plain at 48 KB), so the cap is a memory call, not a latency one. Static 100 KB mounted in 0.58 s (283 MB, at N=3), so a higher cap is possible. Judge by the delta to plain, not the F4 bars.
+- A "50 KB" block (51,200 characters) is over the default, so device numbers use 48 KB.
+- Evidence: [REPORT.md](../../../bench/results/REPORT.md#phase-3-highlight-implementation-check-s25-fe); spike code and logs were not kept (throwaway).
+
+## P3-32: The open-fence fast path is gated on `syntax`, not on any plugin
+
+Accepted · 2026-11-21
+
+- **Decision:** `src/stream/createMarkdownStream.ts` turns the fast path off on `plugins.some((p) => p.syntax !== undefined)` instead of `plugins.length`. The converter handles `fence` before any `nodes` lookup, so only a `syntax.markdownIt` rule can own a fence. The highlight plugin supplies only `components.CodeBlock` and adds no syntax rules. Emoji, mentions and admonitions are syntax plugins and still lose the fast path; a flag for block rules only is a separate issue. Lands in the same PR as the plugin ([P3-34](#p3-34-highlight-scope-core-changes-and-exit-criteria)).
+- **Why:** with a components-only plugin the fast path is flat (2.4 against 88.9 ms for 502 flushes of a 20 KB fence) and `done()` still equals `parse()`; a syntax plugin still falls back.
+- Open: if a preset ever ships fence-owning syntax, the check must read the resolved list, not the user list.
+- Evidence: `src/stream/__tests__/openFence.test.ts`; timing spike not kept (throwaway).
+
+## P3-33: Syntax colours are a core theme token that follows the theme mode
+
+Accepted · 2026-11-21
+
+- **Decision:** a core `ThemeTokens.syntax`, a colour for each of the 13 types of [P3-29](#p3-29-hand-rolled-tokenizers-with-a-stateless-replaceable-contract): complete once resolved, partial in a theme input, where it merges key by key onto the built-in palette of the resolved scheme (GitHub light and dark, each at least 4.5:1 on `codeBg`; `plain` is the code text colour). It follows the `theme` prop (`light`, `dark`, `auto`) through normal theme resolution (`src/theme/context.ts`, `src/theme/cache.ts`); the code block reads it from the render context, and a type drawn in the block's text colour inherits it. The defaults do not follow a custom `colors.text`: set `syntax.plain` (and the rest) with it. It is a core token, like `tokens.checkbox`, because plugins can contribute element styles but not tokens. CodeBlock also gets an `open` prop: true only while a fence is unclosed on the tail block of a stream, false for static documents and after `done()`.
+- **Why:** [enriched-markdown](https://docs.swmansion.com/enriched-markdown/rich-text-formatting/code-highlighting) does the same (14 token types, plain until the fence closes, about 50 KB cap) but is tree-sitter native with no Expo Go or web, so it cannot be reused ([D1, D2](../07-roadmap.md#decisions)). `open` lets the plugin skip incremental work on closed blocks and re-tokenize once at close.
+
+## P3-34: Highlight scope, core changes and exit criteria
+
+Accepted · 2026-11-21
+
+- **Decision:** one PR carries the plugin and its core changes: the fast-path gate ([P3-32](#p3-32-the-open-fence-fast-path-is-gated-on-syntax-not-on-any-plugin)), the `open` prop and `tokens.syntax` ([P3-33](#p3-33-syntax-colours-are-a-core-theme-token-that-follows-the-theme-mode)). Out of the first release: line numbers, highlighted lines, titles and a copy button (later options on the same plugin, or a user `CodeBlock`). Exit criteria: a Node unit suite (tokenizers, chunking, incremental equals full tokenize, the concatenation invariant), the streaming and fast-path test, a device pass on the S25 FE, and iOS and web checks (iOS simulator run and the Playwright web smoke project count).
+- **Verified** (2026-11-21): on the S25 FE, streaming and static against plain, the 800-character single-`Text` threshold, and seams within 1 px at font scale 0.8 to 2.0 with a close swap under 1 px ([REPORT](../../../bench/results/REPORT.md#phase-3-highlight-implementation-check-s25-fe)); on the iOS simulator, N=2 kept (no quadratic span cost, but static 48 KB is 8x plain against 5.2x on the S25 FE); on web, the Playwright smoke project ([iOS and web](../../../bench/results/REPORT.md#ios-simulator-and-web)).
+- **Waived by name** (user decision, 2026-11-21): (1) the VoiceOver and TalkBack checks of the single accessible code block, because they cannot be automated here. The structure was verified in the iOS accessibility tree (one element labelled with the full code, children hidden); no real screen-reader pass was run. Revisit in the accessibility pass (with #20, tracked in #56). (2) A physical iPhone run and (3) a true release build: the device numbers come from Expo Go with a release-ish (`--no-dev --minify`) bundle.
+- Carried from the spikes, not re-run: N=3 at 50 KB; heap read after runs, not at peak.

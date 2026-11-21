@@ -105,6 +105,7 @@ export type {
   FontFaces,
   FontFamily,
   MarkdownTheme,
+  SyntaxTokenType,
   Theme,
   ThemeInput,
   ThemeProp,

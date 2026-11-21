@@ -32,10 +32,27 @@ export const lightTheme: ThemeTokens = Object.freeze({
       opacity: 0.6,
     }),
   }),
+  // GitHub light syntax colors; each is >= 4.5:1 on `colors.codeBg`.
+  syntax: Object.freeze({
+    keyword: '#cf222e',
+    string: '#0a3069',
+    number: '#0550ae',
+    comment: '#59636e',
+    function: '#8250df',
+    type: '#953800',
+    operator: '#cf222e',
+    punctuation: '#1f2328',
+    property: '#0550ae',
+    constant: '#0550ae',
+    plain: '#1f2328',
+    inserted: '#116329',
+    deleted: '#82071e',
+  }),
 });
 
 /**
- * Built-in dark theme (GitHub-dark-like palette). Only colors differ from
+ * Built-in dark theme (GitHub-dark-like palette). Only colors (`colors`,
+ * `syntax`) differ from
  * `lightTheme`, so switching scheme never changes layout.
  */
 export const darkTheme: ThemeTokens = Object.freeze({
@@ -49,5 +66,21 @@ export const darkTheme: ThemeTokens = Object.freeze({
     quoteBar: '#3d444d',
     highlight: '#5a4a00',
     footnoteHighlight: 'rgba(212, 167, 44, 0.35)',
+  }),
+  // GitHub dark syntax colors; each is >= 4.5:1 on `colors.codeBg`.
+  syntax: Object.freeze({
+    keyword: '#ff7b72',
+    string: '#a5d6ff',
+    number: '#79c0ff',
+    comment: '#9198a1',
+    function: '#d2a8ff',
+    type: '#ffa657',
+    operator: '#ff7b72',
+    punctuation: '#e6edf3',
+    property: '#79c0ff',
+    constant: '#79c0ff',
+    plain: '#e6edf3',
+    inserted: '#7ee787',
+    deleted: '#ffa198',
   }),
 });

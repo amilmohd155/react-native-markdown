@@ -28,12 +28,16 @@ function BlockImpl({ table, index, ctx, taskBase }: BlockProps) {
 /**
  * Whether a block can skip re-rendering (P1-9): same render context, and
  * the block renders identically in both tables (document context, block
- * context, source text), and the same task base.
+ * context, source text), the same task base, and the same open-fence state.
  */
 export function blockPropsEqual(a: BlockProps, b: BlockProps): boolean {
   return (
     a.ctx === b.ctx &&
     a.taskBase === b.taskBase &&
+    // CodeBlock `open` (P3-33): `done()` closes a tail fence without
+    // changing its text.
+    (a.table.openFenceBlock === a.index) ===
+      (b.table.openFenceBlock === b.index) &&
     isSameBlock(a.table, a.index, b.table, b.index)
   );
 }

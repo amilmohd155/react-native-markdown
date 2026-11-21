@@ -73,8 +73,8 @@ function anyCloser(text: string, char: string, length: number): boolean {
 }
 
 /**
- * The open fence at the end of `table`, or null. Requires: no user plugins
- * (they may own fences), last block is a plain CodeBlock that starts with a
+ * The open fence at the end of `table`, or null. Requires: no syntax plugins
+ * (only a syntax rule can own a fence), last block is a plain CodeBlock that starts with a
  * fence marker at column 0, runs to the end of the source, has a complete
  * opening line, no `\r`/`\0`, and no closing line yet.
  */
@@ -103,6 +103,39 @@ function findOpenFence(table: NodeTable): OpenFence | null {
   return { char, length, lastLine };
 }
 
+/**
+ * The block index of the tail fence when it has no closing line yet, or
+ * undefined (CodeBlock `open`, P3-33). Unlike `findOpenFence` it holds on
+ * every path and with any plugins: the last real block is a top-level
+ * CodeBlock that opens with a fence (0-3 spaces, 3+ backticks or tildes)
+ * and no later line closes it. `text` is the string the offsets index.
+ * Indented code and fences nested in lists or quotes never count.
+ */
+function openFenceBlockOf(t: NodeTable, text: string): number | undefined {
+  const sections =
+    t.blockCount > 0 &&
+    t.type[t.blocks[t.blockCount - 1]!] === NodeType.FootnoteSection
+      ? 1
+      : 0;
+  const last = t.blockCount - 1 - sections;
+  if (last < 0 || t.type[t.blocks[last]!] !== NodeType.CodeBlock) {
+    return undefined;
+  }
+  const lines = text.slice(t.blockStart[last]!).split(/\r\n?|\n/);
+  const first = lines[0]!;
+  let i = 0;
+  while (i < 3 && first.charCodeAt(i) === 32) i++;
+  const char = first[i];
+  if (char !== '`' && char !== '~') return undefined;
+  let length = 0;
+  while (first[i + length] === char) length++;
+  if (length < 3) return undefined;
+  for (let k = 1; k < lines.length; k++) {
+    if (couldClose(lines[k]!, char, length)) return undefined;
+  }
+  return last;
+}
+
 export const createMarkdownStreamCoreWith = (
   streamOptions?: StreamOptions,
   internals: StreamCoreInternals = {}
@@ -115,9 +148,12 @@ export const createMarkdownStreamCoreWith = (
     delete rest.smoothing;
     options = rest as ParseOptions;
   }
+  // Only a syntax rule can own a fence (the converter handles `fence` before
+  // any plugin node lookup), so components-only plugins keep the fast path
+  // (P3-32). Inline-only syntax plugins still lose it.
   const fastPathEnabled =
     (internals.fenceFastPath ?? FENCE_FAST_PATH_DEFAULT) &&
-    !options?.plugins?.length;
+    !options?.plugins?.some((p) => p.syntax !== undefined);
 
   let source = '';
   let table: NodeTable = parseWithMarkdownIt('', options).table;
@@ -260,7 +296,7 @@ export const createMarkdownStreamCoreWith = (
     const blockEnd = table.blockEnd.slice();
     blockEnd[last] = source.length;
     fence.lastLine = lastLine;
-    table = { ...table, strings, blockEnd, source };
+    table = { ...table, strings, blockEnd, source, openFenceBlock: last };
     lastFlush = {
       charsReparsed: chunk.length,
       fullReparse: false,
@@ -270,6 +306,19 @@ export const createMarkdownStreamCoreWith = (
   };
 
   const appendExact = (chunk: string): NodeTable => {
+    appendRaw(chunk);
+    // The fast path already set `openFenceBlock`. Every other path builds a
+    // table without it (`done`/`reset` tables stay without it: not open).
+    if (lastFlush.path !== 'fence-fast-path') {
+      const open = openFenceBlockOf(table, source);
+      if (open !== table.openFenceBlock) {
+        table = { ...table, openFenceBlock: open };
+      }
+    }
+    return table;
+  };
+
+  const appendRaw = (chunk: string): NodeTable => {
     if (chunk.length === 0) {
       lastFlush = { charsReparsed: 0, fullReparse: false, path: 'tail' };
       return table;
@@ -362,9 +411,14 @@ export const createMarkdownStreamCoreWith = (
       if (tail.table.context === exact.context && !tail.hasFootnoteDefinition) {
         // Offsets index the smoothed text (never longer than the real one);
         // `source` stays the real text.
+        const spliced = spliceTables(exact, stableCount, tail.table, prefixId);
         result = {
-          ...spliceTables(exact, stableCount, tail.table, prefixId),
+          ...spliced,
           source,
+          openFenceBlock: openFenceBlockOf(
+            spliced,
+            source.slice(0, openStart) + hidden
+          ),
         };
       }
     }

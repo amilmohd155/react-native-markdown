@@ -25,7 +25,14 @@ describe('built-in themes', () => {
     expect(Object.keys(darkTheme.colors)).toEqual(
       Object.keys(lightTheme.colors)
     );
-    expect({ ...darkTheme, colors: lightTheme.colors }).toEqual(lightTheme);
+    expect(Object.keys(darkTheme.syntax)).toEqual(
+      Object.keys(lightTheme.syntax)
+    );
+    expect({
+      ...darkTheme,
+      colors: lightTheme.colors,
+      syntax: lightTheme.syntax,
+    }).toEqual(lightTheme);
   });
 
   it.each([

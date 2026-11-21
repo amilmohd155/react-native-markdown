@@ -193,6 +193,7 @@ function tokensOf(theme: ThemeTokens | Theme): ThemeTokens {
     listBullets,
     imageRatio,
     checkbox,
+    syntax,
   } = theme;
   return Object.freeze({
     colors,
@@ -204,6 +205,7 @@ function tokensOf(theme: ThemeTokens | Theme): ThemeTokens {
     listBullets,
     imageRatio,
     checkbox,
+    syntax,
   });
 }
 

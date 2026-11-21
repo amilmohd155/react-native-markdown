@@ -113,8 +113,27 @@ describe('element props', () => {
         codeBlockProps(table, id)
       )
     ).toEqual([
-      { code: 'const a = 1;\n', language: 'ts', meta: 'title="a.ts"' },
-      { code: 'indented', language: null, meta: null },
+      {
+        code: 'const a = 1;\n',
+        language: 'ts',
+        meta: 'title="a.ts"',
+        open: false,
+      },
+      { code: 'indented', language: null, meta: null, open: false },
+    ]);
+  });
+
+  it("CodeBlock: open only for the table's open tail fence (P3-33)", () => {
+    const closed = tableFor('```\na\n```\n\n```\nb\n');
+    const open = { ...closed, openFenceBlock: 1 };
+    const ids = nodesOfType(open, NodeType.CodeBlock);
+    expect(ids.map((id) => codeBlockProps(open, id).open)).toEqual([
+      false,
+      true,
+    ]);
+    expect(ids.map((id) => codeBlockProps(closed, id).open)).toEqual([
+      false,
+      false,
     ]);
   });
 

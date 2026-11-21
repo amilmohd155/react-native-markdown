@@ -70,6 +70,8 @@ export function mergeTokens(
     radius: mergeGroup(base.radius, input.radius),
     imageRatio: input.imageRatio ?? base.imageRatio,
     checkbox: mergeCheckbox(base.checkbox, input.checkbox),
+    // Unset types keep the base palette's color (P3-33).
+    syntax: mergeGroup(base.syntax, input.syntax),
     listBullets:
       input.listBullets === undefined
         ? base.listBullets
