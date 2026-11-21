@@ -5,7 +5,8 @@
       "@docren/react-native-markdown": ["./src/index"],
       "@docren/react-native-markdown/emoji": ["./src/emoji/index"],
       "@docren/react-native-markdown/mentions": ["./src/mentions/index"],
-      "@docren/react-native-markdown/admonitions": ["./src/admonitions/index"]
+      "@docren/react-native-markdown/admonitions": ["./src/admonitions/index"],
+      "@docren/react-native-markdown/highlight": ["./src/highlight/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
