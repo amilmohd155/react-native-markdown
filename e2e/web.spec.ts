@@ -6,6 +6,7 @@ import {
   NUMBERED_CODE,
   NUMBERED_LONG_LINE,
   NUMBERED_SMALL_CODE,
+  NUMBERED_TRAILING_CODE,
   WEB_FIXTURES,
 } from '../test/web/fixtures';
 
@@ -446,6 +447,30 @@ test.describe('line numbers and wrap', () => {
     expect(selected).not.toMatch(/\d/);
     expect(selected).toBe(NUMBERED_SMALL_CODE);
   });
+
+  // Code ending in 2 blank lines (P3-35): native draws an empty last line
+  // after the final `\n`, so its gutter gets a bare `\n` too; web
+  // (`pre-wrap`) draws none after either, so the heights stay equal.
+  for (const id of [
+    'codeblock-numbers-trailing',
+    'codeblock-numbers-trailing-highlight',
+  ]) {
+    test(`draws the gutter as tall as code ending in blank lines on ${id}`, async ({
+      page,
+    }) => {
+      const { gutter, code } = await layoutOf(page, id, NUMBERED_TRAILING_CODE);
+      expect(code.map((c) => c.text).join('')).toBe(NUMBERED_TRAILING_CODE);
+      const numbers = gutter
+        .flatMap((g) => g.text.split('\n'))
+        .filter((n) => n !== '');
+      expect(numbers.join('\n')).toBe(`${NUMBERS}\n31`);
+      expect(gutter).toHaveLength(code.length);
+      if (id.endsWith('highlight')) expect(code.length).toBeGreaterThan(1);
+      const total = (boxes: readonly Box[]) =>
+        boxes.reduce((sum, b) => sum + b.height, 0);
+      expect(Math.abs(total(gutter) - total(code))).toBeLessThanOrEqual(1);
+    });
+  }
 
   test('wraps the long line onto rows that keep one number', async ({
     page,

@@ -9,7 +9,12 @@ import {
   type TextStyle,
 } from 'react-native';
 import type { ElementStyle } from '../../theme';
-import { codeLineCount, codeLines, gutterText, rowText } from '../codeLines';
+import {
+  codeLineCount,
+  codeLines,
+  rowText,
+  singleGutterText,
+} from '../codeLines';
 
 /**
  * Line number and wrap layouts of a code block (P3-35), shared by the
@@ -280,10 +285,7 @@ function GutterBody(props: BodyProps) {
   const { code, gutterStyle, maxFontSizeMultiplier } = props;
   const lastLine = Math.max(1, codeLineCount(code));
   const width = useGutterWidth(gutterStyle, lastLine, maxFontSizeMultiplier);
-  const texts = useMemo(
-    () => [gutterText({ text: code, firstLine: 1, lineCount: lastLine })],
-    [code, lastLine]
-  );
+  const texts = useMemo(() => [singleGutterText(code)], [code]);
   return (
     <GutterFrame
       texts={texts}

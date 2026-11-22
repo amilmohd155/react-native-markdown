@@ -1125,6 +1125,58 @@ describe('line numbers and wrap (P3-35)', () => {
       }
     );
 
+    it.each([false, true])(
+      'chunked: the gutter draws as many lines as the chunks, trailing blank lines too (web %s)',
+      async (web) => {
+        if (web) jest.replaceProperty(Platform, 'OS', 'web');
+        for (const code of [
+          'a;\nb;\nc;',
+          'a;\nb;\nc;\n',
+          'a;\nb;\nc;\n\n',
+          'a;\nb;\nc;\n\n\n',
+          'a;\n\nb;\n\n\nc;\n\n',
+        ]) {
+          const tree = await renderTree(
+            element(numbers, code, false, chunkedPlugin)
+          );
+          const codeTexts = codes(tree).map(textOf);
+          const gutterTexts = gutters(tree).map(textOf);
+          expect(gutterTexts).toHaveLength(codeTexts.length);
+          const sum = (texts: string[]) =>
+            texts.reduce((n, t) => n + drawn(t, web), 0);
+          expect(sum(gutterTexts)).toBe(sum(codeTexts));
+          // Only the last entry gains a bare `\n`, on native only.
+          const extra = !web && code.endsWith('\n');
+          const numbersOf = gutterTexts.map((t) => t.replace(/\n$/, ''));
+          expect(numbersOf.join('\n')).toBe(oneTo(codeLineCount(code)));
+          expect(gutterTexts.map((t) => t.endsWith('\n'))).toEqual(
+            gutterTexts.map((_, i) => extra && i === gutterTexts.length - 1)
+          );
+          // The cache is not mutated: a rerender draws the same gutter.
+          const before = gutters(tree);
+          await tree.rerender(element(numbers, code, false, chunkedPlugin));
+          expect(gutters(tree).map(textOf)).toEqual(gutterTexts);
+          for (const [i, g] of gutters(tree).entries()) {
+            expect(g).toBe(before[i]);
+          }
+        }
+      }
+    );
+
+    it('chunked while open: finished chunks keep their gutter Text and text', async () => {
+      const code = 'a;\nb;\nc;\nd;\n';
+      const tree = await renderTree(
+        element(numbers, code, true, chunkedPlugin)
+      );
+      expect(gutters(tree).map(textOf)).toEqual(['1\n2', '3\n4\n']);
+      const [first] = gutters(tree);
+      await tree.rerender(
+        element(numbers, `${code}e;\n\n`, true, chunkedPlugin)
+      );
+      expect(gutters(tree).map(textOf)).toEqual(['1\n2', '3\n4', '5\n6\n']);
+      expect(gutters(tree)[0]).toBe(first);
+    });
+
     it('numbers 10 and 100 lines at the chunked width', async () => {
       const lines = (n: number) =>
         Array.from({ length: n }, (_, i) => `x${i};`).join('\n');
@@ -1169,7 +1221,10 @@ describe('line numbers and wrap (P3-35)', () => {
         for (let i = 1; i <= lines.length; i++) {
           const code = lines.slice(0, i).join('');
           await tree.rerender(element({ codeBlock }, code, true));
-          const numbers = gutters(tree).flatMap((n) => textOf(n).split('\n'));
+          // Native: the last gutter ends in a bare `\n` after the code's.
+          const numbers = gutters(tree)
+            .flatMap((n) => textOf(n).split('\n'))
+            .filter((n) => n !== '');
           expect(numbers).toEqual(
             [...Array(codeLineCount(code)).keys()].map((k) => String(k + 1))
           );

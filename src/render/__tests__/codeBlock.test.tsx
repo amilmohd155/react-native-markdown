@@ -171,6 +171,35 @@ describe('default CodeBlock layouts (P3-35)', () => {
     expect(ariaHidden(codes[0]!)).toBe(false);
   });
 
+  it.each([false, true])(
+    'numbers on, wrap off: the gutter draws as many lines as the code, trailing blank lines too (web %s)',
+    async (web) => {
+      if (web) jest.replaceProperty(Platform, 'OS', 'web');
+      /** Lines a Text draws: native adds an empty line after a final `\n`, web (`pre-wrap`) none. */
+      const drawn = (text: string) =>
+        web
+          ? Math.max(1, text.replace(/\n$/, '').split('\n').length)
+          : text.split('\n').length;
+      for (const [code, gutter] of [
+        ['a\nb', '1\n2'],
+        ['a\nb\n', '1\n2\n'],
+        ['a\nb\n\n', '1\n2\n3\n'],
+        ['a\nb\n\n\n', '1\n2\n3\n4\n'],
+      ] as const) {
+        const { all } = await renderBlock(
+          { codeBlock: { lineNumbers: true } },
+          { code }
+        );
+        const [text] = all(isCode).map(textOfNode);
+        expect(text).toBe(code);
+        // One text on both platforms: a final `\n` adds a bare line, which
+        // native draws (as the code's) and web does not (nor the code's).
+        expect(all(isGutter).map(textOfNode)).toEqual([gutter]);
+        expect(drawn(gutter)).toBe(drawn(code));
+      }
+    }
+  );
+
   it('sizes the gutter from the digits of the last line number', async () => {
     const code = Array.from({ length: 120 }, (_, i) => `x${i}`).join('\n');
     const nine = Array.from({ length: 9 }, (_, i) => `x${i}`).join('\n');

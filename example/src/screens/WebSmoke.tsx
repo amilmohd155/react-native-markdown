@@ -12,6 +12,7 @@ import {
   LONG_LINE_CODE,
   NUMBERED_CODE,
   NUMBERED_SMALL_CODE,
+  NUMBERED_TRAILING_CODE,
   WEB_FIXTURES,
 } from '../../../test/web/fixtures';
 
@@ -74,7 +75,9 @@ function HeaderFixture({
  * The `codeblock-numbers*` and `codeblock-*wrap*` blocks add line numbers
  * and wrap to {@link NUMBERED_CODE} (selectable), plain and highlighted;
  * `codeblock-numbers-highlight-small` numbers {@link NUMBERED_SMALL_CODE}
- * (one code Text); `codeblock-wrap` wraps without numbers.
+ * (one code Text); `codeblock-numbers-trailing*` number
+ * {@link NUMBERED_TRAILING_CODE} (ends in 2 blank lines), plain and
+ * highlighted; `codeblock-wrap` wraps without numbers.
  */
 export function WebSmoke() {
   return (
@@ -120,6 +123,19 @@ export function WebSmoke() {
       <HeaderFixture
         testID="codeblock-numbers-highlight-small"
         code={NUMBERED_SMALL_CODE}
+        codeBlock={NUMBERS}
+        highlighted
+        selectable
+      />
+      <HeaderFixture
+        testID="codeblock-numbers-trailing"
+        code={NUMBERED_TRAILING_CODE}
+        codeBlock={NUMBERS}
+        selectable
+      />
+      <HeaderFixture
+        testID="codeblock-numbers-trailing-highlight"
+        code={NUMBERED_TRAILING_CODE}
         codeBlock={NUMBERS}
         highlighted
         selectable

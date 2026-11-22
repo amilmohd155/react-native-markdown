@@ -29,7 +29,7 @@ import {
   useCodeBlockHeader,
   useCodeBlockWrap,
 } from '../render/defaults/codeBlockShell';
-import { codeLineCount, gutterText, rowText } from '../render/codeLines';
+import { gutterText, rowText, singleGutterText } from '../render/codeLines';
 import { isDev } from '../render/devInline';
 import type { ElementProps } from '../render/elements';
 import type { ElementStyle } from '../theme';
@@ -223,6 +223,7 @@ function Highlighted({
         <GutterBody
           chunks={chunks}
           code={single ? code : null}
+          web={web}
           gutterStyle={theme.codeBlockGutter}
           maxFontSizeMultiplier={text.maxFontSizeMultiplier}
         >
@@ -338,18 +339,6 @@ function chunkGutterText(chunk: Chunk, firstLine: number): string {
 }
 
 /**
- * The gutter of the single code `Text`: its numbers, one per line, plus a
- * bare `\n` when the code ends in one, so it draws as many lines as the code
- * `Text` (native draws an empty last line after a final `\n`, web draws none
- * in both). An empty block shows line 1.
- */
-function singleGutterText(code: string): string {
-  const lineCount = Math.max(1, codeLineCount(code));
-  const numbers = gutterText({ text: code, firstLine: 1, lineCount });
-  return code.endsWith('\n') ? `${numbers}\n` : numbers;
-}
-
-/**
  * Numbers without wrap: the code scrolls beside a fixed gutter. With `code`
  * (the single code `Text`) the gutter is one `Text` for the whole block;
  * else it mirrors the chunks, one gutter `Text` per chunk with that chunk's
@@ -359,6 +348,7 @@ function singleGutterText(code: string): string {
 function GutterBody({
   chunks,
   code,
+  web,
   gutterStyle,
   maxFontSizeMultiplier,
   children,
@@ -366,6 +356,7 @@ function GutterBody({
   readonly chunks: readonly Chunk[];
   /** The code when drawn as one `Text`, else `null`. */
   readonly code: string | null;
+  readonly web: boolean;
   readonly gutterStyle: ElementStyle;
   readonly maxFontSizeMultiplier: number | undefined;
   readonly children: ReactNode;
@@ -379,6 +370,12 @@ function GutterBody({
   if (code !== null) texts.push(singleGutterText(code));
   // An empty block still shows line 1, as the default block does.
   else if (texts.length === 0) texts.push('1');
+  // Native draws an empty last line after the last chunk's final `\n` (the
+  // other chunks drop theirs), so its gutter gets a bare `\n` too: a new
+  // string, the cached text stays as is. Web draws none (`pre-wrap`).
+  else if (!web && chunks[chunks.length - 1]!.text.endsWith('\n')) {
+    texts[texts.length - 1] += '\n';
+  }
   const width = useGutterWidth(
     gutterStyle,
     Math.max(1, firstLine - 1),

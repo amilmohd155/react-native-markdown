@@ -77,6 +77,19 @@ export function gutterText(chunk: CodeChunk): string {
 }
 
 /**
+ * The gutter of a code block drawn as one code `Text`, shared by the plain
+ * gutter layout and the small highlighted block: its numbers, one per line,
+ * plus a bare `\n` when the code ends in one, so it draws as many lines as
+ * the code `Text` (native draws an empty last line after a final `\n`, web
+ * draws none in both). An empty block shows line 1.
+ */
+export function singleGutterText(code: string): string {
+  const lineCount = Math.max(1, codeLineCount(code));
+  const numbers = gutterText({ text: code, firstLine: 1, lineCount });
+  return code.endsWith('\n') ? `${numbers}\n` : numbers;
+}
+
+/**
  * End offset and line count of the chunk starting at `from`: just after the
  * first complete line that is at least the {@link LINES_PER_CHUNK}th and not
  * blank, or the end of `code`.

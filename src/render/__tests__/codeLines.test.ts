@@ -4,6 +4,7 @@ import {
   codeLines,
   gutterText,
   rowText,
+  singleGutterText,
   type CodeChunk,
 } from '../codeLines';
 
@@ -171,6 +172,29 @@ describe('gutterText', () => {
     );
     const chunks = codeChunks('a\nb\n\n\nc\nd\ne', false);
     expect(chunks.map(gutterText)).toEqual(['1\n2', '3\n4\n5', '6\n7']);
+  });
+});
+
+describe('singleGutterText', () => {
+  it('shows line 1 for an empty block', () => {
+    expect(singleGutterText('')).toBe('1');
+  });
+
+  it('numbers one line, with a bare newline after a final newline', () => {
+    expect(singleGutterText('a')).toBe('1');
+    expect(singleGutterText('a\n')).toBe('1\n');
+  });
+
+  it('numbers trailing blank lines and adds one bare newline', () => {
+    expect(singleGutterText('a\nb')).toBe('1\n2');
+    expect(singleGutterText('a\n\n')).toBe('1\n2\n');
+    expect(singleGutterText('a\n\n\n')).toBe('1\n2\n3\n');
+    // Native draws as many lines as the code Text (split on `\n`).
+    for (const code of ['a', 'a\n', 'a\n\n', 'a\n\n\n', '\n']) {
+      expect(singleGutterText(code).split('\n')).toHaveLength(
+        code.split('\n').length
+      );
+    }
   });
 });
 

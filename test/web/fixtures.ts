@@ -65,6 +65,13 @@ export const NUMBERED_SMALL_CODE = [
   '}',
 ].join('\n');
 
+/**
+ * {@link NUMBERED_CODE} ending in 2 blank lines (P3-35): the code ends in
+ * `\n\n`, so native draws an empty last line that the gutter must match.
+ * Over 800 characters, so the highlighted block is chunked.
+ */
+export const NUMBERED_TRAILING_CODE = `${NUMBERED_CODE}\n\n`;
+
 /** The 1-based line of {@link NUMBERED_CODE} that wraps. */
 export const NUMBERED_LONG_LINE = 15;
 
