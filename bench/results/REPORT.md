@@ -1297,3 +1297,17 @@ The same harness as the Android pass, on the iOS simulator (Expo Go SDK 58, `--n
   - `draws a chunked highlighted block as tall as the plain one` (PR #73). Class (a): 4,956.9 against 4,957.6 px (0.7 px over about 240 lines). This is sub-pixel line rounding across chunks, as accepted in P3-30.
 - **Manual check:** the gutter is exact in every layout: top delta 0 for each row and chunk. In the rows layout, line 15 wraps onto 4 lines and its number stays one line at the row top. Mouse drag gives exactly the code: no digits, and blank lines 10, 20 and 21 kept. `Wrap` is underlined only while `aria-pressed="true"`. The header and the gutter stay fixed during horizontal scroll, and there are no page errors. Separate finding: on the header-only fixtures (no numbers, no wrap), the code `Text` computes `user-select: none` in WebKit and Chromium alike, so the code cannot be drag-selected there.
 - **Verdict:** WebKit found no product bug (class (b)) in the header, numbers or wrap. All 10 failures come from how WebKit or Playwright behaves, so the suite stays Chromium-only.
+
+## Code block numbers: trailing blank lines (S25 FE and iOS simulator, 2026-11-22)
+
+- **Method:** numbered fences without wrap whose code ends in `\n` (blank lines before the closing fence), plain and highlighted (over 800 characters, chunked), in Expo Go on the S25 FE and the iPhone 18 Pro simulator; gutter column height against code column height from the layout. Before the fix:
+
+| platform | font scale / size | gutter minus code | why |
+|---|---|---|---|
+| Android | 0.8 | -14.1 dp | empty last line 14.1 of lineHeight 16.38 |
+| Android | 2.0 | -31.62 dp | lineHeight 34.29 |
+| iOS | large | -20.33 pt | one line |
+| iOS | XXXL | -27.3 to -27.7 pt | one line |
+
+- **Affected:** the plain block in the gutter layout (any size) and the last chunk of a chunked highlighted block. **Not affected:** a highlighted block drawn as one `Text` and both rows layouts. Native draws an empty last line after a final `\n`; web (`pre-wrap`) draws none.
+- **Fix:** the gutter text ends in a bare `\n` when its code does ([P3-35](../../docs/rewrite/phase-3/decisions.md#p3-35-code-block-header-line-numbers-and-wrap-in-pure-js)). Verified by unit tests and the web e2e (gutter and code heights equal within 1 px), and re-measured on the S25 FE (font scale 0.8 and 2.0) and the iOS simulator (content size `large` and XXXL) with the same cases: gutter minus code height is now 0 in every case, including the plain gutter with 1 to 3 trailing blanks, a large plain block, the plain gutter with a header and a large highlighted chunked block; the cases that lined up before (plain with no trailing blank, middle blanks only, one line, the highlighted single `Text`, rows) did not regress. Not tested on a device: the open-to-closed swap of a real stream (covered by unit tests only).
