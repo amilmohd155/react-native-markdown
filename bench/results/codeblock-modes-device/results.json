@@ -1,0 +1,1118 @@
+{
+ "device": "Samsung S25 FE (SM-S731B), Expo Go SDK 58, --no-dev --minify bundle, font scale 0.8 unless labelled",
+ "date": "2026-11-22",
+ "static": [
+  {
+   "query": "mode=base",
+   "pssKB": 228581,
+   "result": {
+    "kind": "base"
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=1&header=0&num=0&wrap=0",
+   "pssKB": 255908,
+   "result": {
+    "kind": "mount",
+    "ms": 158,
+    "cfg": {
+     "size": "10k",
+     "hl": true,
+     "header": false,
+     "num": false,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=1&header=0&num=1&wrap=0",
+   "pssKB": 262538,
+   "result": {
+    "kind": "mount",
+    "ms": 172,
+    "cfg": {
+     "size": "10k",
+     "hl": true,
+     "header": false,
+     "num": true,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=1&header=0&num=1&wrap=1",
+   "pssKB": 263139,
+   "result": {
+    "kind": "mount",
+    "ms": 91,
+    "cfg": {
+     "size": "10k",
+     "hl": true,
+     "header": false,
+     "num": true,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=1&header=0&num=0&wrap=1",
+   "pssKB": 244443,
+   "result": {
+    "kind": "mount",
+    "ms": 147,
+    "cfg": {
+     "size": "10k",
+     "hl": true,
+     "header": false,
+     "num": false,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=0&header=0&num=0&wrap=0",
+   "pssKB": 230810,
+   "result": {
+    "kind": "mount",
+    "ms": 71,
+    "cfg": {
+     "size": "10k",
+     "hl": false,
+     "header": false,
+     "num": false,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=0&header=0&num=1&wrap=0",
+   "pssKB": 232191,
+   "result": {
+    "kind": "mount",
+    "ms": 80,
+    "cfg": {
+     "size": "10k",
+     "hl": false,
+     "header": false,
+     "num": true,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=0&header=0&num=1&wrap=1",
+   "pssKB": 259637,
+   "result": {
+    "kind": "mount",
+    "ms": 52,
+    "cfg": {
+     "size": "10k",
+     "hl": false,
+     "header": false,
+     "num": true,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=0&header=0&num=0&wrap=1",
+   "pssKB": 230552,
+   "result": {
+    "kind": "mount",
+    "ms": 13,
+    "cfg": {
+     "size": "10k",
+     "hl": false,
+     "header": false,
+     "num": false,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=1&header=0&num=0&wrap=0",
+   "pssKB": 279968,
+   "result": {
+    "kind": "mount",
+    "ms": 246,
+    "cfg": {
+     "size": "20k",
+     "hl": true,
+     "header": false,
+     "num": false,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=1&header=0&num=1&wrap=0",
+   "pssKB": 274109,
+   "result": {
+    "kind": "mount",
+    "ms": 169,
+    "cfg": {
+     "size": "20k",
+     "hl": true,
+     "header": false,
+     "num": true,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=1&header=0&num=1&wrap=1",
+   "pssKB": 301839,
+   "result": {
+    "kind": "mount",
+    "ms": 331,
+    "cfg": {
+     "size": "20k",
+     "hl": true,
+     "header": false,
+     "num": true,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=1&header=0&num=0&wrap=1",
+   "pssKB": 270678,
+   "result": {
+    "kind": "mount",
+    "ms": 186,
+    "cfg": {
+     "size": "20k",
+     "hl": true,
+     "header": false,
+     "num": false,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=0&header=0&num=0&wrap=0",
+   "pssKB": 231177,
+   "result": {
+    "kind": "mount",
+    "ms": 76,
+    "cfg": {
+     "size": "20k",
+     "hl": false,
+     "header": false,
+     "num": false,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=0&header=0&num=1&wrap=0",
+   "pssKB": 236727,
+   "result": {
+    "kind": "mount",
+    "ms": 54,
+    "cfg": {
+     "size": "20k",
+     "hl": false,
+     "header": false,
+     "num": true,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=0&header=0&num=1&wrap=1",
+   "pssKB": 287928,
+   "result": {
+    "kind": "mount",
+    "ms": 241,
+    "cfg": {
+     "size": "20k",
+     "hl": false,
+     "header": false,
+     "num": true,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=0&header=0&num=0&wrap=1",
+   "pssKB": 231106,
+   "result": {
+    "kind": "mount",
+    "ms": 61,
+    "cfg": {
+     "size": "20k",
+     "hl": false,
+     "header": false,
+     "num": false,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=1&header=0&num=0&wrap=0",
+   "pssKB": 315203,
+   "result": {
+    "kind": "mount",
+    "ms": 293,
+    "cfg": {
+     "size": "48k",
+     "hl": true,
+     "header": false,
+     "num": false,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=1&header=0&num=1&wrap=0",
+   "pssKB": 336629,
+   "result": {
+    "kind": "mount",
+    "ms": 349,
+    "cfg": {
+     "size": "48k",
+     "hl": true,
+     "header": false,
+     "num": true,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=1&header=0&num=1&wrap=1",
+   "pssKB": 418330,
+   "result": {
+    "kind": "mount",
+    "ms": 434,
+    "cfg": {
+     "size": "48k",
+     "hl": true,
+     "header": false,
+     "num": true,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=1&header=0&num=0&wrap=1",
+   "pssKB": 305248,
+   "result": {
+    "kind": "mount",
+    "ms": 247,
+    "cfg": {
+     "size": "48k",
+     "hl": true,
+     "header": false,
+     "num": false,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=0&header=0&num=0&wrap=0",
+   "pssKB": 230466,
+   "result": {
+    "kind": "mount",
+    "ms": 84,
+    "cfg": {
+     "size": "48k",
+     "hl": false,
+     "header": false,
+     "num": false,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=0&header=0&num=1&wrap=0",
+   "pssKB": 240587,
+   "result": {
+    "kind": "mount",
+    "ms": 128,
+    "cfg": {
+     "size": "48k",
+     "hl": false,
+     "header": false,
+     "num": true,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=0&header=0&num=1&wrap=1",
+   "pssKB": 336819,
+   "result": {
+    "kind": "mount",
+    "ms": 217,
+    "cfg": {
+     "size": "48k",
+     "hl": false,
+     "header": false,
+     "num": true,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=0&header=0&num=0&wrap=1",
+   "pssKB": 229511,
+   "result": {
+    "kind": "mount",
+    "ms": 52,
+    "cfg": {
+     "size": "48k",
+     "hl": false,
+     "header": false,
+     "num": false,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=base",
+   "pssKB": 226369,
+   "result": {
+    "kind": "base"
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=1&header=0&num=0&wrap=0",
+   "pssKB": 252031,
+   "result": {
+    "kind": "mount",
+    "ms": 177,
+    "cfg": {
+     "size": "10k",
+     "hl": true,
+     "header": false,
+     "num": false,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=1&header=0&num=1&wrap=0",
+   "pssKB": 263642,
+   "result": {
+    "kind": "mount",
+    "ms": 158,
+    "cfg": {
+     "size": "10k",
+     "hl": true,
+     "header": false,
+     "num": true,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=1&header=0&num=1&wrap=1",
+   "pssKB": 273572,
+   "result": {
+    "kind": "mount",
+    "ms": 89,
+    "cfg": {
+     "size": "10k",
+     "hl": true,
+     "header": false,
+     "num": true,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=1&header=0&num=0&wrap=1",
+   "pssKB": 244865,
+   "result": {
+    "kind": "mount",
+    "ms": 122,
+    "cfg": {
+     "size": "10k",
+     "hl": true,
+     "header": false,
+     "num": false,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=0&header=0&num=0&wrap=0",
+   "pssKB": 230794,
+   "result": {
+    "kind": "mount",
+    "ms": 39,
+    "cfg": {
+     "size": "10k",
+     "hl": false,
+     "header": false,
+     "num": false,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=0&header=0&num=1&wrap=0",
+   "pssKB": 231780,
+   "result": {
+    "kind": "mount",
+    "ms": 61,
+    "cfg": {
+     "size": "10k",
+     "hl": false,
+     "header": false,
+     "num": true,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=0&header=0&num=1&wrap=1",
+   "pssKB": 257160,
+   "result": {
+    "kind": "mount",
+    "ms": 137,
+    "cfg": {
+     "size": "10k",
+     "hl": false,
+     "header": false,
+     "num": true,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=10k&hl=0&header=0&num=0&wrap=1",
+   "pssKB": 229935,
+   "result": {
+    "kind": "mount",
+    "ms": 41,
+    "cfg": {
+     "size": "10k",
+     "hl": false,
+     "header": false,
+     "num": false,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=1&header=0&num=0&wrap=0",
+   "pssKB": 281485,
+   "result": {
+    "kind": "mount",
+    "ms": 139,
+    "cfg": {
+     "size": "20k",
+     "hl": true,
+     "header": false,
+     "num": false,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=1&header=0&num=1&wrap=0",
+   "pssKB": 273373,
+   "result": {
+    "kind": "mount",
+    "ms": 168,
+    "cfg": {
+     "size": "20k",
+     "hl": true,
+     "header": false,
+     "num": true,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=1&header=0&num=1&wrap=1",
+   "pssKB": 301889,
+   "result": {
+    "kind": "mount",
+    "ms": 162,
+    "cfg": {
+     "size": "20k",
+     "hl": true,
+     "header": false,
+     "num": true,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=1&header=0&num=0&wrap=1",
+   "pssKB": 268739,
+   "result": {
+    "kind": "mount",
+    "ms": 108,
+    "cfg": {
+     "size": "20k",
+     "hl": true,
+     "header": false,
+     "num": false,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=0&header=0&num=0&wrap=0",
+   "pssKB": 230975,
+   "result": {
+    "kind": "mount",
+    "ms": 58,
+    "cfg": {
+     "size": "20k",
+     "hl": false,
+     "header": false,
+     "num": false,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=0&header=0&num=1&wrap=0",
+   "pssKB": 231313,
+   "result": {
+    "kind": "mount",
+    "ms": 23,
+    "cfg": {
+     "size": "20k",
+     "hl": false,
+     "header": false,
+     "num": true,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=0&header=0&num=1&wrap=1",
+   "pssKB": 285278,
+   "result": {
+    "kind": "mount",
+    "ms": 237,
+    "cfg": {
+     "size": "20k",
+     "hl": false,
+     "header": false,
+     "num": true,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=20k&hl=0&header=0&num=0&wrap=1",
+   "pssKB": 228335,
+   "result": {
+    "kind": "mount",
+    "ms": 49,
+    "cfg": {
+     "size": "20k",
+     "hl": false,
+     "header": false,
+     "num": false,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=1&header=0&num=0&wrap=0",
+   "pssKB": 308229,
+   "result": {
+    "kind": "mount",
+    "ms": 295,
+    "cfg": {
+     "size": "48k",
+     "hl": true,
+     "header": false,
+     "num": false,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=1&header=0&num=1&wrap=0",
+   "pssKB": 336176,
+   "result": {
+    "kind": "mount",
+    "ms": 353,
+    "cfg": {
+     "size": "48k",
+     "hl": true,
+     "header": false,
+     "num": true,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=1&header=0&num=1&wrap=1",
+   "pssKB": 402370,
+   "result": {
+    "kind": "mount",
+    "ms": 439,
+    "cfg": {
+     "size": "48k",
+     "hl": true,
+     "header": false,
+     "num": true,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=1&header=0&num=0&wrap=1",
+   "pssKB": 284601,
+   "result": {
+    "kind": "mount",
+    "ms": 244,
+    "cfg": {
+     "size": "48k",
+     "hl": true,
+     "header": false,
+     "num": false,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=0&header=0&num=0&wrap=0",
+   "pssKB": 234292,
+   "result": {
+    "kind": "mount",
+    "ms": 104,
+    "cfg": {
+     "size": "48k",
+     "hl": false,
+     "header": false,
+     "num": false,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=0&header=0&num=1&wrap=0",
+   "pssKB": 241836,
+   "result": {
+    "kind": "mount",
+    "ms": 132,
+    "cfg": {
+     "size": "48k",
+     "hl": false,
+     "header": false,
+     "num": true,
+     "wrap": false
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=0&header=0&num=1&wrap=1",
+   "pssKB": 350978,
+   "result": {
+    "kind": "mount",
+    "ms": 214,
+    "cfg": {
+     "size": "48k",
+     "hl": false,
+     "header": false,
+     "num": true,
+     "wrap": true
+    }
+   }
+  },
+  {
+   "query": "mode=static&size=48k&hl=0&header=0&num=0&wrap=1",
+   "pssKB": 233366,
+   "result": {
+    "kind": "mount",
+    "ms": 21,
+    "cfg": {
+     "size": "48k",
+     "hl": false,
+     "header": false,
+     "num": false,
+     "wrap": true
+    }
+   }
+  }
+ ],
+ "stream": [
+  {
+   "query": "mode=stream&size=48k&hl=1&header=1&num=0&wrap=0",
+   "pssKB": 380628,
+   "result": {
+    "kind": "stream",
+    "cfg": {
+     "size": "48k",
+     "hl": true,
+     "header": true,
+     "num": false,
+     "wrap": false
+    },
+    "chars": 49163,
+    "n": 615,
+    "p50": 16.1,
+    "p95": 30.3,
+    "max": 71.55,
+    "totalMs": 14437
+   }
+  },
+  {
+   "query": "mode=stream&size=48k&hl=1&header=1&num=1&wrap=0",
+   "pssKB": 500987,
+   "result": {
+    "kind": "stream",
+    "cfg": {
+     "size": "48k",
+     "hl": true,
+     "header": true,
+     "num": true,
+     "wrap": false
+    },
+    "chars": 49163,
+    "n": 615,
+    "p50": 21.27,
+    "p95": 41.32,
+    "max": 79.85,
+    "totalMs": 17306
+   }
+  },
+  {
+   "query": "mode=stream&size=48k&hl=1&header=1&num=1&wrap=1",
+   "pssKB": 474369,
+   "result": {
+    "kind": "stream",
+    "cfg": {
+     "size": "48k",
+     "hl": true,
+     "header": true,
+     "num": true,
+     "wrap": true
+    },
+    "chars": 49163,
+    "n": 615,
+    "p50": 29.09,
+    "p95": 78.38,
+    "max": 347.33,
+    "totalMs": 28549
+   }
+  },
+  {
+   "query": "mode=stream&size=48k&hl=1&header=1&num=0&wrap=0",
+   "pssKB": 393671,
+   "result": {
+    "kind": "stream",
+    "cfg": {
+     "size": "48k",
+     "hl": true,
+     "header": true,
+     "num": false,
+     "wrap": false
+    },
+    "chars": 49163,
+    "n": 615,
+    "p50": 22.23,
+    "p95": 40.72,
+    "max": 105.69,
+    "totalMs": 18743
+   }
+  },
+  {
+   "query": "mode=stream&size=48k&hl=1&header=1&num=1&wrap=0",
+   "pssKB": 489780,
+   "result": {
+    "kind": "stream",
+    "cfg": {
+     "size": "48k",
+     "hl": true,
+     "header": true,
+     "num": true,
+     "wrap": false
+    },
+    "chars": 49163,
+    "n": 615,
+    "p50": 31.46,
+    "p95": 58.86,
+    "max": 113.55,
+    "totalMs": 24550
+   }
+  },
+  {
+   "query": "mode=stream&size=48k&hl=1&header=1&num=1&wrap=1",
+   "pssKB": 676801,
+   "result": {
+    "kind": "stream",
+    "cfg": {
+     "size": "48k",
+     "hl": true,
+     "header": true,
+     "num": true,
+     "wrap": true
+    },
+    "chars": 49163,
+    "n": 615,
+    "p50": 43.46,
+    "p95": 113.04,
+    "max": 537.65,
+    "totalMs": 41432
+   }
+  },
+  {
+   "query": "mode=stream&size=48k&hl=0&header=1&num=1&wrap=1",
+   "result": {
+    "p50": 19.45,
+    "p95": 44.38,
+    "max": 193.5,
+    "totalMs": 24144
+   },
+   "pssKB": 519478
+  },
+  {
+   "query": "mode=stream&size=48k&hl=0&header=1&num=1&wrap=1",
+   "result": {
+    "p50": 22.16,
+    "p95": 48.21,
+    "max": 197.93,
+    "totalMs": 25789
+   },
+   "pssKB": 506650
+  },
+  {
+   "query": "mode=stream&size=48k&hl=0&header=1&num=1&wrap=0",
+   "result": {
+    "p50": 27.46,
+    "p95": 78.63,
+    "max": 105.25,
+    "totalMs": 27817
+   },
+   "pssKB": 360583
+  }
+ ],
+ "seams": [
+  {
+   "label": "fs0.8 hl=1 num=1&wrap=0",
+   "result": {
+    "kind": "measure",
+    "cfg": {
+     "size": "seam",
+     "hl": true,
+     "header": true,
+     "num": true,
+     "wrap": false
+    },
+    "texts": 221,
+    "gutter": 109,
+    "code": 109,
+    "gutterTotal": 3833.14,
+    "codeTotal": 3833.14,
+    "bottomDrift": 0,
+    "topDiff0": 0,
+    "maxTopDiff": 0,
+    "maxHeightDiff": 0,
+    "lineH": 16.38
+   }
+  },
+  {
+   "label": "fs0.8 hl=1 num=1&wrap=1",
+   "result": {
+    "kind": "measure",
+    "cfg": {
+     "size": "seam",
+     "hl": true,
+     "header": true,
+     "num": true,
+     "wrap": true
+    },
+    "texts": 471,
+    "gutter": 234,
+    "code": 234,
+    "gutterTotal": 3833.14,
+    "codeTotal": 4439.24,
+    "bottomDrift": 0,
+    "topDiff0": 0,
+    "maxTopDiff": 0,
+    "maxHeightDiff": 0,
+    "lineH": 16.38,
+    "wrappedRows": 12,
+    "wrappedRowsWithTallGutter": 0,
+    "blankRows": 25,
+    "blankRowMaxDiff": 0
+   }
+  },
+  {
+   "label": "fs0.8 hl=0 num=1&wrap=0",
+   "result": {
+    "kind": "measure",
+    "cfg": {
+     "size": "seam",
+     "hl": false,
+     "header": true,
+     "num": true,
+     "wrap": false
+    },
+    "texts": 5,
+    "gutter": 1,
+    "code": 1,
+    "gutterTotal": 3832.76,
+    "codeTotal": 3832.76,
+    "bottomDrift": 0,
+    "topDiff0": 0,
+    "maxTopDiff": 0,
+    "maxHeightDiff": 0,
+    "lineH": 3832.76
+   }
+  },
+  {
+   "label": "fs0.8 hl=0 num=1&wrap=1",
+   "result": {
+    "kind": "measure",
+    "cfg": {
+     "size": "seam",
+     "hl": false,
+     "header": true,
+     "num": true,
+     "wrap": true
+    },
+    "texts": 471,
+    "gutter": 234,
+    "code": 234,
+    "gutterTotal": 3833.14,
+    "codeTotal": 4439.24,
+    "bottomDrift": 0,
+    "topDiff0": 0,
+    "maxTopDiff": 0,
+    "maxHeightDiff": 0,
+    "lineH": 16.38,
+    "wrappedRows": 12,
+    "wrappedRowsWithTallGutter": 0,
+    "blankRows": 25,
+    "blankRowMaxDiff": 0
+   }
+  },
+  {
+   "label": "fs2.0 hl=1 num=1&wrap=0",
+   "result": {
+    "kind": "measure",
+    "cfg": {
+     "size": "seam",
+     "hl": true,
+     "header": true,
+     "num": true,
+     "wrap": false
+    },
+    "texts": 221,
+    "gutter": 109,
+    "code": 109,
+    "gutterTotal": 8022.86,
+    "codeTotal": 8022.86,
+    "bottomDrift": 0,
+    "topDiff0": 0,
+    "maxTopDiff": 0,
+    "maxHeightDiff": 0,
+    "lineH": 34.29
+   }
+  },
+  {
+   "label": "fs2.0 hl=1 num=1&wrap=1",
+   "result": {
+    "kind": "measure",
+    "cfg": {
+     "size": "seam",
+     "hl": true,
+     "header": true,
+     "num": true,
+     "wrap": true
+    },
+    "texts": 471,
+    "gutter": 234,
+    "code": 234,
+    "gutterTotal": 8022.85,
+    "codeTotal": 17897.14,
+    "bottomDrift": 0,
+    "topDiff0": 0,
+    "maxTopDiff": 0,
+    "maxHeightDiff": 0,
+    "lineH": 34.28,
+    "wrappedRows": 135,
+    "wrappedRowsWithTallGutter": 0,
+    "blankRows": 25,
+    "blankRowMaxDiff": 0
+   }
+  },
+  {
+   "label": "fs2.0 hl=0 num=1&wrap=0",
+   "result": {
+    "kind": "measure",
+    "cfg": {
+     "size": "seam",
+     "hl": false,
+     "header": true,
+     "num": true,
+     "wrap": false
+    },
+    "texts": 5,
+    "gutter": 1,
+    "code": 1,
+    "gutterTotal": 8022.86,
+    "codeTotal": 8022.86,
+    "bottomDrift": 0,
+    "topDiff0": 0,
+    "maxTopDiff": 0,
+    "maxHeightDiff": 0,
+    "lineH": 8022.86
+   }
+  },
+  {
+   "label": "fs2.0 hl=0 num=1&wrap=1",
+   "result": {
+    "kind": "measure",
+    "cfg": {
+     "size": "seam",
+     "hl": false,
+     "header": true,
+     "num": true,
+     "wrap": true
+    },
+    "texts": 471,
+    "gutter": 234,
+    "code": 234,
+    "gutterTotal": 8022.85,
+    "codeTotal": 17897.14,
+    "bottomDrift": 0,
+    "topDiff0": 0,
+    "maxTopDiff": 0,
+    "maxHeightDiff": 0,
+    "lineH": 34.28,
+    "wrappedRows": 135,
+    "wrappedRowsWithTallGutter": 0,
+    "blankRows": 25,
+    "blankRowMaxDiff": 0
+   }
+  }
+ ],
+ "wrapToggleMs": [
+  {
+   "hl": true,
+   "gutterToRows": [
+    484,
+    502
+   ],
+   "rowsToGutter": [
+    385,
+    393
+   ]
+  },
+  {
+   "hl": false,
+   "gutterToRows": [
+    243,
+    273
+   ],
+   "rowsToGutter": [
+    58,
+    57
+   ]
+  }
+ ]
+}

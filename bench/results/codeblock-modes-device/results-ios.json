@@ -1,0 +1,977 @@
+{
+ "device": "iPhone 18 Pro simulator (iOS), Expo Go SDK 58, --no-dev --minify bundle (dev=false in every record), content size large unless labelled XXXL",
+ "date": "2026-11-22",
+ "notes": [
+  "mount: setState of a pre-parsed document to the last onLayout of a wrapper View (1.5 s quiet, 10 s cap); fresh Expo Go launch per cell; header off, selectable off",
+  "memory: phys_footprint of the Expo Go process (footprint -p), 1 s after the post; baseline read in the same launch before mount",
+  "stream: useMarkdownStream, 80 chars every 16 ms, header on; commit = render of the new document to its layout effect; React.Profiler onRender did not fire in this production bundle (profilerCalls 0)",
+  "toggle: wrap prop flipped 4 times after mount at 48 KB, numbers on; ms to the last onLayout",
+  "align: RCTParagraphTextView window frames (argent native-find-views), 234-line block (31 blank rows); gutter vs code tops and bottoms; L = content size large, XXXL = extra-extra-extra-large. For scroll/wrap modes (no gutter) only the block height is meaningful"
+ ],
+ "static": [
+  {
+   "cfg": "size=10k&hl=1&header=0&num=0&wrap=0",
+   "chars": 10239,
+   "mountMs": 214.1,
+   "layouts": 1,
+   "heightPt": 5017.67,
+   "baseFootprintMB": 161.0,
+   "footprintMB": 524.0
+  },
+  {
+   "cfg": "size=10k&hl=1&header=0&num=0&wrap=0",
+   "chars": 10239,
+   "mountMs": 346.8,
+   "layouts": 1,
+   "heightPt": 5017.67,
+   "baseFootprintMB": 160.0,
+   "footprintMB": 524.0
+  },
+  {
+   "cfg": "size=10k&hl=1&header=0&num=1&wrap=0",
+   "chars": 10239,
+   "mountMs": 343.1,
+   "layouts": 1,
+   "heightPt": 5017.67,
+   "baseFootprintMB": 161.0,
+   "footprintMB": 527.0
+  },
+  {
+   "cfg": "size=10k&hl=1&header=0&num=1&wrap=1",
+   "chars": 10239,
+   "mountMs": 393.7,
+   "layouts": 1,
+   "heightPt": 8637,
+   "baseFootprintMB": 161.0,
+   "footprintMB": 272.0
+  },
+  {
+   "cfg": "size=10k&hl=1&header=0&num=0&wrap=1",
+   "chars": 10239,
+   "mountMs": 177.9,
+   "layouts": 1,
+   "heightPt": 8250.67,
+   "baseFootprintMB": 161.0,
+   "footprintMB": 273.0
+  },
+  {
+   "cfg": "size=10k&hl=0&header=0&num=0&wrap=0",
+   "chars": 10239,
+   "mountMs": 57.4,
+   "layouts": 1,
+   "heightPt": 5009.67,
+   "baseFootprintMB": 159.0,
+   "footprintMB": 263.0
+  },
+  {
+   "cfg": "size=10k&hl=0&header=0&num=1&wrap=0",
+   "chars": 10239,
+   "mountMs": 75.3,
+   "layouts": 1,
+   "heightPt": 5009.67,
+   "baseFootprintMB": 161.0,
+   "footprintMB": 265.0
+  },
+  {
+   "cfg": "size=10k&hl=0&header=0&num=1&wrap=1",
+   "chars": 10239,
+   "mountMs": 220.0,
+   "layouts": 1,
+   "heightPt": 8637,
+   "baseFootprintMB": 160.0,
+   "footprintMB": 205.0
+  },
+  {
+   "cfg": "size=10k&hl=0&header=0&num=0&wrap=1",
+   "chars": 10239,
+   "mountMs": 82.7,
+   "layouts": 1,
+   "heightPt": 8237.33,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 188.0
+  },
+  {
+   "cfg": "size=20k&hl=1&header=0&num=0&wrap=0",
+   "chars": 20480,
+   "mountMs": 723.3,
+   "layouts": 1,
+   "heightPt": 10121.33,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 891.0
+  },
+  {
+   "cfg": "size=20k&hl=1&header=0&num=1&wrap=0",
+   "chars": 20480,
+   "mountMs": 731.6,
+   "layouts": 1,
+   "heightPt": 10121.33,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 899.0
+  },
+  {
+   "cfg": "size=20k&hl=1&header=0&num=1&wrap=1",
+   "chars": 20480,
+   "mountMs": 362.0,
+   "layouts": 1,
+   "heightPt": 17238,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 384.0
+  },
+  {
+   "cfg": "size=20k&hl=1&header=0&num=0&wrap=1",
+   "chars": 20480,
+   "mountMs": 241.4,
+   "layouts": 1,
+   "heightPt": 16485.67,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 387.0
+  },
+  {
+   "cfg": "size=20k&hl=0&header=0&num=0&wrap=0",
+   "chars": 20480,
+   "mountMs": 15.3,
+   "layouts": 1,
+   "heightPt": 10105,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 368.0
+  },
+  {
+   "cfg": "size=20k&hl=0&header=0&num=1&wrap=0",
+   "chars": 20480,
+   "mountMs": 124.9,
+   "layouts": 1,
+   "heightPt": 10105,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 372.0
+  },
+  {
+   "cfg": "size=20k&hl=0&header=0&num=1&wrap=1",
+   "chars": 20480,
+   "mountMs": 419.8,
+   "layouts": 1,
+   "heightPt": 17238,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 250.0
+  },
+  {
+   "cfg": "size=20k&hl=0&header=0&num=0&wrap=1",
+   "chars": 20480,
+   "mountMs": 109.3,
+   "layouts": 1,
+   "heightPt": 16459,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 214.0
+  },
+  {
+   "cfg": "size=48k&hl=1&header=0&num=0&wrap=0",
+   "chars": 49152,
+   "mountMs": 1648.3,
+   "layouts": 1,
+   "heightPt": 23927.67,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 1875.0
+  },
+  {
+   "cfg": "size=48k&hl=1&header=0&num=1&wrap=0",
+   "chars": 49152,
+   "mountMs": 1827.1,
+   "layouts": 1,
+   "heightPt": 23927.67,
+   "baseFootprintMB": 161.0,
+   "footprintMB": 1893.0
+  },
+  {
+   "cfg": "size=48k&hl=1&header=0&num=1&wrap=1",
+   "chars": 49152,
+   "mountMs": 1385.2,
+   "layouts": 1,
+   "heightPt": 40987.33,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 663.0
+  },
+  {
+   "cfg": "size=48k&hl=1&header=0&num=0&wrap=1",
+   "chars": 49152,
+   "mountMs": 764.8,
+   "layouts": 1,
+   "heightPt": 39259,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 691.0
+  },
+  {
+   "cfg": "size=48k&hl=0&header=0&num=0&wrap=0",
+   "chars": 49152,
+   "mountMs": 93.1,
+   "layouts": 1,
+   "heightPt": 23888.67,
+   "baseFootprintMB": 161.0,
+   "footprintMB": 163.0
+  },
+  {
+   "cfg": "size=48k&hl=0&header=0&num=1&wrap=0",
+   "chars": 49152,
+   "mountMs": 82.2,
+   "layouts": 1,
+   "heightPt": 23888.67,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 173.0
+  },
+  {
+   "cfg": "size=48k&hl=0&header=0&num=1&wrap=1",
+   "chars": 49152,
+   "mountMs": 902.4,
+   "layouts": 1,
+   "heightPt": 40987.33,
+   "baseFootprintMB": 159.0,
+   "footprintMB": 364.0
+  },
+  {
+   "cfg": "size=48k&hl=0&header=0&num=0&wrap=1",
+   "chars": 49152,
+   "mountMs": 177.2,
+   "layouts": 1,
+   "heightPt": 39195,
+   "baseFootprintMB": 163.0,
+   "footprintMB": 286.0
+  },
+  {
+   "cfg": "size=10k&hl=1&header=0&num=0&wrap=0",
+   "chars": 10239,
+   "mountMs": 320.6,
+   "layouts": 1,
+   "heightPt": 5017.67,
+   "baseFootprintMB": 161.0,
+   "footprintMB": 524.0
+  },
+  {
+   "cfg": "size=10k&hl=1&header=0&num=1&wrap=0",
+   "chars": 10239,
+   "mountMs": 369.1,
+   "layouts": 1,
+   "heightPt": 5017.67,
+   "baseFootprintMB": 161.0,
+   "footprintMB": 528.0
+  },
+  {
+   "cfg": "size=10k&hl=1&header=0&num=1&wrap=1",
+   "chars": 10239,
+   "mountMs": 350.1,
+   "layouts": 1,
+   "heightPt": 8637,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 273.0
+  },
+  {
+   "cfg": "size=10k&hl=1&header=0&num=0&wrap=1",
+   "chars": 10239,
+   "mountMs": 80.5,
+   "layouts": 1,
+   "heightPt": 8250.67,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 272.0
+  },
+  {
+   "cfg": "size=10k&hl=0&header=0&num=0&wrap=0",
+   "chars": 10239,
+   "mountMs": 100.3,
+   "layouts": 1,
+   "heightPt": 5009.67,
+   "baseFootprintMB": 161.0,
+   "footprintMB": 263.0
+  },
+  {
+   "cfg": "size=10k&hl=0&header=0&num=1&wrap=0",
+   "chars": 10239,
+   "mountMs": 134.1,
+   "layouts": 1,
+   "heightPt": 5009.67,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 266.0
+  },
+  {
+   "cfg": "size=10k&hl=0&header=0&num=1&wrap=1",
+   "chars": 10239,
+   "mountMs": 262.6,
+   "layouts": 1,
+   "heightPt": 8637,
+   "baseFootprintMB": 161.0,
+   "footprintMB": 206.0
+  },
+  {
+   "cfg": "size=10k&hl=0&header=0&num=0&wrap=1",
+   "chars": 10239,
+   "mountMs": 32.0,
+   "layouts": 1,
+   "heightPt": 8237.33,
+   "baseFootprintMB": 151.0,
+   "footprintMB": 187.0
+  },
+  {
+   "cfg": "size=20k&hl=1&header=0&num=0&wrap=0",
+   "chars": 20480,
+   "mountMs": 628.0,
+   "layouts": 1,
+   "heightPt": 10121.33,
+   "baseFootprintMB": 157.0,
+   "footprintMB": 891.0
+  },
+  {
+   "cfg": "size=20k&hl=1&header=0&num=1&wrap=0",
+   "chars": 20480,
+   "mountMs": 668.3,
+   "layouts": 1,
+   "heightPt": 10121.33,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 899.0
+  },
+  {
+   "cfg": "size=20k&hl=1&header=0&num=1&wrap=1",
+   "chars": 20480,
+   "mountMs": 599.7,
+   "layouts": 1,
+   "heightPt": 17238,
+   "baseFootprintMB": 158.0,
+   "footprintMB": 384.0
+  },
+  {
+   "cfg": "size=20k&hl=1&header=0&num=0&wrap=1",
+   "chars": 20480,
+   "mountMs": 319.5,
+   "layouts": 1,
+   "heightPt": 16485.67,
+   "baseFootprintMB": 160.0,
+   "footprintMB": 386.0
+  },
+  {
+   "cfg": "size=20k&hl=0&header=0&num=0&wrap=0",
+   "chars": 20480,
+   "mountMs": 15.8,
+   "layouts": 1,
+   "heightPt": 10105,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 368.0
+  },
+  {
+   "cfg": "size=20k&hl=0&header=0&num=1&wrap=0",
+   "chars": 20480,
+   "mountMs": 134.0,
+   "layouts": 1,
+   "heightPt": 10105,
+   "baseFootprintMB": 161.0,
+   "footprintMB": 371.0
+  },
+  {
+   "cfg": "size=20k&hl=0&header=0&num=1&wrap=1",
+   "chars": 20480,
+   "mountMs": 410.0,
+   "layouts": 1,
+   "heightPt": 17238,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 251.0
+  },
+  {
+   "cfg": "size=20k&hl=0&header=0&num=0&wrap=1",
+   "chars": 20480,
+   "mountMs": 68.7,
+   "layouts": 1,
+   "heightPt": 16459,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 214.0
+  },
+  {
+   "cfg": "size=48k&hl=1&header=0&num=0&wrap=0",
+   "chars": 49152,
+   "mountMs": 1599.2,
+   "layouts": 1,
+   "heightPt": 23927.67,
+   "baseFootprintMB": 163.0,
+   "footprintMB": 1875.0
+  },
+  {
+   "cfg": "size=48k&hl=1&header=0&num=1&wrap=0",
+   "chars": 49152,
+   "mountMs": 1715.4,
+   "layouts": 1,
+   "heightPt": 23927.67,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 1893.0
+  },
+  {
+   "cfg": "size=48k&hl=1&header=0&num=1&wrap=1",
+   "chars": 49152,
+   "mountMs": 1390.5,
+   "layouts": 1,
+   "heightPt": 40987.33,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 662.0
+  },
+  {
+   "cfg": "size=48k&hl=1&header=0&num=0&wrap=1",
+   "chars": 49152,
+   "mountMs": 849.5,
+   "layouts": 1,
+   "heightPt": 39259,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 691.0
+  },
+  {
+   "cfg": "size=48k&hl=0&header=0&num=0&wrap=0",
+   "chars": 49152,
+   "mountMs": 49.1,
+   "layouts": 1,
+   "heightPt": 23888.67,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 163.0
+  },
+  {
+   "cfg": "size=48k&hl=0&header=0&num=1&wrap=0",
+   "chars": 49152,
+   "mountMs": 64.6,
+   "layouts": 1,
+   "heightPt": 23888.67,
+   "baseFootprintMB": 158.0,
+   "footprintMB": 172.0
+  },
+  {
+   "cfg": "size=48k&hl=0&header=0&num=1&wrap=1",
+   "chars": 49152,
+   "mountMs": 869.2,
+   "layouts": 1,
+   "heightPt": 40987.33,
+   "baseFootprintMB": 161.0,
+   "footprintMB": 363.0
+  },
+  {
+   "cfg": "size=48k&hl=0&header=0&num=0&wrap=1",
+   "chars": 49152,
+   "mountMs": 141.6,
+   "layouts": 1,
+   "heightPt": 39195,
+   "baseFootprintMB": 162.0,
+   "footprintMB": 285.0
+  }
+ ],
+ "stream": [
+  {
+   "cfg": "size=48k&hl=1&header=1&num=0&wrap=0",
+   "chars": 49163,
+   "commits": 308,
+   "p50": 9.7,
+   "p95": 15.9,
+   "max": 42.3,
+   "lastCommit": 42.3,
+   "totalMs": 10365,
+   "profilerCalls": 0,
+   "footprintMBAtEnd": 1944.0
+  },
+  {
+   "cfg": "size=48k&hl=1&header=1&num=1&wrap=0",
+   "chars": 49163,
+   "commits": 308,
+   "p50": 14.5,
+   "p95": 24.4,
+   "max": 51.8,
+   "lastCommit": 46.7,
+   "totalMs": 10458,
+   "profilerCalls": 0,
+   "footprintMBAtEnd": 1968.0
+  },
+  {
+   "cfg": "size=48k&hl=1&header=1&num=1&wrap=1",
+   "chars": 49163,
+   "commits": 308,
+   "p50": 18.6,
+   "p95": 34.8,
+   "max": 319.2,
+   "lastCommit": 60.1,
+   "totalMs": 11239,
+   "profilerCalls": 0,
+   "footprintMBAtEnd": 763.0
+  },
+  {
+   "cfg": "size=48k&hl=0&header=1&num=1&wrap=1",
+   "chars": 49165,
+   "commits": 308,
+   "p50": 19.8,
+   "p95": 35.9,
+   "max": 216.7,
+   "lastCommit": 36.5,
+   "totalMs": 11379,
+   "profilerCalls": 0,
+   "footprintMBAtEnd": 384.0
+  },
+  {
+   "cfg": "size=48k&hl=1&header=1&num=0&wrap=0",
+   "chars": 49163,
+   "commits": 308,
+   "p50": 9.8,
+   "p95": 15.5,
+   "max": 39.1,
+   "lastCommit": 39.1,
+   "totalMs": 10305,
+   "profilerCalls": 0,
+   "footprintMBAtEnd": 1953.0
+  },
+  {
+   "cfg": "size=48k&hl=1&header=1&num=1&wrap=0",
+   "chars": 49163,
+   "commits": 308,
+   "p50": 14.1,
+   "p95": 27.3,
+   "max": 49.1,
+   "lastCommit": 47.5,
+   "totalMs": 10420,
+   "profilerCalls": 0,
+   "footprintMBAtEnd": 2024.0
+  },
+  {
+   "cfg": "size=48k&hl=1&header=1&num=1&wrap=1",
+   "chars": 49163,
+   "commits": 308,
+   "p50": 19.2,
+   "p95": 34.5,
+   "max": 318.3,
+   "lastCommit": 60.1,
+   "totalMs": 11303,
+   "profilerCalls": 0,
+   "footprintMBAtEnd": 759.0
+  },
+  {
+   "cfg": "size=48k&hl=0&header=1&num=1&wrap=1",
+   "chars": 49165,
+   "commits": 308,
+   "p50": 19.6,
+   "p95": 35.4,
+   "max": 229.7,
+   "lastCommit": 37.0,
+   "totalMs": 11367,
+   "profilerCalls": 0,
+   "footprintMBAtEnd": 387.0
+  }
+ ],
+ "toggle": [
+  {
+   "cfg": "size=48k&hl=1&header=0&num=1&wrap=0",
+   "steps": [
+    {
+     "step": "mount",
+     "wrap": false,
+     "ms": 1736.5,
+     "layouts": 1,
+     "height": 23927.7
+    },
+    {
+     "step": "toggle",
+     "to": "rows",
+     "ms": 1355.6,
+     "layouts": 1,
+     "height": 40987.3
+    },
+    {
+     "step": "toggle",
+     "to": "chunks",
+     "ms": 501.4,
+     "layouts": 1,
+     "height": 23927.7
+    },
+    {
+     "step": "toggle",
+     "to": "rows",
+     "ms": 1390.8,
+     "layouts": 1,
+     "height": 40987.3
+    },
+    {
+     "step": "toggle",
+     "to": "chunks",
+     "ms": 1713.6,
+     "layouts": 1,
+     "height": 23927.7
+    }
+   ]
+  },
+  {
+   "cfg": "size=48k&hl=0&header=0&num=1&wrap=0",
+   "steps": [
+    {
+     "step": "mount",
+     "wrap": false,
+     "ms": 99.9,
+     "layouts": 1,
+     "height": 23888.7
+    },
+    {
+     "step": "toggle",
+     "to": "rows",
+     "ms": 855.1,
+     "layouts": 1,
+     "height": 40987.3
+    },
+    {
+     "step": "toggle",
+     "to": "chunks",
+     "ms": 145.1,
+     "layouts": 1,
+     "height": 23888.7
+    },
+    {
+     "step": "toggle",
+     "to": "rows",
+     "ms": 750.1,
+     "layouts": 1,
+     "height": 40987.3
+    },
+    {
+     "step": "toggle",
+     "to": "chunks",
+     "ms": 130.2,
+     "layouts": 1,
+     "height": 23888.7
+    }
+   ]
+  },
+  {
+   "cfg": "size=48k&hl=1&header=0&num=1&wrap=0",
+   "steps": [
+    {
+     "step": "mount",
+     "wrap": false,
+     "ms": 1757.6,
+     "layouts": 1,
+     "height": 23927.7
+    },
+    {
+     "step": "toggle",
+     "to": "rows",
+     "ms": 1383.4,
+     "layouts": 1,
+     "height": 40987.3
+    },
+    {
+     "step": "toggle",
+     "to": "chunks",
+     "ms": 1630.0,
+     "layouts": 1,
+     "height": 23927.7
+    },
+    {
+     "step": "toggle",
+     "to": "rows",
+     "ms": 3354.7,
+     "layouts": 1,
+     "height": 40987.3
+    },
+    {
+     "step": "toggle",
+     "to": "chunks",
+     "ms": 1995.9,
+     "layouts": 1,
+     "height": 23927.7
+    }
+   ]
+  },
+  {
+   "cfg": "size=48k&hl=0&header=0&num=1&wrap=0",
+   "steps": [
+    {
+     "step": "mount",
+     "wrap": false,
+     "ms": 104.2,
+     "layouts": 1,
+     "height": 23888.7
+    },
+    {
+     "step": "toggle",
+     "to": "rows",
+     "ms": 817.2,
+     "layouts": 1,
+     "height": 40987.3
+    },
+    {
+     "step": "toggle",
+     "to": "chunks",
+     "ms": 131.7,
+     "layouts": 1,
+     "height": 23888.7
+    },
+    {
+     "step": "toggle",
+     "to": "rows",
+     "ms": 768.0,
+     "layouts": 1,
+     "height": 40987.3
+    },
+    {
+     "step": "toggle",
+     "to": "chunks",
+     "ms": 130.9,
+     "layouts": 1,
+     "height": 23888.7
+    }
+   ]
+  }
+ ],
+ "copyPress": [
+  {
+   "cfg": "size=3k&hl=1&header=1&num=1&wrap=0",
+   "got": 3072,
+   "expected": 3072,
+   "equal": true,
+   "language": "ts"
+  },
+  {
+   "cfg": "size=3k&hl=0&header=1&num=1&wrap=0",
+   "got": 3072,
+   "expected": 3072,
+   "equal": true,
+   "language": "text"
+  },
+  {
+   "cfg": "size=48k&hl=0&header=1&num=1&wrap=1",
+   "got": 49152,
+   "expected": 49152,
+   "equal": true,
+   "language": "text"
+  }
+ ],
+ "align": [
+  {
+   "label": "hl-gutter-L",
+   "block": {
+    "y": 239.66666412353516,
+    "x": 12,
+    "width": 378,
+    "height": 4824
+   },
+   "gutterTexts": 109,
+   "codeTexts": 109,
+   "maxTopDelta": 0.0,
+   "maxHeightDelta": 0.0,
+   "gutterSpan": 4757.99951171875,
+   "codeSpan": 4757.99951171875,
+   "bottomDelta": 0.0
+  },
+  {
+   "label": "L-hl1-gutter",
+   "block": {
+    "y": 239.66666412353516,
+    "x": 12,
+    "width": 378,
+    "height": 4824
+   },
+   "gutterTexts": 109,
+   "codeTexts": 109,
+   "maxTopDelta": 0.0,
+   "maxHeightDelta": 0.0,
+   "gutterSpan": 4757.99951171875,
+   "codeSpan": 4757.99951171875,
+   "bottomDelta": 0.0
+  },
+  {
+   "label": "L-hl1-rows",
+   "block": {
+    "y": 239.66666412353516,
+    "x": 12,
+    "width": 378,
+    "height": 8280.666015625
+   },
+   "gutterTexts": 234,
+   "codeTexts": 234,
+   "maxTopDelta": 0.0,
+   "maxHeightDelta": 142.3333740234375,
+   "gutterSpan": 8214.666015625,
+   "codeSpan": 8214.666015625,
+   "bottomDelta": 0.0
+  },
+  {
+   "label": "L-hl1-wrap",
+   "block": {
+    "y": 239.66666412353516,
+    "x": 12,
+    "width": 378,
+    "height": 7914.6669921875
+   },
+   "gutterTexts": 109,
+   "codeTexts": 0
+  },
+  {
+   "label": "L-hl0-scroll",
+   "block": {
+    "y": 239.66666412353516,
+    "x": 12,
+    "width": 378,
+    "height": 4816.33349609375
+   },
+   "gutterTexts": 1,
+   "codeTexts": 0
+  },
+  {
+   "label": "L-hl0-gutter",
+   "block": {
+    "y": 239.66666412353516,
+    "x": 12,
+    "width": 378,
+    "height": 4816.33349609375
+   },
+   "gutterTexts": 1,
+   "codeTexts": 1,
+   "maxTopDelta": 0.0,
+   "maxHeightDelta": 0.0,
+   "gutterSpan": 4750.6669921875,
+   "codeSpan": 4750.6669921875,
+   "bottomDelta": 0.0
+  },
+  {
+   "label": "L-hl0-rows",
+   "block": {
+    "y": 239.66666412353516,
+    "x": 12,
+    "width": 378,
+    "height": 8280.666015625
+   },
+   "gutterTexts": 234,
+   "codeTexts": 234,
+   "maxTopDelta": 0.0,
+   "maxHeightDelta": 142.3333740234375,
+   "gutterSpan": 8214.666015625,
+   "codeSpan": 8214.666015625,
+   "bottomDelta": 0.0
+  },
+  {
+   "label": "L-hl0-wrap",
+   "block": {
+    "y": 239.66666412353516,
+    "x": 12,
+    "width": 378,
+    "height": 7902
+   },
+   "gutterTexts": 1,
+   "codeTexts": 0
+  },
+  {
+   "label": "L-hl1-scroll",
+   "block": {
+    "y": 239.66666412353516,
+    "x": 12,
+    "width": 378,
+    "height": 4824
+   },
+   "gutterTexts": 109,
+   "codeTexts": 0
+  },
+  {
+   "label": "XXXL-hl1-scroll",
+   "block": {
+    "y": 314.6666717529297,
+    "x": 12,
+    "width": 378,
+    "height": 6509.6669921875
+   },
+   "gutterTexts": 109,
+   "codeTexts": 0
+  },
+  {
+   "label": "XXXL-hl1-gutter",
+   "block": {
+    "y": 314.6666717529297,
+    "x": 12,
+    "width": 378,
+    "height": 6509.6669921875
+   },
+   "gutterTexts": 109,
+   "codeTexts": 109,
+   "maxTopDelta": 0.0,
+   "maxHeightDelta": 0,
+   "gutterSpan": 6437.3330078125,
+   "codeSpan": 6437.3330078125,
+   "bottomDelta": 0.0
+  },
+  {
+   "label": "XXXL-hl1-rows",
+   "block": {
+    "y": 314.6666717529297,
+    "x": 12,
+    "width": 378,
+    "height": 13842.666015625
+   },
+   "gutterTexts": 234,
+   "codeTexts": 234,
+   "maxTopDelta": 0.0,
+   "maxHeightDelta": 302.0,
+   "gutterSpan": 13770.666015625,
+   "codeSpan": 13770.666015625,
+   "bottomDelta": 0.0
+  },
+  {
+   "label": "XXXL-hl1-wrap",
+   "block": {
+    "y": 314.6666717529297,
+    "x": 12,
+    "width": 378,
+    "height": 12694
+   },
+   "gutterTexts": 109,
+   "codeTexts": 0
+  },
+  {
+   "label": "XXXL-hl0-scroll",
+   "block": {
+    "y": 314.6666717529297,
+    "x": 12,
+    "width": 378,
+    "height": 6499.33349609375
+   },
+   "gutterTexts": 1,
+   "codeTexts": 0
+  },
+  {
+   "label": "XXXL-hl0-gutter",
+   "block": {
+    "y": 314.6666717529297,
+    "x": 12,
+    "width": 378,
+    "height": 6499.33349609375
+   },
+   "gutterTexts": 1,
+   "codeTexts": 1,
+   "maxTopDelta": 0.0,
+   "maxHeightDelta": 0.0,
+   "gutterSpan": 6427.6669921875,
+   "codeSpan": 6427.6669921875,
+   "bottomDelta": 0.0
+  },
+  {
+   "label": "XXXL-hl0-rows",
+   "block": {
+    "y": 314.6666717529297,
+    "x": 12,
+    "width": 378,
+    "height": 13842.666015625
+   },
+   "gutterTexts": 234,
+   "codeTexts": 234,
+   "maxTopDelta": 0.0,
+   "maxHeightDelta": 302.0,
+   "gutterSpan": 13770.666015625,
+   "codeSpan": 13770.666015625,
+   "bottomDelta": 0.0
+  },
+  {
+   "label": "XXXL-hl0-wrap",
+   "block": {
+    "y": 314.6666717529297,
+    "x": 12,
+    "width": 378,
+    "height": 12679
+   },
+   "gutterTexts": 1,
+   "codeTexts": 0
+  }
+ ],
+ "selection": {
+  "hl-gutter": "one 2-line chunk: \"  if (total > limit) return false;\\n  return total + 11;\" (55 chars), no digits",
+  "hl-rows": "one line, the wrapped 186-char line 5 exactly, no newline, no digits",
+  "plain-gutter": "whole block, 3072 of 3072 chars, no digits",
+  "plain-rows": "one line, 186 chars, same as hl-rows"
+ }
+}

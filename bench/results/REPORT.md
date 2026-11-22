@@ -1182,3 +1182,118 @@ A chunk takes 2 lines and extends past blank lines, so no chunk but the last end
 - **iOS streaming p50 / p95, ms:** plain against hl at 10 KB 6.8 / 11.8 against 9.1 / 15.0, 20 KB 11.7 / 23.1 against 16.1 / 27.5, 48 KB 17.7 / 39.0 against 24.4 / 49.1 (total 24.3 against 27.6 s).
 - **iOS behaviour:** colours follow the appearance; no range selection on any `Text`, so long-press Copy takes one whole `Text` (a chunk on a chunked block); a chunked block is one `AXGroup` labelled with the full code (VoiceOver not run); it is 5.67 pt taller than plain per 3.3 KB from pixel rounding of the fractional code `lineHeight`, at most 1 px per seam; the close swap changed no pixels.
 - **Web** (Playwright Chromium): the smoke project passes with a `highlight` block (one element whose text is exactly the code, at least 3 colours); a 3.3 KB block is as tall as plain (3,642 px); selection across chunks returns the code exactly.
+
+## Code block header, line numbers and wrap spike (2026-11-21)
+
+Throwaway spike for [#72](https://github.com/amilmohd155/react-native-markdown/issues/72) / P3-35: plain `Text`/`View` with the real highlight spans, a synthetic TypeScript-like block (short, long and blank lines). Spike code and logs were not kept. S25 FE and the iOS simulator (iPhone 18 Pro) ran Expo Go with a `--no-dev --minify` bundle; web is the production export in Chromium (WebKit not installed). Read every number as a ratio: Android is one run per cell, iOS and web the mean of two, and simulator timings are noisy. Mount is `setState` to the last `onLayout`.
+
+Layouts: **A1** one `Text`, no numbers. **A2** one `Text` plus a gutter `Text` (`1\n2\n..N`), no wrap. **A3** as A2 with wrap. **B1** one row per line (`View` of gutter `Text` and code `Text`), wrap. **B2** rows in one horizontal `ScrollView`, no wrap. **B3** the current 2-line chunks plus a mirrored gutter column, no wrap.
+
+Mount ms at 10 KB / 20 KB / 48 KB (`–` = not run):
+
+| Layout | S25 FE | iOS sim | Web |
+|---|---|---|---|
+| A1 | 1,968 / 7,485 / 43,808 | 230 / 396 / 1,009 | 42 / 59 / 97 |
+| A2 | 2,007 / 7,592 / – | 263 / 356 / 1,119 | 31 / 66 / 97 |
+| A3 | 2,013 / 7,504 / – | 195 / 380 / 642 | 22 / 59 / 87 |
+| B1 | 244 / 399 / 887 | 296 / 493 / 1,203 | 63 / 75 / 141 |
+| B2 | 233 / 428 / 986 | 317 / 434 / 835 | 60 / 96 / 148 |
+| B3 | 215 / 362 / 764 | 337 / 499 / 1,406 | 39 / 61 / 117 |
+
+Android TOTAL PSS at 48 KB, against a 245 MB baseline: A1 +47 MB, B1 +157, B2 +152, B3 +110 (B1 at 10 KB and 20 KB: 272 and 297 MB). Wrap toggle at 48 KB (remounts the body, resets the horizontal offset): S25 FE B3 737 ms, B2 906, B1 1,114; iOS A2 1,032, B1 1,505, B2 532, B3 1,526; web B1 159, B3 111.
+
+- **A3 misaligns everywhere.** One `Text` plus a gutter only lines up when no line wraps: gutter 1,461 against code 2,201 dp at 3 KB on the S25 FE, 21,945 against 34,084 pt at 48 KB on iOS, 21,941 against 38,889 px on web. B3 misaligns the same way with wrap on, so it is wrap-off only.
+- **A2, B1, B2 and B3 align** on all three platforms, at font scale 2.0 (Android), XXXL (iOS) and CSS zoom 2 (web). iOS gutter and code round alike (20.33 pt per row, exact 20.30), so they never drift apart; rows end 7.3 pt taller per 234 lines than a plain block, 36 pt at 48 KB.
+- **Blank rows.** Android: an empty `''` row is 35.05 dp against 34.29 at font scale 2.0 (21 dp over 234 lines); a `' '` placeholder fixes it, and at scale 1.0 there is no drift over 471 lines. iOS: blank rows match text rows. Web: with `''` the empty code `Text` is 0 px tall (the gutter holds the row height).
+- **Selection.** Android A2: Select all covers the code with no numbers. Android B1: long-press and Select all stays inside one row, and the paste is that line without its number. iOS B1: long-press shows only Copy for one row. A `selectable={false}` gutter was never selected or copied on any platform. Web, 3 KB block: A2 and B3 select the code exactly; B1 with `''` rows gave 3,061 of 3,071 characters (blank lines lost), with `' '` rows 3,081 (spaces leak), and with a trailing `'\n'` on each row the code exactly.
+- **Header** stays fixed while the code scrolls sideways (B2, B3, A2 on all three); the gutter stays fixed in B3 and A2 and scrolls away in B2. `navigator.clipboard.writeText` on web copies the code exactly.
+- **Cost.** One `Text` is quadratic on Android (44 s at 48 KB) and linear on iOS and web. B1 and B2 mount about 1.1 to 1.3x B3 on the S25 FE (+45 MB at 48 KB) and did not crash.
+
+Not measured: a release build, a physical iPhone, WebKit, real TalkBack and VoiceOver passes.
+
+## Code block header, numbers and wrap: Android device pass (S25 FE, 2026-11-22)
+
+The shipped `codeBlock={{ header, lineNumbers, wrap }}` ([P3-35](../../docs/rewrite/phase-3/decisions.md#p3-35-code-block-header-line-numbers-and-wrap-in-pure-js)) on the S25 FE. Numbers: [`codeblock-modes-device/results.json`](./codeblock-modes-device/results.json). Throwaway in-app harness (not kept): one fence of synthetic TS (short lines, about 10% blank lines with adjacent pairs, 160 to 280-character lines), `ts` (highlighted) or `text` (plain).
+
+- **Method:** Expo Go SDK 58, bundle `--no-dev --minify`, font scale 0.8, fresh app launch per cell, 2 runs (mean shown). Mount is `setState` of a pre-parsed document to the last `onLayout`; PSS is `dumpsys meminfo` TOTAL PSS after mount (baseline 222 MB with the example's other screens mounted). Streaming: `useMarkdownStream`, 80 characters every 16 ms, header on, `commit` is render start to layout effect. Machine and phone load were high: read **ratios** only. Selection and Copy ran on a dev bundle with `selectable` on (Expo Go kept serving its cached release bundle after edits; only a dev-mode URL refreshed it).
+
+**Static mount, ms** (scroll = numbers off, wrap off; gutter = numbers, no wrap; rows = numbers and wrap; wrap = wrap only):
+
+| | 10 KB hl / plain | 20 KB hl / plain | 48 KB hl / plain | PSS at 48 KB, MB, hl / plain |
+|---|---|---|---|---|
+| scroll | 168 / 55 | 193 / 67 | 294 / 94 | +83 / +5 |
+| gutter | 165 / 71 | 169 / 39 | 351 / 130 | +107 / +14 |
+| rows | 90 / 95 | 247 / 239 | 437 / 216 | +179 / +114 |
+| wrap | 135 / 27 | 147 / 55 | 246 / 37 | +66 / +4 |
+
+**Streaming 48 KB highlighted** (range of 2 runs):
+
+| | commit p50 / p95, ms | max, ms | total, s | PSS at end, MB |
+|---|---|---|---|---|
+| no numbers | 16 to 22 / 30 to 41 | 72 to 106 | 14 to 19 | 372 to 384 |
+| gutter | 21 to 31 / 41 to 59 | 80 to 114 | 17 to 25 | 478 to 489 |
+| rows | 29 to 43 / 78 to 113 | 347 to 538 | 29 to 41 | 463 to 661 |
+| rows, plain | 19 to 22 / 44 to 48 | 194 to 198 | 24 to 26 | 507 to 519 |
+| gutter, plain | 27 / 79 (1 run) | 105 | 28 | 361 |
+
+**Seams** (234 lines, 25 blank rows, gutter against code from the element rects): bottom drift 0.00 dp for gutter (hl: 109 chunk pairs; plain: one `Text` each) and rows, at font scale 0.8 and 2.0; every row's number top equals its code top; 12 (0.8) and 135 (2.0) wrapped rows keep a one-line gutter.
+
+- **Rows at 48 KB** mount 1.25x gutter and add 72 MB over it (+179 MB over the baseline; spike B1 +157 MB, 887 ms against 764 ms). Static cost is acceptable. Streaming highlighted rows is the weak spot: p95 78 to 113 ms (about 2x gutter), max commit 347 to 538 ms (not split into the `done()` swap and in-stream commits) and 1.7x the total time; no crash or OOM.
+- **`maxLength` cap with numbers plus wrap: none set.** A cap only turns colour off. At 48 KB plain rows mount in 216 ms (+114 MB) against 437 ms (+179 MB) highlighted, and stream at p95 about 46 ms against about 96 ms. No crash or OOM in any arm, so the trade is colour for half the cost; revisit with a release build if the highlighted rows stream shows the same p95.
+- **Wrap toggle at 48 KB** (prop path): hl gutter to rows 493 ms, back 389 ms; plain 258 ms and 58 ms. The header Wrap button switches the same layouts; toggling back resets the horizontal offset to 0.
+- **Horizontal scroll** (gutter): header and gutter stay fixed while the code scrolls.
+- **Selection** (long-press, Select all, Copy, paste): hl gutter gives one 2-line chunk (`interface Options ...\n  if (total > limit) return false;`); rows gives one line (a wrapped 228-character line exactly, no newline); plain gutter gives the whole block (3,072 of 3,072 characters). No gutter digits in any paste. Not tried: plain rows, wrap only, scroll. Header Copy: `onCopyPress` received 3,072 / 3,072 (hl rows) and 49,152 / 49,152 (plain 48 KB) characters, equal to the code.
+- **Accessibility** (React tree via argent): header `ts` text, `Wrap lines` and `Copy code` buttons are siblings of the body, which is one element labelled with the full code; gutter Texts sit under the labelled body inside a `no-hide-descendants` View. The Wrap `selected` state is from source; the tree read showed no state. The Android accessibility tree itself could not be dumped (`uiautomator` blocked), and TalkBack was not run.
+- **Visual:** light and dark follow the theme; the Wrap button has no visible on state (only `accessibilityState.selected`).
+
+## Code block header, numbers and wrap: iOS simulator pass (iPhone 18 Pro, 2026-11-22)
+
+The same harness as the Android pass, on the iOS simulator (Expo Go SDK 58, `--no-dev --minify`, every record `__DEV__` false). Numbers: [`codeblock-modes-device/results-ios.json`](./codeblock-modes-device/results-ios.json).
+
+- **Method:** one fresh Expo Go launch per cell, 2 runs (mean shown), header and `selectable` off. Mount is `setState` of a pre-parsed document to the last `onLayout`. Memory is the `phys_footprint` of the Expo Go process (`footprint -p`) after mount, minus the same launch's baseline (about 160 MB). Streaming: `useMarkdownStream`, 80 characters every 16 ms, header on; `commit` is render to layout effect (`React.Profiler` does not fire in this production bundle). Seams: `RCTParagraphTextView` frames via argent `native-find-views`, 234 lines with 31 blank rows. Simulator timings are noisy: read **ratios** only.
+
+**Static mount, ms** (modes as in the Android table):
+
+| | 10 KB hl / plain | 20 KB hl / plain | 48 KB hl / plain | footprint at 48 KB, MB, hl / plain |
+|---|---|---|---|---|
+| scroll | 334 / 79 | 676 / 16 | 1,624 / 71 * | +1,713 / +2 * |
+| gutter | 356 / 105 | 700 / 130 | 1,771 / 74 * | +1,732 / +13 * |
+| rows | 372 / 242 | 481 / 415 | 1,388 / 886 | +501 / +204 |
+| wrap | 129 / 58 | 281 / 89 | 807 / 160 | +529 / +123 |
+
+\* the plain 48 KB code `Text` is never drawn (see the findings).
+
+**Streaming 48 KB highlighted** (range of 2 runs):
+
+| | commit p50 / p95, ms | max, ms | total, s | footprint at end, MB |
+|---|---|---|---|---|
+| no numbers | 9.7 to 9.8 / 15.5 to 15.9 | 39 to 42 | 10.3 | 1,944 to 1,953 |
+| gutter | 14.1 to 14.5 / 24.4 to 27.3 | 49 to 52 | 10.4 to 10.5 | 1,968 to 2,024 |
+| rows | 18.6 to 19.2 / 34.5 to 34.8 | 318 to 319 | 11.2 to 11.3 | 759 to 763 |
+| rows, plain | 19.6 to 19.8 / 35.4 to 35.9 | 217 to 230 | 11.4 | 384 to 387 |
+
+**Seams** (gutter against code; 0.00 means equal to the frame):
+
+| content size | gutter, hl (109 chunk pairs) | gutter, plain | rows (234), hl and plain | chunks against one plain `Text` |
+|---|---|---|---|---|
+| large | top and bottom 0.00 pt | 0.00 pt | every top 0.00, bottom 0.00; 20.33 pt per row | +7.3 pt (4,758 against 4,751) |
+| XXXL | 0.00 pt | 0.00 pt | 0.00; 27.33 or 27.67 pt per row | +9.7 pt (6,437 against 6,428) |
+
+- **Bug: a plain 48 KB block without wrap is blank.** Its one code `Text` (about 2,350 pt wide and 23,900 pt tall) is laid out but never drawn. The body is empty in `scroll` mode, and the new `gutter` mode shows the numbers beside empty code. The footprint barely moves (+2 MB), so the layer is likely over the texture size limit. The cause is in the existing `scroll` layout, but `gutter` makes it visible. Checked on pristine `v1` (b388539, the iPhone 18 Pro simulator, 3x, Light and Dark, after a relaunch): the bug is already there. It follows the area of the one code `Text`, not its height: a plain block draws at 268,418,924 px² (716.67 x 41,615 pt, normal lines) and is blank at 274,965,675 px², so the limit is about 2^28 px² (268,435,456). With normal lines (up to about 85 characters) it starts between 2,050 and 2,100 lines (about 121 to 124 thousand characters); with lines up to 280 characters (2,352 pt wide), between 600 and 650 lines (about 25 to 27 thousand). Top and bottom behave alike; two 600-line fences draw where one 1,200-line fence is blank; a highlighted `ts` block (chunked) draws at 48 KB and 2,000 lines. The 48 KB case above was blank only because its generator made very wide lines. Not checked on a physical iPhone or a second simulator size. Plain 48 KB `wrap` and `rows` were checked and draw; 20 KB plain and highlighted 48 KB draw by footprint, not checked visually. Accepted as a known limitation in [P3-35](../../docs/rewrite/phase-3/decisions.md#p3-35-code-block-header-line-numbers-and-wrap-in-pure-js); evidence screenshots are not kept.
+- **Rows at 48 KB are acceptable on iOS.** Rows mount faster than chunks for highlighted code (1,388 against 1,771 ms) and use about a third of the memory (+501 against +1,732 MB). Every highlighted chunk `Text` is 2,352 pt wide (stretched to the longest line) inside the horizontal `ScrollView`; this is the likely cause of the +1.7 GB footprint without wrap. On iOS, rows are cheaper than chunks, the reverse of Android (spike iOS: B1 1,203 ms, B3 1,406 ms). Streaming rows: p95 about 35 ms (1.3x gutter), max commit 318 ms (not the `done()` commit, which took 60 ms); total 1.08x. No crash in any arm. **No `maxLength` cap is needed for numbers plus wrap**, which matches the Android pass.
+- **Seams:** gutter and code never drift in either layout or content size. Chunks stay taller than one `Text` by the P3-30 rounding (about 1 px per seam), which was already accepted. Rows round to 20.33 pt as in the spike, and highlighted and plain rows are the same height.
+- **Wrap toggle at 48 KB** (prop path, 2 launches with 2 round trips each): highlighted chunks to rows took 1.36 to 3.35 s, and back took 0.50 to 2.0 s. Plain took 0.75 to 0.86 s and 0.13 to 0.15 s. The header Wrap button resets the horizontal offset to 0, as on Android.
+- **Selection** (long-press, then Copy; checked with the simulator clipboard and one paste into a `TextInput`): highlighted gutter copies one 2-line chunk, and highlighted or plain rows copy one line (the wrapped 186-character line exactly). Plain gutter copies the whole block (3,072 of 3,072 characters). No gutter digits appear in any copy. Header Copy: `onCopyPress` got 3,072 / 3,072 characters (highlighted and plain) and 49,152 / 49,152 characters (plain rows at 48 KB).
+- **Accessibility** (iOS AX tree): the header shows the fence tag, then `Wrap lines` (`[selected]` when on) and `Copy code` buttons, then the body as one element labelled with the full code. Gutter numbers are not exposed. In reading order the header comes before the body. A real VoiceOver pass was not run.
+- **Visual:** light and dark both follow the theme, and the header corners are clipped. Wrap is underlined only while wrap is on. In gutter mode the header and gutter stay fixed while the code scrolls sideways.
+
+## Code block header, numbers and wrap: WebKit (Playwright, 2026-11-22)
+
+- **Method:** Playwright 1.64.1, WebKit 27.2 (playwright build 2370), headless. The repo's `e2e/web.spec.ts` (66 tests, same `/#smoke` fixtures, fresh `yarn build:web-example`) run through a temporary config outside the repo that extends `playwright.config.ts` with `browserName: 'webkit'`; the repo config stays Chromium-only. Failures rerun alone in WebKit and in Chromium. A manual WebKit script also screenshotted the header and numbers fixtures, mouse-dragged and range-selected each body, and clicked Copy with `navigator.clipboard` stubbed.
+- **Result:** 56 passed, 10 failed. The same 10 pass in Chromium. Each WebKit failure also fails when run alone, so none is a flake.
+- **Failures:**
+  - 8 Copy tests (`copies exactly the code …`, 3 header, 4 numbers, 1 wrap). Class (a): `grantPermissions` throws `Unknown permission: clipboard-write` in WebKit. With the clipboard stubbed, Copy hands `onCopyPress` the exact code (114, 465 and 1,434 / 1,434 characters, no digits). The real `readText` is refused without a user gesture.
+  - `selects a chunked highlighted block as the code exactly` (the highlight work from PR #73, not this spike). Class (a): `Selection.toString()` of a range over a column of block `div`s adds a trailing `\n` in WebKit. A range over a numbers or wrap body behaves the same (1,435 against 1,434 characters, with the code as an exact prefix and no digits). A real mouse drag gives the code exactly.
+  - `draws a chunked highlighted block as tall as the plain one` (PR #73). Class (a): 4,956.9 against 4,957.6 px (0.7 px over about 240 lines). This is sub-pixel line rounding across chunks, as accepted in P3-30.
+- **Manual check:** the gutter is exact in every layout: top delta 0 for each row and chunk. In the rows layout, line 15 wraps onto 4 lines and its number stays one line at the row top. Mouse drag gives exactly the code: no digits, and blank lines 10, 20 and 21 kept. `Wrap` is underlined only while `aria-pressed="true"`. The header and the gutter stay fixed during horizontal scroll, and there are no page errors. Separate finding: on the header-only fixtures (no numbers, no wrap), the code `Text` computes `user-select: none` in WebKit and Chromium alike, so the code cannot be drag-selected there.
+- **Verdict:** WebKit found no product bug (class (b)) in the header, numbers or wrap. All 10 failures come from how WebKit or Playwright behaves, so the suite stays Chromium-only.
