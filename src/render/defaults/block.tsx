@@ -414,30 +414,35 @@ export function Table({ style, children }: ElementProps<'Table'>) {
   const [state, setState] = useState(() => ({
     theme,
     widths: cachedColumnWidths(theme, key),
+    pass: 0,
   }));
   let widths = state.widths;
+  let pass = state.pass;
   if (state.theme !== theme) {
     // New fonts or sizes: use that theme's cached widths, or re-measure.
+    // A new measuring pass remounts the cells: native reports `onLayout` only
+    // for new or resized views, and unchanged sizes would never reveal it.
     widths = cachedColumnWidths(theme, key);
-    setState({ theme, widths });
+    if (widths === null) pass += 1;
+    setState({ theme, widths, pass });
   }
 
   // One measuring pass per layout object: a new theme or table makes a new
   // one, which starts again with no measurements.
   const layout = useMemo<TableLayout>(() => {
-    const pass = { measured: [] as number[], scheduled: false };
+    const scan = { measured: [] as number[], scheduled: false };
     return {
       widths,
       report(column, width) {
         if (widths !== null) return;
-        pass.measured[column] = Math.max(pass.measured[column] ?? 0, width);
-        if (pass.scheduled) return;
+        scan.measured[column] = Math.max(scan.measured[column] ?? 0, width);
+        if (scan.scheduled) return;
         // Cells lay out in the same frame; collect them all, then commit.
-        pass.scheduled = true;
+        scan.scheduled = true;
         requestAnimationFrame(() => {
-          const final = columnWidths(pass.measured);
+          const final = columnWidths(scan.measured);
           storeColumnWidths(theme, key, final);
-          setState({ theme, widths: final });
+          setState((prev) => ({ theme, widths: final, pass: prev.pass }));
         });
       },
     };
@@ -462,6 +467,7 @@ export function Table({ style, children }: ElementProps<'Table'>) {
     >
       {/* Hidden while measuring, so unaligned columns never show. */}
       <View
+        key={pass}
         style={
           frame === null
             ? widths === null
