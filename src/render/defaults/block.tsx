@@ -15,6 +15,7 @@ import {
   View,
   type StyleProp,
   type TextStyle,
+  type ViewStyle,
 } from 'react-native';
 import type { ElementStyle } from '../../theme';
 import {
@@ -382,15 +383,33 @@ export function Table({ style, children }: ElementProps<'Table'>) {
     };
   }, [widths, theme, key]);
 
+  const { align, bleed } = theme.tableFrame;
+  const frame = useMemo(
+    () =>
+      align === null && bleed === 0
+        ? null
+        : splitTableFrame(style.container, align, bleed),
+    [style.container, align, bleed]
+  );
+
   return (
     <ScrollView
       horizontal
       bounces={false}
-      style={style.container}
+      style={frame === null ? style.container : frame.outer}
+      contentContainerStyle={frame?.content}
       showsHorizontalScrollIndicator={false}
     >
       {/* Hidden while measuring, so unaligned columns never show. */}
-      <View style={widths === null ? styles.measuring : undefined}>
+      <View
+        style={
+          frame === null
+            ? widths === null
+              ? styles.measuring
+              : undefined
+            : [frame.border, widths === null ? styles.measuring : undefined]
+        }
+      >
         <TableLayoutContext.Provider value={layout}>
           {children}
         </TableLayoutContext.Provider>
@@ -398,6 +417,44 @@ export function Table({ style, children }: ElementProps<'Table'>) {
     </ScrollView>
   );
 }
+
+/**
+ * `table.align` and `horizontalOverflow` need the border on the table itself
+ * (not the full-width scroll view): the scroll view keeps the margins and
+ * bleeds out by `bleed` (padded back so the table starts in line), and its
+ * content aligns a table narrower than the container.
+ */
+function splitTableFrame(
+  container: ViewStyle | undefined,
+  align: 'left' | 'center' | 'right' | null,
+  bleed: number
+) {
+  const { borderColor, borderWidth, borderRadius, ...outer } =
+    StyleSheet.flatten(container) ?? {};
+  return {
+    outer: {
+      ...outer,
+      ...(bleed > 0 && { marginHorizontal: -bleed }),
+    } as ViewStyle,
+    content: {
+      flexGrow: 1,
+      paddingHorizontal: bleed,
+      justifyContent: ALIGN_JUSTIFY[align ?? 'left'],
+    } as ViewStyle,
+    border: {
+      borderColor,
+      borderWidth,
+      borderRadius,
+      overflow: borderRadius ? 'hidden' : undefined,
+    } as ViewStyle,
+  };
+}
+
+const ALIGN_JUSTIFY = {
+  left: 'flex-start',
+  center: 'center',
+  right: 'flex-end',
+} as const;
 
 export function TableRow({ style, children }: ElementProps<'TableRow'>) {
   return <View style={style.container}>{children}</View>;

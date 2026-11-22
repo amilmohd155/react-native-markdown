@@ -28,6 +28,7 @@ import {
   type HeadingLevel,
   type ResolvedTheme,
   type SyntaxTokenType,
+  type TableFrame,
   type ThemeTokens,
 } from './types';
 
@@ -46,9 +47,7 @@ const scriptScale = (): number =>
 
 /**
  * Typed but ignored for now (no slot in the resolver yet): `blockquote.admonitions`;
- * `link.variants`; `table.align`, `horizontalOverflow`, `headerBackgroundColor`,
- * `headerColor`, `headerFontFamily`, `rowEvenBackgroundColor`,
- * `rowOddBackgroundColor`; `image.height`, `maxHeight`, `resizeMode`;
+ * `link.variants`; `image.height`, `maxHeight`, `resizeMode`;
  * `inlineImage.size`; `checkbox.borderColor`, `checkmarkColor`,
  * `borderRadius`.
  */
@@ -65,6 +64,44 @@ function footnoteMetrics(b: FlatThemeBlock, t: ThemeTokens) {
     noteSize: note.fontSize ?? t.fontSize.base * 0.875,
     lineRatio: t.paragraphLineHeight / t.fontSize.base,
   };
+}
+
+/**
+ * Table variants. The header cell is bold unless `table.headerFontFamily`
+ * names its own face; `headerColor` tints its text. Row backgrounds: the
+ * header row, then the body rows alternate even/odd counting the first body
+ * row as even (a cell's own `backgroundColor` paints over its row).
+ */
+function deriveTableVariants(
+  b: FlatThemeBlock,
+  cell: StyleEntry,
+  row: StyleEntry,
+  fonts: ThemeTokens['fonts']
+) {
+  const table = b.table ?? {};
+  const tableHeaderCell: StyleEntry = {
+    text: {
+      ...cell.text,
+      ...(table.headerFontFamily === undefined
+        ? fontStyleFor(fonts.body, { bold: true, italic: false }, '600')
+        : { fontFamily: table.headerFontFamily, fontWeight: 'normal' }),
+      ...defined<TextStyle>({ color: table.headerColor }),
+    },
+    container: cell.container,
+  };
+  const rowWith = (backgroundColor: string | undefined): StyleEntry => ({
+    container: { ...row.container, ...defined<ViewStyle>({ backgroundColor }) },
+  });
+  const tableRows = {
+    header: rowWith(table.headerBackgroundColor),
+    even: rowWith(table.rowEvenBackgroundColor),
+    odd: rowWith(table.rowOddBackgroundColor),
+  };
+  const tableFrame: TableFrame = Object.freeze({
+    align: table.align ?? null,
+    bleed: Math.max(0, table.horizontalOverflow ?? 0),
+  });
+  return { tableHeaderCell, tableRows, tableFrame };
 }
 
 const TEXT_KEYS = [
@@ -614,13 +651,12 @@ export function resolveTheme(
   // Variants, from the merged elements.
   const paragraph = merged.Paragraph;
   const tableCell = merged.TableCell;
-  const tableHeaderCell: StyleEntry = {
-    text: {
-      ...tableCell.text,
-      ...fontStyleFor(fonts.body, { bold: true, italic: false }, '600'),
-    },
-    container: tableCell.container,
-  };
+  const { tableHeaderCell, tableRows, tableFrame } = deriveTableVariants(
+    block,
+    tableCell,
+    merged.TableRow,
+    fonts
+  );
   // A sub-list sits `itemSpacing` below its parent item's text.
   const nestedList: StyleEntry = {
     container: {
@@ -703,6 +739,9 @@ export function resolveTheme(
   for (const [name, entry] of plugins) add(`plugin:${name}`, entry);
   headings.forEach((entry, i) => add(`h${i + 1}`, entry));
   add('tableHeaderCell', tableHeaderCell);
+  add('tableHeaderRow', tableRows.header);
+  add('tableRowEven', tableRows.even);
+  add('tableRowOdd', tableRows.odd);
   add('nestedList', nestedList);
   add('tightParagraph', tightParagraph);
   add('footnoteSection', footnoteSection);
@@ -752,6 +791,10 @@ export function resolveTheme(
       Emphasis: variants('Emphasis'),
     }),
     tableHeaderCell: pick1('tableHeaderCell'),
+    tableHeaderRow: pick1('tableHeaderRow'),
+    tableRowEven: pick1('tableRowEven'),
+    tableRowOdd: pick1('tableRowOdd'),
+    tableFrame,
     nestedList: pick1('nestedList'),
     tightParagraph: pick1('tightParagraph'),
     footnoteSection: pick1('footnoteSection'),

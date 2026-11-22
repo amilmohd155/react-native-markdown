@@ -107,7 +107,11 @@ export interface TableTheme extends MarginProps {
   borderRadius?: number;
   /** A table narrower than its container. */
   align?: 'left' | 'center' | 'right';
-  /** Bleed in points on each side of a scrolling table. */
+  /**
+   * Bleed in points on each side of a scrolling table. It replaces any
+   * marginLeft/marginRight of the table (`MarginProps` only allows top/bottom). An ancestor with `overflow: hidden`
+   * clips the bleed. Negative values count as 0.
+   */
   horizontalOverflow?: number;
   headerBackgroundColor?: string;
   headerColor?: string;

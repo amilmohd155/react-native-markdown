@@ -262,15 +262,23 @@ function renderNode(
       );
     }
 
-    case NodeType.TableRow:
+    case NodeType.TableRow: {
+      const props = tableRowProps(table, id);
+      // Rows are numbered across head and body: the first body row is 1.
+      const row = props.header
+        ? theme.tableHeaderRow
+        : props.index % 2 === 1
+          ? theme.tableRowEven
+          : theme.tableRowOdd;
       return element(
         ctx,
         'TableRow',
         id,
-        tableRowProps(table, id),
-        elements.TableRow,
+        props,
+        row,
         renderChildren(table, id, ctx, place)
       );
+    }
 
     case NodeType.TableCell: {
       const props = tableCellProps(table, id);

@@ -226,6 +226,14 @@ export interface ResolvedTheme {
   };
   /** `TableCell` inside the table head. */
   readonly tableHeaderCell: ElementStyle;
+  /** `TableRow` of the table head (`table.headerBackgroundColor`). */
+  readonly tableHeaderRow: ElementStyle;
+  /** `TableRow` of the even body rows, the first body row counts as even. */
+  readonly tableRowEven: ElementStyle;
+  /** `TableRow` of the odd body rows. */
+  readonly tableRowOdd: ElementStyle;
+  /** Table placement: `align` of a narrow table, `bleed` of a scrolling one. */
+  readonly tableFrame: TableFrame;
   /** `List` nested inside a list item: no bottom margin. */
   readonly nestedList: ElementStyle;
   /** `Paragraph` inside a tight list: no block spacing. */
@@ -241,6 +249,12 @@ export interface ResolvedTheme {
    * draws the separator on its right.
    */
   readonly codeBlockGutter: ElementStyle;
+}
+
+/** `table.align` (null: unset) and `table.horizontalOverflow` in points. */
+export interface TableFrame {
+  readonly align: 'left' | 'center' | 'right' | null;
+  readonly bleed: number;
 }
 
 /** Heading level, 1 to 6. */
