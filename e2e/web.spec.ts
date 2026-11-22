@@ -56,6 +56,22 @@ for (const fixture of WEB_FIXTURES) {
   }
 }
 
+test('table cells never wrap a word mid-word', async ({ page }) => {
+  // react-native-web rounds onLayout widths down; a column measured that way
+  // is a fraction of a pixel too narrow and breaks its longest word.
+  const box = page.getByTestId('table-words');
+  for (const word of ['Left', 'Center', 'Right', 'aligned', 'per', 'column']) {
+    const lines = await box
+      .getByText(word, { exact: true })
+      .evaluate(
+        (el) =>
+          el.getClientRects().length &&
+          el.scrollHeight / parseFloat(getComputedStyle(el).lineHeight)
+      );
+    expect(lines, word).toBeLessThan(1.5);
+  }
+});
+
 test('highlights a small ts fence as one text of coloured spans', async ({
   page,
 }) => {

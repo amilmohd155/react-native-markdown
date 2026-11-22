@@ -120,6 +120,13 @@ export const WEB_FIXTURES: readonly WebFixture[] = [
     text: ['a', 'b', '1', '2'],
   },
   {
+    // Words that fill their columns: a width rounded down wraps them mid-word.
+    name: 'table-words',
+    source:
+      '| Left | Center | Right |\n|:---|:---:|---:|\n| aligned | per | column |',
+    text: ['Left', 'Center', 'Right', 'aligned', 'per', 'column'],
+  },
+  {
     name: 'link',
     source: 'see [docs](https://example.com/docs)',
     text: ['docs'],

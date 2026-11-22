@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { act } from 'react';
 import { renderTree, type TestInstance, type Tree } from '../../__tests__/tree';
 import { resolveTheme } from '../../theme';
@@ -57,6 +57,48 @@ describe('table column widths', () => {
     expect(cells(root).map(widthOf)).toEqual([90, 60, 90, 60, 90, 60]);
     expect(cells(root).every((c) => c.props.onLayout === undefined)).toBe(true);
     expect(JSON.stringify(root.toJSON())).not.toContain('"opacity":0');
+  });
+
+  it('waits for every cell, even when cells report in separate frames', async () => {
+    const ctx = createRenderCtx({ components: defaultComponents });
+    const root = await mount(SOURCE.replace('three', 'late'), ctx);
+    const report = (indices: number[], widths: number[]) =>
+      act(async () => {
+        const all = cells(root);
+        indices.forEach((i) =>
+          all[i]?.props.onLayout?.({
+            nativeEvent: { layout: { width: widths[i] } },
+          })
+        );
+      });
+    const widths = [30, 20, 50, 60, 90, 10];
+
+    // Frame 1: the cells of the first two rows only; the frame flushes.
+    await report([0, 1, 2, 3], widths);
+    await act(async () => {
+      jest.runOnlyPendingTimers();
+    });
+    expect(cells(root).map(widthOf)).toEqual(Array(6).fill(undefined));
+
+    // Frame 2: the last row arrives, then every column is final.
+    await report([4, 5], widths);
+    await act(async () => {
+      jest.runOnlyPendingTimers();
+    });
+    expect(cells(root).map(widthOf)).toEqual([90, 60, 90, 60, 90, 60]);
+  });
+
+  it('adds a pixel on web, where onLayout rounds widths down', async () => {
+    const spy = jest.replaceProperty(Platform, 'OS', 'web');
+    try {
+      const ctx = createRenderCtx({ components: defaultComponents });
+      // Own source: widths are cached per theme and table content.
+      const root = await mount(SOURCE.replace('three', 'web'), ctx);
+      await layOut(root, [30, 20, 50, 60, 90, 10]);
+      expect(cells(root).map(widthOf)).toEqual([91, 61, 91, 61, 91, 61]);
+    } finally {
+      spy.restore();
+    }
   });
 
   it('reuses cached widths on the next mount of the same table', async () => {

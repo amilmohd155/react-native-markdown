@@ -1,5 +1,7 @@
 import {
   useContext,
+  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -9,6 +11,7 @@ import {
   Animated,
   Image as RNImage,
   Pressable,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -429,24 +432,59 @@ export function Table({ style, children }: ElementProps<'Table'>) {
 
   // One measuring pass per layout object: a new theme or table makes a new
   // one, which starts again with no measurements.
-  const layout = useMemo<TableLayout>(() => {
-    const scan = { measured: [] as number[], scheduled: false };
-    return {
+  const { layout, attach } = useMemo(() => {
+    const scan = {
+      measured: [] as number[],
+      enrolled: new Set<object>(),
+      reported: new Set<object>(),
+      scheduled: false,
+      disposed: false,
+    };
+    // Web reports `onLayout` a frame or more apart under load, so committing
+    // on the first frame fixes only the columns measured so far (the rest
+    // keep their natural width, ragged). Commit when every cell has reported.
+    const commitWhenComplete = () => {
+      if (scan.disposed || scan.scheduled || scan.enrolled.size === 0) return;
+      for (const cell of scan.enrolled) if (!scan.reported.has(cell)) return;
+      // Cells lay out in the same frame; collect them all, then commit.
+      scan.scheduled = true;
+      requestAnimationFrame(() => {
+        if (scan.disposed) return;
+        const final = columnWidths(scan.measured);
+        storeColumnWidths(theme, key, final);
+        setState((prev) => ({ theme, widths: final, pass: prev.pass }));
+      });
+    };
+    const value: TableLayout = {
       widths,
-      report(column, width) {
+      enroll(cell) {
+        if (widths !== null) return () => {};
+        scan.enrolled.add(cell);
+        return () => {
+          scan.enrolled.delete(cell);
+          commitWhenComplete();
+        };
+      },
+      report(cell, column, width) {
         if (widths !== null) return;
         scan.measured[column] = Math.max(scan.measured[column] ?? 0, width);
-        if (scan.scheduled) return;
-        // Cells lay out in the same frame; collect them all, then commit.
-        scan.scheduled = true;
-        requestAnimationFrame(() => {
-          const final = columnWidths(scan.measured);
-          storeColumnWidths(theme, key, final);
-          setState((prev) => ({ theme, widths: final, pass: prev.pass }));
-        });
+        scan.reported.add(cell);
+        commitWhenComplete();
+      },
+    };
+    return {
+      layout: value,
+      // Strict mode runs effects twice: re-arm on every attach.
+      attach: () => {
+        scan.disposed = false;
+        return () => {
+          scan.disposed = true;
+        };
       },
     };
   }, [widths, theme, key]);
+  // A replaced layout (new theme, table or widths) drops its pending commit.
+  useEffect(attach, [attach]);
 
   const { align, bleed } = theme.tableFrame;
   const frame = useMemo(
@@ -526,6 +564,14 @@ export function TableRow({ style, children }: ElementProps<'TableRow'>) {
   return <View style={style.container}>{children}</View>;
 }
 
+/**
+ * react-native-web reports `onLayout` sizes from `offsetWidth`, which rounds
+ * to whole pixels: a cell whose natural width is 67.17 reports 67, so its
+ * text (53.17 wide, plus padding and border) wraps mid-word at the fixed
+ * width. One pixel of slack covers the rounding; native reports exact floats.
+ */
+const webLayoutSlack = () => (Platform.OS === 'web' ? 1 : 0);
+
 const CELL_ALIGN = {
   left: undefined,
   center: { textAlign: 'center' },
@@ -542,6 +588,11 @@ export function TableCell({
   const layout = useContext(TableLayoutContext);
   const width = layout?.widths?.[column];
   const measuring = layout !== null && layout.widths === null;
+  const [identity] = useState(() => ({}));
+  useLayoutEffect(
+    () => (measuring ? layout.enroll(identity) : undefined),
+    [measuring, layout, identity]
+  );
 
   return (
     <View
@@ -551,7 +602,12 @@ export function TableCell({
       ]}
       onLayout={
         measuring
-          ? (event) => layout.report(column, event.nativeEvent.layout.width)
+          ? (event) =>
+              layout.report(
+                identity,
+                column,
+                event.nativeEvent.layout.width + webLayoutSlack()
+              )
           : undefined
       }
     >
