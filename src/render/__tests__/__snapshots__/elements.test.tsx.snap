@@ -1000,8 +1000,6 @@ exports[`element snapshots List 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 26,
             },
           ]
@@ -1067,8 +1065,6 @@ exports[`element snapshots List 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 26,
             },
           ]
@@ -1148,8 +1144,6 @@ exports[`element snapshots ListItem 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 20,
             },
           ]
@@ -1264,8 +1258,6 @@ exports[`element snapshots ListItem 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 20,
             },
           ]
@@ -1281,7 +1273,7 @@ exports[`element snapshots ListItem 1`] = `
                 "lineHeight": 24,
               },
               null,
-              false,
+              {},
             ]
           }
         >

@@ -132,7 +132,17 @@ export interface ThemeTokens {
   };
   readonly spacing: {
     readonly block: number;
-    readonly listIndent: number;
+  };
+  /** List marker metrics (`list.*`). `indent` is the per-level minimum column. */
+  readonly list: {
+    readonly indent: number;
+    readonly gap: number;
+    readonly markerMinWidth: number;
+    readonly itemSpacing: number;
+    /** Bullet marker text style (`bulletColor`, `bulletSize`). */
+    readonly bulletStyle: TextStyle;
+    /** Number marker text style (right-aligned, `markerColor`, `markerFontWeight`). */
+    readonly orderedStyle: TextStyle;
   };
   readonly radius: {
     readonly code: number;

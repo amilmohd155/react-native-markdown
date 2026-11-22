@@ -41,7 +41,11 @@ export const lightTheme: FlatThemeBlock = Object.freeze({
   highlight: Object.freeze({ backgroundColor: '#fff8c5' }),
   footnoteDefinition: Object.freeze({ highlightColor: '#fff3a3' }),
   // U+FE0E (text presentation): iOS draws ▪ as an emoji square without it.
-  list: Object.freeze({ bullets: Object.freeze(['•', '◦', '▪︎']) }),
+  list: Object.freeze({
+    bullets: Object.freeze(['•', '◦', '▪︎']),
+    marginLeft: 20,
+    gapWidth: 6,
+  }),
   image: Object.freeze({ aspectRatio: 16 / 9 }),
   checkbox: Object.freeze({
     checkedText: Object.freeze({

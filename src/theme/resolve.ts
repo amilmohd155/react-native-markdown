@@ -37,7 +37,6 @@ const HEADING_LEVELS: readonly HeadingLevel[] = [1, 2, 3, 4, 5, 6];
 
 // Internal scales (P3a-2: tokens are internal).
 const BLOCK_SPACING = 12;
-const LIST_INDENT = 20;
 /** Paragraph line height as a multiple of its size; the result is in points. */
 const LINE_HEIGHT = 1.5;
 const HEADING_SCALE = 1.2;
@@ -46,9 +45,7 @@ const scriptScale = (): number =>
   Platform.select({ android: 0.65, default: 0.75 });
 
 /**
- * Typed but ignored for now (no slot in the resolver yet): `list.bulletColor`,
- * `bulletSize`, `markerColor`, `markerFontWeight`, `markerMinWidth`,
- * `gapWidth`, `marginLeft`, `itemSpacing`; `blockquote.admonitions`;
+ * Typed but ignored for now (no slot in the resolver yet): `blockquote.admonitions`;
  * `link.variants`; `table.align`, `horizontalOverflow`, `headerBackgroundColor`,
  * `headerColor`, `headerFontFamily`, `rowEvenBackgroundColor`,
  * `rowOddBackgroundColor`; `image.height`, `maxHeight`, `resizeMode`;
@@ -150,6 +147,27 @@ function defined<T extends object>(style: T): T {
   return out as T;
 }
 
+/** List marker metrics and marker text styles the item renderer reads. */
+function listTokens(list: NonNullable<FlatThemeBlock['list']>) {
+  return Object.freeze({
+    indent: list.marginLeft!,
+    gap: list.gapWidth!,
+    markerMinWidth: list.markerMinWidth ?? 0,
+    itemSpacing: list.itemSpacing ?? 0,
+    // Built once: the item renderer picks one per item.
+    bulletStyle: Object.freeze(
+      defined<TextStyle>({ color: list.bulletColor, fontSize: list.bulletSize })
+    ),
+    orderedStyle: Object.freeze(
+      defined<TextStyle>({
+        textAlign: 'right',
+        color: list.markerColor,
+        fontWeight: list.markerFontWeight,
+      })
+    ),
+  });
+}
+
 /** `{ fontFamily }` when set; nothing for the system font. */
 function family(fontFamily: string | undefined): TextStyle {
   return fontFamily === undefined ? {} : { fontFamily };
@@ -227,7 +245,8 @@ function tokensOf(
       subscript: b.subscript?.fontScale ?? scriptScale(),
       footnoteReference: b.footnoteReference?.fontScale ?? scriptScale(),
     }),
-    spacing: Object.freeze({ block: BLOCK_SPACING, listIndent: LIST_INDENT }),
+    spacing: Object.freeze({ block: BLOCK_SPACING }),
+    list: listTokens(b.list!),
     radius: Object.freeze({ code: b.codeBlock!.borderRadius! }),
     listBullets: Object.freeze([...b.list!.bullets!]),
     imageRatio: b.image!.aspectRatio!,
@@ -602,8 +621,15 @@ export function resolveTheme(
     },
     container: tableCell.container,
   };
+  // A sub-list sits `itemSpacing` below its parent item's text.
   const nestedList: StyleEntry = {
-    container: { ...merged.List.container, marginBottom: 0 },
+    container: {
+      ...merged.List.container,
+      marginBottom: 0,
+      ...(tokens.list.itemSpacing > 0 && {
+        marginTop: tokens.list.itemSpacing,
+      }),
+    },
   };
   const tightParagraph: StyleEntry = {
     text: paragraph.text,

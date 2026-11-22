@@ -98,10 +98,8 @@ export function List({ style, children }: ElementProps<'List'>) {
 const CHECKED = '☑\uFE0E';
 const UNCHECKED = '☐\uFE0E';
 
-/** Space between the marker column and the item content. */
-const MARKER_GAP = 6;
-
 export function ListItem({
+  index,
   ordered,
   marker,
   checked,
@@ -118,10 +116,13 @@ export function ListItem({
 
   // Same width for every item of the list, from its longest marker, so
   // "9." and "10." stay aligned (right-aligned when ordered).
-  const { fontSize, spacing } = theme.tokens;
+  const { fontSize, list } = theme.tokens;
   const width = Math.max(
-    spacing.listIndent,
-    Math.ceil(markerChars * fontSize.base * 0.6) + MARKER_GAP
+    list.indent,
+    Math.max(
+      list.markerMinWidth,
+      Math.ceil(markerChars * fontSize.base * 0.6)
+    ) + list.gap
   );
 
   const { checkbox } = theme.tokens;
@@ -140,7 +141,11 @@ export function ListItem({
   if (checked === null) {
     markerNode = (
       <Text
-        style={[style.text, inherited, ordered && styles.markerOrdered]}
+        style={[
+          style.text,
+          inherited,
+          ordered ? list.orderedStyle : list.bulletStyle,
+        ]}
         accessible={false}
       >
         {marker}
@@ -184,8 +189,14 @@ export function ListItem({
   }
 
   return (
-    <View style={style.container}>
-      <View style={[styles.markerColumn, { width }]}>{markerNode}</View>
+    <View
+      style={
+        index > 0 && list.itemSpacing > 0
+          ? [style.container, { marginTop: list.itemSpacing }]
+          : style.container
+      }
+    >
+      <View style={[{ width, paddingRight: list.gap }]}>{markerNode}</View>
       <View style={styles.content}>
         {checkedText === null ? (
           children
@@ -477,8 +488,6 @@ export function FootnoteDefinition({
 }
 
 const styles = StyleSheet.create({
-  markerColumn: { paddingRight: MARKER_GAP },
-  markerOrdered: { textAlign: 'right' },
   checkbox: { alignSelf: 'flex-start' },
   content: { flex: 1, minWidth: 0 },
   imageFrame: { width: '100%' },

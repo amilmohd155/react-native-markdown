@@ -1000,8 +1000,6 @@ exports[`theme snapshots dark element List 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 26,
             },
           ]
@@ -1067,8 +1065,6 @@ exports[`theme snapshots dark element List 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 26,
             },
           ]
@@ -1148,8 +1144,6 @@ exports[`theme snapshots dark element ListItem 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 20,
             },
           ]
@@ -1264,8 +1258,6 @@ exports[`theme snapshots dark element ListItem 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 20,
             },
           ]
@@ -1281,7 +1273,7 @@ exports[`theme snapshots dark element ListItem 1`] = `
                 "lineHeight": 24,
               },
               null,
-              false,
+              {},
             ]
           }
         >
@@ -2421,8 +2413,6 @@ exports[`theme snapshots dark plugin taskLists 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 20,
             },
           ]
@@ -2534,8 +2524,6 @@ exports[`theme snapshots dark plugin taskLists 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 20,
             },
           ]
@@ -3642,8 +3630,6 @@ exports[`theme snapshots light element List 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 26,
             },
           ]
@@ -3709,8 +3695,6 @@ exports[`theme snapshots light element List 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 26,
             },
           ]
@@ -3790,8 +3774,6 @@ exports[`theme snapshots light element ListItem 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 20,
             },
           ]
@@ -3906,8 +3888,6 @@ exports[`theme snapshots light element ListItem 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 20,
             },
           ]
@@ -3923,7 +3903,7 @@ exports[`theme snapshots light element ListItem 1`] = `
                 "lineHeight": 24,
               },
               null,
-              false,
+              {},
             ]
           }
         >
@@ -5063,8 +5043,6 @@ exports[`theme snapshots light plugin taskLists 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 20,
             },
           ]
@@ -5176,8 +5154,6 @@ exports[`theme snapshots light plugin taskLists 1`] = `
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 20,
             },
           ]

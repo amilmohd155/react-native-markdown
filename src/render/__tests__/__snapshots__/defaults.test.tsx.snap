@@ -222,8 +222,6 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 26,
             },
           ]
@@ -289,8 +287,6 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 26,
             },
           ]
@@ -365,8 +361,6 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 20,
             },
           ]
@@ -481,8 +475,6 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
           [
             {
               "paddingRight": 6,
-            },
-            {
               "width": 20,
             },
           ]
