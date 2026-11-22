@@ -183,7 +183,8 @@ function useScrollProps(
       own.onScrollToIndexFailed = control.onScrollToIndexFailed;
       // A drag ends a pending `scrollToBlock` / `scrollToEnd` retry
       // (follow-tail's own drag handler does the same).
-      own.onScrollBeginDrag ??= control.cancel;
+      own.onScrollBeginDrag =
+        (follow ? control.onScrollBeginDrag : undefined) ?? control.cancel;
     }
     return own;
   }, [
