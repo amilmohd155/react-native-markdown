@@ -1,0 +1,412 @@
+{
+ "tree": "8dc2ed5 + uncommitted M5 working tree (Phase 3a)",
+ "date": "2026-11-22T14:43:18.304Z",
+ "device": {
+  "os": "android",
+  "osVersion": 37,
+  "model": "SM-S731B",
+  "brand": "samsung",
+  "userAgent": null,
+  "hermes": true,
+  "dev": false
+ },
+ "mode": "full",
+ "warmup": 5,
+ "runs": 20,
+ "fixtures": [
+  {
+   "id": "F3",
+   "bytes": 97211
+  }
+ ],
+ "summary": [
+  {
+   "fixture": "F3",
+   "impl": "v1-obj",
+   "metric": "parse",
+   "n": 20,
+   "median": 103.31927701830864,
+   "p90": 124.50692149400712
+  },
+  {
+   "fixture": "F3",
+   "impl": "v1-obj",
+   "metric": "firstRender",
+   "n": 20,
+   "median": 313.0091020166874,
+   "p90": 401.4953164994717
+  },
+  {
+   "fixture": "F3",
+   "impl": "v1-obj",
+   "metric": "parse+firstRender",
+   "n": 20,
+   "median": 410.59675800800323,
+   "p90": 534.8295358181
+  },
+  {
+   "fixture": "F3",
+   "impl": "v1-obj",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 42.47582000494003,
+   "p90": 48.74383238554001
+  },
+  {
+   "fixture": "F3",
+   "impl": "v1",
+   "metric": "parse",
+   "n": 20,
+   "median": 98.63187500834465,
+   "p90": 125.22715198397637
+  },
+  {
+   "fixture": "F3",
+   "impl": "v1",
+   "metric": "firstRender",
+   "n": 20,
+   "median": 308.65767550468445,
+   "p90": 407.3190035879612
+  },
+  {
+   "fixture": "F3",
+   "impl": "v1",
+   "metric": "parse+firstRender",
+   "n": 20,
+   "median": 401.65156200528145,
+   "p90": 532.7945624887943
+  },
+  {
+   "fixture": "F3",
+   "impl": "v1",
+   "metric": "reRenderOneBlock",
+   "n": 20,
+   "median": 41.66695302724838,
+   "p90": 47.92822643518448
+  }
+ ],
+ "themeResolve": {
+  "resolveThemeCold_medianMs": 0.23878902196884155,
+  "resolveThemeCold_p90Ms": 0.24352291226387024,
+  "resolveThemeBuiltinInput_medianMs": 0.22812500596046448,
+  "resolveThemeBuiltinInput_p90Ms": 0.2304767906665802,
+  "cacheHit_medianMs": 0.0005859732627868652,
+  "cacheHit_p90Ms": 0.0006250143051147461,
+  "cacheHit_p99Ms": 0.0008199810981750488
+ },
+ "environment": {
+  "build": "Expo Go SDK 58 (release native shell) running a production JS bundle: metro --no-dev --minify, Hermes bytecode, dev:false. NOT a standalone release APK (would need expo prebuild + gradle). Phone on USB, charging, not airplane mode. Dev-menu onboarding sheet was visible during runs.",
+  "comparability": "Not comparable with bench/results/sm-s731b-2026-11-06-linkify-fix.json or the budgets.json ceilings (standalone release build): Expo Go adds about 2.2x on reRenderOneBlock. Compare only with the same-environment baseline below.",
+  "harness": "Temporary example/src/TmpBench.tsx (not committed): the Bench tab method of 81220d3 (5 warm-up + 20 runs, alternating variants, 2-frame unmount wait), F3 / v1 only. impl v1 = theme=\"light\" (protocol), v1-obj = a createTheme object with 7 element keys.",
+  "methodNote": "Expo Go caches the first bundle per project: every run used pm clear of Expo Go before launch so the bundle was fetched fresh."
+ },
+ "baseline55ca455": {
+  "note": "same harness, same environment, detached worktree at 55ca455 (before Phase 3a); v1-obj uses the old createTheme API",
+  "runs": [
+   {
+    "date": "2026-11-22T14:41:26.311Z",
+    "summary": [
+     {
+      "fixture": "F3",
+      "impl": "v1-obj",
+      "metric": "parse",
+      "n": 20,
+      "median": 115.48980501294136,
+      "p90": 126.96001990437507
+     },
+     {
+      "fixture": "F3",
+      "impl": "v1-obj",
+      "metric": "firstRender",
+      "n": 20,
+      "median": 358.9197454750538,
+      "p90": 399.798124319315
+     },
+     {
+      "fixture": "F3",
+      "impl": "v1-obj",
+      "metric": "parse+firstRender",
+      "n": 20,
+      "median": 476.1653515100479,
+      "p90": 527.056027007103
+     },
+     {
+      "fixture": "F3",
+      "impl": "v1-obj",
+      "metric": "reRenderOneBlock",
+      "n": 20,
+      "median": 42.67933547496796,
+      "p90": 47.727858918905255
+     },
+     {
+      "fixture": "F3",
+      "impl": "v1",
+      "metric": "parse",
+      "n": 20,
+      "median": 114.25033250451088,
+      "p90": 127.06148799657822
+     },
+     {
+      "fixture": "F3",
+      "impl": "v1",
+      "metric": "firstRender",
+      "n": 20,
+      "median": 357.2285154759884,
+      "p90": 392.182273888588
+     },
+     {
+      "fixture": "F3",
+      "impl": "v1",
+      "metric": "parse+firstRender",
+      "n": 20,
+      "median": 471.47884798049927,
+      "p90": 524.8551560282707
+     },
+     {
+      "fixture": "F3",
+      "impl": "v1",
+      "metric": "reRenderOneBlock",
+      "n": 20,
+      "median": 42.260371029376984,
+      "p90": 49.307832241058364
+     }
+    ],
+    "themeResolve": {
+     "resolveThemeCold_medianMs": 0.09769552946090698,
+     "resolveThemeCold_p90Ms": 0.09969179630279541
+    }
+   },
+   {
+    "date": "2026-11-22T14:45:11.329Z",
+    "summary": [
+     {
+      "fixture": "F3",
+      "impl": "v1-obj",
+      "metric": "parse",
+      "n": 20,
+      "median": 106.85501953959465,
+      "p90": 125.91740641593934
+     },
+     {
+      "fixture": "F3",
+      "impl": "v1-obj",
+      "metric": "firstRender",
+      "n": 20,
+      "median": 337.2710545063019,
+      "p90": 395.91373826265334
+     },
+     {
+      "fixture": "F3",
+      "impl": "v1-obj",
+      "metric": "parse+firstRender",
+      "n": 20,
+      "median": 449.1642774939537,
+      "p90": 521.48550786376
+     },
+     {
+      "fixture": "F3",
+      "impl": "v1-obj",
+      "metric": "reRenderOneBlock",
+      "n": 20,
+      "median": 41.20650398731232,
+      "p90": 48.51619850993157
+     },
+     {
+      "fixture": "F3",
+      "impl": "v1",
+      "metric": "parse",
+      "n": 20,
+      "median": 106.79972651600838,
+      "p90": 131.81588273644448
+     },
+     {
+      "fixture": "F3",
+      "impl": "v1",
+      "metric": "firstRender",
+      "n": 20,
+      "median": 337.8245504796505,
+      "p90": 401.35217649936675
+     },
+     {
+      "fixture": "F3",
+      "impl": "v1",
+      "metric": "parse+firstRender",
+      "n": 20,
+      "median": 445.4458589851856,
+      "p90": 541.0114959955215
+     },
+     {
+      "fixture": "F3",
+      "impl": "v1",
+      "metric": "reRenderOneBlock",
+      "n": 20,
+      "median": 41.55679649114609,
+      "p90": 45.9148508310318
+     }
+    ],
+    "themeResolve": {
+     "resolveThemeCold_medianMs": 0.1043749749660492,
+     "resolveThemeCold_p90Ms": 0.10595361590385437
+    }
+   }
+  ]
+ },
+ "otherCurrentRuns": [
+  {
+   "date": "2026-11-22T14:26:28.647Z",
+   "summary": [
+    {
+     "fixture": "F3",
+     "impl": "v1-obj",
+     "metric": "parse",
+     "n": 20,
+     "median": 91.480976998806,
+     "p90": 94.74316393136978
+    },
+    {
+     "fixture": "F3",
+     "impl": "v1-obj",
+     "metric": "firstRender",
+     "n": 20,
+     "median": 298.9134185016155,
+     "p90": 308.168445199728
+    },
+    {
+     "fixture": "F3",
+     "impl": "v1-obj",
+     "metric": "parse+firstRender",
+     "n": 20,
+     "median": 390.32203099131584,
+     "p90": 401.12142956852915
+    },
+    {
+     "fixture": "F3",
+     "impl": "v1-obj",
+     "metric": "reRenderOneBlock",
+     "n": 20,
+     "median": 38.37195351719856,
+     "p90": 40.62471856474877
+    },
+    {
+     "fixture": "F3",
+     "impl": "v1",
+     "metric": "parse",
+     "n": 20,
+     "median": 92.93451198935509,
+     "p90": 94.59783987402916
+    },
+    {
+     "fixture": "F3",
+     "impl": "v1",
+     "metric": "firstRender",
+     "n": 20,
+     "median": 297.56982401013374,
+     "p90": 302.78407007455826
+    },
+    {
+     "fixture": "F3",
+     "impl": "v1",
+     "metric": "parse+firstRender",
+     "n": 20,
+     "median": 389.994023501873,
+     "p90": 396.6330935060978
+    },
+    {
+     "fixture": "F3",
+     "impl": "v1",
+     "metric": "reRenderOneBlock",
+     "n": 20,
+     "median": 37.23480498790741,
+     "p90": 37.9738127887249
+    }
+   ],
+   "themeResolve": {
+    "resolveThemeCold_medianMs": 0.16367197036743164,
+    "resolveThemeCold_p90Ms": 0.16789400577545166,
+    "resolveThemeBuiltinInput_medianMs": 0.15206998586654663,
+    "resolveThemeBuiltinInput_p90Ms": 0.15301188826560974,
+    "cacheHit_medianMs": 0.00042897462844848633,
+    "cacheHit_p90Ms": 0.00042998790740966797,
+    "cacheHit_p99Ms": 0.00046902894973754883
+   }
+  },
+  {
+   "date": "2026-11-22T14:47:08.229Z",
+   "summary": [
+    {
+     "fixture": "F3",
+     "impl": "v1-obj",
+     "metric": "parse",
+     "n": 20,
+     "median": 113.83992198109627,
+     "p90": 141.43667937517168
+    },
+    {
+     "fixture": "F3",
+     "impl": "v1-obj",
+     "metric": "firstRender",
+     "n": 20,
+     "median": 361.8845510184765,
+     "p90": 450.47525748610497
+    },
+    {
+     "fixture": "F3",
+     "impl": "v1-obj",
+     "metric": "parse+firstRender",
+     "n": 20,
+     "median": 475.72447299957275,
+     "p90": 600.8977581560612
+    },
+    {
+     "fixture": "F3",
+     "impl": "v1-obj",
+     "metric": "reRenderOneBlock",
+     "n": 20,
+     "median": 45.43279302120209,
+     "p90": 57.12801551222802
+    },
+    {
+     "fixture": "F3",
+     "impl": "v1",
+     "metric": "parse",
+     "n": 20,
+     "median": 114.08790999650955,
+     "p90": 139.7959883749485
+    },
+    {
+     "fixture": "F3",
+     "impl": "v1",
+     "metric": "firstRender",
+     "n": 20,
+     "median": 368.2425585091114,
+     "p90": 462.49817986488347
+    },
+    {
+     "fixture": "F3",
+     "impl": "v1",
+     "metric": "parse+firstRender",
+     "n": 20,
+     "median": 482.51019501686096,
+     "p90": 593.6113940954208
+    },
+    {
+     "fixture": "F3",
+     "impl": "v1",
+     "metric": "reRenderOneBlock",
+     "n": 20,
+     "median": 46.61419901251793,
+     "p90": 58.096429699659346
+    }
+   ],
+   "themeResolve": {
+    "resolveThemeCold_medianMs": 0.26484352350234985,
+    "resolveThemeCold_p90Ms": 0.2751170635223389,
+    "resolveThemeBuiltinInput_medianMs": 0.2550780177116394,
+    "resolveThemeBuiltinInput_p90Ms": 0.26140610575675965,
+    "cacheHit_medianMs": 0.0006639957427978516,
+    "cacheHit_p90Ms": 0.000702977180480957,
+    "cacheHit_p99Ms": 0.000937044620513916
+   }
+  }
+ ]
+}

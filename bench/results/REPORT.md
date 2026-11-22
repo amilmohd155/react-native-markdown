@@ -1311,3 +1311,23 @@ The same harness as the Android pass, on the iOS simulator (Expo Go SDK 58, `--n
 
 - **Affected:** the plain block in the gutter layout (any size) and the last chunk of a chunked highlighted block. **Not affected:** a highlighted block drawn as one `Text` and both rows layouts. Native draws an empty last line after a final `\n`; web (`pre-wrap`) draws none.
 - **Fix:** the gutter text ends in a bare `\n` when its code does ([P3-35](../../docs/rewrite/phase-3/decisions.md#p3-35-code-block-header-line-numbers-and-wrap-in-pure-js)). Verified by unit tests and the web e2e (gutter and code heights equal within 1 px), and re-measured on the S25 FE (font scale 0.8 and 2.0) and the iOS simulator (content size `large` and XXXL) with the same cases: gutter minus code height is now 0 in every case, including the plain gutter with 1 to 3 trailing blanks, a large plain block, the plain gutter with a header and a large highlighted chunked block; the cases that lined up before (plain with no trailing blank, middle blanks only, one line, the highlighted single `Text`, rows) did not regress. Not tested on a device: the open-to-closed swap of a real stream (covered by unit tests only).
+
+## Phase 3a (flat theme) device run
+
+Cost check for the flat theme ([Phase 3a exit criteria](../../docs/rewrite/phase-3a/README.md#exit-criteria)). Raw data: [`sm-s731b-2026-11-22-phase-3a.json`](./sm-s731b-2026-11-22-phase-3a.json).
+
+- **Method:** S25 FE, Expo Go SDK 58 running a production bundle (`--no-dev --minify`, Hermes bytecode), not a standalone release APK. A throwaway Bench-tab harness (5 warm-up + 20 runs, alternating variants), F3, `impl` v1 (`theme="light"`). Tree: `8dc2ed5` plus the uncommitted M5 changes. Baseline: the same harness and environment at `55ca455` (before Phase 3a). Expo Go was cleared before each launch so the bundle was fetched fresh.
+- **Not comparable** with the release rows or the ceilings: Expo Go is about 2.2x slower on `reRenderOneBlock`. Compare only the first two rows.
+
+Medians, ms:
+
+| F3, v1 | `parse` | `firstRender` | `reRenderOneBlock` | `parse+firstRender` |
+|---|---|---|---|---|
+| Current tree, 3 runs | 98.6 / 92.9 / 114.1 | 308.7 / 297.6 / 368.2 | 41.7 / 37.2 / 46.6 | 401.7 / 390.0 / 482.5 |
+| `55ca455`, 2 runs | 114.3 / 106.8 | 357.2 / 337.8 | 42.3 / 41.6 | 471.5 / 445.4 |
+| Release build, 2026-11-06 ([after the autolink fix](#after-the-autolink-fix-9f4845b)) | 79.4 | 264.5 | 18.5 | 338.1 |
+| Ceiling ([budgets](#proposed-budgets-for-f3)) | 100 | 325 | 25 | 595 |
+
+- **No regression.** `reRenderOneBlock` is 41.7 ms (current runs 37.2 to 46.6) against 42.3 and 41.6 ms at `55ca455`; the run-to-run spread is as large as the difference. The `v1-obj` variant (a theme object with 7 element keys) matches `v1` in every run.
+- **Resolve micro-bench** (`resolveTheme`, 7-key flat input, cold): 0.24 to 0.26 ms in two runs, 0.16 ms in a faster one; `55ca455` 0.098 and 0.104 ms. A cache hit is about 0.65 us (0.43 to 0.66 us), so an equal theme reuses the cached result and the cold cost is paid once per distinct theme.
+- **`check:budgets`** flags `reRenderOneBlock` (41.7 against 25 ms) only because of Expo Go's overhead; the same figure at `55ca455` is as high. A release-build re-measure against the F3 ceilings is deferred to the optimization pass ([D9](../../docs/rewrite/07-roadmap.md#decisions)).
