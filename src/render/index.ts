@@ -30,6 +30,8 @@ export type {
 export {
   createRenderCtx,
   useRenderCtx,
+  type CodeBlockOptions,
+  type CodeCopyInfo,
   type FootnoteBackLinkMark,
   type FootnoteA11yLabels,
   type FootnotePressInfo,

@@ -28,6 +28,12 @@ import {
   type TableLayout,
 } from '../contexts';
 import { checkboxHitSlop } from '../checkbox';
+import { codeLayout, PlainCodeBody } from './codeBlockLayout';
+import {
+  CodeBlockShell,
+  useCodeBlockHeader,
+  useCodeBlockWrap,
+} from './codeBlockShell';
 import type { ElementProps } from '../elements';
 import { useImageSize } from '../imageSize';
 import { useTaskState } from '../useTaskState';
@@ -194,24 +200,41 @@ export function ListItem({
   );
 }
 
-export function CodeBlock({ code, style }: ElementProps<'CodeBlock'>) {
-  const { options } = useRenderContext();
+export function CodeBlock({
+  code,
+  language,
+  meta,
+  open,
+  style,
+}: ElementProps<'CodeBlock'>) {
+  const { options, theme } = useRenderContext();
+  const { wrap, toggleWrap } = useCodeBlockWrap();
+  const header = useCodeBlockHeader({
+    code,
+    language,
+    meta,
+    open,
+    wrap,
+    onToggleWrap: toggleWrap,
+  });
+  const { lineNumbers } = options.codeBlock;
   return (
-    <View style={style.container}>
-      <ScrollView
-        horizontal
-        bounces={false}
-        showsHorizontalScrollIndicator={false}
-      >
-        <Text
-          style={style.text}
-          selectable={options.selectable}
-          maxFontSizeMultiplier={options.maxFontSizeMultiplier ?? undefined}
-        >
-          {code}
-        </Text>
-      </ScrollView>
-    </View>
+    <CodeBlockShell
+      code={code}
+      style={style.container}
+      header={header}
+      // Numbered bodies are hidden from accessibility: the label reads them.
+      labelled={lineNumbers}
+    >
+      <PlainCodeBody
+        code={code}
+        layout={codeLayout({ lineNumbers, wrap })}
+        textStyle={style.text}
+        gutterStyle={theme.codeBlockGutter}
+        selectable={options.selectable}
+        maxFontSizeMultiplier={options.maxFontSizeMultiplier ?? undefined}
+      />
+    </CodeBlockShell>
   );
 }
 

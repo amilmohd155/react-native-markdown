@@ -44,6 +44,12 @@ describe('createRenderCtx', () => {
       footnoteBackLinkMark: DEFAULT_FOOTNOTE_BACK_LINK_MARK,
       scriptFallback: 'smaller',
       images: 'allow',
+      codeBlock: {
+        header: false,
+        lineNumbers: false,
+        wrap: false,
+        copyable: false,
+      },
     });
     expect(Object.isFrozen(ctx)).toBe(true);
   });
@@ -54,6 +60,20 @@ describe('createRenderCtx', () => {
       createRenderCtx({ components, interactiveTasks: false }).options
         .interactiveTasks
     ).toBe(false);
+  });
+
+  it('resolves codeBlock and makes it copyable with onCopyPress', () => {
+    const ctx = createRenderCtx({
+      components,
+      codeBlock: { wrap: true },
+      handlers: { onCopyPress: () => {} },
+    });
+    expect(ctx.options.codeBlock).toEqual({
+      header: false,
+      lineNumbers: false,
+      wrap: true,
+      copyable: true,
+    });
   });
 });
 
@@ -108,5 +128,33 @@ describe('useRenderCtx', () => {
     await update({ components, taskResetKey: 'x' });
     expect(seen[1]).toBe(seen[0]);
     expect(seen[1]!.tasks).toBe(seen[0]!.tasks);
+  });
+
+  it('keeps ctx with a new inline codeBlock of the same values', async () => {
+    const { seen, update } = await renderCtx({
+      components,
+      codeBlock: { header: true },
+    });
+    await update({ components, codeBlock: { header: true } });
+    await update({ components, codeBlock: { header: true, wrap: false } });
+    expect(new Set(seen).size).toBe(1);
+  });
+
+  it('changes ctx when a codeBlock flag changes', async () => {
+    const { seen, update } = await renderCtx({ components });
+    await update({ components, codeBlock: { lineNumbers: true } });
+    expect(seen[1]).not.toBe(seen[0]);
+    expect(seen[0]!.options.codeBlock.lineNumbers).toBe(false);
+    expect(seen[1]!.options.codeBlock.lineNumbers).toBe(true);
+  });
+
+  it('changes ctx when onCopyPress is added, not when it changes', async () => {
+    const { seen, update } = await renderCtx({ components });
+    await update({ components, handlers: { onCopyPress: () => {} } });
+    await update({ components, handlers: { onCopyPress: () => {} } });
+    expect(seen[0]!.options.codeBlock.copyable).toBe(false);
+    expect(seen[1]!.options.codeBlock.copyable).toBe(true);
+    expect(seen[1]).not.toBe(seen[0]);
+    expect(seen[2]).toBe(seen[1]);
   });
 });

@@ -116,6 +116,23 @@ function deriveElements(t: ThemeTokens): Record<ElementName, StyleEntry> {
         marginBottom: spacing.block,
       },
     },
+    CodeBlockHeader: {
+      text: {
+        fontFamily: mono,
+        fontSize: base * 0.75,
+        lineHeight: base * 0.75 * 1.45,
+        color: colors.muted,
+      },
+      container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.codeBg,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: colors.border,
+        paddingHorizontal: spacing.block,
+        paddingVertical: spacing.block * 0.5,
+      },
+    },
     Table: { container: { marginBottom: spacing.block } },
     TableRow: { container: { flexDirection: 'row' } },
     TableCell: { text: blockText, container: cellContainer },
@@ -218,9 +235,9 @@ function tokensOf(theme: ThemeTokens | Theme): ThemeTokens {
  * 3. element styles derived from the tokens;
  * 4. `pluginThemes`, in plugin order;
  * 5. the theme's own `elements` overrides.
- * Variants (`tightParagraph`, `nestedList`, `tableHeaderCell`, font
- * variants) derive from the merged elements, so an override of `Paragraph`
- * or `List` reaches them too. A `Heading` function is called once per level.
+ * Variants (`tightParagraph`, `nestedList`, `tableHeaderCell`,
+ * `codeBlockGutter`, font variants) derive from the merged elements, so an
+ * override of `Paragraph`, `List` or `CodeBlock` reaches them too. A `Heading` function is called once per level.
  */
 export function resolveTheme(
   theme: ThemeTokens | Theme,
@@ -288,6 +305,23 @@ export function resolveTheme(
     },
   };
 
+  // Aligns line for line with the merged code text.
+  const codeText = merged.CodeBlock.text ?? {};
+  const codeBlockGutter: StyleEntry = {
+    text: {
+      fontFamily: codeText.fontFamily,
+      fontSize: codeText.fontSize,
+      lineHeight: codeText.lineHeight,
+      color: tokens.colors.muted,
+      textAlign: 'right',
+      paddingRight: tokens.spacing.block * 0.5,
+    },
+    container: {
+      borderRightWidth: StyleSheet.hairlineWidth,
+      borderRightColor: tokens.colors.border,
+    },
+  };
+
   // Font variants: only face maps make `Strong`/`Emphasis` depend on where
   // they sit, so family names reuse the one element style.
   const faceMode = hasFaceMap(fonts);
@@ -333,6 +367,7 @@ export function resolveTheme(
   add('nestedList', nestedList);
   add('tightParagraph', tightParagraph);
   add('footnoteSection', footnoteSection);
+  add('codeBlockGutter', codeBlockGutter);
   variantEntries.Strong.forEach((e, i) => add(`Strong@${i}`, e));
   variantEntries.Emphasis.forEach((e, i) => add(`Emphasis@${i}`, e));
 
@@ -379,6 +414,7 @@ export function resolveTheme(
     nestedList: pick('nestedList'),
     tightParagraph: pick('tightParagraph'),
     footnoteSection: pick('footnoteSection'),
+    codeBlockGutter: pick('codeBlockGutter'),
   });
 }
 

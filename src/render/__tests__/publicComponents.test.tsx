@@ -2,9 +2,11 @@ import { createElement } from 'react';
 import { View } from 'react-native';
 import { renderTree } from '../../__tests__/tree';
 import { Markdown } from '../../api/Markdown';
+import { createRenderCtx } from '../context';
 import { defaultComponents, defaults } from '../defaults';
 import type { ElementProps } from '../elements';
 import { inlineView, type InlineViewProps } from '../inlineView';
+import { codeBlockHeader } from './helpers';
 
 describe('defaults', () => {
   it('is the built-in component map', () => {
@@ -29,6 +31,24 @@ describe('defaults', () => {
     );
     expect(root.find('Mermaid').props.source).toContain('graph TD');
     expect(JSON.stringify(root.toJSON())).toContain('let x');
+  });
+});
+
+describe('defaults.CodeBlockHeader', () => {
+  it('is a default that a custom header can wrap', async () => {
+    const CodeBlockHeader = (props: ElementProps<'CodeBlockHeader'>) => (
+      <defaults.CodeBlockHeader {...props} onCopy={null} />
+    );
+    const ctx = createRenderCtx({
+      components: Object.freeze({ ...defaultComponents, CodeBlockHeader }),
+    });
+    const root = await renderTree(codeBlockHeader(ctx));
+    expect(
+      root.findAll((n) => n.props.accessibilityLabel === 'Wrap lines')
+    ).not.toHaveLength(0);
+    expect(
+      root.findAll((n) => n.props.accessibilityLabel === 'Copy code')
+    ).toHaveLength(0);
   });
 });
 

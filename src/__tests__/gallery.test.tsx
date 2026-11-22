@@ -39,6 +39,9 @@ describe('example gallery', () => {
         components={spies as Partial<Components>}
         onTaskToggle={() => {}}
         onFootnotePress={() => {}}
+        // `CodeBlockHeader` has no node: code blocks draw it (P3-35).
+        codeBlock={{ header: true }}
+        onCopyPress={() => {}}
       />
     );
     expect(ELEMENT_NAMES.filter((name) => !seen.has(name))).toEqual([]);

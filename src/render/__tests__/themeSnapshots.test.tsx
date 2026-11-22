@@ -6,12 +6,16 @@ import {
   ELEMENT_NAMES,
   lightTheme,
   resolveTheme,
-  type ElementName,
 } from '../../theme';
 import { BlockList } from '../Block';
 import { createRenderCtx } from '../context';
 import { defaultComponents } from '../defaults';
-import { tableFor } from './helpers';
+import {
+  codeBlockHeader,
+  MARKDOWN_ELEMENT_NAMES,
+  tableFor,
+  type MarkdownElementName,
+} from './helpers';
 
 /**
  * 06-testing.md · Renderer tests: snapshots of every element in light and
@@ -24,7 +28,8 @@ const THEMES = {
   dark: resolveTheme(darkTheme),
 };
 
-const ELEMENTS: Record<ElementName, string> = {
+/** `CodeBlockHeader` has no markdown node: it is rendered directly. */
+const ELEMENTS: Record<MarkdownElementName, string> = {
   Heading: '## A heading',
   Paragraph: 'A paragraph.',
   Blockquote: '> A quote.',
@@ -85,15 +90,27 @@ afterEach(() => getSize.mockRestore());
 
 describe('theme snapshots', () => {
   it('has a fixture for every element and built-in plugin', () => {
-    expect(Object.keys(ELEMENTS).sort()).toEqual([...ELEMENT_NAMES].sort());
+    expect(Object.keys(ELEMENTS).sort()).toEqual(
+      [...MARKDOWN_ELEMENT_NAMES].sort()
+    );
+    expect(ELEMENT_NAMES).toContain('CodeBlockHeader');
     expect(Object.keys(PLUGINS).sort()).toEqual(
       GFM_PLUGINS.map((p) => p.name).sort()
     );
   });
 
   describe.each(['light', 'dark'] as const)('%s', (theme) => {
-    it.each(ELEMENT_NAMES)('element %s', async (name) => {
+    it.each(MARKDOWN_ELEMENT_NAMES)('element %s', async (name) => {
       expect(await render(ELEMENTS[name], theme)).toMatchSnapshot();
+    });
+
+    it('element CodeBlockHeader', async () => {
+      const ctx = createRenderCtx({
+        components: defaultComponents,
+        theme: THEMES[theme],
+      });
+      const tree = await renderTree(codeBlockHeader(ctx));
+      expect(tree.toJSON()).toMatchSnapshot();
     });
 
     it.each(Object.keys(PLUGINS) as GfmPluginName[])(

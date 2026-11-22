@@ -52,6 +52,22 @@ export interface ElementPropsMap {
      */
     readonly open: boolean;
   };
+  /**
+   * The bar above a code block (P3-35). Drawn by `CodeBlock` when
+   * `codeBlock.header` is set; no markdown node of its own.
+   */
+  CodeBlockHeader: {
+    readonly language: string | null;
+    readonly code: string;
+    /** The fence is still streaming: Copy is disabled. */
+    readonly open: boolean;
+    /** Lines wrap. */
+    readonly wrap: boolean;
+    /** Toggles wrap; `null` hides the Wrap button. */
+    readonly onToggleWrap: (() => void) | null;
+    /** Copies the code; `null` (no `onCopyPress`) hides the Copy button. */
+    readonly onCopy: (() => void) | null;
+  };
   Table: WithChildren & { readonly align: readonly Align[] };
   TableRow: WithChildren & { readonly header: boolean; readonly index: number };
   TableCell: WithChildren & {

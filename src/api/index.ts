@@ -65,6 +65,8 @@ export type { HtmlMode, Preset } from '../parse';
 export { defaults, inlineView, useTaskState } from '../render';
 export type {
   AnyElementName,
+  CodeBlockOptions,
+  CodeCopyInfo,
   Components,
   ElementProps,
   FootnoteBackLinkMark,

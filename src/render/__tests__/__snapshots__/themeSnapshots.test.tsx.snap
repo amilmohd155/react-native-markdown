@@ -74,6 +74,152 @@ exports[`theme snapshots dark element CodeBlock 1`] = `
 </View>
 `;
 
+exports[`theme snapshots dark element CodeBlockHeader 1`] = `
+<View
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#151b23",
+      "borderBottomColor": "#3d444d",
+      "borderBottomWidth": 0.5,
+      "flexDirection": "row",
+      "paddingHorizontal": 12,
+      "paddingVertical": 6,
+    }
+  }
+>
+  <View
+    style={
+      {
+        "flex": 1,
+      }
+    }
+  >
+    <Text
+      numberOfLines={1}
+      style={
+        {
+          "color": "#9198a1",
+          "fontFamily": "Menlo",
+          "fontSize": 12,
+          "lineHeight": 17.4,
+        }
+      }
+    >
+      ts
+    </Text>
+  </View>
+  <View
+    accessibilityLabel="Wrap lines"
+    accessibilityRole="button"
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": undefined,
+        "expanded": undefined,
+        "selected": false,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    aria-pressed={false}
+    collapsable={false}
+    focusable={true}
+    hitSlop={8}
+    onBlur={[Function]}
+    onClick={[Function]}
+    onFocus={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      {
+        "marginLeft": 12,
+      }
+    }
+  >
+    <Text
+      style={
+        {
+          "color": "#9198a1",
+          "fontFamily": "Menlo",
+          "fontSize": 12,
+          "lineHeight": 17.4,
+        }
+      }
+    >
+      Wrap
+    </Text>
+  </View>
+  <View
+    accessibilityLabel="Copy code"
+    accessibilityRole="button"
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": false,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    hitSlop={8}
+    onBlur={[Function]}
+    onClick={[Function]}
+    onFocus={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      [
+        {
+          "marginLeft": 12,
+        },
+        false,
+      ]
+    }
+  >
+    <Text
+      style={
+        {
+          "color": "#9198a1",
+          "fontFamily": "Menlo",
+          "fontSize": 12,
+          "lineHeight": 17.4,
+        }
+      }
+    >
+      Copy
+    </Text>
+  </View>
+</View>
+`;
+
 exports[`theme snapshots dark element Divider 1`] = `
 <View>
   <View
@@ -2568,6 +2714,152 @@ exports[`theme snapshots light element CodeBlock 1`] = `
         </Text>
       </View>
     </RCTScrollView>
+  </View>
+</View>
+`;
+
+exports[`theme snapshots light element CodeBlockHeader 1`] = `
+<View
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#f6f8fa",
+      "borderBottomColor": "#d1d9e0",
+      "borderBottomWidth": 0.5,
+      "flexDirection": "row",
+      "paddingHorizontal": 12,
+      "paddingVertical": 6,
+    }
+  }
+>
+  <View
+    style={
+      {
+        "flex": 1,
+      }
+    }
+  >
+    <Text
+      numberOfLines={1}
+      style={
+        {
+          "color": "#59636e",
+          "fontFamily": "Menlo",
+          "fontSize": 12,
+          "lineHeight": 17.4,
+        }
+      }
+    >
+      ts
+    </Text>
+  </View>
+  <View
+    accessibilityLabel="Wrap lines"
+    accessibilityRole="button"
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": undefined,
+        "expanded": undefined,
+        "selected": false,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    aria-pressed={false}
+    collapsable={false}
+    focusable={true}
+    hitSlop={8}
+    onBlur={[Function]}
+    onClick={[Function]}
+    onFocus={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      {
+        "marginLeft": 12,
+      }
+    }
+  >
+    <Text
+      style={
+        {
+          "color": "#59636e",
+          "fontFamily": "Menlo",
+          "fontSize": 12,
+          "lineHeight": 17.4,
+        }
+      }
+    >
+      Wrap
+    </Text>
+  </View>
+  <View
+    accessibilityLabel="Copy code"
+    accessibilityRole="button"
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": false,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    hitSlop={8}
+    onBlur={[Function]}
+    onClick={[Function]}
+    onFocus={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      [
+        {
+          "marginLeft": 12,
+        },
+        false,
+      ]
+    }
+  >
+    <Text
+      style={
+        {
+          "color": "#59636e",
+          "fontFamily": "Menlo",
+          "fontSize": 12,
+          "lineHeight": 17.4,
+        }
+      }
+    >
+      Copy
+    </Text>
   </View>
 </View>
 `;

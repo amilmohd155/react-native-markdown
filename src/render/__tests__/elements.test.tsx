@@ -7,7 +7,12 @@ import { createRenderCtx, type RenderCtx } from '../context';
 import { defaultComponents } from '../defaults';
 import type { Components } from '../elements';
 import { isInlineView, markInlineView } from '../inlineView';
-import { tableFor } from './helpers';
+import {
+  codeBlockHeader,
+  MARKDOWN_ELEMENT_NAMES,
+  tableFor,
+  type MarkdownElementName,
+} from './helpers';
 
 /**
  * M3 done criteria (work-breakdown.md · M3):
@@ -16,9 +21,10 @@ import { tableFor } from './helpers';
  * - a user `memo` component bails out when its block is unchanged.
  *
  * The fixture list is checked against ELEMENT_NAMES, so a new element
- * without a fixture fails here.
+ * without a fixture fails here. `CodeBlockHeader` has no markdown node, so
+ * it is rendered directly.
  */
-const FIXTURES: Record<ElementName, string> = {
+const FIXTURES: Record<MarkdownElementName, string> = {
   Heading: '## A heading',
   Paragraph: 'A paragraph.',
   Blockquote: '> A quote.',
@@ -86,10 +92,12 @@ afterEach(() => getSize.mockRestore());
 
 describe('element snapshots', () => {
   it('has a fixture for every element', () => {
-    expect(Object.keys(FIXTURES).sort()).toEqual([...ELEMENT_NAMES].sort());
+    expect(Object.keys(FIXTURES).sort()).toEqual(
+      [...MARKDOWN_ELEMENT_NAMES].sort()
+    );
   });
 
-  it.each(ELEMENT_NAMES)('%s', async (name) => {
+  it.each(MARKDOWN_ELEMENT_NAMES)('%s', async (name) => {
     const seen: ElementName[] = [];
     const { root } = await mount(
       FIXTURES[name],
@@ -97,6 +105,13 @@ describe('element snapshots', () => {
     );
     // The fixture really renders the element under test.
     expect(seen).toContain(name);
+    expect(root.toJSON()).toMatchSnapshot();
+  });
+
+  it('CodeBlockHeader', async () => {
+    const root = await renderTree(
+      codeBlockHeader(createRenderCtx({ components: defaultComponents }))
+    );
     expect(root.toJSON()).toMatchSnapshot();
   });
 });

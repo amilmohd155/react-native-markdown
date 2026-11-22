@@ -26,6 +26,7 @@ function allStyles(theme: ResolvedTheme): [string, ElementStyle][] {
     ['tableHeaderCell', theme.tableHeaderCell],
     ['tightParagraph', theme.tightParagraph],
     ['footnoteSection', theme.footnoteSection],
+    ['codeBlockGutter', theme.codeBlockGutter],
   ];
 }
 
@@ -104,6 +105,28 @@ describe('merge order', () => {
     });
     expect(theme.tableHeaderCell.container).toMatchObject({ padding: 9 });
     expect(theme.tableHeaderCell.text.fontWeight).toBe('600');
+  });
+
+  it('aligns the code gutter with an overridden CodeBlock text', () => {
+    const theme = resolveTheme(
+      createTheme({
+        elements: {
+          CodeBlock: {
+            text: { fontFamily: 'Mono', fontSize: 15, lineHeight: 22 },
+          },
+        },
+      })
+    );
+    expect(theme.codeBlockGutter.text).toMatchObject({
+      fontFamily: 'Mono',
+      fontSize: 15,
+      lineHeight: 22,
+      color: lightTheme.colors.muted,
+      textAlign: 'right',
+    });
+    expect(theme.codeBlockGutter.container.borderRightColor).toBe(
+      lightTheme.colors.border
+    );
   });
 
   it('ignores the elements of a plain token set', () => {

@@ -26,6 +26,49 @@ export const HIGHLIGHT_CODE =
   'export default greet(42);';
 
 /**
+ * A `ts` fence with one line far wider than the screen, for the code block
+ * header (P3-35): the body scrolls horizontally, the header stays put.
+ */
+export const LONG_LINE_CODE =
+  'const wide = [' +
+  Array.from({ length: 40 }, (_, i) => `'item-${i}'`).join(', ') +
+  '];\nexport default wide;';
+
+/**
+ * A `ts` fence of 30 lines for line numbers and wrap (P3-35): one blank line
+ * in the middle (line 10), two adjacent ones (lines 20 and 21), and one line
+ * far wider than the screen (line {@link NUMBERED_LONG_LINE}) that wraps
+ * when wrap is on. Over 800 characters, so a highlighted block is chunked
+ * in every layout. Selecting the code must yield this exactly.
+ */
+export const NUMBERED_CODE = (() => {
+  const lines: string[] = [];
+  for (let i = 1; i <= 30; i++) {
+    if (i === 10 || i === 20 || i === 21) lines.push('');
+    else if (i === 15) lines.push(LONG_LINE_CODE.split('\n')[0]!);
+    else lines.push(`export const v${i} = sum(${i}, 'line ${i}');`);
+  }
+  return lines.join('\n');
+})();
+
+/**
+ * A small `ts` fence of 6 lines with a blank line (line 3), under 800
+ * characters: highlighted with numbers and no wrap, it is one code Text
+ * beside one gutter Text (P3-35), so a drag selects the whole block.
+ */
+export const NUMBERED_SMALL_CODE = [
+  'function greet(name: string) {',
+  "  const hi = 'hi ' + name;",
+  '',
+  '  console.log(hi);',
+  '  return hi.trim() === hi ? hi : null;',
+  '}',
+].join('\n');
+
+/** The 1-based line of {@link NUMBERED_CODE} that wraps. */
+export const NUMBERED_LONG_LINE = 15;
+
+/**
  * A closed `ts` fence of 3 KB, over the single-Text limit, so it renders as
  * one Text per 2 lines. Blank lines fall at chunk ends, inside chunks, as a
  * whole chunk, and in the final chunk (`\n// end`). Selecting the block
