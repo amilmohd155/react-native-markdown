@@ -34,6 +34,10 @@ import {
   type SchemeSetting,
 } from './ui';
 
+if (Platform.OS === 'web') {
+  require('./webAppearance');
+}
+
 const SCREENS: {
   name: string;
   glyph: string;
@@ -71,6 +75,7 @@ export default function App() {
 
   // A theme object follows the device scheme and <Markdown> has no `scheme`
   // prop, so pin the app's scheme to the Light/Dark setting ('unspecified' = system).
+  // react-native-web has no `setColorScheme`; ./webAppearance adds it on web.
   useEffect(() => {
     Appearance.setColorScheme(setting === 'auto' ? 'unspecified' : setting);
   }, [setting]);
