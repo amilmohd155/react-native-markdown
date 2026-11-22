@@ -13,11 +13,12 @@ import {
   StyleSheet,
   Text,
   View,
+  type ImageStyle,
   type StyleProp,
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import type { ElementStyle } from '../../theme';
+import type { ElementStyle, ThemeTokens } from '../../theme';
 import {
   InheritedTextContext,
   ListGapContext,
@@ -264,11 +265,34 @@ export function HtmlBlock({ html, style }: ElementProps<'HtmlBlock'>) {
 }
 
 /**
+ * Box of a block image: `aspectRatio` > `maxHeight` > `height`, else the
+ * natural ratio (`ratio` stands in until the size is known).
+ */
+function blockImageSize(
+  sizing: ThemeTokens['imageSizing'],
+  size: { readonly width: number; readonly height: number } | null,
+  ratio: number
+): ImageStyle {
+  const natural = size === null ? ratio : size.width / size.height;
+  switch (sizing.mode) {
+    case 'ratio':
+      return { aspectRatio: ratio };
+    case 'maxHeight':
+      return { aspectRatio: natural, maxHeight: sizing.maxHeight };
+    case 'height':
+      return { height: sizing.height };
+    default:
+      return { aspectRatio: natural };
+  }
+}
+
+/**
  * Block image at full width (never wider than its natural size), with its
  * real aspect ratio from the size cache. While the size is unknown, a quiet
  * placeholder box (theme `imageRatio`, `codeBg` fill) reserves the space, so
- * an image of that ratio never moves what is below it. Images
- * that fail to load show their alt text instead.
+ * an image of that ratio never moves what is below it. The loaded box
+ * follows `imageSizing` (ratio, `maxHeight`, fixed `height`, else natural)
+ * and `resizeMode`. Images that fail to load show their alt text instead.
  */
 export function Image({ src, alt, title, style }: ElementProps<'Image'>) {
   const { theme, handlers, options } = useRenderContext();
@@ -293,24 +317,24 @@ export function Image({ src, alt, title, style }: ElementProps<'Image'>) {
     );
   }
 
+  const { imageSizing, imageRatio } = theme.tokens;
   const image = (
     <RNImage
       source={{ uri: src }}
       accessibilityLabel={alt}
       accessibilityHint={title ?? undefined}
-      resizeMode="contain"
+      resizeMode={imageSizing.resizeMode}
       style={[
         styles.blockImage,
-        size === null
-          ? {
-              aspectRatio: theme.tokens.imageRatio,
-              backgroundColor: colors.codeBg,
-              borderRadius: radius ?? theme.tokens.radius.code,
-            }
-          : {
-              aspectRatio: size.width / size.height,
-              borderRadius: radius,
-            },
+        {
+          ...blockImageSize(imageSizing, size, imageRatio),
+          ...(size === null
+            ? {
+                backgroundColor: colors.codeBg,
+                borderRadius: radius ?? theme.tokens.radius.code,
+              }
+            : { borderRadius: radius }),
+        },
       ]}
     />
   );

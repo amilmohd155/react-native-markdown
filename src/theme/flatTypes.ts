@@ -133,12 +133,13 @@ export interface DividerTheme
 
 export interface ImageTheme extends MarginProps {
   borderRadius?: number;
-  /** Also the placeholder until the size is known. */
+  /** Fixed box ratio (overrides the natural one); also the placeholder. */
   aspectRatio?: number;
   /** Fixed height. */
   height?: number;
-  /** Fit, aspect kept. */
+  /** Height cap, natural aspect kept. */
   maxHeight?: number;
+  /** Default `'cover'` with `aspectRatio` or `maxHeight`, else `'contain'`. */
   resizeMode?: 'contain' | 'cover' | 'stretch' | 'center' | 'none';
 }
 

@@ -47,10 +47,34 @@ const scriptScale = (): number =>
 
 /**
  * Typed but ignored for now (no slot in the resolver yet): `blockquote.admonitions`;
- * `link.variants`; `image.height`, `maxHeight`, `resizeMode`;
- * `inlineImage.size`; `checkbox.borderColor`, `checkmarkColor`,
+ * `link.variants`; `checkbox.borderColor`, `checkmarkColor`,
  * `borderRadius`.
  */
+
+const DEFAULT_IMAGE_RATIO = 16 / 9;
+
+/** Sizing mode of a block image: `aspectRatio` > `maxHeight` > `height`. */
+function imageSizing(
+  image: FlatThemeBlock['image']
+): ThemeTokens['imageSizing'] {
+  const { aspectRatio, maxHeight, height, resizeMode } = image ?? {};
+  const mode =
+    aspectRatio !== undefined
+      ? 'ratio'
+      : maxHeight !== undefined
+        ? 'maxHeight'
+        : height !== undefined
+          ? 'height'
+          : 'natural';
+  return Object.freeze({
+    mode,
+    height,
+    maxHeight,
+    resizeMode:
+      resizeMode ??
+      (mode === 'ratio' || mode === 'maxHeight' ? 'cover' : 'contain'),
+  });
+}
 
 /**
  * Footnote text metrics: the size defaults to 0.875 of the paragraph's, and
@@ -286,7 +310,9 @@ function tokensOf(
     list: listTokens(b.list!),
     radius: Object.freeze({ code: b.codeBlock!.borderRadius! }),
     listBullets: Object.freeze([...b.list!.bullets!]),
-    imageRatio: b.image!.aspectRatio!,
+    imageRatio: b.image?.aspectRatio ?? DEFAULT_IMAGE_RATIO,
+    imageSizing: imageSizing(b.image),
+    inlineImageSize: b.inlineImage?.size,
     checkbox: Object.freeze({
       color: checkbox?.color,
       checkedColor: checkbox?.checkedColor,

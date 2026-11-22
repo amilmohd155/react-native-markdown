@@ -46,7 +46,7 @@ export const lightTheme: FlatThemeBlock = Object.freeze({
     marginLeft: 20,
     gapWidth: 6,
   }),
-  image: Object.freeze({ aspectRatio: 16 / 9 }),
+  image: Object.freeze({}),
   checkbox: Object.freeze({
     checkedText: Object.freeze({
       textDecorationLine: 'line-through',

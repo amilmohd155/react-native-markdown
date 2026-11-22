@@ -151,10 +151,23 @@ export interface ThemeTokens {
   readonly listBullets: readonly string[];
   /**
    * Width / height of the box a block image reserves until its real size is
-   * known (and it isn't cached). Keeps the list from shifting under a
-   * windowed list.
+   * known (and it isn't cached); with `image.aspectRatio` set it is also the
+   * loaded box. Keeps the list from shifting under a windowed list.
    */
   readonly imageRatio: number;
+  /**
+   * How a block image is sized (`image.aspectRatio` > `maxHeight` > `height`,
+   * else the natural ratio). `resizeMode` defaults to `'cover'` when a ratio
+   * or `maxHeight` is set, else `'contain'`.
+   */
+  readonly imageSizing: {
+    readonly mode: 'natural' | 'ratio' | 'maxHeight' | 'height';
+    readonly height: number | undefined;
+    readonly maxHeight: number | undefined;
+    readonly resizeMode: 'contain' | 'cover' | 'stretch' | 'center' | 'none';
+  };
+  /** `inlineImage.size`: square side in points; unset, the line height. */
+  readonly inlineImageSize: number | undefined;
   /**
    * The task-list checkbox (P3-20). `color`, `checkedColor` and `size` style
    * the marker glyph; unset, it inherits the item's text color and font
