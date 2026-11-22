@@ -1,5 +1,5 @@
 import type { TextStyle, ViewStyle } from 'react-native';
-import type { AdmonitionKind } from './flatTypes';
+import type { AdmonitionKind, MarkdownTheme } from './flatTypes';
 
 /**
  * Built-in element names: the keys of `components`.
@@ -228,6 +228,11 @@ export interface LinkVariantStyle {
  * Spec: docs/rewrite/phase-1/theme-resolution.md
  */
 export interface ResolvedTheme {
+  /**
+   * The merged flat theme with the derived defaults filled in: what the
+   * public `useMarkdownTheme()` returns.
+   */
+  readonly flat: MarkdownTheme;
   readonly tokens: ThemeTokens;
   readonly elements: { readonly [E in ElementName]: ElementStyle };
   /**

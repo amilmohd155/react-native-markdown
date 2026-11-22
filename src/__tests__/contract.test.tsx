@@ -16,17 +16,14 @@ import { Animated, FlatList, ScrollView, Text } from 'react-native';
 import {
   Markdown,
   createTheme,
-  darkTheme,
   defaults,
   definePlugin,
   inlineView,
-  lightTheme,
   parse,
   useMarkdownTheme,
   visit,
   type Components,
   type ElementProps,
-  type ElementStyle,
   type FootnoteBackLinkMark,
   type FootnotePressInfo,
   type FootnoteScrollOffset,
@@ -45,6 +42,7 @@ import {
   type MarkdownTheme,
   type ScrollOptions,
   type TaskToggleInfo,
+  type FlatThemeBlock,
   type FlatThemeInput,
   type VirtualizeOptions,
   type VisitProps,
@@ -52,6 +50,8 @@ import {
 import type { GuardedThemeKeys } from '../theme/flatTypes';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
+
+type TableOf = NonNullable<FlatThemeBlock['table']> | undefined;
 
 type Equal<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
@@ -209,13 +209,19 @@ describe('<Markdown> props', () => {
     };
     element(<Markdown source="x" theme={input} />);
     element(<Markdown source="x" theme={createTheme(input)} />);
-    element(<Markdown source="x" theme={lightTheme} />);
+    element(<Markdown source="x" theme="dark" />);
     // @ts-expect-error: unknown key
     element(<Markdown source="x" theme={{ sizes: {} }} />);
     // @ts-expect-error: a prop the element does not accept
     element(<Markdown source="x" theme={{ divider: { color: 'red' } }} />);
     // @ts-expect-error: createTheme has no `base`
-    createTheme(input, darkTheme);
+    createTheme(input, input);
+    // @ts-expect-error: `elements` is gone (one flat shape)
+    element(<Markdown source="x" theme={{ elements: { Link: {} } }} />);
+    // @ts-expect-error: tokens are internal
+    element(<Markdown source="x" theme={{ colors: { text: 'red' } }} />);
+    // @ts-expect-error: a theme is not a string other than the built-in names
+    element(<Markdown source="x" theme="sepia" />);
   });
 
   it('types the scroll and virtualize containers', () => {
@@ -390,7 +396,9 @@ describe('elements', () => {
   it('gives each element its semantic props and style', () => {
     expectType<Equal<ElementProps<'Heading'>['level'], HeadingLevel>>(true);
     expectType<Equal<ElementProps<'Heading'>['id'], string>>(true);
-    expectType<Equal<ElementProps<'Heading'>['style'], ElementStyle>>(true);
+    expectType<
+      Equal<ElementProps<'Heading'>['style'], ElementProps<'Link'>['style']>
+    >(true);
     expectType<Equal<ElementProps<'Link'>['href'], string>>(true);
     expectType<Equal<ElementProps<'Link'>['title'], string | null>>(true);
     expectType<Equal<ElementProps<'CodeBlock'>['language'], string | null>>(
@@ -636,11 +644,22 @@ describe('parse and visit', () => {
 });
 
 describe('theme', () => {
-  it('gives custom components the merged tokens and styles', () => {
+  it('gives custom components the merged flat values', () => {
     type Theme = ReturnType<typeof useMarkdownTheme>;
     expectType<Equal<Theme, MarkdownTheme>>(true);
-    expectType<Equal<Theme['styles']['Link'], ElementStyle>>(true);
-    expectType<Equal<Theme['headings']['length'], 6>>(true);
+    expectType<Equal<Theme['link']['color'], string>>(true);
+    expectType<Equal<Theme['paragraph']['fontSize'], number>>(true);
+    expectType<Equal<Theme['h1']['fontSize'], number>>(true);
+    expectType<Equal<Theme['codeBlock']['syntax']['keyword'], string>>(true);
+    // Keys with no built-in default stay optional.
+    expectType<Equal<Theme['table'], TableOf>>(true);
+    const read = (theme: Theme) => {
+      // @ts-expect-error: readonly
+      theme.link = { color: 'red' };
+      // @ts-expect-error: no tokens, no element styles
+      void theme.tokens;
+    };
+    void read;
   });
 });
 
@@ -654,6 +673,12 @@ describe('internals', () => {
     void import('@docren/react-native-markdown').then((m) => m.tableOf);
     // @ts-expect-error: the internal backend contract is private
     void (null as unknown as import('@docren/react-native-markdown').ParserBackendImpl);
+    // @ts-expect-error: tokens are internal
+    void (null as unknown as import('@docren/react-native-markdown').ThemeTokens);
+    // @ts-expect-error: the container/text style split is internal
+    void (null as unknown as import('@docren/react-native-markdown').ElementStyle);
+    // @ts-expect-error: built-in themes are internal (use theme="light")
+    void import('@docren/react-native-markdown').then((m) => m.lightTheme);
   });
 
   it('runs', () => {

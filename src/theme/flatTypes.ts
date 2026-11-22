@@ -290,3 +290,65 @@ export type FlatThemeInput = object &
     dark?: FlatThemeBlock;
     light?: FlatThemeBlock;
   };
+
+/** `T` with the props in `R` replaced by (usually required) versions. */
+type With<T, R> = Omit<T, keyof R> & R;
+
+/** A heading key as `useMarkdownTheme()` returns it: its size is always set. */
+type ResolvedHeading = With<HeadingTheme, { fontSize: number }>;
+
+/**
+ * What `useMarkdownTheme()` returns: the merged flat theme of the active
+ * scheme, in the vocabulary of the `theme` prop. Built-in defaults are always
+ * present, so the props that have one are required (`link.color`,
+ * `paragraph.fontSize`, `codeBlock.backgroundColor`, `h1.fontSize`, ...);
+ * every other key stays optional, and `dark`/`light` are already applied.
+ * Readonly: the same object is returned until the theme changes.
+ */
+export type MarkdownTheme = Readonly<
+  With<
+    FlatThemeBlock,
+    {
+      paragraph: With<
+        ParagraphTheme,
+        { color: string; fontSize: number; lineHeight: number }
+      >;
+      h1: ResolvedHeading;
+      h2: ResolvedHeading;
+      h3: ResolvedHeading;
+      h4: ResolvedHeading;
+      h5: ResolvedHeading;
+      h6: ResolvedHeading;
+      blockquote: With<
+        BlockquoteTheme,
+        { color: string; borderLeftColor: string }
+      >;
+      list: With<
+        ListTheme,
+        {
+          bullets: readonly string[];
+          marginLeft: number;
+          gapWidth: number;
+        }
+      >;
+      codeBlock: With<
+        CodeBlockTheme,
+        {
+          color: string;
+          backgroundColor: string;
+          fontFamily: FontFamily;
+          borderRadius: number;
+          syntax: Readonly<Record<SyntaxTokenType, string>>;
+        }
+      >;
+      divider: With<DividerTheme, { backgroundColor: string }>;
+      highlight: With<HighlightTheme, { backgroundColor: string }>;
+      footnoteDefinition: With<
+        FootnoteDefinitionTheme,
+        { highlightColor: string }
+      >;
+      link: With<LinkTheme, { color: string }>;
+      checkbox: With<CheckboxTheme, { checkedText: TextStyle | false }>;
+    }
+  >
+>;

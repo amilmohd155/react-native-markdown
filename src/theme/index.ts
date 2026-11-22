@@ -1,18 +1,17 @@
 /**
  * Theme tokens and resolution (Phase 1 · M4).
  *
- * Contents so far (minimal version for the M3 renderer):
+ * Internal: only what src/api/index.ts re-exports is public.
  * - Element names, tokens and resolved-theme types (./types)
- * - Built-in light and dark themes (./tokens)
- * - Token → element style derivation, one StyleSheet.create (./resolve)
- *
+ * - Built-in light and dark flat themes (./tokens)
+ * - Flat theme → element style derivation, one StyleSheet.create (./resolve)
  * - createTheme, the typed flat theme helper (./create), and the flat merge
  *   (./merge)
  *
  * - Resolve cache keyed on scheme, flat theme input and plugin layers (./cache)
  *
- * - MarkdownThemeContext, useMarkdownTheme() and useResolvedTheme(), which
- *   follows the color scheme for 'auto' (./context)
+ * - MarkdownThemeContext, useMarkdownTheme() (the merged flat values) and
+ *   useResolvedTheme(), which follows the color scheme for 'auto' (./context)
  *
  * Design:
  * - docs/rewrite/04-api.md#theme
@@ -35,6 +34,7 @@ export type {
   AdmonitionKind,
   FlatThemeBlock,
   FlatThemeInput,
+  MarkdownTheme,
 } from './flatTypes';
 export { darkTheme, lightTheme } from './tokens';
 export { createTheme } from './create';
@@ -43,7 +43,6 @@ export {
   MarkdownThemeContext,
   useMarkdownTheme,
   useResolvedTheme,
-  type MarkdownTheme,
 } from './context';
 export {
   BODY_FONT,

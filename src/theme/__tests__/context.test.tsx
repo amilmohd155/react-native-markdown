@@ -177,17 +177,71 @@ describe('useMarkdownTheme', () => {
     };
   }
 
-  it('gives custom components the tokens and resolved styles', async () => {
+  it('gives custom components the merged flat values', async () => {
     const { seen, components } = capture();
     const theme = resolveThemeProp('light', 'light');
     const ctx = createRenderCtx({ components, theme });
     await renderTree(<BlockList table={TABLE} ctx={ctx} />);
     const got = seen.at(-1)!;
-    expect(got.tokens).toBe(theme.tokens);
-    expect(got.styles).toBe(theme.elements);
-    expect(got.headings).toBe(theme.headings);
-    expect(got.styles.Link.text.color).toBe(lightTheme.link!.color);
-    expect(got.headings[0]!.text.fontSize).toBe(40);
+    expect(got).toBe(theme.flat);
+    expect(got.link.color).toBe(lightTheme.link!.color);
+    expect(got.paragraph.fontSize).toBe(16);
+    expect(got.paragraph.lineHeight).toBe(24);
+    expect(got.h1.fontSize).toBe(40);
+    expect(got.codeBlock.backgroundColor).toBe(
+      lightTheme.codeBlock!.backgroundColor
+    );
+    // The default code colour is the scheme's text colour.
+    expect(got.codeBlock.color).toBe(lightTheme.paragraph!.color);
+    expect(got.codeBlock.syntax.keyword).toBe(
+      lightTheme.codeBlock!.syntax!.keyword
+    );
+    expect(got.list.bullets).toEqual(lightTheme.list!.bullets);
+    expect(got).not.toHaveProperty('tokens');
+    expect(got).not.toHaveProperty('dark');
+  });
+
+  it('returns the dark values for the dark scheme and for auto', async () => {
+    const { seen, components } = capture();
+    for (const [prop, scheme] of [
+      ['dark', 'light'],
+      ['auto', 'dark'],
+    ] as const) {
+      const ctx = createRenderCtx({
+        components,
+        theme: resolveThemeProp(prop, scheme),
+      });
+      await renderTree(<BlockList table={TABLE} ctx={ctx} />);
+      const got = seen.at(-1)!;
+      expect(got.paragraph.color).toBe(darkTheme.paragraph!.color);
+      expect(got.link.color).toBe(darkTheme.link!.color);
+      expect(got.codeBlock.backgroundColor).toBe(
+        darkTheme.codeBlock!.backgroundColor
+      );
+    }
+  });
+
+  it('merges a user theme (top-level keys, then the scheme block) over the defaults', async () => {
+    const { seen, components } = capture();
+    const theme = resolveThemeProp(
+      {
+        link: { color: 'red' },
+        paragraph: { fontSize: 20 },
+        h2: { fontSize: 33 },
+        dark: { link: { color: 'blue' } },
+      },
+      'dark'
+    );
+    const ctx = createRenderCtx({ components, theme });
+    await renderTree(<BlockList table={TABLE} ctx={ctx} />);
+    const got = seen.at(-1)!;
+    expect(got.link.color).toBe('blue');
+    expect(got.paragraph.fontSize).toBe(20);
+    expect(got.paragraph.lineHeight).toBe(30);
+    expect(got.paragraph.color).toBe(darkTheme.paragraph!.color);
+    expect(got.h2.fontSize).toBe(33);
+    expect(got.h1.fontSize).toBe(Math.round(20 * 1.2 ** 5));
+    expect(got.codeBlock.color).toBe(darkTheme.paragraph!.color);
   });
 
   it('keeps the same reference until the theme changes', async () => {
@@ -214,7 +268,7 @@ describe('useMarkdownTheme', () => {
     });
     await root.rerender(<BlockList table={TABLE} ctx={dark} />);
     expect(seen.at(-1)).not.toBe(first);
-    expect(seen.at(-1)!.tokens.colors.text).toBe(darkTheme.paragraph!.color);
+    expect(seen.at(-1)!.paragraph.color).toBe(darkTheme.paragraph!.color);
   });
 
   it('throws outside <Markdown>', async () => {

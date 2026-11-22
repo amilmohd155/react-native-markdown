@@ -8,6 +8,7 @@ import type {
   AdmonitionKind,
   FlatThemeBlock,
   FlatThemeInput,
+  MarkdownTheme,
 } from './flatTypes';
 import {
   BODY_FONT,
@@ -708,6 +709,34 @@ function pluginEntries(b: FlatThemeBlock): Map<string, StyleEntry> {
 }
 
 /**
+ * The merged block plus the defaults the resolver derives, so a reader sees
+ * the effective value of every prop that has a built-in one: the paragraph
+ * line height, each heading's size and the code text colour.
+ */
+function flatOf(b: FlatThemeBlock, t: ThemeTokens): MarkdownTheme {
+  const out: Record<string, unknown> = {
+    ...b,
+    paragraph: Object.freeze({
+      ...b.paragraph,
+      lineHeight: t.paragraphLineHeight,
+    }),
+    codeBlock: Object.freeze({
+      ...b.codeBlock,
+      color: b.codeBlock?.color ?? t.colors.text,
+      syntax: t.syntax,
+    }),
+  };
+  for (const level of HEADING_LEVELS) {
+    const key = `h${level}` as const;
+    out[key] = Object.freeze({
+      ...b[key],
+      fontSize: b[key]?.fontSize ?? headingFontSize(t, level),
+    });
+  }
+  return Object.freeze(out) as unknown as MarkdownTheme;
+}
+
+/**
  * Resolves a theme into element styles with a single `StyleSheet.create`
  * call covering every element, heading level and variant.
  *
@@ -901,6 +930,7 @@ export function resolveTheme(
   };
 
   return Object.freeze({
+    flat: flatOf(block, tokens),
     tokens,
     elements: Object.freeze(elements),
     pluginElements: Object.freeze(pluginElements),

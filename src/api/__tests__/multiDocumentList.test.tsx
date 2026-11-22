@@ -41,7 +41,7 @@ function paragraphFor(doc: string): Partial<Components> {
     const theme = useMarkdownTheme();
     return createElement(
       'Tagged',
-      { doc, themeText: theme.tokens.colors.text },
+      { doc, themeText: theme.paragraph.color },
       <Default {...props} />
     );
   }

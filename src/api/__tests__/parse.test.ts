@@ -67,11 +67,9 @@ describe('parse', () => {
     expect(Object.keys(api).sort()).toEqual([
       'Markdown',
       'createTheme',
-      'darkTheme',
       'defaults',
       'definePlugin',
       'inlineView',
-      'lightTheme',
       'parse',
       'useMarkdownBlocks',
       'useMarkdownStream',
