@@ -137,7 +137,7 @@ How v0 style keys map:
 | `inlineCode` | `inlineCode` |
 | `link` | `link` |
 | `image` | `image`, `inlineImage` |
-| `list`, `listItem`, `listItemContent` | `list` (`marginLeft`, `gapWidth`, `itemSpacing`), `listItem` |
+| `list`, `listItem`, `listItemContent` | `list` (`marginLeft`, `gapWidth`, `itemSpacing`, item text props) |
 | `listBullet` | `list.bullets` (see [below](#listbulletstyle-and-custombulletelement)) |
 
 If a component needs the resolved styles of other elements, call `useMarkdownTheme()` inside it. It returns the resolved flat values for the active scheme, e.g. `useMarkdownTheme().link.color`, and only works inside `<Markdown>`.

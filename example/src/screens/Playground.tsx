@@ -88,14 +88,15 @@ const PRESETS = {
       rowOddBackgroundColor: '#dbeafe',
       borderRadius: 10,
       align: 'center',
+      color: '#0f172a',
+      cellPaddingVertical: 8,
     },
-    tableCell: { color: '#0f172a' },
     dark: {
       table: {
         rowEvenBackgroundColor: '#172036',
         rowOddBackgroundColor: '#1e2a47',
+        color: '#e2e8f0',
       },
-      tableCell: { color: '#e2e8f0' },
     },
   }),
   admonitions: createTheme({
@@ -154,6 +155,20 @@ const PRESETS = {
     image: { maxHeight: 140, borderRadius: 16 },
     inlineImage: { size: 28 },
   }),
+  footnotes: createTheme({
+    footnote: {
+      reference: { color: '#b45309', fontScale: 0.8 },
+      backLink: { color: '#b45309' },
+      definition: { color: '#78350f', fontSize: 14, highlightColor: '#fde68a' },
+    },
+    dark: {
+      footnote: {
+        reference: { color: '#fbbf24' },
+        backLink: { color: '#fbbf24' },
+        definition: { color: '#fde68a', highlightColor: '#78350f' },
+      },
+    },
+  }),
   sizing: createTheme({
     // Headings scale from paragraph.fontSize; inline sizes follow the parent.
     paragraph: { fontSize: 20 },
@@ -175,6 +190,7 @@ const PRESET_OPTIONS: readonly { value: PresetName; label: string }[] = [
   { value: 'mentions', label: 'Mentions' },
   { value: 'checkbox', label: 'Checkbox' },
   { value: 'images', label: 'Images' },
+  { value: 'footnotes', label: 'Footnotes' },
   { value: 'sizing', label: 'Sizing' },
 ];
 

@@ -14,6 +14,7 @@ Phases 1 to 3 built the features. This phase makes the public API easy to learn 
 | Inline sizes relative to the parent, `fontScale` for sub and superscript | [P3a-3](./decisions.md#p3a-3-inline-sizes-are-relative-to-the-parent) |
 | Heading scale, points `lineHeight`, `syntax` names, `link.variants` (replaces `mention`) | [P3a-4](./decisions.md#p3a-4-theme-details-settled-in-the-whitelist), [P3a-6](./decisions.md#p3a-6-linkvariants-merge-per-pattern-prop-by-prop-object-order-first-match-wins) |
 | Drawn task checkbox with border, checkmark and radius props | [P3a-5](./decisions.md#p3a-5-the-checkbox-is-a-drawn-box) |
+| Related elements nest under their parent (`codeBlock.header`, `footnote.*`); `listItem` and `tableCell` fold into `list` and `table` | [P3a-7](./decisions.md#p3a-7-related-elements-nest-under-their-parent-key) |
 
 Target shape: [04 · Theme](../04-api.md#theme).
 

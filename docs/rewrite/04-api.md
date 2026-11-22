@@ -53,7 +53,7 @@ const onCopyPress = ({ code }: CodeCopyInfo) => {
 <Markdown source={md} codeBlock={{ header: true, lineNumbers: true }} onCopyPress={onCopyPress} />;
 ```
 
-The header sits outside the code body: with it on, the body is the labelled element and Copy is a second accessible element, and `theme.codeBlock.padding` pads the body, not the bar. Style the bar with `theme.codeBlockHeader`, or replace it in `components`; Wrap is part of the default bar (underlined while on, `aria-pressed` on web, hidden while the fence streams) and flipping it remounts the body and resets its horizontal scroll. The gutter is the structural `codeBlockGutter` style (not an element), derived from the merged `CodeBlock` text so numbers match the code line for line. With numbers on, a plain block or a closed highlighted one of up to 800 characters selects whole without wrap; a larger or open highlighted block, or numbers with wrap, selects inside one 2-line chunk or row on Android and iOS, so Copy is the way to copy it all. Known iOS limitation of very large plain blocks: [P3-35](./phase-3/decisions.md#p3-35-code-block-header-line-numbers-and-wrap-in-pure-js).
+The header sits outside the code body: with it on, the body is the labelled element and Copy is a second accessible element, and `theme.codeBlock.padding` pads the body, not the bar. Style the bar with `theme.codeBlock.header`, or replace it in `components`; Wrap is part of the default bar (hidden while the fence streams); flipping it remounts the body and resets its horizontal scroll. The gutter is the structural `codeBlockGutter` style, derived from the merged `CodeBlock` text. With numbers on, a larger or open highlighted block, or numbers with wrap, selects only inside one chunk on Android and iOS, so Copy is the way to copy it all. Very large plain blocks on iOS: [P3-35](./phase-3/decisions.md#p3-35-code-block-header-line-numbers-and-wrap-in-pure-js).
 
 ### `MarkdownListRef`
 
@@ -179,17 +179,15 @@ const theme = createTheme({
 |---|---|
 | `paragraph`, `h1`-`h6` | T, M |
 | `blockquote` | T, M, `backgroundColor`, `borderLeftColor`, `borderLeftWidth`, `borderRadius`, `padding` (top and bottom), `paddingLeft` (bar to text), `admonitions` |
-| `list` | M, `bullets` (by depth), `bulletColor`, `bulletSize`, `markerColor`, `markerFontWeight`, `markerMinWidth`, `gapWidth`, `marginLeft` (indent per level), `itemSpacing` |
-| `listItem` | T |
-| `codeBlock` | T, M, `backgroundColor`, `borderColor`, `borderWidth`, `borderRadius`, `padding`, `syntax` |
-| `codeBlockHeader` | `color`, `fontFamily`, `fontSize`, `lineHeight`, `backgroundColor`, `borderBottomColor`, `borderBottomWidth`, `paddingHorizontal`, `paddingVertical` |
-| `table` | M, `borderColor`, `borderWidth`, `borderRadius`, `align`, `horizontalOverflow`, `headerBackgroundColor`, `headerColor`, `headerFontFamily`, `rowEvenBackgroundColor`, `rowOddBackgroundColor` |
-| `tableCell` | T, `backgroundColor`, `padding`, `paddingHorizontal`, `paddingVertical` |
+| `list` | M, T (item text, over `paragraph`), `bullets` (by depth), `bulletColor`, `bulletSize`, `markerColor`, `markerFontWeight`, `markerMinWidth`, `gapWidth`, `marginLeft` (indent per level), `itemSpacing` |
+| `codeBlock` | T, M, `backgroundColor`, `borderColor`, `borderWidth`, `borderRadius`, `padding`, `syntax`, `header` |
+| `codeBlock.header` | `color`, `fontFamily`, `fontSize`, `lineHeight`, `backgroundColor`, `borderBottomColor`, `borderBottomWidth`, `paddingHorizontal`, `paddingVertical` |
+| `table` | M, T (cell text), `cellPadding`, `cellPaddingHorizontal`, `cellPaddingVertical`, `cellBackgroundColor`, `borderColor`, `borderWidth`, `borderRadius`, `align`, `horizontalOverflow`, `headerBackgroundColor`, `headerColor`, `headerFontFamily`, `rowEvenBackgroundColor`, `rowOddBackgroundColor` |
 | `divider` | M, `backgroundColor`, `height` |
 | `image` | M, `borderRadius`, `aspectRatio`, `height`, `maxHeight`, `resizeMode` |
 | `inlineImage` | `size` |
 | `htmlBlock` | `color`, `fontFamily`, `fontSize`, M |
-| `footnoteDefinition` | `color`, `fontSize`, `lineHeight`, `highlightColor` |
+| `footnote.definition` | `color`, `fontSize`, `lineHeight`, `highlightColor` |
 | `checkbox` | `color`, `checkedColor`, `size`, `borderColor`, `checkmarkColor`, `borderRadius`, `checkedText` |
 | `strong` | `color`, `fontFamily`, `fontWeight` |
 | `em` | `color`, `fontFamily`, `fontStyle` |
@@ -198,13 +196,13 @@ const theme = createTheme({
 | `link` | `color`, `fontFamily`, `fontWeight`, `textDecorationLine`, `backgroundColor`, `variants` |
 | `inlineCode`, `kbd` | `color`, `fontFamily`, `fontSize`, `backgroundColor` |
 | `superscript`, `subscript` | `color`, `fontScale` |
-| `footnoteReference` | `color`, `fontScale` |
-| `footnoteBackLink` | `color` |
+| `footnote.reference` | `color`, `fontScale` |
+| `footnote.backLink` | `color` |
 
 - **`dark` / `light` blocks** take the same keys. Merge order, later wins, per prop: built-in theme of the active scheme < plugin defaults < top-level keys < the active scheme's block. Top-level keys apply to both schemes. Pin a scheme with `theme="light"` or put values under `light: {…}`.
 - **`createTheme(input)`** is a typed identity helper (frozen copy, no `base`): it checks the whitelist for a theme defined outside JSX and lets a package ship a theme as a value. Compose with a spread: `createTheme({ ...brand, link: { color } })`. A plain object is equally valid as `theme`.
-- **Sizing.** Headings scale from `paragraph.fontSize` by an internal ratio unless an `h1`-`h6` sets its own `fontSize`. `lineHeight` is in points and, as on any RN `Text`, an exact height: taller inline content (an inline image, a larger `fontSize`) is clipped, so raise `paragraph.lineHeight` with `inlineImage.size`. Inline elements default to `1em` (the parent's size; a number is absolute). `superscript`, `subscript` and `footnoteReference` take `fontScale`, default 0.75 on iOS and web, 0.65 on Android (Roboto's larger x-height).
-- **`link.variants`** styles links by URL: keys are regular-expression sources tested against the `href` in object order, first match wins, no match uses `link`. A variant takes the props of `link` and merges over it; across layers variants merge per pattern, prop by prop, new patterns append. This is also how mentions are styled (no `Mention` key). An invalid pattern is skipped with a one-time dev warning.
+- **Sizing.** Headings scale from `paragraph.fontSize` by an internal ratio unless an `h1`-`h6` sets its own `fontSize`. `lineHeight` is in points and, as on any RN `Text`, an exact height: taller inline content (an inline image, a larger `fontSize`) is clipped, so raise `paragraph.lineHeight` with `inlineImage.size`. Inline elements default to `1em` (the parent's size; a number is absolute). `superscript`, `subscript` and `footnote.reference` take `fontScale`, default 0.75 on iOS and web, 0.65 on Android.
+- **`link.variants`** styles links by URL: keys are regular-expression sources tested against the `href` in object order, first match wins, no match uses `link`. A variant merges over `link`; across layers per pattern, prop by prop, new patterns append. This is also how mentions are styled (no `Mention` key). An invalid pattern is skipped with a one-time dev warning.
 - **`blockquote.admonitions.<kind>`**, kind `note`, `tip`, `important`, `warning` or `caution`: `color` (accent) and `backgroundColor`. Geometry and fonts come from `blockquote`. Defaults are GitHub's palette; a hex `color` gets a default tint, any other format needs `backgroundColor`.
 - **`checkbox`** is always a drawn box ([P3a-5](./phase-3a/decisions.md#p3a-5-the-checkbox-is-a-drawn-box)): `size` is the box width in points (default 0.9 x the list font size), `color` the unchecked border (or `borderColor`), `checkedColor` the checked fill (both default to the text colour), `checkmarkColor` the tick (near-black or white by the fill's luminance), `checkedText` the checked item's text style (merged onto line-through and dim, or `false`).
 - **`codeBlock.syntax`**: a colour per token type, 15 types (`keyword`, `string`, `number`, `comment`, `function`, `type`, `operator`, `punctuation`, `property`, `constant`, `variable`, `embedded`, `plain`, `inserted`, `deleted`). A partial object merges onto the scheme's palette. `plain`, `operator`, `punctuation`, `variable` and `embedded` follow a custom `codeBlock.color` unless set; the other types follow the scheme only, so with a dark custom `codeBlock.backgroundColor` set `number`, `keyword` and the rest too ([P3-33](./phase-3/decisions.md#p3-33-syntax-colours-are-a-core-theme-token-that-follows-the-theme-mode)).

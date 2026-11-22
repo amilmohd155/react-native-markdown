@@ -21,8 +21,8 @@ Accepted · 2026-11-22
 
 - **Decision:** `theme` is `'auto' | 'light' | 'dark'` or one flat object keyed by element (`paragraph`, `h1`–`h6`, `link`, `codeBlock`, …) with plain style props, e.g. `codeBlock: { backgroundColor, borderRadius, padding }`. Public tokens (`colors`, `fontSize`, `radius`, `fonts`, `listBullets`, …), the `container`/`text` slots and `elements.*` leave the public API; `lightTheme` and `darkTheme` keep using tokens internally. `createTheme(input)` stays as a typed identity helper for the flat shape, without `base`: a theme always merges onto the built-in theme of the active scheme. Top-level keys apply to both schemes; the `dark`/`light` block merges over them. A plain object stays valid. Plugin element styles are keys of the same object.
 - **Why:** three input shapes, two layers and three override paths are hard to learn; a flat, CSS-like shape is one concept. Each element has a typed prop whitelist, so the library knows which props go to the container and which to the text. Inline elements inherit from their block (nested `<Text>`). `createTheme` stays for whitelist checking outside JSX and so a package can ship a theme as a value.
-- **Code block (P3-35):** `codeBlockHeader` is a flat key. The line-number gutter is structural and derives from `codeBlock` text (no key). The `codeBlock={{ header, lineNumbers, wrap }}` prop and `onCopyPress` are behaviour and unchanged.
-- **Consequences:** the default `codeBlock.color` follows the scheme. Plugin keys must not clash with core keys or `dark`/`light`. Admonitions nest under `blockquote.admonitions.<kind>`. Props with no RN style name (`bulletColor`, `itemSpacing`, `fontScale`, syntax colours) get their own names. Supersedes the theme API of P1-16 to P1-18 where they conflict (font faces and the resolve cache remain, internally).
+- **Code block (P3-35):** `codeBlock.header` nests under `codeBlock` ([P3a-7](#p3a-7-related-elements-nest-under-their-parent-key)). The gutter is structural (no key); the `codeBlock={{ header, lineNumbers, wrap }}` prop and `onCopyPress` are unchanged.
+- **Consequences:** the default `codeBlock.color` follows the scheme. Plugin keys must not clash with core keys or `dark`/`light`. Admonitions nest under `blockquote.admonitions.<kind>`. Supersedes the theme API of P1-16 to P1-18 where they conflict (font faces and the resolve cache remain, internally).
 
 ## P3a-3: Inline sizes are relative to the parent
 
@@ -51,3 +51,10 @@ Accepted · 2026-11-22
 
 - **Decision:** a variant key is a regular-expression source tested against the `href` in object order, first match wins. Across layers the same pattern keeps its position and the props it does not set; new patterns append. A variant merges over `link`.
 - **Why:** deterministic and predictable, so a `dark` block can recolour one pattern without repeating the rest. Refines [P3a-4](#p3a-4-theme-details-settled-in-the-whitelist).
+
+## P3a-7: Related elements nest under their parent key
+
+Accepted · 2026-11-22
+
+- **Decision:** families nest: `codeBlock.header`, `footnote.reference`, `footnote.backLink`, `footnote.definition` (`link.variants` and `blockquote.admonitions` already did). `listItem` folds into `list` text props, `tableCell` into `table` `cell*` props. A lone element without a parent stays top level.
+- **Why:** footnote keys shared a prefix and repeated in dark blocks. `listItem` was text-only and inherited `paragraph`; cell padding belongs to `table`, as enriched-markdown's `cellPadding*`. One rule: a top-level key is one element or a family root, children nest.
