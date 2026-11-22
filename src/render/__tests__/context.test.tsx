@@ -1,5 +1,5 @@
 import { renderTree } from '../../__tests__/tree';
-import { getDefaultTheme, lightTheme, resolveTheme } from '../../theme';
+import { getDefaultTheme, resolveTheme } from '../../theme';
 import {
   createRenderCtx,
   DEFAULT_FOOTNOTE_BACK_LINK_MARK,
@@ -104,7 +104,7 @@ describe('useRenderCtx', () => {
 
   it('changes ctx when the theme or the component map changes', async () => {
     const { seen, update } = await renderCtx({ components });
-    await update({ components, theme: resolveTheme(lightTheme) });
+    await update({ components, theme: resolveTheme({}) });
     await update({ components: Object.freeze({}) as Components });
     expect(new Set(seen).size).toBe(3);
   });

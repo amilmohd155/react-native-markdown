@@ -1,7 +1,7 @@
 /**
  * Props of the elements plugins add, by element name (without `children` and
- * `style`). Empty here: a plugin package augments it so `components` and
- * `theme.elements` type-check its elements:
+ * `style`). Empty here: a plugin package augments it so `components`
+ * type-checks its elements:
  *
  * ```ts
  * declare module '@docren/react-native-markdown' {
@@ -16,10 +16,28 @@
  * package's exports only through that kind of re-export chain, not through
  * named re-exports (`export type { X } from`). Keep it that way
  * (src/__tests__/contract.test.tsx checks the by-name augmentation).
- * Lives with the theme because `theme.elements` is keyed by it.
  */
 
 export interface PluginElementPropsMap {}
 
 /** Names of the elements plugins add (those declared in the map above). */
 export type PluginElementName = keyof PluginElementPropsMap & string;
+
+/**
+ * Theme keys plugins add, with their prop types. Empty here: a plugin
+ * augments it, like `PluginElementPropsMap` (same `export *` chain):
+ *
+ * ```ts
+ * declare module '@docren/react-native-markdown' {
+ *   interface PluginThemeMap {
+ *     callout?: { color?: string };
+ *   }
+ * }
+ * ```
+ *
+ * Keys must not be core keys, `dark` or `light`; a clash makes
+ * `FlatThemeBlock` and `FlatThemeInput` resolve to `never`, so every use
+ * fails to compile. Keep the `export *` re-export chain of
+ * `PluginElementPropsMap` in mind: augmentation only merges through it.
+ */
+export interface PluginThemeMap {}

@@ -1,4 +1,4 @@
-import { Text } from 'react-native';
+import { Text, type TextStyle, type ViewStyle } from 'react-native';
 import { useCallback, type ComponentType } from 'react';
 import { useRenderContext } from '../render/contexts';
 import type { MentionPressInfo } from '../render/context';
@@ -18,6 +18,11 @@ declare module '@docren/react-native-markdown' {
   interface PluginElementPropsMap {
     Mention: MentionAttrs;
   }
+  // The theme key of the element: flat props, text props to its text, the
+  // rest to its container.
+  interface PluginThemeMap {
+    Mention?: TextStyle & ViewStyle;
+  }
 }
 
 /**
@@ -34,8 +39,8 @@ export function useMentionPress(): (info: MentionPressInfo) => void {
 }
 
 /**
- * Default `Mention`: nested text like a link, styled by `theme.elements.Mention`
- * and, without one, by `Link`.
+ * Default `Mention`: nested text like a link, styled by the `Mention` theme key
+ * and, without one, by `link`.
  */
 export const Mention: ComponentType<ElementProps<'Mention'>> =
   function Mention({ scheme, id, label, url, style }) {

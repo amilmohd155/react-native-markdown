@@ -26,6 +26,16 @@ declare module '@docren/react-native-markdown' {
     AdmonitionWarning: {};
     AdmonitionCaution: {};
   }
+  // Theme keys, flat props (text props to the text, the rest to the
+  // container). `Admonition` styles every kind, the others one kind.
+  interface PluginThemeMap {
+    Admonition?: TextStyle & ViewStyle;
+    AdmonitionNote?: TextStyle & ViewStyle;
+    AdmonitionTip?: TextStyle & ViewStyle;
+    AdmonitionImportant?: TextStyle & ViewStyle;
+    AdmonitionWarning?: TextStyle & ViewStyle;
+    AdmonitionCaution?: TextStyle & ViewStyle;
+  }
 }
 
 /** Default titles, replaced per kind by `admonitions({ titles })`. */
@@ -79,7 +89,7 @@ function isLight(color: string): boolean {
 
 /**
  * The default `Admonition`: an accent bar and tinted box over `Blockquote`'s
- * layout, a title, then the content. `theme.elements.Admonition` styles every
+ * layout, a title, then the content. The `Admonition` theme key styles every
  * kind and `AdmonitionNote` and the like style one; both win over the
  * defaults, the kind over the shared one.
  */

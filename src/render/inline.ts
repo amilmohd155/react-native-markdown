@@ -1,5 +1,5 @@
 import { createElement, Fragment, type ReactNode } from 'react';
-import type { TextStyle } from 'react-native';
+import { StyleSheet, type TextStyle } from 'react-native';
 import {
   Flag,
   getText,
@@ -67,7 +67,13 @@ export function renderInline(
   ctx: RenderCtx,
   /** The block's text style: declared inline views get its metrics. */
   blockText?: TextStyle,
-  font: FontState = BODY_FONT
+  font: FontState = BODY_FONT,
+  /**
+   * The font size the content sits in, for the scaled elements (`fontScale`).
+   * Defaults to the block text's: pass it when an inherited style (a
+   * blockquote's, the footnote section's) overrides that.
+   */
+  size: number = blockText?.fontSize ?? ctx.theme.tokens.fontSize.base
 ): ReactNode {
   const softBreakAsSpace = ctx.options.softBreak === 'space';
   const dev = isDev();
@@ -83,7 +89,7 @@ export function renderInline(
           : text;
       continue;
     }
-    const node = renderInlineNode(table, c, ctx, dev, blockText, font);
+    const node = renderInlineNode(table, c, ctx, dev, blockText, font, size);
     if (node === null) continue;
     if (run !== '') {
       out.push(run);
@@ -108,14 +114,15 @@ function pluginInline(
   ctx: RenderCtx,
   dev: boolean,
   blockText: TextStyle | undefined,
-  font: FontState
+  font: FontState,
+  size: number
 ): ReactNode {
   const plugin = pluginNodeOf(table, id);
   if (plugin === undefined) return null;
   const children =
     table.firstChild[id] === NONE
       ? undefined
-      : renderInline(table, id, ctx, blockText, font);
+      : renderInline(table, id, ctx, blockText, font, size);
   const component = pluginComponentOf(ctx, plugin.name);
   if (component === undefined) return children ?? null;
 
@@ -158,6 +165,35 @@ function inline<K extends ElementName>(
   );
 }
 
+const SCRIPT_KEY = {
+  Superscript: 'superscript',
+  Subscript: 'subscript',
+} as const;
+
+const sized = new WeakMap<ElementStyle, Map<number, ElementStyle>>();
+
+/**
+ * `style` with the text size set to `fontSize`: how a `fontScale` element
+ * gets its absolute size (nested `<Text>` has no relative sizes). Cached per
+ * style and size, so equal input gives the same object.
+ */
+function sizedStyle(style: ElementStyle, fontSize: number): ElementStyle {
+  let bySize = sized.get(style);
+  if (bySize === undefined) {
+    bySize = new Map();
+    sized.set(style, bySize);
+  }
+  let out = bySize.get(fontSize);
+  if (out === undefined) {
+    out = Object.freeze({
+      text: { ...StyleSheet.flatten(style.text), fontSize },
+      container: style.container,
+    });
+    bySize.set(fontSize, out);
+  }
+  return out;
+}
+
 /** Inline elements whose only props are `children` and `style`. */
 const WRAPPERS: ReadonlyMap<number, ElementName> = new Map<number, ElementName>(
   [
@@ -176,9 +212,10 @@ function renderInlineNode(
   ctx: RenderCtx,
   dev: boolean,
   blockText: TextStyle | undefined,
-  font: FontState
+  font: FontState,
+  size: number
 ): ReactNode {
-  const { elements, fontVariants } = ctx.theme;
+  const { elements, fontVariants, tokens } = ctx.theme;
   const type = table.type[id]!;
 
   if (type === NodeType.Strong || type === NodeType.Emphasis) {
@@ -195,12 +232,17 @@ function renderInlineNode(
       id,
       {},
       fontVariants[name][fontStateIndex(font)]!,
-      renderInline(table, id, ctx, blockText, inner)
+      renderInline(table, id, ctx, blockText, inner, size)
     );
   }
 
   const wrapper = WRAPPERS.get(type);
   if (wrapper !== undefined) {
+    // Scripts are a fraction of the surrounding size (nested ones compound).
+    const inner =
+      wrapper === 'Superscript' || wrapper === 'Subscript'
+        ? size * tokens.fontScale[SCRIPT_KEY[wrapper]]
+        : size;
     return inline(
       ctx,
       dev,
@@ -208,8 +250,8 @@ function renderInlineNode(
       wrapper,
       id,
       {},
-      elements[wrapper],
-      renderInline(table, id, ctx, blockText, font)
+      inner === size ? elements[wrapper] : sizedStyle(elements[wrapper], inner),
+      renderInline(table, id, ctx, blockText, font, inner)
     );
   }
 
@@ -223,7 +265,7 @@ function renderInlineNode(
         id,
         linkProps(table, id),
         elements.Link,
-        renderInline(table, id, ctx, blockText, font)
+        renderInline(table, id, ctx, blockText, font, size)
       );
     case NodeType.InlineCode:
       return inline(
@@ -243,7 +285,7 @@ function renderInlineNode(
       // in, as plain text.
       if (!imageAllowed(ctx.options.images, src))
         return alt === '' ? null : alt;
-      const size = cachedImageSize(src);
+      const imageSize = cachedImageSize(src);
       return inline(
         ctx,
         dev,
@@ -253,7 +295,7 @@ function renderInlineNode(
         inlineImageProps(
           table,
           id,
-          size === undefined || size === 'error' ? null : size
+          imageSize === undefined || imageSize === 'error' ? null : imageSize
         ),
         elements.InlineImage
       );
@@ -286,7 +328,10 @@ function renderInlineNode(
         'FootnoteReference',
         id,
         footnoteReferenceProps(table, id),
-        elements.FootnoteReference
+        sizedStyle(
+          elements.FootnoteReference,
+          size * tokens.fontScale.footnoteReference
+        )
       );
     case NodeType.FootnoteBackLink: {
       const link = inline(
@@ -305,6 +350,6 @@ function renderInlineNode(
         : createElement(Fragment, { key: id }, ' ', link);
     }
     default:
-      return pluginInline(table, id, ctx, dev, blockText, font);
+      return pluginInline(table, id, ctx, dev, blockText, font, size);
   }
 }

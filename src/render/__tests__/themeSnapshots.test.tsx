@@ -1,12 +1,7 @@
 import { Image } from 'react-native';
 import { renderTree } from '../../__tests__/tree';
 import { GFM_PLUGINS, type GfmPluginName } from '../../plugins/gfm';
-import {
-  darkTheme,
-  ELEMENT_NAMES,
-  lightTheme,
-  resolveTheme,
-} from '../../theme';
+import { ELEMENT_NAMES, resolveTheme } from '../../theme';
 import { BlockList } from '../Block';
 import { createRenderCtx } from '../context';
 import { defaultComponents } from '../defaults';
@@ -24,8 +19,8 @@ import {
  * the plugins in both.
  */
 const THEMES = {
-  light: resolveTheme(lightTheme),
-  dark: resolveTheme(darkTheme),
+  light: resolveTheme({}),
+  dark: resolveTheme({}, 'dark'),
 };
 
 /** `CodeBlockHeader` has no markdown node: it is rendered directly. */

@@ -5,6 +5,7 @@ import { renderTree, textOf } from '../../__tests__/tree';
 import { dumpBlocks, type Dumped } from '../../parse/__tests__/dump';
 import { parseWithMarkdownIt } from '../../parse/markdownItBackend';
 import { streamView } from '../../../test/stream/harness';
+import type { FlatThemeInput } from '../../theme';
 import { admonitions } from '../index';
 
 type Options = Parameters<typeof admonitions>[0];
@@ -209,12 +210,13 @@ describe('admonitions: render', () => {
       <Markdown
         source={'> [!NOTE]\n> a\n\n> [!TIP]\n> b'}
         plugins={[admonitions()]}
-        theme={{
-          elements: {
-            Admonition: { container: { marginBottom: 33 } },
-            AdmonitionTip: { container: { backgroundColor: '#123456' } },
-          },
-        }}
+        // Plugin keys are typed by augmenting `PluginThemeMap`.
+        theme={
+          {
+            Admonition: { marginBottom: 33 },
+            AdmonitionTip: { backgroundColor: '#123456' },
+          } as unknown as FlatThemeInput
+        }
       />
     );
     const note = screen.getByLabelText('Note');
@@ -229,7 +231,7 @@ describe('admonitions: render', () => {
       <Markdown
         source={'> [!NOTE]\n> a'}
         plugins={[admonitions()]}
-        theme={{ fonts: { body: 'Inter' } }}
+        theme={{ paragraph: { fontFamily: 'Inter' } }}
       />
     );
     const title = screen.getByText('Note');
@@ -242,7 +244,9 @@ describe('admonitions: render', () => {
         source={'> [!NOTE]\n> a'}
         plugins={[admonitions()]}
         theme={{
-          fonts: { body: { regular: 'Inter-Regular', bold: 'Inter-Bold' } },
+          paragraph: {
+            fontFamily: { regular: 'Inter-Regular', bold: 'Inter-Bold' },
+          },
         }}
       />
     );

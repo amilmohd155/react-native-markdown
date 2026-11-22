@@ -45,10 +45,11 @@ import {
   type MarkdownTheme,
   type ScrollOptions,
   type TaskToggleInfo,
-  type ThemeInput,
+  type FlatThemeInput,
   type VirtualizeOptions,
   type VisitProps,
 } from '@docren/react-native-markdown';
+import type { GuardedThemeKeys } from '../theme/flatTypes';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -68,6 +69,10 @@ function element(_node: ReactNode): void {}
 declare module '@docren/react-native-markdown' {
   interface PluginElementPropsMap {
     ContractBadge: { label: string };
+  }
+  // Theme keys of a plugin, by name, through the same `export *` chain.
+  interface PluginThemeMap {
+    ContractBadge?: { color?: string; padding?: number };
   }
 }
 
@@ -198,12 +203,19 @@ describe('<Markdown> props', () => {
   });
 
   it('accepts theme inputs and createTheme results', () => {
-    const input: ThemeInput = { colors: { link: '#00f' } };
+    const input: FlatThemeInput = {
+      link: { color: '#00f' },
+      dark: { link: { color: '#88f' } },
+    };
     element(<Markdown source="x" theme={input} />);
-    element(<Markdown source="x" theme={createTheme(input, darkTheme)} />);
+    element(<Markdown source="x" theme={createTheme(input)} />);
     element(<Markdown source="x" theme={lightTheme} />);
-    // @ts-expect-error: unknown token group
+    // @ts-expect-error: unknown key
     element(<Markdown source="x" theme={{ sizes: {} }} />);
+    // @ts-expect-error: a prop the element does not accept
+    element(<Markdown source="x" theme={{ divider: { color: 'red' } }} />);
+    // @ts-expect-error: createTheme has no `base`
+    createTheme(input, darkTheme);
   });
 
   it('types the scroll and virtualize containers', () => {
@@ -480,7 +492,7 @@ describe('plugins', () => {
     components: {
       ContractBadge: ({ label }) => <>{label}</>,
     },
-    theme: { ContractBadge: { text: { color: '#fff' } } },
+    theme: { ContractBadge: { color: '#fff' } },
   });
 
   it('infers node props and keeps the name literal', () => {
@@ -521,7 +533,7 @@ describe('plugins', () => {
       <Markdown
         source="x"
         components={{ ContractBadge: ({ label }) => <>{label}</> }}
-        theme={{ elements: { ContractBadge: { container: { padding: 2 } } } }}
+        theme={{ ContractBadge: { padding: 2 } }}
       />
     );
     element(
@@ -534,6 +546,42 @@ describe('plugins', () => {
       />
     );
     expectType<Equal<ElementProps<'ContractBadge'>['label'], string>>(true);
+  });
+
+  it('lets a plugin declare its theme keys by augmenting the package', () => {
+    element(
+      <Markdown
+        source="x"
+        theme={{
+          ContractBadge: { color: '#fff' },
+          dark: { ContractBadge: { padding: 1 } },
+        }}
+      />
+    );
+    element(
+      <Markdown
+        source="x"
+        // @ts-expect-error: the key takes the props the plugin declared
+        theme={{ ContractBadge: { fontSize: 12 } }}
+      />
+    );
+    // The augmentation clashes with no core key, so the input is not `never`.
+    expectType<Equal<[FlatThemeInput] extends [never] ? true : false, false>>(
+      true
+    );
+  });
+
+  it('turns a plugin key that clashes with a core key or a scheme block into never', () => {
+    // Replicates the guard on a map that clashes; the real map cannot be
+    // augmented with a clash here without breaking this very file.
+    type Clash = { link?: { color?: string }; mention?: { color?: string } };
+    type Fine = { mention?: { color?: string } };
+    expectType<Equal<GuardedThemeKeys<Clash>, never>>(true);
+    expectType<Equal<GuardedThemeKeys<{ dark?: {} }>, never>>(true);
+    expectType<Equal<GuardedThemeKeys<{ light?: {} }>, never>>(true);
+    expectType<Equal<GuardedThemeKeys<Fine>, { mention?: { color?: string } }>>(
+      true
+    );
   });
 
   it('does not expose markdown-it tokens to plugin authors', () => {

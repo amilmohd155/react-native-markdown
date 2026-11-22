@@ -829,7 +829,6 @@ exports[`theme snapshots dark element InlineCode 1`] = `
         {
           "backgroundColor": "#151b23",
           "fontFamily": "Menlo",
-          "fontSize": 14.4,
         }
       }
     >
@@ -904,7 +903,6 @@ exports[`theme snapshots dark element Kbd 1`] = `
         {
           "backgroundColor": "#151b23",
           "fontFamily": "Menlo",
-          "fontSize": 14.4,
         }
       }
     >
@@ -3473,7 +3471,6 @@ exports[`theme snapshots light element InlineCode 1`] = `
         {
           "backgroundColor": "#f6f8fa",
           "fontFamily": "Menlo",
-          "fontSize": 14.4,
         }
       }
     >
@@ -3548,7 +3545,6 @@ exports[`theme snapshots light element Kbd 1`] = `
         {
           "backgroundColor": "#f6f8fa",
           "fontFamily": "Menlo",
-          "fontSize": 14.4,
         }
       }
     >

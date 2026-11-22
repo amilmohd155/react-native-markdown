@@ -1,7 +1,8 @@
 import { createContext, useContext, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import { resolveThemeProp, type ColorScheme, type ThemeProp } from './cache';
-import type { ElementOverrides, ResolvedTheme, ThemeTokens } from './types';
+import type { FlatThemeBlock } from './flatTypes';
+import type { ResolvedTheme, ThemeTokens } from './types';
 
 /**
  * The resolved theme of the enclosing `<Markdown>` (provided by the block
@@ -14,7 +15,7 @@ export const MarkdownThemeContext = createContext<ResolvedTheme | null>(null);
 
 /** What `useMarkdownTheme()` returns. */
 export interface MarkdownTheme {
-  /** The merged tokens: colors, fonts, sizes and spacing. */
+  /** The resolved values: colors, fonts, sizes and spacing. */
   readonly tokens: ThemeTokens;
   /**
    * The resolved style of every element, as `{ text, container }`. `Heading`
@@ -56,7 +57,7 @@ export function useMarkdownTheme(): MarkdownTheme {
  */
 export function useResolvedTheme(
   theme: ThemeProp = 'auto',
-  plugins?: readonly ElementOverrides[]
+  plugins?: readonly FlatThemeBlock[]
 ): ResolvedTheme {
   const scheme: ColorScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   return resolveThemeProp(theme, scheme, plugins);

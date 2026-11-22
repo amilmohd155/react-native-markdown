@@ -99,17 +99,17 @@ export type {
 // `export *` on purpose: see ../theme/pluginElements (by-name augmentation).
 export * from '../theme/pluginElements';
 export { createTheme, darkTheme, lightTheme, useMarkdownTheme } from '../theme';
+// TODO(M5): final public cleanup (ThemeTokens stays for `useMarkdownTheme()`
+// until its return type is decided; lightTheme/darkTheme are flat blocks now).
 export type {
   ElementName,
-  ElementOverride,
-  ElementOverrides,
   ElementStyle,
+  FlatThemeBlock,
+  FlatThemeInput,
   FontFaces,
   FontFamily,
   MarkdownTheme,
   SyntaxTokenType,
-  Theme,
-  ThemeInput,
   ThemeProp,
   ThemeTokens,
 } from '../theme';

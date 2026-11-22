@@ -2,7 +2,8 @@ import type { MarkdownIt } from 'markdown-it';
 import type { ComponentType, ReactNode } from 'react';
 import type { PluginNodeAttrs } from '../model';
 import type { Components } from '../render/elements';
-import type { ElementOverride, ElementOverrides, ElementStyle } from '../theme';
+import type { TextStyle, ViewStyle } from 'react-native';
+import type { ElementStyle, FlatThemeBlock } from '../theme';
 
 /**
  * A markdown-it token, as a plugin's `from` reads it. A read-only subset of
@@ -111,11 +112,13 @@ export interface MarkdownPlugin<
     >;
   };
   /**
-   * Theme overrides for this plugin's elements and built-in ones. Later
-   * plugins win, then the `theme` prop.
+   * Default styles for this plugin's elements (keys named like the nodes,
+   * flat props: text props go to the text, the rest to the container) and
+   * for built-in ones (flat keys). Merged under the user's `theme`; later
+   * plugins win.
    */
-  readonly theme?: ElementOverrides & {
-    readonly [K in keyof NoInfer<N>]?: ElementOverride;
+  readonly theme?: FlatThemeBlock & {
+    readonly [K in keyof NoInfer<N>]?: TextStyle & ViewStyle;
   };
 }
 

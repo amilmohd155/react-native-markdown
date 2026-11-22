@@ -205,8 +205,8 @@ describe('highlight: tokensMatchInput', () => {
 });
 
 describe('highlight: token types', () => {
-  it('re-uses the 13 core syntax token types', () => {
-    expect(SYNTAX_TOKEN_TYPES).toHaveLength(13);
+  it('re-uses the 15 core syntax token types', () => {
+    expect(SYNTAX_TOKEN_TYPES).toHaveLength(15);
     const token: Token = { type: 'inserted', text: '+' };
     expect(SYNTAX_TOKEN_TYPES).toContain(token.type);
   });

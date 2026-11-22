@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
 import { act } from 'react';
 import { renderTree, type TestInstance, type Tree } from '../../__tests__/tree';
-import { lightTheme, resolveTheme } from '../../theme';
+import { resolveTheme } from '../../theme';
 import { BlockList } from '../Block';
 import { createRenderCtx, type RenderCtx } from '../context';
 import { defaultComponents } from '../defaults';
@@ -82,14 +82,14 @@ describe('table column widths', () => {
   });
 
   it('caches per theme', async () => {
-    const theme = resolveTheme(lightTheme);
+    const theme = resolveTheme({});
     const ctx = createRenderCtx({ components: defaultComponents, theme });
     const root = await mount('| x |\n|---|\n| y |\n', ctx);
     await layOut(root, [100, 120]);
 
     const other = createRenderCtx({
       components: defaultComponents,
-      theme: resolveTheme(lightTheme),
+      theme: resolveTheme({}),
     });
     const fresh = await mount('| x |\n|---|\n| y |\n', other);
     expect(cells(fresh).map(widthOf)).toEqual([undefined, undefined]);

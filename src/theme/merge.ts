@@ -1,0 +1,76 @@
+import type { FlatThemeBlock, FlatThemeInput } from './flatTypes';
+import type { ColorScheme } from './types';
+import { darkTheme, lightTheme } from './tokens';
+
+/**
+ * Merges flat theme blocks (P3a-2). Per key, per prop, shallowly; the maps
+ * in `NESTED` merge one level deeper. `undefined` values are skipped.
+ * Spec: docs/rewrite/phase-3a/theme-props.md
+ */
+
+type Props = Record<string, unknown>;
+type Block = Record<string, Props | undefined>;
+
+/**
+ * Props whose value is itself a map that merges key by key: the syntax
+ * palette, link variants, admonition kinds, and a checked item's text style
+ * (so `{ opacity: 1 }` keeps the line-through).
+ */
+const NESTED: ReadonlySet<string> = new Set([
+  'syntax',
+  'variants',
+  'admonitions',
+  'checkedText',
+]);
+
+function isMap(value: unknown): value is Props {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function mergeProps(a: Props | undefined, b: Props | undefined) {
+  const out: Props = { ...a };
+  if (b === undefined) return out;
+  for (const key of Object.keys(b)) {
+    const value = b[key];
+    if (value === undefined) continue;
+    const prev = out[key];
+    out[key] =
+      NESTED.has(key) && isMap(prev) && isMap(value)
+        ? { ...prev, ...value }
+        : value;
+  }
+  return out;
+}
+
+/** `over` merged onto `base`, key by key. Neither is modified. */
+function mergeBlock(base: Block, over: Block | undefined): Block {
+  if (over === undefined) return base;
+  const out: Block = { ...base };
+  for (const key of Object.keys(over)) {
+    const props = over[key];
+    if (props === undefined) continue;
+    out[key] = mergeProps(out[key], props);
+  }
+  return out;
+}
+
+/**
+ * The flat block a theme resolves from. Merge order: the built-in theme of
+ * `scheme`, plugin default blocks (in plugin order), the user's top-level
+ * keys, the user's `dark`/`light` block for `scheme`.
+ */
+export function mergeFlat(
+  scheme: ColorScheme,
+  layers: readonly FlatThemeBlock[],
+  input: FlatThemeInput
+): FlatThemeBlock {
+  let out = (scheme === 'dark' ? darkTheme : lightTheme) as Block;
+  for (const layer of layers) out = mergeBlock(out, layer as Block);
+  const { dark, light, ...top } = input;
+  out = mergeBlock(out, top as Block);
+  out = mergeBlock(
+    out,
+    (scheme === 'dark' ? dark : light) as Block | undefined
+  );
+  return out as FlatThemeBlock;
+}

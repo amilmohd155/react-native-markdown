@@ -53,6 +53,12 @@ interface Place {
    * advanced in document order as items render.
    */
   readonly tasks: { next: number };
+  /**
+   * The font size an enclosing block's text style sets for its content
+   * (a blockquote's, the footnote section's): it overrides the paragraph's,
+   * so the scaled inline elements (`fontScale`) start from it.
+   */
+  readonly textSize?: number;
 }
 
 /**
@@ -123,7 +129,7 @@ function renderNode(
         id,
         props,
         heading,
-        renderInline(table, id, ctx, heading.text, HEADING_FONT)
+        renderInline(table, id, ctx, heading.text, HEADING_FONT, place.textSize)
       );
     }
 
@@ -148,7 +154,7 @@ function renderNode(
         id,
         {},
         paragraph,
-        renderInline(table, id, ctx, paragraph.text)
+        renderInline(table, id, ctx, paragraph.text, undefined, place.textSize)
       );
     }
 
@@ -159,7 +165,10 @@ function renderNode(
         id,
         {},
         elements.Blockquote,
-        renderChildren(table, id, ctx, place)
+        renderChildren(table, id, ctx, {
+          ...place,
+          textSize: elements.Blockquote.text.fontSize ?? place.textSize,
+        })
       );
 
     case NodeType.List: {
@@ -277,7 +286,8 @@ function renderNode(
           id,
           ctx,
           cell.text,
-          props.header ? TABLE_HEAD_FONT : BODY_FONT
+          props.header ? TABLE_HEAD_FONT : BODY_FONT,
+          place.textSize
         )
       );
     }
@@ -298,7 +308,10 @@ function renderNode(
         createElement(
           InheritedTextContext.Provider,
           { value: section.text },
-          renderChildren(table, id, ctx, place)
+          renderChildren(table, id, ctx, {
+            ...place,
+            textSize: section.text.fontSize ?? place.textSize,
+          })
         )
       );
     }

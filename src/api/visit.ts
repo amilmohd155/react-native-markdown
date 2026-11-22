@@ -69,7 +69,7 @@ type Callback = (
   info: VisitInfo
 ) => void;
 
-const DEFAULT_BULLETS = lightTheme.listBullets;
+const DEFAULT_BULLETS = lightTheme.list!.bullets!;
 
 /** Inline and block wrappers whose only props are `children` and `style`. */
 const PLAIN: ReadonlyMap<number, VisitElementName> = new Map([

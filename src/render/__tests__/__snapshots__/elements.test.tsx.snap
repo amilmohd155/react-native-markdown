@@ -829,7 +829,6 @@ exports[`element snapshots InlineCode 1`] = `
         {
           "backgroundColor": "#f6f8fa",
           "fontFamily": "Menlo",
-          "fontSize": 14.4,
         }
       }
     >
@@ -904,7 +903,6 @@ exports[`element snapshots Kbd 1`] = `
         {
           "backgroundColor": "#f6f8fa",
           "fontFamily": "Menlo",
-          "fontSize": 14.4,
         }
       }
     >

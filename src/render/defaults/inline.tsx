@@ -84,7 +84,6 @@ function ScriptRun({
           { color: colors.text, fontFamily: regularFamily(fonts.body) },
           inherited,
           style.text,
-          { fontSize: baseline.fontSize * 0.75 },
         ]}
       >
         {children}

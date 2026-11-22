@@ -153,7 +153,8 @@ export function ListItem({
     // without moving the first-line alignment with the item text.
     const glyphSize = checkbox.size ?? style.text.fontSize ?? fontSize.base;
     const lineHeight =
-      style.text.lineHeight ?? glyphSize * theme.tokens.lineHeight;
+      style.text.lineHeight ??
+      (glyphSize * theme.tokens.paragraphLineHeight) / fontSize.base;
     const color = shown
       ? (checkbox.checkedColor ?? checkbox.color)
       : checkbox.color;
@@ -261,6 +262,8 @@ export function Image({ src, alt, title, style }: ElementProps<'Image'>) {
   const { theme, handlers, options } = useRenderContext();
   const size = useImageSize(src);
   const { colors } = theme.tokens;
+  // `image.borderRadius`: clips the loaded image too (the container does not).
+  const radius = style.container.borderRadius;
 
   if (size === 'error') {
     return (
@@ -290,9 +293,12 @@ export function Image({ src, alt, title, style }: ElementProps<'Image'>) {
           ? {
               aspectRatio: theme.tokens.imageRatio,
               backgroundColor: colors.codeBg,
-              borderRadius: theme.tokens.radius.code,
+              borderRadius: radius ?? theme.tokens.radius.code,
             }
-          : { aspectRatio: size.width / size.height },
+          : {
+              aspectRatio: size.width / size.height,
+              borderRadius: radius,
+            },
       ]}
     />
   );

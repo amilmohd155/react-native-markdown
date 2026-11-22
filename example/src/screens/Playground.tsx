@@ -7,16 +7,12 @@ import {
   View,
 } from 'react-native';
 import {
-  createTheme,
-  darkTheme,
-  lightTheme,
   Markdown,
   parse,
   type FontFaces,
-  type HeadingLevel,
   type ScriptFallback,
   type SoftBreak,
-  type ThemeInput,
+  type FlatThemeInput,
   type ThemeProp,
 } from '@docren/react-native-markdown';
 import { MentionChip } from '../components/MentionChip';
@@ -45,11 +41,6 @@ const INTER: FontFaces = {
   bold: 'Inter_700Bold',
   boldItalic: 'Inter_700Bold_Italic',
 };
-
-// Module-level, so the theme cache can match it by identity.
-const headingOverride = (level: HeadingLevel) => ({
-  text: level === 1 ? { textTransform: 'uppercase' as const } : {},
-});
 
 // Declared inline views (D8): link chips and raised/lowered scripts.
 const CHIP_COMPONENTS = {
@@ -91,38 +82,38 @@ const DEFAULTS: Options = {
 };
 
 /**
- * The library's theme for these options. Under `'auto'` a tweak object
- * merges onto the device scheme's base; light and dark build on their own.
+ * The library's theme for these options: a flat tweak object, merged onto
+ * the built-in theme of the active scheme.
  */
 function themeFor(
   scheme: 'auto' | 'light' | 'dark',
   options: Options
 ): ThemeProp {
-  const tweaks: ThemeInput = {
-    ...(options.size === 'large' ? { fontSize: { base: 20 } } : null),
-    ...(options.accent
-      ? {
-          colors: { link: '#bf3989', quoteBar: '#bf3989' },
-          radius: { code: 16 },
-          listBullets: ['→', '·', '–'],
-        }
-      : null),
-    ...(options.font === 'inter' ? { fonts: { body: INTER } } : null),
-    ...(options.overrides
-      ? {
-          elements: {
-            Link: { text: { textDecorationLine: 'none', fontWeight: '700' } },
-            CodeBlock: {
-              container: { borderLeftWidth: 4, borderLeftColor: '#bf3989' },
-            },
-            Heading: headingOverride,
-          },
-        }
-      : null),
+  const tweaks: FlatThemeInput = {
+    paragraph: {
+      ...(options.size === 'large' ? { fontSize: 20 } : null),
+      ...(options.font === 'inter' ? { fontFamily: INTER } : null),
+    },
+    link: {
+      ...(options.accent ? { color: '#bf3989' } : null),
+      ...(options.overrides
+        ? { textDecorationLine: 'none', fontWeight: '700' }
+        : null),
+    },
+    blockquote: options.accent ? { borderLeftColor: '#bf3989' } : {},
+    codeBlock: {
+      ...(options.accent ? { borderRadius: 16 } : null),
+      ...(options.overrides
+        ? { borderWidth: 1, borderColor: '#bf3989' }
+        : null),
+    },
+    list: options.accent ? { bullets: ['→', '·', '–'] } : {},
   };
-  if (Object.keys(tweaks).length === 0) return scheme;
-  if (scheme === 'auto') return tweaks;
-  return createTheme(tweaks, scheme === 'dark' ? darkTheme : lightTheme);
+  if (Object.values(tweaks).every((p) => Object.keys(p).length === 0)) {
+    return scheme;
+  }
+  // A flat theme merges onto the device scheme's built-in theme.
+  return tweaks;
 }
 
 type Mode = 'preview' | 'edit';

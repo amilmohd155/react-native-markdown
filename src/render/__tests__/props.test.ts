@@ -20,7 +20,7 @@ import {
 } from '../props';
 import { nodesOfType, tableFor } from './helpers';
 
-const bullets = lightTheme.listBullets;
+const bullets = lightTheme.list!.bullets!;
 
 /** List nesting depth of a list item, as the renderer computes it. */
 function depthOf(table: NodeTable, item: number): number {

@@ -32,7 +32,7 @@ import { footnoteSectionIndex } from '../render/footnoteTargets';
 import type { FadePlan } from '../render/fade';
 import {
   useResolvedTheme,
-  type ElementOverrides,
+  type FlatThemeBlock,
   type ThemeProp,
 } from '../theme';
 import { streamInfoOf, tableOf, type MarkdownDocument } from './document';
@@ -380,7 +380,7 @@ export function useMarkdownPipeline(
   );
 
   const themeLayers = useMemo(() => {
-    const layers: ElementOverrides[] = [];
+    const layers: FlatThemeBlock[] = [];
     for (const plugin of plugins) {
       if (plugin.theme) layers.push(plugin.theme);
     }

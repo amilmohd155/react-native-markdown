@@ -77,7 +77,6 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
         {
           "backgroundColor": "#f6f8fa",
           "fontFamily": "Menlo",
-          "fontSize": 14.4,
         }
       }
     >
@@ -117,7 +116,6 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
         {
           "backgroundColor": "#f6f8fa",
           "fontFamily": "Menlo",
-          "fontSize": 14.4,
         }
       }
     >
