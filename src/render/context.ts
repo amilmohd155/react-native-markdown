@@ -46,6 +46,26 @@ export interface TaskToggleInfo {
   /** The item's own text, formatting flattened, nested lists excluded. */
   readonly text: string;
 }
+/** What `onCopyPress` receives: the code block's Copy button (P3-35). */
+export interface CodeCopyInfo {
+  /** The block's code, as rendered. */
+  readonly code: string;
+  /** The fence's language, or `null`. */
+  readonly language: string | null;
+  /** The rest of the fence info after the language, or `null`. */
+  readonly meta: string | null;
+}
+
+/** The `codeBlock` prop: parts of the code block (P3-35). All default `false`. */
+export interface CodeBlockOptions {
+  /** A bar above the code: the fence tag, a Wrap toggle and Copy (with `onCopyPress`). */
+  readonly header?: boolean;
+  /** A line number gutter. */
+  readonly lineNumbers?: boolean;
+  /** Wrap long lines instead of scrolling horizontally. */
+  readonly wrap?: boolean;
+}
+
 /**
  * Where a footnote press should go (P1-15). The app scrolls; the renderer
  * doesn't own the scroll view.
@@ -121,6 +141,8 @@ export interface RenderHandlers {
   readonly onMentionPress?: (info: MentionPressInfo) => void;
   /** Called after a task checkbox is toggled by a tap (P3-16). */
   readonly onTaskToggle?: (info: TaskToggleInfo) => void;
+  /** A press on a code block's Copy button; the button shows only when set (P3-35). */
+  readonly onCopyPress?: (info: CodeCopyInfo) => void;
   /**
    * Makes footnote references and back-links pressable. Return `false` to
    * skip the built-in jump of an owned container (P3-9).
@@ -155,6 +177,13 @@ export interface RenderOptions {
   readonly scriptFallback: ScriptFallback;
   /** Which images load; the rest render as their alt text. */
   readonly images: ImagesPolicy;
+  /** The `codeBlock` prop resolved; `copyable` is true when `onCopyPress` is set (P3-35). */
+  readonly codeBlock: {
+    readonly header: boolean;
+    readonly lineNumbers: boolean;
+    readonly wrap: boolean;
+    readonly copyable: boolean;
+  };
 }
 
 const NO_HANDLERS: RenderHandlers = Object.freeze({});
@@ -171,6 +200,12 @@ const DEFAULT_RENDER_OPTIONS: RenderOptions = Object.freeze({
   footnoteFocus: null,
   scriptFallback: 'smaller',
   images: 'allow',
+  codeBlock: Object.freeze({
+    header: false,
+    lineNumbers: false,
+    wrap: false,
+    copyable: false,
+  }),
 });
 
 /**
@@ -220,6 +255,8 @@ export interface RenderCtxInput {
   readonly footnoteBackLinkMark?: FootnoteBackLinkMark;
   /** P3-15. Keep the reference stable: it is part of `ctx` identity. */
   readonly footnoteFocus?: FootnoteFocusConfig | null;
+  /** P3-35. Compared by its values: an inline object keeps `ctx`. */
+  readonly codeBlock?: CodeBlockOptions;
   /** A stream is running: footnote links are inert (P3-12). Default `false`. */
   readonly footnotesInert?: boolean;
   /**
@@ -256,6 +293,12 @@ function optionsOf(input: RenderCtxInput): RenderOptions {
     scriptFallback:
       input.scriptFallback ?? DEFAULT_RENDER_OPTIONS.scriptFallback,
     images: input.images ?? DEFAULT_RENDER_OPTIONS.images,
+    codeBlock: Object.freeze({
+      header: input.codeBlock?.header ?? false,
+      lineNumbers: input.codeBlock?.lineNumbers ?? false,
+      wrap: input.codeBlock?.wrap ?? false,
+      copyable: input.handlers?.onCopyPress !== undefined,
+    }),
   });
 }
 
@@ -301,6 +344,10 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
   const scriptFallback =
     input.scriptFallback ?? DEFAULT_RENDER_OPTIONS.scriptFallback;
   const images = input.images ?? DEFAULT_RENDER_OPTIONS.images;
+  const header = input.codeBlock?.header ?? false;
+  const lineNumbers = input.codeBlock?.lineNumbers ?? false;
+  const wrap = input.codeBlock?.wrap ?? false;
+  const copyable = latest.onCopyPress !== undefined;
 
   const options = useMemo<RenderOptions>(
     () =>
@@ -316,6 +363,7 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
         footnoteFocus,
         scriptFallback,
         images,
+        codeBlock: Object.freeze({ header, lineNumbers, wrap, copyable }),
       }),
     [
       softBreak,
@@ -329,6 +377,10 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
       footnoteFocus,
       scriptFallback,
       images,
+      header,
+      lineNumbers,
+      wrap,
+      copyable,
     ]
   );
 

@@ -53,7 +53,9 @@ Built and verified ([P3-29 to P3-34](./decisions.md#p3-29-hand-rolled-tokenizers
 - Colours come from the core `tokens.syntax` (13 types, light and dark defaults, following the `theme` prop; a partial override merges onto them) ([P3-33](./decisions.md#p3-33-syntax-colours-are-a-core-theme-token-that-follows-the-theme-mode)).
 - Streaming and size: highlighted as it arrives, as memoised Texts of 2 lines (more past blank lines) in one accessible, labelled View; once closed, a block of up to 800 characters is one Text, so selection covers it all (on larger blocks it stays inside one chunk on Android, crosses chunks exactly on web, and iOS copies one whole Text); above `maxLength` (default 50,000 characters) the block is plain ([P3-30](./decisions.md#p3-30-highlighted-code-renders-as-one-text-per-2-lines), [P3-31](./decisions.md#p3-31-highlight-up-to-maxlength-50000-characters-then-plain)).
 - Core changes in the same PR: the fast-path gate, a `CodeBlock` `open` prop, `tokens.syntax` ([P3-34](./decisions.md#p3-34-highlight-scope-core-changes-and-exit-criteria)).
-- Deferred: line numbers, highlighted lines, titles, copy button.
+- Deferred: highlighted lines, titles.
+
+The highlighted block takes the same `codeBlock={{ header, lineNumbers, wrap }}` options as the default one (header with fence tag, Wrap and Copy; a line-number gutter mirrored beside its chunks, or one row per line with wrap). `codeBlock` and `onCopyPress` are core `<Markdown>` props, not `highlight()` options ([P3-35](./decisions.md#p3-35-code-block-header-line-numbers-and-wrap-in-pure-js), [04 · Code block header](../04-api.md#code-block-header)).
 
 Bring your own tokenizer (about 25 lines, no shipped adapter or peer dependency; typechecked with `lowlight@3` and `@types/hast`):
 

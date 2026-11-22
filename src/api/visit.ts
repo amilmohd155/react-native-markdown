@@ -25,8 +25,15 @@ import { tableOf, type MarkdownDocument } from './document';
 
 type AllElementProps = ElementPropsMap & PluginElementPropsMap;
 
-/** Names `visit` can call: built-in elements and declared plugin elements. */
-export type VisitElementName = keyof AllElementProps & string;
+/**
+ * Names `visit` can call: built-in elements and declared plugin elements.
+ * `CodeBlockHeader` is left out: it has no markdown node (the `CodeBlock`
+ * component draws it, P3-35), so `visit` would never call it.
+ */
+export type VisitElementName = Exclude<
+  keyof AllElementProps & string,
+  'CodeBlockHeader'
+>;
 
 /**
  * What a visitor receives for element `K`: the same props its component

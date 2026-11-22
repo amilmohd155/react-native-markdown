@@ -9,6 +9,8 @@ import {
 } from '../../__tests__/tree';
 import { getDefaultTheme } from '../../theme';
 import { BlockList } from '../Block';
+import { RenderCtxContext } from '../contexts';
+import type { ElementProps } from '../elements';
 import { createRenderCtx, type RenderCtxInput } from '../context';
 import { defaultComponents } from '../defaults';
 import { resetInlineViewWarnings } from '../devInline';
@@ -244,5 +246,114 @@ describe('links', () => {
         '#frag',
       ].map(isOpenableUrl)
     ).toEqual([true, true, true, true, false, false, false, false]);
+  });
+});
+
+describe('code block header (P3-35)', () => {
+  const FENCE = '```ts title="a.ts"\nconst a = 1;\n```\n';
+  const copyButtons = (node: TestInstance) =>
+    findAll(
+      node,
+      (n) => n.type === 'View' && n.props.accessibilityLabel === 'Copy code'
+    );
+  const body = (root: Tree) =>
+    root.find((n) => n.props.horizontal === true).parent!;
+
+  it('is off by default: one unlabelled container, as before', async () => {
+    const root = await render(FENCE);
+    expect(root.findAll((n) => n.props.accessible === true)).toEqual([]);
+    expect(hostTexts(root).map((n) => n.props.children)).toEqual([
+      'const a = 1;',
+    ]);
+  });
+
+  it('draws the language outside the labelled body, no Copy without a handler', async () => {
+    const root = await render(FENCE, { codeBlock: { header: true } });
+    const labelled = root.findAll(
+      (n) =>
+        n.props.accessible === true && n.props.accessibilityRole !== 'button'
+    );
+    expect(labelled).toEqual([body(root)]);
+    expect(labelled[0]!.props.accessibilityLabel).toBe('const a = 1;');
+    const label = root.find(
+      (n) => n.type === 'Text' && n.props.children === 'ts'
+    );
+    expect(findAll(labelled[0]!, (n) => n === label)).toEqual([]);
+    expect(root.findAll('Text').some((n) => n.props.children === 'Copy')).toBe(
+      false
+    );
+  });
+
+  it('shows Copy with onCopyPress, which gets code, language and meta', async () => {
+    const onCopyPress = jest.fn();
+    const root = await render(FENCE, {
+      codeBlock: { header: true },
+      handlers: { onCopyPress },
+    });
+    const copy = root.find(
+      (n) => n.type === 'View' && n.props.accessibilityLabel === 'Copy code'
+    );
+    expect(copy.props.accessibilityState).toEqual({ disabled: false });
+    await fireEvent.press(copy);
+    expect(onCopyPress.mock.calls).toEqual([
+      [{ code: 'const a = 1;', language: 'ts', meta: 'title="a.ts"' }],
+    ]);
+  });
+
+  it('disables Copy while the fence is open', async () => {
+    const onCopyPress = jest.fn();
+    const ctx = createRenderCtx({
+      components: defaultComponents,
+      codeBlock: { header: true },
+      handlers: { onCopyPress },
+    });
+    const view = await renderRN(
+      <RenderCtxContext.Provider value={ctx}>
+        <defaultComponents.CodeBlock
+          code="let a"
+          language={null}
+          meta={null}
+          open
+          style={ctx.theme.elements.CodeBlock}
+        />
+      </RenderCtxContext.Provider>
+    );
+    const [copy] = copyButtons(view.container);
+    expect(copy!.props.accessibilityState).toEqual({ disabled: true });
+    await fireEvent.press(copy!);
+    expect(onCopyPress).not.toHaveBeenCalled();
+  });
+
+  it('renders a replacement components.CodeBlockHeader with its props', async () => {
+    const onCopyPress = jest.fn();
+    const seen: ElementProps<'CodeBlockHeader'>[] = [];
+    const Header = (props: ElementProps<'CodeBlockHeader'>) => {
+      seen.push(props);
+      return null;
+    };
+    const ctx = createRenderCtx({
+      components: Object.freeze({
+        ...defaultComponents,
+        CodeBlockHeader: Header,
+      }),
+      codeBlock: { header: true, wrap: true },
+      handlers: { onCopyPress },
+    });
+    await renderRN(<BlockList table={tableFor(FENCE)} ctx={ctx} />);
+    const props = seen.at(-1)!;
+    expect(props).toMatchObject({
+      language: 'ts',
+      code: 'const a = 1;',
+      open: false,
+      wrap: true,
+      onToggleWrap: expect.any(Function),
+      style: ctx.theme.elements.CodeBlockHeader,
+    });
+    props.onCopy!();
+    expect(onCopyPress).toHaveBeenCalledWith({
+      code: 'const a = 1;',
+      language: 'ts',
+      meta: 'title="a.ts"',
+    });
   });
 });

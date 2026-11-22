@@ -15,6 +15,9 @@ export const ELEMENT_NAMES = [
   'List',
   'ListItem',
   'CodeBlock',
+  // The bar above a code block (P3-35). No markdown node: `CodeBlock`
+  // draws it when `codeBlock.header` is set, so `visit` never calls it.
+  'CodeBlockHeader',
   'Table',
   'TableRow',
   'TableCell',
@@ -213,6 +216,12 @@ export interface ResolvedTheme {
    * apart from the document, `text` cascades into its definitions.
    */
   readonly footnoteSection: ElementStyle;
+  /**
+   * The code block's line number gutter (P3-35, structural, not an element):
+   * `text` matches the merged `CodeBlock` text line for line, `container`
+   * draws the separator on its right.
+   */
+  readonly codeBlockGutter: ElementStyle;
 }
 
 /** Heading level, 1 to 6. */

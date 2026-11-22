@@ -5,9 +5,11 @@
  */
 import { useEffect } from 'react';
 import { Dimensions, Platform, StyleSheet } from 'react-native';
-import { act } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 import {
+  find,
   findAll,
+  type Match,
   renderTree,
   textOf,
   type JsonElement,
@@ -20,7 +22,8 @@ import {
   type UseMarkdownStreamResult,
 } from '../../api/useMarkdownStream';
 import { definePlugin, type MarkdownPlugin } from '../../plugins/definePlugin';
-import { createRenderCtx } from '../../render/context';
+import { codeLineCount, codeLines } from '../../render/codeLines';
+import { createRenderCtx, type RenderCtxInput } from '../../render/context';
 import { RenderCtxContext } from '../../render/contexts';
 import { defaultComponents } from '../../render/defaults';
 import { darkTheme, getDefaultTheme, lightTheme } from '../../theme';
@@ -31,8 +34,10 @@ import {
 } from '../HighlightedCodeBlock';
 import { DEFAULT_MAX_LENGTH, highlight, type Tokenizer } from '../index';
 
-// Records every `runsOf` call: one per chunk Text render.
+// Records every `runsOf` call: one per chunk Text render. `lineRunsOf`
+// calls: one per chunk render in the numbered wrap layout (P3-35).
 const mockRunsCalls: Chunk[] = [];
+const mockLineRunsCalls: Chunk[] = [];
 jest.mock('../chunking', () => {
   const actual = jest.requireActual('../chunking');
   return {
@@ -40,6 +45,10 @@ jest.mock('../chunking', () => {
     runsOf: (chunk: Chunk, colorOf?: unknown) => {
       mockRunsCalls.push(chunk);
       return actual.runsOf(chunk, colorOf);
+    },
+    lineRunsOf: (chunk: Chunk, colorOf?: unknown) => {
+      mockLineRunsCalls.push(chunk);
+      return actual.lineRunsOf(chunk, colorOf);
     },
   };
 });
@@ -91,6 +100,7 @@ const spans = (tree: Tree, text: string) =>
 let warn: jest.SpyInstance;
 beforeEach(() => {
   mockRunsCalls.length = 0;
+  mockLineRunsCalls.length = 0;
   warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
 });
 afterEach(() => {
@@ -312,6 +322,68 @@ describe('accessibility', () => {
         n.props.accessibilityElementsHidden === true
     );
     expect(hidden).toHaveLength(1);
+  });
+
+  it('keeps the header (P3-35) outside the labelled body', async () => {
+    const onCopyPress = jest.fn();
+    const view = await render(
+      <Markdown
+        source={fence('ts', TS)}
+        plugins={plugins}
+        codeBlock={{ header: true }}
+        onCopyPress={onCopyPress}
+      />
+    );
+    const tree = {
+      find: (match: Match) => find(view.container, match),
+      findAll: (match: Match) => findAll(view.container, match),
+    } as Tree;
+    const body = codeRoot(tree);
+    expect(body.props.accessibilityLabel).toBe(TS.slice(0, -1));
+    const copy = tree.find(
+      (n) => n.type === 'View' && n.props.accessibilityLabel === 'Copy code'
+    );
+    const wrap = tree.find(
+      (n) => n.type === 'View' && n.props.accessibilityLabel === 'Wrap lines'
+    );
+    // Wrap and Copy (Pressables) are their own elements, beside the body.
+    expect(tree.findAll((n) => n.props.accessible === true)).toEqual([
+      wrap,
+      copy,
+      body,
+    ]);
+    const label = tree.find((n) => n.type === 'Text' && textOf(n) === 'ts');
+    for (const part of [wrap, copy, label]) {
+      expect(findAll(body, (n) => n === part)).toEqual([]);
+    }
+    // The header and the body share the outer View.
+    expect(findAll(body.parent!, (n) => n === copy)).toEqual([copy]);
+    await fireEvent.press(copy);
+    expect(onCopyPress).toHaveBeenCalledWith({
+      code: TS.slice(0, -1),
+      language: 'ts',
+      meta: null,
+    });
+  });
+
+  it('gives the plain fallback the same header', async () => {
+    const source = fence('cobol', 'MOVE A TO B.\n');
+    const props = { source, codeBlock: { header: true } } as const;
+    const tree = await renderTree(<Markdown {...props} plugins={plugins} />);
+    const plain = await renderTree(<Markdown {...props} />);
+    // Each Wrap button has its own handlers: compare as serialised.
+    expect(JSON.stringify(tree.toJSON())).toBe(JSON.stringify(plain.toJSON()));
+    expect(tree.findAll((n) => textOf(n) === 'cobol').length).toBeGreaterThan(
+      0
+    );
+    // Over maxLength too.
+    const ts = { source: fence('ts', TS), codeBlock: { header: true } };
+    const long = await renderTree(
+      <Markdown {...ts} plugins={[highlight({ maxLength: 10 })]} />
+    );
+    expect(JSON.stringify(long.toJSON())).toBe(
+      JSON.stringify((await renderTree(<Markdown {...ts} />)).toJSON())
+    );
   });
 });
 
@@ -643,5 +715,581 @@ describe('one Text for a small closed block (P3-30)', () => {
     const chunked = await renderTree(block(code, false, chunkedPlugin));
     expect(chunkNodes(chunked).length).toBeGreaterThan(1);
     expect(coloured(single)).toEqual(coloured(chunked));
+  });
+});
+
+describe('line numbers and wrap (P3-35)', () => {
+  const CODE = TS.slice(0, -1);
+  /** Lines `1\n2`, `3\n4`, `5`: the 2-line chunks. */
+  const CHUNKS = [
+    'const answer = 42;\nfunction greet(name: string) {',
+    "  // say hi\n  return 'hi ' + name;",
+    '}',
+  ];
+
+  type Options = Omit<RenderCtxInput, 'components'>;
+  const element = (
+    input: Options,
+    code = CODE,
+    open = false,
+    p: MarkdownPlugin = plugin
+  ) => {
+    const ctx = createRenderCtx({ ...input, components: defaultComponents });
+    const C = p.components!.CodeBlock!;
+    return (
+      <RenderCtxContext.Provider value={ctx}>
+        <C
+          language="ts"
+          meta={null}
+          open={open}
+          style={ctx.theme.elements.CodeBlock}
+          code={code}
+        />
+      </RenderCtxContext.Provider>
+    );
+  };
+  const mount = (input: Options, code?: string, open?: boolean) =>
+    renderTree(element(input, code, open));
+
+  const isScroll = (n: TestInstance) => n.props.horizontal === true;
+  const isGutter = (n: TestInstance) =>
+    n.type === 'Text' &&
+    n.props.selectable === false &&
+    Array.isArray(n.props.style) &&
+    n.props.style.some(
+      (x: unknown) => typeof x === 'object' && x !== null && 'minWidth' in x
+    );
+  /** A code Text: not a gutter, not a colour span inside another Text. */
+  const isCode = (n: TestInstance) =>
+    n.type === 'Text' && !isGutter(n) && n.parent?.type !== 'Text';
+  const isLabelled = (n: TestInstance) =>
+    n.type === 'View' &&
+    typeof n.props.accessibilityLabel === 'string' &&
+    n.props.accessible === true &&
+    n.props.accessibilityRole !== 'button';
+  const isWrapButton = (n: TestInstance) =>
+    n.type === 'View' && n.props.accessibilityLabel === 'Wrap lines';
+  const inside = (node: TestInstance, ancestor: TestInstance) => {
+    for (let n = node.parent; n !== null; n = n.parent) {
+      if (n === ancestor) return true;
+    }
+    return false;
+  };
+  const hiddenFromA11y = (node: TestInstance) => {
+    for (let n: TestInstance | null = node; n !== null; n = n.parent) {
+      if (
+        n.props.accessibilityElementsHidden === true &&
+        n.props.importantForAccessibility === 'no-hide-descendants'
+      ) {
+        return true;
+      }
+    }
+    return false;
+  };
+  /** Web: `aria-hidden` on an ancestor (react-native-web ignores the native props). */
+  const ariaHidden = (node: TestInstance) => {
+    for (let n: TestInstance | null = node; n !== null; n = n.parent) {
+      if (n.props['aria-hidden'] === true) return true;
+    }
+    return false;
+  };
+  const gutters = (tree: Tree) => tree.findAll(isGutter);
+  const codes = (tree: Tree) => tree.findAll(isCode);
+  const body = (tree: Tree) => tree.find(isLabelled);
+  /** The gutter frame's instances: body, row, gutter column, ScrollView, code column. */
+  const frameOf = (tree: Tree) => {
+    const scroll = tree.find(isScroll);
+    return [
+      body(tree),
+      scroll.parent!,
+      gutters(tree)[0]!.parent!,
+      scroll,
+      codes(tree)[0]!.parent!,
+    ];
+  };
+  const sameFrame = (tree: Tree, frame: readonly TestInstance[]) => {
+    const now = frameOf(tree);
+    expect(now).toHaveLength(frame.length);
+    for (const [i, n] of frame.entries()) expect(now[i]).toBe(n);
+  };
+  const minWidthOf = (g: TestInstance): unknown =>
+    StyleSheet.flatten(g.props.style).minWidth;
+
+  it('numbers off, wrap off: the tree is unchanged by the options', async () => {
+    for (const p of [plugin, chunkedPlugin]) {
+      const today = await renderTree(element({}, CODE, false, p));
+      const explicit = await renderTree(
+        element(
+          { codeBlock: { lineNumbers: false, wrap: false } },
+          CODE,
+          false,
+          p
+        )
+      );
+      expect(explicit.toJSON()).toEqual(today.toJSON());
+    }
+  });
+
+  it.each([
+    ['one Text', plugin, [CODE]],
+    ['chunks', chunkedPlugin, CHUNKS],
+  ] as const)(
+    'numbers off, wrap on: the same %s without the ScrollView',
+    async (_, p, texts) => {
+      const wrapped = await renderTree(
+        element({ codeBlock: { wrap: true } }, CODE, false, p)
+      );
+      const scrolled = await renderTree(element({}, CODE, false, p));
+      expect(wrapped.findAll(isScroll)).toEqual([]);
+      expect(gutters(wrapped)).toEqual([]);
+      expect(codes(wrapped).map(textOf)).toEqual(texts);
+      // The hidden code column is the scrolled one, moved up a level.
+      const root = body(wrapped);
+      expect(root.children).toHaveLength(1);
+      const column = root.children[0] as TestInstance;
+      expect(hiddenFromA11y(column)).toBe(true);
+      const scrolledColumn = findAll(
+        scrolled.find(isScroll),
+        (n) => n.type === 'View' && n.props.accessibilityElementsHidden === true
+      );
+      expect(scrolledColumn).toHaveLength(1);
+      expect(column.toJSON()).toEqual(scrolledColumn[0]!.toJSON());
+    }
+  );
+
+  it('numbers on, wrap off: chunks beside a mirrored gutter outside the ScrollView', async () => {
+    // Over the single-Text limit: chunks.
+    const tree = await renderTree(
+      element(
+        { codeBlock: { lineNumbers: true }, selectable: true },
+        CODE,
+        false,
+        chunkedPlugin
+      )
+    );
+    const scroll = tree.find(isScroll);
+    const code = codes(tree);
+    expect(code.map(textOf)).toEqual(CHUNKS);
+    const gutter = gutters(tree);
+    expect(gutter.map(textOf)).toEqual(['1\n2', '3\n4', '5']);
+    const theme = getDefaultTheme();
+    for (const [i, g] of gutter.entries()) {
+      expect(inside(g, scroll)).toBe(false);
+      expect(g.props.selectable).toBe(false);
+      expect(hiddenFromA11y(g)).toBe(true);
+      // Web: the gutter column carries aria-hidden, the code does not.
+      expect(g.parent!.props['aria-hidden']).toBe(true);
+      expect(g.props.style[0]).toBe(theme.codeBlockGutter.text);
+      // Mirrored: as many numbers as its chunk has lines.
+      expect(textOf(g).split('\n')).toHaveLength(
+        codeLineCount(textOf(code[i]!))
+      );
+    }
+    for (const c of code) {
+      expect(inside(c, scroll)).toBe(true);
+      expect(c.props.selectable).toBe(true);
+      expect(c.props.style).toBe(theme.elements.CodeBlock.text);
+      expect(hiddenFromA11y(c)).toBe(true);
+      expect(ariaHidden(c)).toBe(false);
+    }
+    // Colours survive.
+    expect(spans(tree, '42').map(colorOf)).toEqual([lightTheme.syntax.number]);
+  });
+
+  it('numbers on, wrap on: one row per line, coloured', async () => {
+    const tree = await mount({
+      codeBlock: { lineNumbers: true, wrap: true },
+      selectable: true,
+    });
+    expect(tree.findAll(isScroll)).toEqual([]);
+    const gutter = gutters(tree);
+    expect(gutter.map(textOf)).toEqual(['1', '2', '3', '4', '5']);
+    const code = codes(tree);
+    expect(code).toHaveLength(codeLineCount(CODE));
+    expect(code.map(textOf)).toEqual(codeLines(CODE));
+    for (const [i, c] of code.entries()) {
+      expect(c.props.selectable).toBe(true);
+      expect(c.props.style).toContainEqual(
+        expect.objectContaining({ flex: 1 })
+      );
+      expect(hiddenFromA11y(c)).toBe(true);
+      expect(findAll(c.parent!, isGutter)).toEqual([gutter[i]]);
+      expect(ariaHidden(c)).toBe(false);
+    }
+    for (const g of gutter) {
+      expect(g.props.selectable).toBe(false);
+      expect(hiddenFromA11y(g)).toBe(true);
+      expect(g.parent!.props['aria-hidden']).toBe(true);
+    }
+    expect(spans(tree, '42').map(colorOf)).toEqual([lightTheme.syntax.number]);
+  });
+
+  describe('blank rows', () => {
+    const code = 'a;\nb;\n}\n\nx;\n\n\ny;\n';
+    const rows = { codeBlock: { lineNumbers: true, wrap: true } };
+
+    it("hold ' ' on native", async () => {
+      const tree = await mount(rows, code);
+      expect(codes(tree).map(textOf)).toEqual(
+        codeLines(code).map((l) => (l === '' ? ' ' : l))
+      );
+    });
+
+    it('keep their newline on web, joining to the code', async () => {
+      jest.replaceProperty(Platform, 'OS', 'web');
+      for (const c of [code, code.slice(0, -1)]) {
+        const tree = await mount(rows, c);
+        const texts = codes(tree).map(textOf);
+        expect(texts).toHaveLength(codeLineCount(c));
+        expect(texts.join('')).toBe(c);
+      }
+    });
+  });
+
+  it('shows line 1 for an empty block', async () => {
+    const gutter = await mount({ codeBlock: { lineNumbers: true } }, '');
+    expect(gutters(gutter).map(textOf)).toEqual(['1']);
+    const rows = await mount(
+      { codeBlock: { lineNumbers: true, wrap: true } },
+      ''
+    );
+    expect(gutters(rows).map(textOf)).toEqual(['1']);
+    expect(codes(rows).map(textOf)).toEqual([' ']);
+  });
+
+  it('labels the body with the code exactly, numbers on', async () => {
+    for (const header of [false, true]) {
+      for (const wrap of [false, true]) {
+        const tree = await mount({
+          codeBlock: { header, wrap, lineNumbers: true },
+        });
+        const labelled = tree.findAll(isLabelled);
+        expect(labelled).toHaveLength(1);
+        expect(labelled[0]!.props.accessibilityLabel).toBe(CODE);
+        // Nothing inside the body is reachable on its own.
+        expect(
+          findAll(labelled[0]!, (n) => n.props.accessible === true)
+        ).toEqual([]);
+      }
+    }
+  });
+
+  it('copies the code without numbers', async () => {
+    const onCopyPress = jest.fn();
+    const view = await render(
+      element({
+        codeBlock: { header: true, lineNumbers: true, wrap: true },
+        handlers: { onCopyPress },
+      })
+    );
+    const [copy] = findAll(
+      view.container,
+      (n) => n.type === 'View' && n.props.accessibilityLabel === 'Copy code'
+    );
+    await fireEvent.press(copy!);
+    expect(onCopyPress).toHaveBeenCalledWith({
+      code: CODE,
+      language: 'ts',
+      meta: null,
+    });
+  });
+
+  it('the Wrap button toggles the layout and tracks it', async () => {
+    const view = await render(
+      element({ codeBlock: { header: true, lineNumbers: true } })
+    );
+    const all = (m: Match) => findAll(view.container, m);
+    const button = () => all(isWrapButton)[0]!;
+    expect(button().props.accessibilityState.selected).toBe(false);
+    expect(all(isScroll)).toHaveLength(1);
+    expect(all(isGutter).map(textOf)).toEqual(['1\n2\n3\n4\n5']);
+
+    await fireEvent.press(button());
+    expect(button().props.accessibilityState.selected).toBe(true);
+    expect(all(isScroll)).toEqual([]);
+    expect(all(isGutter)).toHaveLength(5);
+
+    await fireEvent.press(button());
+    expect(button().props.accessibilityState.selected).toBe(false);
+    expect(all(isScroll)).toHaveLength(1);
+    expect(all(isGutter).map(textOf)).toEqual(['1\n2\n3\n4\n5']);
+  });
+
+  it('hides the Wrap button while open; wrap still applies', async () => {
+    const tree = await mount(
+      { codeBlock: { header: true, wrap: true, lineNumbers: true } },
+      CODE,
+      true
+    );
+    expect(tree.findAll(isWrapButton)).toEqual([]);
+    expect(tree.findAll(isScroll)).toEqual([]);
+    expect(gutters(tree)).toHaveLength(5);
+  });
+
+  describe('numbers on, wrap off: one Text for a small closed block', () => {
+    const numbers = { codeBlock: { lineNumbers: true } };
+    const oneTo = (n: number) =>
+      Array.from({ length: n }, (_, i) => String(i + 1)).join('\n');
+    /** At most `limit` characters drawn as one Text. */
+    const limited = (limit: number) =>
+      definePlugin({
+        name: 'highlight',
+        components: {
+          CodeBlock: createHighlightedCodeBlock({
+            maxLength: DEFAULT_MAX_LENGTH,
+            singleTextMaxLength: limit,
+          }),
+        },
+      });
+    /** Lines a Text draws: native adds an empty line after a final `\n`. */
+    const drawn = (text: string, web: boolean) =>
+      web ? Math.max(1, codeLineCount(text)) : text.split('\n').length;
+
+    it('is one code Text in the ScrollView beside one gutter Text', async () => {
+      const tree = await mount({ ...numbers, selectable: true });
+      const scroll = tree.find(isScroll);
+      const [code, ...moreCode] = codes(tree);
+      expect(moreCode).toEqual([]);
+      expect(textOf(code!)).toBe(CODE);
+      expect(inside(code!, scroll)).toBe(true);
+      expect(code!.props.selectable).toBe(true);
+      expect(code!.props.style).toBe(getDefaultTheme().elements.CodeBlock.text);
+      expect(hiddenFromA11y(code!)).toBe(true);
+      expect(ariaHidden(code!)).toBe(false);
+      const [gutter, ...moreGutters] = gutters(tree);
+      expect(moreGutters).toEqual([]);
+      expect(textOf(gutter!)).toBe('1\n2\n3\n4\n5');
+      expect(inside(gutter!, scroll)).toBe(false);
+      expect(gutter!.props.selectable).toBe(false);
+      expect(hiddenFromA11y(gutter!)).toBe(true);
+      expect(gutter!.parent!.props['aria-hidden']).toBe(true);
+      expect(gutter!.props.style[0]).toBe(
+        getDefaultTheme().codeBlockGutter.text
+      );
+      expect(spans(tree, '42').map(colorOf)).toEqual([
+        lightTheme.syntax.number,
+      ]);
+      // The label is the code, without numbers.
+      expect(body(tree).props.accessibilityLabel).toBe(CODE);
+    });
+
+    it('chunks over the limit and while open, with a mirrored gutter', async () => {
+      const at = await renderTree(
+        element(numbers, CODE, false, limited(CODE.length))
+      );
+      expect(codes(at).map(textOf)).toEqual([CODE]);
+      for (const tree of [
+        await renderTree(
+          element(numbers, CODE, false, limited(CODE.length - 1))
+        ),
+        await mount(numbers, CODE, true),
+      ]) {
+        expect(codes(tree).map(textOf)).toEqual(CHUNKS);
+        expect(gutters(tree).map(textOf)).toEqual(['1\n2', '3\n4', '5']);
+      }
+    });
+
+    it.each([false, true])(
+      'gutter and code draw the same lines, and the close swap keeps the code lines (web %s)',
+      async (web) => {
+        if (web) jest.replaceProperty(Platform, 'OS', 'web');
+        for (const code of [
+          'a;',
+          'a;\n',
+          'a;\n\n',
+          'a;\n\nb;\n\n\n',
+          'a;\nb;\n\nc;\n',
+          'a;\r\nb;\r\n',
+        ]) {
+          const tree = await mount(numbers, code);
+          const [text, ...more] = codes(tree).map(textOf);
+          expect(more).toEqual([]);
+          expect(text).toBe(code);
+          const [gutter, ...moreGutters] = gutters(tree).map(textOf);
+          expect(moreGutters).toEqual([]);
+          // Numbered: the logical lines; a final `\n` adds a bare line.
+          expect(
+            gutter!
+              .split('\n')
+              .filter((n) => n !== '')
+              .join('\n')
+          ).toBe(oneTo(codeLineCount(code)));
+          expect(drawn(gutter!, web)).toBe(drawn(code, web));
+          // The open chunks draw as many code lines as the one Text.
+          const open = await mount(numbers, code, true);
+          const lines = codes(open)
+            .map(textOf)
+            .reduce((n, t) => n + drawn(t, web), 0);
+          expect(lines).toBe(drawn(code, web));
+        }
+      }
+    );
+
+    it.each([false, true])(
+      'chunked: the gutter draws as many lines as the chunks, trailing blank lines too (web %s)',
+      async (web) => {
+        if (web) jest.replaceProperty(Platform, 'OS', 'web');
+        for (const code of [
+          'a;\nb;\nc;',
+          'a;\nb;\nc;\n',
+          'a;\nb;\nc;\n\n',
+          'a;\nb;\nc;\n\n\n',
+          'a;\n\nb;\n\n\nc;\n\n',
+        ]) {
+          const tree = await renderTree(
+            element(numbers, code, false, chunkedPlugin)
+          );
+          const codeTexts = codes(tree).map(textOf);
+          const gutterTexts = gutters(tree).map(textOf);
+          expect(gutterTexts).toHaveLength(codeTexts.length);
+          const sum = (texts: string[]) =>
+            texts.reduce((n, t) => n + drawn(t, web), 0);
+          expect(sum(gutterTexts)).toBe(sum(codeTexts));
+          // Only the last entry gains a bare `\n`, on native only.
+          const extra = !web && code.endsWith('\n');
+          const numbersOf = gutterTexts.map((t) => t.replace(/\n$/, ''));
+          expect(numbersOf.join('\n')).toBe(oneTo(codeLineCount(code)));
+          expect(gutterTexts.map((t) => t.endsWith('\n'))).toEqual(
+            gutterTexts.map((_, i) => extra && i === gutterTexts.length - 1)
+          );
+          // The cache is not mutated: a rerender draws the same gutter.
+          const before = gutters(tree);
+          await tree.rerender(element(numbers, code, false, chunkedPlugin));
+          expect(gutters(tree).map(textOf)).toEqual(gutterTexts);
+          for (const [i, g] of gutters(tree).entries()) {
+            expect(g).toBe(before[i]);
+          }
+        }
+      }
+    );
+
+    it('chunked while open: finished chunks keep their gutter Text and text', async () => {
+      const code = 'a;\nb;\nc;\nd;\n';
+      const tree = await renderTree(
+        element(numbers, code, true, chunkedPlugin)
+      );
+      expect(gutters(tree).map(textOf)).toEqual(['1\n2', '3\n4\n']);
+      const [first] = gutters(tree);
+      await tree.rerender(
+        element(numbers, `${code}e;\n\n`, true, chunkedPlugin)
+      );
+      expect(gutters(tree).map(textOf)).toEqual(['1\n2', '3\n4', '5\n6\n']);
+      expect(gutters(tree)[0]).toBe(first);
+    });
+
+    it('numbers 10 and 100 lines at the chunked width', async () => {
+      const lines = (n: number) =>
+        Array.from({ length: n }, (_, i) => `x${i};`).join('\n');
+      const widths: unknown[] = [];
+      for (const n of [9, 10, 100]) {
+        const code = lines(n);
+        expect(code.length).toBeLessThanOrEqual(SINGLE_TEXT_MAX_LENGTH);
+        const tree = await mount(numbers, code);
+        const [gutter] = gutters(tree);
+        expect(textOf(gutter!)).toBe(oneTo(n));
+        const chunked = await renderTree(
+          element(numbers, code, false, chunkedPlugin)
+        );
+        expect(minWidthOf(gutter!)).toBe(minWidthOf(gutters(chunked)[0]!));
+        widths.push(minWidthOf(gutter!));
+      }
+      const [w9, w10, w100] = widths as number[];
+      expect(w9!).toBeLessThan(w10!);
+      expect(w10!).toBeLessThan(w100!);
+    });
+
+    it('wrap with numbers stays one row per line', async () => {
+      const tree = await mount({
+        codeBlock: { lineNumbers: true, wrap: true },
+      });
+      expect(codes(tree).map(textOf)).toEqual(codeLines(CODE));
+      expect(gutters(tree).map(textOf)).toEqual(['1', '2', '3', '4', '5']);
+    });
+  });
+
+  describe('streaming, then close', () => {
+    const lines = CODE.split(/(?<=\n)/);
+
+    it.each([
+      ['numbers on, wrap off', { lineNumbers: true, wrap: false }],
+      ['numbers on, wrap on', { lineNumbers: true, wrap: true }],
+    ] as const)(
+      '%s: numbers grow with the lines; nothing remounts',
+      async (_, codeBlock) => {
+        const tree = await renderTree(element({ codeBlock }, lines[0]!, true));
+        let mounted: TestInstance[] = [];
+        for (let i = 1; i <= lines.length; i++) {
+          const code = lines.slice(0, i).join('');
+          await tree.rerender(element({ codeBlock }, code, true));
+          // Native: the last gutter ends in a bare `\n` after the code's.
+          const numbers = gutters(tree)
+            .flatMap((n) => textOf(n).split('\n'))
+            .filter((n) => n !== '');
+          expect(numbers).toEqual(
+            [...Array(codeLineCount(code)).keys()].map((k) => String(k + 1))
+          );
+          // Every gutter and code Text mounted earlier is still there.
+          const now = [...gutters(tree), ...codes(tree)];
+          for (const n of mounted) expect(now).toContain(n);
+          mounted = now;
+        }
+        // Wrap off swaps the chunks to one Text at close (P3-35): only the
+        // chunk and gutter Texts change, the frame stays.
+        const frame = codeBlock.wrap ? [] : frameOf(tree);
+        await tree.rerender(element({ codeBlock }, CODE, false));
+        const after = [...gutters(tree), ...codes(tree)];
+        if (codeBlock.wrap) {
+          for (const n of mounted) expect(after).toContain(n);
+        } else {
+          sameFrame(tree, frame);
+          expect(gutters(tree).map(textOf)).toEqual(['1\n2\n3\n4\n5']);
+          expect(codes(tree).map(textOf)).toEqual([CODE]);
+        }
+        expect(body(tree).props.accessibilityLabel).toBe(CODE);
+        // The final tree is the static one.
+        const still = await renderTree(element({ codeBlock }, CODE, false));
+        expect(tree.toJSON()).toEqual(still.toJSON());
+      }
+    );
+
+    it('numbers on, wrap on: a finished chunk renders its rows once', async () => {
+      // 9 lines: the gutter width never changes (one digit).
+      const code = Array.from(
+        { length: 9 },
+        (_, i) => `let v${i} = ${i};\n`
+      ).join('');
+      const codeBlock = { lineNumbers: true, wrap: true };
+      const parts = code.split(/(?<=\n)/);
+      const tree = await renderTree(element({ codeBlock }, parts[0]!, true));
+      for (let i = 2; i <= parts.length; i++) {
+        await tree.rerender(
+          element({ codeBlock }, parts.slice(0, i).join(''), true)
+        );
+      }
+      const frozen = mockLineRunsCalls.filter((c) => c.frozen);
+      expect(new Set(frozen.map((c) => c.id)).size).toBeGreaterThanOrEqual(3);
+      const perObject = new Map<Chunk, number>();
+      for (const c of frozen) perObject.set(c, (perObject.get(c) ?? 0) + 1);
+      expect([...perObject.values()].filter((n) => n !== 1)).toEqual([]);
+      expect(codes(tree)).toHaveLength(9);
+    });
+
+    it('numbers off, wrap on: a small block swaps to one Text at close', async () => {
+      const codeBlock = { wrap: true };
+      const tree = await renderTree(element({ codeBlock }, lines[0]!, true));
+      for (let i = 2; i <= lines.length; i++) {
+        await tree.rerender(
+          element({ codeBlock }, lines.slice(0, i).join(''), true)
+        );
+      }
+      const root = body(tree);
+      const column = root.children[0];
+      expect(codes(tree).map(textOf)).toEqual(CHUNKS);
+      await tree.rerender(element({ codeBlock }, CODE, false));
+      expect(body(tree)).toBe(root);
+      expect(root.children[0]).toBe(column);
+      expect(codes(tree).map(textOf)).toEqual([CODE]);
+      expect(tree.findAll(isScroll)).toEqual([]);
+    });
   });
 });

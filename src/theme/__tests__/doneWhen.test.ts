@@ -22,6 +22,7 @@ function snapshotOf(theme: ResolvedTheme): Map<string, string> {
   add('nestedList', theme.nestedList);
   add('tightParagraph', theme.tightParagraph);
   add('footnoteSection', theme.footnoteSection);
+  add('codeBlockGutter', theme.codeBlockGutter);
   return map;
 }
 
@@ -52,7 +53,13 @@ describe('done when: changing one token restyles every element deriving from it'
     [
       'colors.muted',
       (t) => ({ ...t, colors: { ...t.colors, muted: '#020202' } }),
-      ['Blockquote', 'HtmlBlock', 'footnoteSection'],
+      [
+        'Blockquote',
+        'HtmlBlock',
+        'footnoteSection',
+        'CodeBlockHeader',
+        'codeBlockGutter',
+      ],
     ],
     [
       'colors.link',
@@ -62,12 +69,19 @@ describe('done when: changing one token restyles every element deriving from it'
     [
       'colors.codeBg',
       (t) => ({ ...t, colors: { ...t.colors, codeBg: '#040404' } }),
-      ['InlineCode', 'Kbd', 'CodeBlock'],
+      ['InlineCode', 'Kbd', 'CodeBlock', 'CodeBlockHeader'],
     ],
     [
       'colors.border',
       (t) => ({ ...t, colors: { ...t.colors, border: '#050505' } }),
-      ['TableCell', 'tableHeaderCell', 'Divider', 'footnoteSection'],
+      [
+        'TableCell',
+        'tableHeaderCell',
+        'Divider',
+        'footnoteSection',
+        'CodeBlockHeader',
+        'codeBlockGutter',
+      ],
     ],
     [
       'colors.quoteBar',
@@ -83,7 +97,14 @@ describe('done when: changing one token restyles every element deriving from it'
     [
       'fonts.mono',
       (t) => ({ ...t, fonts: { ...t.fonts, mono: 'Mono' } }),
-      ['InlineCode', 'Kbd', 'CodeBlock', 'HtmlBlock'],
+      [
+        'InlineCode',
+        'Kbd',
+        'CodeBlock',
+        'CodeBlockHeader',
+        'codeBlockGutter',
+        'HtmlBlock',
+      ],
     ],
     [
       'lineHeight',

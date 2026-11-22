@@ -63,7 +63,11 @@ F3, S25 FE release, medians: `parse` ≤ 100 ms, `firstRender` ≤ 325 ms, `reRe
 - **Background and resume** (Android): no bug, one flush after resume, final document equals `parse(full)` in 20 of 20 runs.
 - **Pathological single-block inputs** are quadratic by nature; the test asserts a cost relative to flush count, not a fixed time ([testing-harness](./testing-harness.md#pathological-input)).
 
-## 4. Not measured
+## 4. Phase 3: code block numbers and wrap
+
+- **Layout per mode** ([P3-35](./phase-3/decisions.md#p3-35-code-block-header-line-numbers-and-wrap-in-pure-js)): numbers with wrap take one row per line; numbers without wrap a fixed gutter beside one code `Text` (plain, or highlighted closed up to 800 characters) or beside 2-line chunks, mirrored. No `maxLength` cap needed: rows at 48 KB highlighted cost +179 MB on Android and are cheaper than chunks on iOS, with no crash on either; WebKit found no product bug ([Android](../../bench/results/REPORT.md#code-block-header-numbers-and-wrap-android-device-pass-s25-fe-2026-11-22), [iOS](../../bench/results/REPORT.md#code-block-header-numbers-and-wrap-ios-simulator-pass-iphone-18-pro-2026-11-22), [WebKit](../../bench/results/REPORT.md#code-block-header-numbers-and-wrap-webkit-playwright-2026-11-22)).
+
+## 5. Not measured
 
 - Low-end Android and iPhone (iOS `CADisplayLink`, iOS background and resume): waived, revisit at the [v1.0 gate](./07-roadmap.md#v10-release-gate).
 - `F4c` (a real LLM transcript): none collected, the committed transcripts are synthetic and must not set a bar.

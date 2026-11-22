@@ -1,3 +1,4 @@
+import { codeLineCount } from '../render/codeLines';
 import type { SyntaxTokenType, Token, Tokenizer } from './types';
 import { isDev } from './dev';
 import { tokensMatchInput } from './validate';
@@ -514,6 +515,65 @@ export function runsOf(
       : mergeRuns(chunk.tokens, colorOf);
   runCache.set(chunk, { colorOf, runs });
   return runs;
+}
+
+const lineCountCache = new WeakMap<Chunk, number>();
+
+/**
+ * Logical lines in a chunk, as `codeLineCount` counts them (a final `\n`
+ * opens no new line). Every chunk but the last ends in `\n`, so the counts
+ * of a block's chunks sum to the code's line count. Cached per chunk.
+ */
+export function lineCountOf(chunk: Chunk): number {
+  let count = lineCountCache.get(chunk);
+  if (count === undefined) {
+    count = codeLineCount(chunk.text);
+    lineCountCache.set(chunk, count);
+  }
+  return count;
+}
+
+const lineRunCache = new WeakMap<
+  Chunk,
+  {
+    colorOf: ((type: SyntaxTokenType) => unknown) | undefined;
+    lines: Run[][];
+  }
+>();
+
+/**
+ * The {@link runsOf} runs of a chunk split into its lines (one entry per
+ * {@link lineCountOf} line), without the `\n`s: a run that spans lines is
+ * cut at each `\n`, and a blank line has no runs. For the numbered wrap
+ * layout (P3-35), one row per line. Cached per chunk and `colorOf`, so a
+ * frozen chunk returns the same arrays.
+ */
+export function lineRunsOf(
+  chunk: Chunk,
+  colorOf?: (type: SyntaxTokenType) => unknown
+): readonly (readonly Run[])[] {
+  const cached = lineRunCache.get(chunk);
+  if (cached && cached.colorOf === colorOf) return cached.lines;
+  const lines: Run[][] = [];
+  if (chunk.text !== '') {
+    let line: Run[] = [];
+    lines.push(line);
+    for (const run of runsOf(chunk, colorOf)) {
+      const parts = run.text.split('\n');
+      for (let i = 0; i < parts.length; i++) {
+        if (i > 0) {
+          line = [];
+          lines.push(line);
+        }
+        const text = parts[i]!;
+        if (text !== '') line.push({ type: run.type, text });
+      }
+    }
+    // A final `\n` opens no new line.
+    if (chunk.text.endsWith('\n')) lines.pop();
+  }
+  lineRunCache.set(chunk, { colorOf, lines });
+  return lines;
 }
 
 /**

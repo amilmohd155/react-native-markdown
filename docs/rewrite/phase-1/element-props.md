@@ -25,6 +25,8 @@ This is how the renderer turns node table rows ([token-mapping.md](./token-mappi
 | `CodeBlock` | `code` | row text. One trailing newline is removed. |
 | | `language` | attr `language` or `null` |
 | | `meta` | attr `meta` or `null` |
+| `CodeBlockHeader` | `language`, `code`, `open` | the enclosing `CodeBlock`'s props (no row of its own; `visit` never calls it, [P3-35](../phase-3/decisions.md#p3-35-code-block-header-line-numbers-and-wrap-in-pure-js)) |
+| | `wrap`, `onToggleWrap`, `onCopy` | the block's wrap state (`onToggleWrap` is `null` while `open`); `onCopy` calls `onCopyPress({ code, language, meta })`, `null` when unset |
 | `Table` | `align` | attr `align[]` |
 | `TableRow` | `header` | flag `HEADER` |
 | | `index` | attr `index` |

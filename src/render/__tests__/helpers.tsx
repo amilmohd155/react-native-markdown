@@ -1,9 +1,43 @@
-import { createElement, type ComponentType, type ReactNode } from 'react';
+import {
+  createElement,
+  type ComponentType,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { tableOf } from '../../api/document';
 import { parse, type ParseOptions } from '../../api/parse';
 import type { NodeTable } from '../../model';
 import { ELEMENT_NAMES, type ElementName } from '../../theme';
+import { BlockProviders } from '../Block';
+import type { RenderCtx } from '../context';
 import type { Components } from '../elements';
+
+/**
+ * Elements a markdown fixture can render. `CodeBlockHeader` has no node
+ * (the code block draws it, P3-35): tests render it with `codeBlockHeader`.
+ */
+export type MarkdownElementName = Exclude<ElementName, 'CodeBlockHeader'>;
+export const MARKDOWN_ELEMENT_NAMES = ELEMENT_NAMES.filter(
+  (name): name is MarkdownElementName => name !== 'CodeBlockHeader'
+);
+
+/** `ctx`'s `CodeBlockHeader`, with its theme style and both buttons. */
+export function codeBlockHeader(ctx: RenderCtx): ReactElement {
+  const Header = ctx.components.CodeBlockHeader;
+  return (
+    <BlockProviders ctx={ctx}>
+      <Header
+        language="ts"
+        code="const a = 1;"
+        open={false}
+        wrap={false}
+        onToggleWrap={() => {}}
+        onCopy={() => {}}
+        style={ctx.theme.elements.CodeBlockHeader}
+      />
+    </BlockProviders>
+  );
+}
 
 /** The node table for `source`. */
 export function tableFor(source: string, options?: ParseOptions): NodeTable {

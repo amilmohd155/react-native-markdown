@@ -18,11 +18,26 @@ import {
 } from 'react-native';
 import { useRenderContext } from '../render/contexts';
 import { CodeBlock as DefaultCodeBlock } from '../render/defaults/block';
+import {
+  codeLayout,
+  CodeRow,
+  GutterFrame,
+  useGutterWidth,
+} from '../render/defaults/codeBlockLayout';
+import {
+  CodeBlockShell,
+  useCodeBlockHeader,
+  useCodeBlockWrap,
+} from '../render/defaults/codeBlockShell';
+import { gutterText, rowText, singleGutterText } from '../render/codeLines';
 import { isDev } from '../render/devInline';
 import type { ElementProps } from '../render/elements';
+import type { ElementStyle } from '../theme';
 import {
   blockRuns,
   createChunker,
+  lineCountOf,
+  lineRunsOf,
   runsOf,
   type Chunk,
   type Run,
@@ -35,9 +50,10 @@ import type { HighlightOptions, SyntaxTokenType, Tokenizer } from './types';
  * docs/rewrite/phase-3/plugins.md#highlight
  *
  * Plain blocks (no tokenizer for the tag, or longer than `maxLength`) are
- * the core default `CodeBlock` itself. Highlighted ones keep its container,
- * horizontal ScrollView and text props, and the container is one accessible
- * element labelled with the code. Inside (P3-30):
+ * the core default `CodeBlock` itself. Highlighted ones keep its shell
+ * (`CodeBlockShell`, with the same header: P3-35), horizontal ScrollView and
+ * text props; the body is one accessible element labelled with the code, the
+ * header outside it. Inside (P3-30):
  *
  * - A closed block of at most {@link SINGLE_TEXT_MAX_LENGTH} characters is
  *   one `Text` of colour spans whose text is the code exactly, so selection
@@ -54,6 +70,13 @@ import type { HighlightOptions, SyntaxTokenType, Tokenizer } from './types';
  * does not scale linearly with the font scale. On web (`pre-wrap`) a
  * trailing `\n` draws no line, so chunks keep their text whole: selection
  * across chunks then yields the code exactly.
+ *
+ * Line numbers and wrap (P3-35, `codeLayout`): wrap drops the ScrollView
+ * and keeps the same `Text`s. Numbers without wrap put a fixed gutter beside
+ * the ScrollView: one gutter `Text` for the single code `Text`, else one per
+ * chunk (mirrored, so each pair rounds alike). Numbers with wrap are one row
+ * per line, from each chunk's {@link lineRunsOf}; a finished chunk's rows do
+ * not re-render.
  *
  * Waived by name (P3-34): real VoiceOver and TalkBack passes on the labelled
  * container. Its structure was checked through the iOS accessibility tree.
@@ -108,6 +131,8 @@ export function createHighlightedCodeBlock(
 
 function Highlighted({
   code,
+  language,
+  meta,
   open,
   style,
   tokenizer,
@@ -145,61 +170,339 @@ function Highlighted({
   );
 
   useInvalidWarning(chunks, tag);
+  const { wrap, toggleWrap } = useCodeBlockWrap();
+  const header = useCodeBlockHeader({
+    code,
+    language,
+    meta,
+    open,
+    wrap,
+    onToggleWrap: toggleWrap,
+  });
 
-  const textStyle = style.text;
-  const selectable = options.selectable;
-  const maxFontSizeMultiplier = options.maxFontSizeMultiplier ?? undefined;
-  const lastIndex = chunks.length - 1;
+  const layout = codeLayout({
+    lineNumbers: options.codeBlock.lineNumbers,
+    wrap,
+  });
+  const text: TextProps = {
+    textStyle: style.text,
+    selectable: options.selectable,
+    maxFontSizeMultiplier: options.maxFontSizeMultiplier ?? undefined,
+  };
   // Web keeps every chunk whole (see the module comment).
-  const native = Platform.OS !== 'web';
-  const single = !open && code.length <= singleTextMaxLength;
+  const web = Platform.OS === 'web';
+  // From the final length and `open` only (P3-30); rows are always per line
+  // (P3-35).
+  const single =
+    !open && code.length <= singleTextMaxLength && layout !== 'rows';
+
+  let body: ReactNode;
+  if (layout === 'rows') {
+    body = (
+      <RowsBody
+        chunks={chunks}
+        colorOf={colorOf}
+        web={web}
+        gutterStyle={theme.codeBlockGutter}
+        {...text}
+      />
+    );
+  } else {
+    const codeColumn = (
+      <CodeColumn
+        chunks={chunks}
+        single={single}
+        colorOf={colorOf}
+        web={web}
+        hidden={layout !== 'gutter'}
+        {...text}
+      />
+    );
+    body =
+      layout === 'gutter' ? (
+        <GutterBody
+          chunks={chunks}
+          code={single ? code : null}
+          web={web}
+          gutterStyle={theme.codeBlockGutter}
+          maxFontSizeMultiplier={text.maxFontSizeMultiplier}
+        >
+          {codeColumn}
+        </GutterBody>
+      ) : layout === 'wrap' ? (
+        codeColumn
+      ) : (
+        <ScrollView
+          horizontal
+          bounces={false}
+          showsHorizontalScrollIndicator={false}
+        >
+          {codeColumn}
+        </ScrollView>
+      );
+  }
 
   return (
-    <View style={style.container} accessible accessibilityLabel={code}>
-      <ScrollView
-        horizontal
-        bounces={false}
-        showsHorizontalScrollIndicator={false}
+    <CodeBlockShell
+      code={code}
+      style={style.container}
+      header={header}
+      labelled
+    >
+      {body}
+    </CodeBlockShell>
+  );
+}
+
+type TextProps = {
+  readonly textStyle: TextStyle;
+  readonly selectable: boolean;
+  readonly maxFontSizeMultiplier: number | undefined;
+};
+
+type ColumnProps = TextProps & {
+  readonly chunks: readonly Chunk[];
+  readonly single: boolean;
+  readonly colorOf: ColorOf;
+  readonly web: boolean;
+  /** Hide from accessibility here (not inside the gutter frame, which does). */
+  readonly hidden: boolean;
+};
+
+/**
+ * The code as a column: one `Text` for a small closed block, else one
+ * memoised `Text` per chunk.
+ */
+function CodeColumn({
+  chunks,
+  single,
+  colorOf,
+  web,
+  hidden,
+  ...text
+}: ColumnProps) {
+  const { textStyle, selectable, maxFontSizeMultiplier } = text;
+  const lastIndex = chunks.length - 1;
+  const children =
+    chunks.length === 0 ? (
+      <Text
+        style={textStyle}
+        selectable={selectable}
+        maxFontSizeMultiplier={maxFontSizeMultiplier}
       >
-        <View
-          importantForAccessibility="no-hide-descendants"
-          accessibilityElementsHidden
+        {''}
+      </Text>
+    ) : single ? (
+      <BlockText chunks={chunks} colorOf={colorOf} {...text} />
+    ) : (
+      chunks.map((chunk, i) => (
+        <ChunkText
+          key={chunk.id}
+          chunk={chunk}
+          colorOf={colorOf}
+          // The next chunk's Text starts the next line.
+          trimNewline={!web && i < lastIndex}
+          {...text}
+        />
+      ))
+    );
+  return hidden ? (
+    <View
+      importantForAccessibility="no-hide-descendants"
+      accessibilityElementsHidden
+    >
+      {children}
+    </View>
+  ) : (
+    <View>{children}</View>
+  );
+}
+
+const gutterCache = new WeakMap<
+  Chunk,
+  { readonly firstLine: number; readonly text: string }
+>();
+
+/** A chunk's gutter text (its line numbers), cached per chunk object. */
+function chunkGutterText(chunk: Chunk, firstLine: number): string {
+  const cached = gutterCache.get(chunk);
+  if (cached !== undefined && cached.firstLine === firstLine) {
+    return cached.text;
+  }
+  const text = gutterText({
+    text: chunk.text,
+    firstLine,
+    lineCount: lineCountOf(chunk),
+  });
+  gutterCache.set(chunk, { firstLine, text });
+  return text;
+}
+
+/**
+ * Numbers without wrap: the code scrolls beside a fixed gutter. With `code`
+ * (the single code `Text`) the gutter is one `Text` for the whole block;
+ * else it mirrors the chunks, one gutter `Text` per chunk with that chunk's
+ * numbers, so each pair pixel-rounds alike (iOS) and they never drift apart.
+ * The frame stays mounted when a block swaps between the two at close.
+ */
+function GutterBody({
+  chunks,
+  code,
+  web,
+  gutterStyle,
+  maxFontSizeMultiplier,
+  children,
+}: {
+  readonly chunks: readonly Chunk[];
+  /** The code when drawn as one `Text`, else `null`. */
+  readonly code: string | null;
+  readonly web: boolean;
+  readonly gutterStyle: ElementStyle;
+  readonly maxFontSizeMultiplier: number | undefined;
+  readonly children: ReactNode;
+}) {
+  const texts: string[] = [];
+  let firstLine = 1;
+  for (const chunk of chunks) {
+    if (code === null) texts.push(chunkGutterText(chunk, firstLine));
+    firstLine += lineCountOf(chunk);
+  }
+  if (code !== null) texts.push(singleGutterText(code));
+  // An empty block still shows line 1, as the default block does.
+  else if (texts.length === 0) texts.push('1');
+  // Native draws an empty last line after the last chunk's final `\n` (the
+  // other chunks drop theirs), so its gutter gets a bare `\n` too: a new
+  // string, the cached text stays as is. Web draws none (`pre-wrap`).
+  else if (!web && chunks[chunks.length - 1]!.text.endsWith('\n')) {
+    texts[texts.length - 1] += '\n';
+  }
+  const width = useGutterWidth(
+    gutterStyle,
+    Math.max(1, firstLine - 1),
+    maxFontSizeMultiplier
+  );
+  return (
+    <GutterFrame
+      texts={texts}
+      style={gutterStyle}
+      width={width}
+      maxFontSizeMultiplier={maxFontSizeMultiplier}
+    >
+      {children}
+    </GutterFrame>
+  );
+}
+
+type RowsProps = TextProps & {
+  readonly chunks: readonly Chunk[];
+  readonly colorOf: ColorOf;
+  readonly web: boolean;
+  readonly gutterStyle: ElementStyle;
+};
+
+/**
+ * Numbers with wrap: one {@link CodeRow} per line, grouped per chunk so a
+ * finished chunk's rows do not re-render while the block streams.
+ */
+function RowsBody({ chunks, gutterStyle, ...rest }: RowsProps) {
+  const { maxFontSizeMultiplier } = rest;
+  let lines = 0;
+  for (const chunk of chunks) lines += lineCountOf(chunk);
+  const width = useGutterWidth(
+    gutterStyle,
+    Math.max(1, lines),
+    maxFontSizeMultiplier
+  );
+  let firstLine = 1;
+  const groups = chunks.map((chunk) => {
+    const group = (
+      <ChunkRows
+        key={chunk.id}
+        chunk={chunk}
+        firstLine={firstLine}
+        gutterStyle={gutterStyle}
+        gutterWidth={width}
+        {...rest}
+      />
+    );
+    firstLine += lineCountOf(chunk);
+    return group;
+  });
+  return (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
+      {chunks.length === 0 ? (
+        // An empty block shows line 1, as the default block does.
+        <CodeRow
+          number={1}
+          gutterStyle={gutterStyle}
+          gutterWidth={width}
+          textStyle={rest.textStyle}
+          selectable={rest.selectable}
+          maxFontSizeMultiplier={maxFontSizeMultiplier}
         >
-          {chunks.length === 0 ? (
-            <Text
-              style={textStyle}
-              selectable={selectable}
-              maxFontSizeMultiplier={maxFontSizeMultiplier}
-            >
-              {''}
-            </Text>
-          ) : single ? (
-            <BlockText
-              chunks={chunks}
-              colorOf={colorOf}
-              textStyle={textStyle}
-              selectable={selectable}
-              maxFontSizeMultiplier={maxFontSizeMultiplier}
-            />
-          ) : (
-            chunks.map((chunk, i) => (
-              <ChunkText
-                key={chunk.id}
-                chunk={chunk}
-                colorOf={colorOf}
-                // The next chunk's Text starts the next line.
-                trimNewline={native && i < lastIndex}
-                textStyle={textStyle}
-                selectable={selectable}
-                maxFontSizeMultiplier={maxFontSizeMultiplier}
-              />
-            ))
-          )}
-        </View>
-      </ScrollView>
+          {rowText('', false, rest.web)}
+        </CodeRow>
+      ) : (
+        groups
+      )}
     </View>
   );
 }
+
+type ChunkRowsProps = Omit<RowsProps, 'chunks'> & {
+  readonly chunk: Chunk;
+  readonly firstLine: number;
+  readonly gutterWidth: number;
+};
+
+/**
+ * The rows of one chunk, from its per-line runs ({@link lineRunsOf}).
+ * Shallow-memoised like {@link ChunkText}: a frozen chunk renders once.
+ */
+const ChunkRows = memo(function HighlightedRows({
+  chunk,
+  firstLine,
+  colorOf,
+  web,
+  gutterStyle,
+  gutterWidth,
+  textStyle,
+  selectable,
+  maxFontSizeMultiplier,
+}: ChunkRowsProps) {
+  const lines = lineRunsOf(chunk, colorOf);
+  // The last line has a `\n` after it only when the chunk ends in one.
+  const newlineAtEnd = chunk.text.endsWith('\n');
+  const last = lines.length - 1;
+  return lines.map((runs, i) => {
+    const newline = i < last || newlineAtEnd;
+    let children: ReactNode;
+    if (runs.length === 0) {
+      children = rowText('', newline, web);
+    } else {
+      const spans = spansOf(runs, colorOf);
+      // Web rows keep their `\n`, so they concatenate to the code.
+      if (web && newline) spans.push('\n');
+      children = spans;
+    }
+    return (
+      <CodeRow
+        key={i}
+        number={firstLine + i}
+        gutterStyle={gutterStyle}
+        gutterWidth={gutterWidth}
+        textStyle={textStyle}
+        selectable={selectable}
+        maxFontSizeMultiplier={maxFontSizeMultiplier}
+      >
+        {children}
+      </CodeRow>
+    );
+  });
+});
 
 type BlockProps = {
   readonly chunks: readonly Chunk[];

@@ -1,10 +1,13 @@
 import {
   chunkAll,
   createChunker,
+  lineCountOf,
+  lineRunsOf,
   reconcile,
   runsOf,
   type Chunk,
 } from '../chunking';
+import { codeLineCount, codeLines } from '../../render/codeLines';
 import { bashTokenizer } from '../tokenizers/bash';
 import { diffTokenizer } from '../tokenizers/diff';
 import { javascriptTokenizer } from '../tokenizers/javascript';
@@ -715,6 +718,48 @@ describe('runsOf', () => {
     expect(runsOf(chunk!, colorOf)).toBe(runsOf(chunk!, colorOf));
     const runs = runsOf(chunk!, colorOf);
     expect(runs.map((r) => r.text).join('')).toBe(chunk!.text);
+  });
+});
+
+describe('lines of a chunk (P3-35)', () => {
+  const colorOf = (type: SyntaxTokenType) =>
+    type === 'keyword' ? 'red' : 'ink';
+  const lineTexts = (chunk: Chunk) =>
+    lineRunsOf(chunk, colorOf).map((runs) => runs.map((r) => r.text).join(''));
+
+  it.each([
+    ['plain lines', 'let a = 1;\nconst b = 2;\nlet c'],
+    ['blank lines', 'a;\nb;\n}\n\nx;\n\n\ny;\n'],
+    ['blank lines at the end', 'a;\nb;\n}\n\n'],
+    ['a blank first line', '\nx;\ny;\nz;'],
+    ['CRLF', 'a;\r\nb;\r\n}\r\n\r\nx;\r\n'],
+    ['one line', 'x'],
+    ['empty', ''],
+  ])('%s: counts sum to the code, runs split per line', (_, code) => {
+    const chunks = chunkAll(code, lineTokenizer, 'js');
+    const counts = chunks.map(lineCountOf);
+    expect(counts.reduce((a, b) => a + b, 0)).toBe(codeLineCount(code));
+    expect(chunks.flatMap(lineTexts)).toEqual(codeLines(code));
+    for (const chunk of chunks) {
+      expect(lineRunsOf(chunk, colorOf)).toHaveLength(lineCountOf(chunk));
+      // No run holds a newline; a blank line has no runs.
+      for (const runs of lineRunsOf(chunk, colorOf)) {
+        expect(runs.every((r) => r.text !== '' && !r.text.includes('\n'))).toBe(
+          true
+        );
+      }
+    }
+  });
+
+  it('keeps colours across the cut and is cached per chunk and colours', () => {
+    // `let\nlet` is one red run (the newline folds in): cut in two.
+    const [chunk] = chunkAll('let\nlet b;\n', lineTokenizer, 'js');
+    expect(runsOf(chunk!, colorOf)[0]!.text).toContain('\n');
+    const lines = lineRunsOf(chunk!, colorOf);
+    expect(lines.map((runs) => runs[0]!.type)).toEqual(['keyword', 'keyword']);
+    expect(lines[0]).toEqual([{ type: 'keyword', text: 'let' }]);
+    expect(lineRunsOf(chunk!, colorOf)).toBe(lines);
+    expect(lineRunsOf(chunk!, () => 'ink')).not.toBe(lines);
   });
 });
 

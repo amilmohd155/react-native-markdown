@@ -6,6 +6,8 @@ import type { HtmlMode, ParserBackend } from '../parse';
 import {
   createFootnoteFocusStore,
   useRenderCtx,
+  type CodeBlockOptions,
+  type CodeCopyInfo,
   type Components,
   type FootnoteBackLinkMark,
   type FootnoteA11yLabels,
@@ -120,6 +122,16 @@ export interface MarkdownRenderOptions {
    * every render rebuild the render context. The object itself may be inline.
    */
   readonly footnotes?: FootnotesOptions;
+  /**
+   * Code block parts: `header`, `lineNumbers`, `wrap`. All default `false`
+   * (P3-35). The object may be inline.
+   */
+  readonly codeBlock?: CodeBlockOptions;
+  /**
+   * A press on a code block's Copy button (P3-35). The button shows only
+   * when this is set; write `info.code` to the clipboard yourself.
+   */
+  readonly onCopyPress?: (info: CodeCopyInfo) => void;
   /** Raw HTML handling. Default `'safe'`. Ignored with `document`. */
   readonly html?: HtmlMode;
   /** How soft line breaks render. Default `'space'` (P1-2). */
@@ -318,6 +330,7 @@ export function useMarkdownPipeline(
     onImagePress,
     onMentionPress,
     onTaskToggle,
+    onCopyPress,
     enableTaskListItemToggle,
     onFootnotePress,
     softBreak,
@@ -332,6 +345,7 @@ export function useMarkdownPipeline(
   const html = useStable(props.html, htmlEqual);
   const components = useStable(props.components, shallowEqualObject);
   const images = useStable(props.images, imagesEqual);
+  const codeBlock = useStable(props.codeBlock, shallowEqualObject);
 
   const parsed = useMemo(() => {
     if (document !== undefined) return document;
@@ -384,6 +398,7 @@ export function useMarkdownPipeline(
     onImagePress,
     onMentionPress,
     onTaskToggle,
+    onCopyPress,
     onFootnotePress: footnotePress,
   };
   const ctx = useRenderCtx({
@@ -398,6 +413,7 @@ export function useMarkdownPipeline(
     footnoteLabels,
     footnoteBackLinkMark: props.footnotes?.backLinkMark,
     footnoteFocus: focus,
+    codeBlock,
     footnotesInert: streaming,
     interactiveTasks: enableTaskListItemToggle !== false && !streaming,
     // P3-19: the source text, or the stream's prefix (not `document`

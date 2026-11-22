@@ -14,6 +14,7 @@ import {
   TableCell,
   TableRow,
 } from './block';
+import { CodeBlockHeader } from './codeBlockHeader';
 import {
   Emphasis,
   FootnoteReference,
@@ -44,6 +45,7 @@ export const defaultComponents: Components = Object.freeze({
   List,
   ListItem,
   CodeBlock,
+  CodeBlockHeader,
   Table,
   TableRow,
   TableCell,

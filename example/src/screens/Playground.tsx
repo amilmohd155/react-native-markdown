@@ -68,6 +68,10 @@ interface Options {
   readonly inlineViews: boolean;
   readonly mentionChip: boolean;
   readonly tasks: boolean;
+  readonly selectable: boolean;
+  readonly codeHeader: boolean;
+  readonly lineNumbers: boolean;
+  readonly wrapLines: boolean;
 }
 
 const DEFAULTS: Options = {
@@ -80,6 +84,10 @@ const DEFAULTS: Options = {
   inlineViews: false,
   mentionChip: false,
   tasks: true,
+  selectable: true,
+  codeHeader: false,
+  lineNumbers: false,
+  wrapLines: false,
 };
 
 /**
@@ -153,6 +161,15 @@ export function Playground() {
         : undefined,
     [options.inlineViews, options.mentionChip]
   );
+  // Memoised, so the option object keeps its identity across renders.
+  const { codeHeader, lineNumbers, wrapLines } = options;
+  const codeBlock = useMemo(
+    () =>
+      codeHeader || lineNumbers || wrapLines
+        ? { header: codeHeader, lineNumbers, wrap: wrapLines }
+        : undefined,
+    [codeHeader, lineNumbers, wrapLines]
+  );
   const changed = JSON.stringify(options) !== JSON.stringify(DEFAULTS);
 
   return (
@@ -182,6 +199,7 @@ export function Playground() {
               components={components}
               softBreak={options.softBreak}
               scriptFallback={options.scriptFallback}
+              selectable={options.selectable}
               onLinkPress={(href) => setEvent(`link · ${href}`)}
               onMentionPress={({ scheme, id }) =>
                 setEvent(`mention · ${scheme}:${id}`)
@@ -190,6 +208,11 @@ export function Playground() {
               enableTaskListItemToggle={options.tasks}
               onTaskToggle={({ index, checked }) =>
                 setEvent(`task #${index} · ${checked ? 'done' : 'open'}`)
+              }
+              codeBlock={codeBlock}
+              // No clipboard dependency in the example: log the copy only.
+              onCopyPress={({ code, language }) =>
+                setEvent(`copy · ${language ?? 'code'} · ${code.length} chars`)
               }
             />
           </View>
@@ -325,6 +348,26 @@ export function Playground() {
               label="Interactive tasks"
               value={options.tasks}
               onChange={(v) => set('tasks', v)}
+            />
+            <Toggle
+              label="Selectable text"
+              value={options.selectable}
+              onChange={(v) => set('selectable', v)}
+            />
+            <Toggle
+              label="Code block header"
+              value={options.codeHeader}
+              onChange={(v) => set('codeHeader', v)}
+            />
+            <Toggle
+              label="Line numbers"
+              value={options.lineNumbers}
+              onChange={(v) => set('lineNumbers', v)}
+            />
+            <Toggle
+              label="Wrap lines"
+              value={options.wrapLines}
+              onChange={(v) => set('wrapLines', v)}
             />
           </View>
         </Field>

@@ -10,9 +10,13 @@
  */
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
-import { act } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 import {
+  find,
+  findAll,
+  type Match,
   renderTree,
+  textOf,
   type JsonElement,
   type TestInstance,
   type Tree,
@@ -26,6 +30,8 @@ import {
 } from '../../api/useMarkdownStream';
 import { emoji } from '../../emoji';
 import { definePlugin, type MarkdownPlugin } from '../../plugins/definePlugin';
+import { codeLineCount } from '../../render/codeLines';
+import type { CodeBlockOptions, CodeCopyInfo } from '../../render/context';
 import type { ElementProps } from '../../render/elements';
 import type { FlushStats } from '../../stream/types';
 import { documentToHtml } from '../../../test/utils/documentToHtml';
@@ -67,8 +73,10 @@ jest.mock('../../stream/createMarkdownStream', () => {
   };
 });
 
-// Every `runsOf` call: one per chunk Text render.
+// Every `runsOf` call: one per chunk Text render. Every `lineRunsOf` call:
+// one per chunk render in the numbered wrap layout (P3-35).
 const mockRunsCalls: Chunk[] = [];
+const mockLineRunsCalls: Chunk[] = [];
 jest.mock('../chunking', () => {
   const actual =
     jest.requireActual<typeof import('../chunking')>('../chunking');
@@ -77,6 +85,10 @@ jest.mock('../chunking', () => {
     runsOf: (...args: Parameters<typeof actual.runsOf>) => {
       mockRunsCalls.push(args[0]);
       return actual.runsOf(...args);
+    },
+    lineRunsOf: (...args: Parameters<typeof actual.lineRunsOf>) => {
+      mockLineRunsCalls.push(args[0]);
+      return actual.lineRunsOf(...args);
     },
   };
 });
@@ -144,11 +156,16 @@ type ProbeLog = {
   open: boolean | null;
   /** `runsOf` calls before the first render with `open === false`. */
   closedAt: number | null;
+  /** `lineRunsOf` calls before that render. */
+  lineClosedAt: number | null;
 };
 
 /** Records where the `runsOf` log stood at the first closed render. */
 function noteClosed(log: ProbeLog, open: boolean) {
-  if (!open && log.closedAt === null) log.closedAt = mockRunsCalls.length;
+  if (!open && log.closedAt === null) {
+    log.closedAt = mockRunsCalls.length;
+    log.lineClosedAt = mockLineRunsCalls.length;
+  }
 }
 
 /**
@@ -160,7 +177,13 @@ function probed(inner: MarkdownPlugin): {
   readonly log: ProbeLog;
 } {
   const Inner = inner.components!.CodeBlock!;
-  const log: ProbeLog = { mounts: 0, unmounts: 0, open: null, closedAt: null };
+  const log: ProbeLog = {
+    mounts: 0,
+    unmounts: 0,
+    open: null,
+    closedAt: null,
+    lineClosedAt: null,
+  };
   function Probe(props: ElementProps<'CodeBlock'>) {
     const { open } = props;
     // The probe renders before its block's chunks.
@@ -207,9 +230,15 @@ const probe = {} as { current: UseMarkdownStreamResult };
 function Streamed({
   plugins,
   smooth,
+  onCopyPress,
+  codeBlock = { header: true },
 }: {
   readonly plugins: readonly MarkdownPlugin[];
   readonly smooth: boolean;
+  /** Set: the code block header is on, with Copy (P3-35). */
+  readonly onCopyPress?: (info: CodeCopyInfo) => void;
+  /** With `onCopyPress`: the `codeBlock` prop (default: the header on). */
+  readonly codeBlock?: CodeBlockOptions;
 }) {
   const stream = useMarkdownStream({
     plugins,
@@ -218,7 +247,16 @@ function Streamed({
   useEffect(() => {
     probe.current = stream;
   });
-  return <Markdown document={stream.document} plugins={plugins} />;
+  return onCopyPress === undefined ? (
+    <Markdown document={stream.document} plugins={plugins} />
+  ) : (
+    <Markdown
+      document={stream.document}
+      plugins={plugins}
+      codeBlock={codeBlock}
+      onCopyPress={onCopyPress}
+    />
+  );
 }
 
 const advance = async (ms: number) => {
@@ -317,6 +355,7 @@ beforeEach(() => {
   jest.replaceProperty(Platform, 'OS', 'web');
   mockAppends.length = 0;
   mockRunsCalls.length = 0;
+  mockLineRunsCalls.length = 0;
 });
 afterEach(() => {
   jest.useRealTimers();
@@ -517,6 +556,313 @@ describe.each([
       // subtree swap to the default block is expected.
       expect(log).toMatchObject({ mounts: 1, unmounts: 0 });
       expect(plain(tree.toJSON())).toEqual(plain(await staticJson(plugins)));
+    },
+    TIMEOUT
+  );
+});
+
+describe('streaming a ts fence with the header on (P3-35)', () => {
+  it(
+    'shows the header while open, enables Copy at close, keeps chunk identity',
+    async () => {
+      const { plugin, log } = probed(highlight());
+      const plugins = [plugin];
+      const onCopyPress = jest.fn();
+      const tree = await renderTree(
+        <Streamed plugins={plugins} smooth={false} onCopyPress={onCopyPress} />
+      );
+      /** Copy's `disabled`, or null without a Copy button. */
+      const copyDisabled = (): boolean | null => {
+        const [copy] = tree.findAll(
+          (n) => n.type === 'View' && n.props.accessibilityLabel === 'Copy code'
+        );
+        return copy === undefined
+          ? null
+          : copy.props.accessibilityState.disabled;
+      };
+      const samples: {
+        sent: number;
+        disabled: boolean | null;
+        root: TestInstance | null;
+      }[] = [];
+      const sample = (sent: number) =>
+        samples.push({ sent, disabled: copyDisabled(), root: codeRoot(tree) });
+      for (let at = 0; at < SOURCE.length; at += CHUNK) {
+        await act(async () =>
+          probe.current.append(SOURCE.slice(at, at + CHUNK))
+        );
+        await advance(50);
+        sample(Math.min(at + CHUNK, SOURCE.length));
+      }
+      await act(async () => probe.current.done());
+      for (let i = 0; i < 20; i++) await advance(16);
+      sample(SOURCE.length);
+
+      for (const s of samples) {
+        if (s.sent > BODY_START + 1 && s.sent <= CLOSER_START) {
+          expect([s.sent, s.disabled]).toEqual([s.sent, true]);
+        }
+        if (s.sent >= CLOSER_START + CLOSER.length) {
+          expect([s.sent, s.disabled]).toEqual([s.sent, false]);
+        }
+      }
+      expect(onCopyPress).not.toHaveBeenCalled();
+
+      // One mounted block: the labelled body is one host instance.
+      expect(log).toMatchObject({ mounts: 1, unmounts: 0 });
+      const roots = samples.map((s) => s.root).filter((r) => r !== null);
+      expect(roots.length).toBeGreaterThan(100);
+      expect(roots.every((r) => r === roots[0])).toBe(true);
+
+      // A frozen chunk still renders once while open.
+      expect(log.closedAt).not.toBeNull();
+      const perObject = new Map<Chunk, number>();
+      for (const c of mockRunsCalls.slice(0, log.closedAt!)) {
+        if (c.frozen) perObject.set(c, (perObject.get(c) ?? 0) + 1);
+      }
+      expect(perObject.size).toBeGreaterThan(100);
+      expect([...perObject.values()].filter((n) => n !== 1)).toEqual([]);
+
+      const staticTree = await renderTree(
+        <Markdown
+          source={SOURCE}
+          plugins={plugins}
+          codeBlock={{ header: true }}
+          onCopyPress={onCopyPress}
+        />
+      );
+      expect(plain(tree.toJSON())).toEqual(plain(staticTree.toJSON()));
+    },
+    TIMEOUT
+  );
+});
+
+describe('streaming a ts fence with line numbers (P3-35)', () => {
+  const isGutter = (n: TestInstance) =>
+    n.type === 'Text' &&
+    n.props.selectable === false &&
+    Array.isArray(n.props.style) &&
+    n.props.style.some(
+      (x: unknown) => typeof x === 'object' && x !== null && 'minWidth' in x
+    );
+  /** Code Texts of the block: not gutters, not spans, not the header tag. */
+  const codeTexts = (tree: Tree) => {
+    const [body] = tree.findAll(
+      (n) =>
+        n.type === 'View' &&
+        n.props.accessibilityLabel !== undefined &&
+        n.props.accessible === true &&
+        n.props.accessibilityRole !== 'button'
+    );
+    return body === undefined
+      ? []
+      : findAll(
+          body,
+          (n) => n.type === 'Text' && !isGutter(n) && n.parent?.type !== 'Text'
+        );
+  };
+  const numbersOf = (gutters: readonly TestInstance[]) =>
+    gutters.flatMap((g) => textOf(g).split('\n'));
+  const oneTo = (n: number) =>
+    Array.from({ length: n }, (_, i) => String(i + 1));
+  /** Digit-count changes of the last line number while streaming CODE. */
+  const BANDS = String(codeLineCount(CODE)).length - 1;
+
+  /** Streams SOURCE with `codeBlock`, calling `check` after every flush. */
+  const streamWith = async (
+    codeBlock: CodeBlockOptions,
+    check: (tree: Tree) => void
+  ) => {
+    const { plugin, log } = probed(highlight());
+    const plugins = [plugin];
+    const onCopyPress = jest.fn();
+    // RNTL's render, so fireEvent can press Copy.
+    const view = await render(
+      <Streamed
+        plugins={plugins}
+        smooth={false}
+        onCopyPress={onCopyPress}
+        codeBlock={codeBlock}
+      />
+    );
+    const tree = {
+      find: (match: Match) => find(view.container, match),
+      findAll: (match: Match) => findAll(view.container, match),
+      toJSON: () => view.toJSON(),
+    } as Tree;
+    for (let at = 0; at < SOURCE.length; at += CHUNK) {
+      await act(async () => probe.current.append(SOURCE.slice(at, at + CHUNK)));
+      await advance(50);
+      check(tree);
+    }
+    await act(async () => probe.current.done());
+    for (let i = 0; i < 20; i++) await advance(16);
+    check(tree);
+    expect(log).toMatchObject({ mounts: 1, unmounts: 0 });
+
+    // Copy gets the code exactly, without numbers.
+    const copy = tree.find(
+      (n) => n.type === 'View' && n.props.accessibilityLabel === 'Copy code'
+    );
+    await fireEvent.press(copy);
+    expect(onCopyPress).toHaveBeenCalledWith({
+      code: CODE.slice(0, -1),
+      language: 'ts',
+      meta: null,
+    });
+    const staticTree = await renderTree(
+      <Markdown
+        source={SOURCE}
+        plugins={plugins}
+        codeBlock={codeBlock}
+        onCopyPress={onCopyPress}
+      />
+    );
+    expect(plain(tree.toJSON())).toEqual(plain(staticTree.toJSON()));
+    return log;
+  };
+
+  it(
+    'numbers without wrap: the gutter mirrors the chunks and keeps finished ones',
+    async () => {
+      let previous: { node: TestInstance; text: string }[] = [];
+      let grew = 0;
+      const log = await streamWith(
+        { header: true, lineNumbers: true },
+        (tree) => {
+          const codes = codeTexts(tree);
+          if (codes.length === 0) return;
+          const gutters = tree.findAll(isGutter);
+          // One gutter Text per chunk Text, as many numbers as its lines
+          // (web: chunks keep their text whole, so they join to the code).
+          expect(gutters).toHaveLength(codes.length);
+          const code = codes.map(textOf).join('');
+          expect(numbersOf(gutters)).toEqual(
+            oneTo(Math.max(1, codeLineCount(code)))
+          );
+          for (const [i, g] of gutters.entries()) {
+            expect(textOf(g).split('\n')).toHaveLength(
+              Math.max(1, codeLineCount(textOf(codes[i]!)))
+            );
+          }
+          // A gutter Text, once mounted, stays the same instance; only the
+          // last one (the tail chunk's) may change its numbers.
+          for (const [i, p] of previous.entries()) {
+            expect(gutters[i]).toBe(p.node);
+            if (i < previous.length - 1) {
+              expect(textOf(gutters[i]!)).toBe(p.text);
+            }
+          }
+          if (gutters.length > previous.length) grew++;
+          previous = gutters.map((node) => ({ node, text: textOf(node) }));
+        }
+      );
+      expect(grew).toBeGreaterThan(100);
+      // A frozen chunk's code Text still renders once while open.
+      const perObject = new Map<Chunk, number>();
+      for (const c of mockRunsCalls.slice(0, log.closedAt!)) {
+        if (c.frozen) perObject.set(c, (perObject.get(c) ?? 0) + 1);
+      }
+      expect(perObject.size).toBeGreaterThan(100);
+      expect([...perObject.values()].filter((n) => n !== 1)).toEqual([]);
+    },
+    TIMEOUT
+  );
+
+  it(
+    'numbers without wrap: a small block swaps to one Text and one gutter Text at close',
+    async () => {
+      const small = [
+        'function greet(name: string) {',
+        "  const hi = 'hi ' + name;",
+        '',
+        '  console.log(hi);',
+        '  return hi;',
+        '}',
+        '',
+      ].join('\n');
+      const source = PROSE_BEFORE + OPENER + small + CLOSER + PROSE_AFTER;
+      const { plugin, log } = probed(highlight());
+      const plugins = [plugin];
+      const view = await render(
+        <Streamed
+          plugins={plugins}
+          smooth={false}
+          onCopyPress={jest.fn()}
+          codeBlock={{ header: true, lineNumbers: true }}
+        />
+      );
+      const tree = {
+        find: (match: Match) => find(view.container, match),
+        findAll: (match: Match) => findAll(view.container, match),
+        toJSON: () => view.toJSON(),
+      } as Tree;
+      /** Gutter row, gutter column, ScrollView, code column. */
+      const frameOf = (): TestInstance[] | null => {
+        const scrolls = tree.findAll((n) => n.props.horizontal === true);
+        const [gutter] = tree.findAll(isGutter);
+        const [code] = codeTexts(tree);
+        if (scrolls.length !== 1 || !gutter || !code) return null;
+        const scroll = scrolls[0]!;
+        return [scroll.parent!, gutter.parent!, scroll, code.parent!];
+      };
+      let frame: TestInstance[] | null = null;
+      let chunked = 0;
+      for (let at = 0; at < source.length; at += 20) {
+        await act(async () => probe.current.append(source.slice(at, at + 20)));
+        await advance(50);
+        const now = frameOf();
+        if (now === null) continue;
+        const before = frame;
+        if (before !== null) now.forEach((n, i) => expect(n).toBe(before[i]));
+        frame = now;
+        if (tree.findAll(isGutter).length > 1) chunked++;
+      }
+      await act(async () => probe.current.done());
+      for (let i = 0; i < 20; i++) await advance(16);
+      expect(chunked).toBeGreaterThan(0);
+      const last = frame!;
+      frameOf()!.forEach((n, i) => expect(n).toBe(last[i]));
+      expect(codeTexts(tree).map(textOf)).toEqual([small.slice(0, -1)]);
+      expect(tree.findAll(isGutter).map(textOf)).toEqual(['1\n2\n3\n4\n5\n6']);
+      expect(log).toMatchObject({ mounts: 1, unmounts: 0 });
+    },
+    TIMEOUT
+  );
+
+  it(
+    'numbers with wrap: one row per line; finished rows keep identity',
+    async () => {
+      let previousRows: TestInstance[] = [];
+      const log = await streamWith(
+        { header: true, lineNumbers: true, wrap: true },
+        (tree) => {
+          const codes = codeTexts(tree);
+          if (codes.length === 0) return;
+          const gutters = tree.findAll(isGutter);
+          // Web rows keep their newline: they join to the code.
+          const code = codes.map(textOf).join('');
+          expect(codes).toHaveLength(Math.max(1, codeLineCount(code)));
+          expect(numbersOf(gutters)).toEqual(oneTo(codes.length));
+          // Rows (the code Text's parent View) never remount.
+          const rows = codes.map((c) => c.parent!);
+          for (const [i, r] of previousRows.entries()) expect(rows[i]).toBe(r);
+          previousRows = rows;
+        }
+      );
+      expect(previousRows).toHaveLength(codeLineCount(CODE));
+      // A frozen chunk's rows render once while open, plus once per change
+      // of the gutter width (the digit count of the last line number).
+      const perObject = new Map<Chunk, number>();
+      for (const c of mockLineRunsCalls.slice(0, log.lineClosedAt!)) {
+        if (c.frozen) perObject.set(c, (perObject.get(c) ?? 0) + 1);
+      }
+      expect(perObject.size).toBeGreaterThan(100);
+      expect([...perObject.values()].filter((n) => n > 1 + BANDS)).toEqual([]);
+      // Only chunks before the last width change (line 10 ** BANDS) render
+      // again; each chunk holds at least 2 lines.
+      const again = [...perObject].filter(([, n]) => n > 1);
+      expect(again.every(([c]) => 2 * c.id < 10 ** BANDS)).toBe(true);
     },
     TIMEOUT
   );

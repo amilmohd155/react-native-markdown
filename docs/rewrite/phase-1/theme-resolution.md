@@ -76,7 +76,7 @@ The flattener passes a `{ bold, italic }` state down, seeded by the container (`
   - Built-in themes (`'light'`, `'dark'`, `'auto'`, no plugins) are resolved once per color scheme at first use and kept for the app's lifetime. Other themes sit in a least-recently-used cache of 16 entries, so a theme that changes often cannot grow it without bound. Inputs are treated as immutable.
 - **One `StyleSheet.create` call per resolved theme**, covering all elements, heading levels and variants.
 - **The resolved theme is shared through `MarkdownThemeContext`**, provided by the block list apart from the render context so a component that reads the theme does not re-render when only handlers or options change. `useMarkdownTheme()` returns `{ tokens, styles, headings }`: `styles` holds every element's `{ text, container }`, and `headings` the per-level `Heading` styles (`styles.Heading` is empty because it depends on the level).
-- **Variants derive from the merged elements** (`tightParagraph` from `Paragraph`, `nestedList` from `List`, `tableHeaderCell` from `TableCell`), so an override of the base element reaches them.
+- **Variants derive from the merged elements** (`tightParagraph` from `Paragraph`, `nestedList` from `List`, `tableHeaderCell` from `TableCell`, the structural `codeBlockGutter` from `CodeBlock` text), so an override of the base element reaches them.
 
 ## Dark mode
 
