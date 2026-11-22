@@ -96,9 +96,17 @@ export function List({ style, children }: ElementProps<'List'>) {
   return <View style={style.container}>{children}</View>;
 }
 
-/** Task checkbox glyphs, forced to text presentation (U+FE0E), never emoji. */
-const CHECKED = '☑\uFE0E';
-const UNCHECKED = '☐\uFE0E';
+/** Black or white, whichever reads on `bg` (`#rgb`/`#rrggbb`; else white). */
+function contrastOn(bg: string): string {
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(bg)?.[1];
+  if (!hex) return '#ffffff';
+  const full = hex.length === 3 ? hex.replace(/./g, '$&$&') : hex;
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16));
+  return 0.299 * r! + 0.587 * g! + 0.114 * b! > 160 ? '#0d1117' : '#ffffff';
+}
+
+/** Checkbox size as a fraction of the list font size, when `size` is unset. */
+const CHECKBOX_SIZE = 0.9;
 
 export function ListItem({
   index,
@@ -118,16 +126,17 @@ export function ListItem({
 
   // Same width for every item of the list, from its longest marker, so
   // "9." and "10." stay aligned (right-aligned when ordered).
-  const { fontSize, list } = theme.tokens;
+  const { fontSize, list, checkbox } = theme.tokens;
+  const textSize = style.text.fontSize ?? fontSize.base;
+  const boxSize = checkbox.size ?? textSize * CHECKBOX_SIZE;
   const width = Math.max(
     list.indent,
     Math.max(
       list.markerMinWidth,
       Math.ceil(markerChars * fontSize.base * 0.6)
-    ) + list.gap
+    ) + list.gap,
+    checked === null ? 0 : Math.floor(boxSize) + list.gap
   );
-
-  const { checkbox } = theme.tokens;
   const shown = task.checked;
 
   // A checked item's own text, never its sub-lists' (`InheritedTextReset`).
@@ -140,6 +149,8 @@ export function ListItem({
   );
 
   let markerNode;
+  // Room above and below a box taller than its line; the text drops by it.
+  let extra = 0;
   if (checked === null) {
     markerNode = (
       <Text
@@ -154,38 +165,63 @@ export function ListItem({
       </Text>
     );
   } else {
-    // The glyph is the visual; the Pressable is the touch target. Its
-    // box is the glyph by one line, so `hitSlop` tops it up (44pt wide,
-    // as tall as the gap to the next item allows: see `checkboxHitSlop`)
-    // without moving the first-line alignment with the item text.
-    const glyphSize = checkbox.size ?? style.text.fontSize ?? fontSize.base;
+    // The drawn box is the visual; the Pressable is the touch target. Its
+    // box is one line tall (a bigger box overflows it evenly), so `hitSlop` tops it up (44pt wide, as tall as
+    // the gap to the next item allows: see `checkboxHitSlop`).
     const lineHeight =
       style.text.lineHeight ??
-      (glyphSize * theme.tokens.paragraphLineHeight) / fontSize.base;
-    const color = shown
+      (textSize * theme.tokens.paragraphLineHeight) / fontSize.base;
+    extra = Math.max(0, (boxSize - lineHeight) / 2);
+    const accent = shown
       ? (checkbox.checkedColor ?? checkbox.color)
-      : checkbox.color;
+      : (checkbox.borderColor ?? checkbox.color);
+    const tint = accent ?? theme.tokens.colors.text;
+    const border = Math.max(1, Math.round(boxSize / 10));
     markerNode = (
       <Pressable
-        style={styles.checkbox}
+        style={[
+          styles.checkbox,
+          { height: lineHeight },
+          extra > 0 && { marginVertical: extra },
+        ]}
         accessibilityRole="checkbox"
         accessibilityLabel={text ? text : undefined}
         accessibilityState={{ checked: shown, disabled: !task.interactive }}
         disabled={!task.interactive}
         onPress={task.interactive ? task.toggle : undefined}
-        hitSlop={checkboxHitSlop(glyphSize, lineHeight, gap, width)}
+        hitSlop={checkboxHitSlop(boxSize, lineHeight, gap, width)}
       >
-        <Text
+        <View
+          testID="task-checkbox"
           style={[
-            style.text,
-            inherited,
-            checkbox.size !== undefined && { fontSize: checkbox.size },
-            color !== undefined && { color },
+            styles.box,
+            {
+              width: boxSize,
+              height: boxSize,
+              borderWidth: border,
+              borderColor: tint,
+              borderRadius: checkbox.borderRadius ?? boxSize * 0.2,
+              backgroundColor: shown ? tint : undefined,
+            },
           ]}
-          accessible={false}
         >
-          {shown ? CHECKED : UNCHECKED}
-        </Text>
+          {shown && (
+            <View
+              testID="task-checkmark"
+              style={{
+                width: boxSize * 0.28,
+                height: boxSize * 0.52,
+                borderRightWidth: border,
+                borderBottomWidth: border,
+                borderColor: checkbox.checkmarkColor ?? contrastOn(tint),
+                transform: [
+                  { rotate: '45deg' },
+                  { translateY: -boxSize * 0.07 },
+                ],
+              }}
+            />
+          )}
+        </View>
       </Pressable>
     );
   }
@@ -199,7 +235,7 @@ export function ListItem({
       }
     >
       <View style={[{ width, paddingRight: list.gap }]}>{markerNode}</View>
-      <View style={styles.content}>
+      <View style={[styles.content, extra > 0 && { marginTop: extra }]}>
         {checkedText === null ? (
           children
         ) : (
@@ -569,7 +605,8 @@ export function FootnoteDefinition({
 }
 
 const styles = StyleSheet.create({
-  checkbox: { alignSelf: 'flex-start' },
+  checkbox: { alignSelf: 'flex-start', justifyContent: 'center' },
+  box: { alignItems: 'center', justifyContent: 'center' },
   content: { flex: 1, minWidth: 0 },
   imageFrame: { width: '100%' },
   blockImage: { width: '100%' },

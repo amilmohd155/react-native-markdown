@@ -409,15 +409,87 @@ describe('task look and a11y (P3-20)', () => {
         }}
       />
     );
-    const glyphs = screen.getAllByText(/[☐☑]/);
-    expect(StyleSheet.flatten(glyphs[0]!.props.style)).toMatchObject({
-      color: '#111111',
-      fontSize: 30,
+    const [off, on] = screen.getAllByTestId('task-checkbox');
+    expect(StyleSheet.flatten(off!.props.style)).toMatchObject({
+      borderColor: '#111111',
+      width: 30,
+      height: 30,
     });
-    expect(StyleSheet.flatten(glyphs[1]!.props.style)).toMatchObject({
-      color: '#22aa22',
-      fontSize: 30,
+    expect(StyleSheet.flatten(on!.props.style)).toMatchObject({
+      backgroundColor: '#22aa22',
+      width: 30,
     });
+  });
+
+  it('takes borderColor, checkmarkColor and borderRadius', async () => {
+    await render(
+      <Markdown
+        source={'- [ ] a\n- [x] b'}
+        theme={{
+          checkbox: {
+            color: '#111111',
+            borderColor: '#aa0000',
+            checkedColor: '#00aa00',
+            checkmarkColor: '#0000aa',
+            borderRadius: 7,
+          },
+        }}
+      />
+    );
+    const [off, on] = screen.getAllByTestId('task-checkbox');
+    expect(StyleSheet.flatten(off!.props.style)).toMatchObject({
+      borderColor: '#aa0000',
+      borderRadius: 7,
+    });
+    expect(StyleSheet.flatten(on!.props.style)).toMatchObject({
+      backgroundColor: '#00aa00',
+      borderRadius: 7,
+    });
+    expect(
+      StyleSheet.flatten(screen.getByTestId('task-checkmark').props.style)
+    ).toMatchObject({ borderColor: '#0000aa' });
+  });
+
+  it('keeps the default checkmark readable on the fill', async () => {
+    await render(
+      <Markdown
+        source={'- [x] a'}
+        theme={{ checkbox: { checkedColor: '#eeeeee' } }}
+      />
+    );
+    expect(
+      StyleSheet.flatten(screen.getByTestId('task-checkmark').props.style)
+    ).toMatchObject({ borderColor: '#0d1117' });
+  });
+
+  it('widens the marker column for a big box', async () => {
+    await render(
+      <Markdown source={'- [ ] a'} theme={{ checkbox: { size: 40 } }} />
+    );
+    let node = screen.getByTestId('task-checkbox').parent;
+    let width: unknown;
+    while (node && width === undefined) {
+      width = StyleSheet.flatten(node.props.style)?.width;
+      node = node.parent;
+    }
+    expect(width).toBeGreaterThanOrEqual(46);
+  });
+
+  it('adds room around a box taller than its line', async () => {
+    await render(
+      <Markdown source={'- [ ] a'} theme={{ checkbox: { size: 40 } }} />
+    );
+    const row = StyleSheet.flatten(boxes()[0]!.props.style);
+    expect(row.marginVertical).toBeGreaterThan(0);
+  });
+
+  it('sizes the box 0.9 x the font size by default', async () => {
+    await render(
+      <Markdown source={'- [ ] a'} theme={{ paragraph: { fontSize: 20 } }} />
+    );
+    expect(
+      StyleSheet.flatten(screen.getByTestId('task-checkbox').props.style)
+    ).toMatchObject({ width: 18, height: 18 });
   });
 
   it('merges checkedText onto the default, or turns it off', async () => {
@@ -444,11 +516,12 @@ describe('task look and a11y (P3-20)', () => {
   it('is at least 44pt wide with hitSlop, right slop within the marker column', async () => {
     await render(<Markdown source={'- [ ] a'} />);
     const slop = boxes()[0]!.props.hitSlop;
-    // glyph 16 -> ~10.7 wide (0.67 em), measured on device
-    expect(16 * 0.67 + slop.left + slop.right).toBeGreaterThanOrEqual(44);
+    // box 16 x 0.9 = 14.4 wide
+    const box = 16 * 0.9;
+    expect(box + slop.left + slop.right).toBeGreaterThanOrEqual(44);
     // the right slop stays inside the 20 wide marker column (the item
     // content covers what is beyond it); the left slop makes up the rest
-    expect(16 * 0.67 + slop.right).toBeLessThanOrEqual(20);
+    expect(box + slop.right).toBeLessThanOrEqual(20);
     expect(slop.left).toBeGreaterThan(slop.right);
   });
 

@@ -169,9 +169,11 @@ export interface ThemeTokens {
   /** `inlineImage.size`: square side in points; unset, the line height. */
   readonly inlineImageSize: number | undefined;
   /**
-   * The task-list checkbox (P3-20). `color`, `checkedColor` and `size` style
-   * the marker glyph; unset, it inherits the item's text color and font
-   * size. `checkedText` is the style of a checked item's own text (never its
+   * The task-list checkbox (P3-20), a drawn box. `color` is the unchecked
+   * border (unless `borderColor`) and `checkedColor` the checked fill; unset,
+   * both are the text color. `size` defaults to 0.9 x the list font size.
+   * `checkmarkColor` defaults to black or white, whichever reads on the fill.
+   * `checkedText` is the style of a checked item's own text (never its
    * sub-items'): an object merged onto the default (line-through, dimmed),
    * or `false` for none.
    */
@@ -179,6 +181,9 @@ export interface ThemeTokens {
     readonly color?: string;
     readonly checkedColor?: string;
     readonly size?: number;
+    readonly borderColor?: string;
+    readonly checkmarkColor?: string;
+    readonly borderRadius?: number;
     readonly checkedText: TextStyle | false;
   };
   /**

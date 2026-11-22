@@ -47,8 +47,7 @@ const scriptScale = (): number =>
 
 /**
  * Typed but ignored for now (no slot in the resolver yet): `blockquote.admonitions`;
- * `link.variants`; `checkbox.borderColor`, `checkmarkColor`,
- * `borderRadius`.
+ * `link.variants`.
  */
 
 const DEFAULT_IMAGE_RATIO = 16 / 9;
@@ -317,6 +316,9 @@ function tokensOf(
       color: checkbox?.color,
       checkedColor: checkbox?.checkedColor,
       size: checkbox?.size,
+      borderColor: checkbox?.borderColor,
+      checkmarkColor: checkbox?.checkmarkColor,
+      borderRadius: checkbox?.borderRadius,
       checkedText: checkbox?.checkedText ?? base.checkbox!.checkedText!,
     }),
     syntax: Object.freeze(syntax),

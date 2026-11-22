@@ -248,10 +248,13 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
       </View>
       <View
         style={
-          {
-            "flex": 1,
-            "minWidth": 0,
-          }
+          [
+            {
+              "flex": 1,
+              "minWidth": 0,
+            },
+            false,
+          ]
         }
       >
         <Text
@@ -313,10 +316,13 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
       </View>
       <View
         style={
-          {
-            "flex": 1,
-            "minWidth": 0,
-          }
+          [
+            {
+              "flex": 1,
+              "minWidth": 0,
+            },
+            false,
+          ]
         }
       >
         <Text
@@ -393,7 +399,7 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
             {
               "bottom": 0,
               "left": 25,
-              "right": 9,
+              "right": 5,
               "top": 0,
             }
           }
@@ -407,36 +413,69 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
           onResponderTerminationRequest={[Function]}
           onStartShouldSetResponder={[Function]}
           style={
-            {
-              "alignSelf": "flex-start",
-            }
+            [
+              {
+                "alignSelf": "flex-start",
+                "justifyContent": "center",
+              },
+              {
+                "height": 24,
+              },
+              false,
+            ]
           }
         >
-          <Text
-            accessible={false}
+          <View
             style={
               [
                 {
-                  "color": "#1f2328",
-                  "fontSize": 16,
-                  "lineHeight": 24,
+                  "alignItems": "center",
+                  "justifyContent": "center",
                 },
-                null,
-                false,
-                false,
+                {
+                  "backgroundColor": "#1f2328",
+                  "borderColor": "#1f2328",
+                  "borderRadius": 2.8800000000000003,
+                  "borderWidth": 1,
+                  "height": 14.4,
+                  "width": 14.4,
+                },
               ]
             }
+            testID="task-checkbox"
           >
-            ☑︎
-          </Text>
+            <View
+              style={
+                {
+                  "borderBottomWidth": 1,
+                  "borderColor": "#ffffff",
+                  "borderRightWidth": 1,
+                  "height": 7.488,
+                  "transform": [
+                    {
+                      "rotate": "45deg",
+                    },
+                    {
+                      "translateY": -1.0080000000000002,
+                    },
+                  ],
+                  "width": 4.032000000000001,
+                }
+              }
+              testID="task-checkmark"
+            />
+          </View>
         </View>
       </View>
       <View
         style={
-          {
-            "flex": 1,
-            "minWidth": 0,
-          }
+          [
+            {
+              "flex": 1,
+              "minWidth": 0,
+            },
+            false,
+          ]
         }
       >
         <Text
@@ -507,7 +546,7 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
             {
               "bottom": 0,
               "left": 25,
-              "right": 9,
+              "right": 5,
               "top": 0,
             }
           }
@@ -521,36 +560,48 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
           onResponderTerminationRequest={[Function]}
           onStartShouldSetResponder={[Function]}
           style={
-            {
-              "alignSelf": "flex-start",
-            }
+            [
+              {
+                "alignSelf": "flex-start",
+                "justifyContent": "center",
+              },
+              {
+                "height": 24,
+              },
+              false,
+            ]
           }
         >
-          <Text
-            accessible={false}
+          <View
             style={
               [
                 {
-                  "color": "#1f2328",
-                  "fontSize": 16,
-                  "lineHeight": 24,
+                  "alignItems": "center",
+                  "justifyContent": "center",
                 },
-                null,
-                false,
-                false,
+                {
+                  "backgroundColor": undefined,
+                  "borderColor": "#1f2328",
+                  "borderRadius": 2.8800000000000003,
+                  "borderWidth": 1,
+                  "height": 14.4,
+                  "width": 14.4,
+                },
               ]
             }
-          >
-            ☐︎
-          </Text>
+            testID="task-checkbox"
+          />
         </View>
       </View>
       <View
         style={
-          {
-            "flex": 1,
-            "minWidth": 0,
-          }
+          [
+            {
+              "flex": 1,
+              "minWidth": 0,
+            },
+            false,
+          ]
         }
       >
         <Text
