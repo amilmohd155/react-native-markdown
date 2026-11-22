@@ -125,18 +125,20 @@ describe('block containers and text', () => {
     );
   });
 
-  it('codeBlockHeader: text props to text, bar props to container', () => {
+  it('codeBlock.header: text props to text, bar props to container', () => {
     const { CodeBlockHeader } = resolve({
-      codeBlockHeader: {
-        color: '#111111',
-        fontFamily: 'Fira',
-        fontSize: 11,
-        lineHeight: 15,
-        backgroundColor: '#222222',
-        borderBottomColor: '#333333',
-        borderBottomWidth: 2,
-        paddingHorizontal: 5,
-        paddingVertical: 7,
+      codeBlock: {
+        header: {
+          color: '#111111',
+          fontFamily: 'Fira',
+          fontSize: 11,
+          lineHeight: 15,
+          backgroundColor: '#222222',
+          borderBottomColor: '#333333',
+          borderBottomWidth: 2,
+          paddingHorizontal: 5,
+          paddingVertical: 7,
+        },
       },
     }).elements;
     expect(CodeBlockHeader.text).toMatchObject({
@@ -196,9 +198,11 @@ describe('block containers and text', () => {
     });
   });
 
-  it('footnoteDefinition: text props to text', () => {
+  it('footnote.definition: text props to text', () => {
     const { FootnoteDefinition } = resolve({
-      footnoteDefinition: { color: '#111111', fontSize: 11, lineHeight: 15 },
+      footnote: {
+        definition: { color: '#111111', fontSize: 11, lineHeight: 15 },
+      },
     }).elements;
     expect(FootnoteDefinition.text).toMatchObject({
       color: '#111111',
@@ -252,16 +256,16 @@ describe('tables', () => {
     );
   });
 
-  it('tableCell: text props to text, padding and background to container', () => {
+  it('table: cell text props to text, cell padding and background to container', () => {
     const { TableCell } = resolve({
-      tableCell: {
+      table: {
         color: '#111111',
         fontSize: 13,
         textAlign: 'center',
-        backgroundColor: '#eeeeee',
-        padding: 3,
-        paddingHorizontal: 4,
-        paddingVertical: 5,
+        cellBackgroundColor: '#eeeeee',
+        cellPadding: 3,
+        cellPaddingHorizontal: 4,
+        cellPaddingVertical: 5,
       },
     }).elements;
     expect(TableCell.text).toMatchObject({
@@ -369,10 +373,12 @@ describe('inline elements', () => {
     });
   });
 
-  it('footnoteReference, footnoteBackLink: colour', () => {
+  it('footnote.reference, footnote.backLink: colour', () => {
     const { FootnoteReference, FootnoteBackLink } = resolve({
-      footnoteReference: { color: '#111111' },
-      footnoteBackLink: { color: '#222222' },
+      footnote: {
+        reference: { color: '#111111' },
+        backLink: { color: '#222222' },
+      },
     }).elements;
     expect(FootnoteReference.text.color).toBe('#111111');
     expect(FootnoteBackLink.text.color).toBe('#222222');
@@ -432,10 +438,10 @@ describe('tokens read by consumers', () => {
     ).toMatchObject({ checkedText: false });
   });
 
-  it('footnoteDefinition.highlightColor is the flash colour', () => {
+  it('footnote.definition.highlightColor is the flash colour', () => {
     expect(
-      resolve({ footnoteDefinition: { highlightColor: '#abcdef' } }).tokens
-        .colors.footnoteHighlight
+      resolve({ footnote: { definition: { highlightColor: '#abcdef' } } })
+        .tokens.colors.footnoteHighlight
     ).toBe('#abcdef');
   });
 

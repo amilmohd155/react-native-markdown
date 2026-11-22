@@ -39,7 +39,9 @@ export const lightTheme: FlatThemeBlock = Object.freeze({
   }),
   divider: Object.freeze({ backgroundColor: '#d1d9e0' }),
   highlight: Object.freeze({ backgroundColor: '#fff8c5' }),
-  footnoteDefinition: Object.freeze({ highlightColor: '#fff3a3' }),
+  footnote: Object.freeze({
+    definition: Object.freeze({ highlightColor: '#fff3a3' }),
+  }),
   // U+FE0E (text presentation): iOS draws ▪ as an emoji square without it.
   list: Object.freeze({
     bullets: Object.freeze(['•', '◦', '▪︎']),
@@ -88,7 +90,9 @@ export const darkTheme: FlatThemeBlock = Object.freeze({
   }),
   divider: Object.freeze({ backgroundColor: '#3d444d' }),
   highlight: Object.freeze({ backgroundColor: '#5a4a00' }),
-  footnoteDefinition: Object.freeze({
-    highlightColor: 'rgba(212, 167, 44, 0.35)',
+  footnote: Object.freeze({
+    definition: Object.freeze({
+      highlightColor: 'rgba(212, 167, 44, 0.35)',
+    }),
   }),
 } as const);

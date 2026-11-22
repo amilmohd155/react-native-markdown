@@ -200,7 +200,7 @@ describe('elements from the merged block', () => {
         borderRadius: 12,
         padding: 16,
       },
-      tableCell: { padding: 3, fontStyle: 'italic' },
+      table: { cellPadding: 3, fontStyle: 'italic' },
       divider: { height: 2, marginTop: 5 },
     });
     expect(elements.Paragraph.text).toMatchObject({
@@ -242,8 +242,7 @@ describe('elements from the merged block', () => {
       kbd: { color: 'e' },
       highlight: { color: 'f' },
       superscript: { color: 'g' },
-      footnoteReference: { color: 'h' },
-      footnoteBackLink: { color: 'i' },
+      footnote: { reference: { color: 'h' }, backLink: { color: 'i' } },
     });
     expect(elements.Strong.text).toEqual({ color: 'a', fontWeight: '800' });
     expect(elements.Emphasis.text).toEqual({ fontStyle: 'normal' });
@@ -266,8 +265,10 @@ describe('elements from the merged block', () => {
 
   it('applies the code block header and footnote definition props', () => {
     const { elements } = resolveTheme({
-      codeBlockHeader: { color: 'a', backgroundColor: 'b', paddingVertical: 2 },
-      footnoteDefinition: { fontSize: 12, color: 'c' },
+      codeBlock: {
+        header: { color: 'a', backgroundColor: 'b', paddingVertical: 2 },
+      },
+      footnote: { definition: { fontSize: 12, color: 'c' } },
       htmlBlock: { color: 'd', marginBottom: 1 },
     });
     expect(elements.CodeBlockHeader.text.color).toBe('a');
@@ -287,7 +288,7 @@ describe('elements from the merged block', () => {
     const r = resolveTheme({
       divider: { backgroundColor: '#123456' },
       codeBlock: { backgroundColor: '#abcdef' },
-      footnoteDefinition: { highlightColor: 'pink' },
+      footnote: { definition: { highlightColor: 'pink' } },
       link: { color: '#cc0003' },
     });
     expect(r.tokens.colors.border).toBe('#123456');
@@ -302,7 +303,7 @@ describe('elements from the merged block', () => {
     const theme = resolveTheme({
       paragraph: { color: 'p', marginTop: 3 },
       list: { marginTop: 5 },
-      tableCell: { padding: 9 },
+      table: { cellPadding: 9 },
     });
     expect(theme.tightParagraph.text.color).toBe('p');
     expect(theme.tightParagraph.container).toEqual({

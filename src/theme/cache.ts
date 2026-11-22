@@ -33,7 +33,7 @@ export function shallowEqual(
   return keys.every((key) => Object.hasOwn(y, key) && x[key] === y[key]);
 }
 
-/** Deepest nesting compared: block, key, prop, `syntax`/`variants`, kind. */
+/** Deepest nesting compared: block, key, child/`variants`, pattern, prop. */
 const MAX_DEPTH = 6;
 
 /**

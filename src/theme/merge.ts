@@ -4,7 +4,7 @@ import { darkTheme, lightTheme } from './tokens';
 
 /**
  * Merges flat theme blocks (P3a-2). Per key, per prop, shallowly; the maps
- * in `NESTED` merge one level deeper, and `variants` two (per pattern, prop
+ * in `NESTED` and the child groups in `CHILDREN` merge one level deeper, and `variants` two (per pattern, prop
  * by prop). `undefined` values are skipped.
  * Spec: docs/rewrite/phase-3a/theme-props.md
  */
@@ -23,6 +23,16 @@ const NESTED: ReadonlySet<string> = new Set([
   'admonitions',
   'checkedText',
 ]);
+
+/**
+ * Child groups of a family key (`codeBlock.header`,
+ * `footnote.*`): each merges prop by prop, so a layer that sets one prop of a
+ * child keeps the child's others and the family's other children.
+ */
+const CHILDREN: Readonly<Record<string, ReadonlySet<string>>> = {
+  codeBlock: new Set(['header']),
+  footnote: new Set(['reference', 'backLink', 'definition']),
+};
 
 function isMap(value: unknown): value is Props {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -44,14 +54,20 @@ function mergeVariants(base: Props, over: Props): Props {
   return out;
 }
 
-function mergeProps(a: Props | undefined, b: Props | undefined) {
+function mergeProps(
+  a: Props | undefined,
+  b: Props | undefined,
+  children?: ReadonlySet<string>
+) {
   const out: Props = { ...a };
   if (b === undefined) return out;
   for (const key of Object.keys(b)) {
     const value = b[key];
     if (value === undefined) continue;
     const prev = out[key];
-    if (NESTED.has(key) && isMap(prev) && isMap(value)) {
+    if (children?.has(key) && isMap(prev) && isMap(value)) {
+      out[key] = mergeProps(prev, value);
+    } else if (NESTED.has(key) && isMap(prev) && isMap(value)) {
       out[key] =
         key === 'variants' ? mergeVariants(prev, value) : { ...prev, ...value };
     } else {
@@ -68,7 +84,7 @@ function mergeBlock(base: Block, over: Block | undefined): Block {
   for (const key of Object.keys(over)) {
     const props = over[key];
     if (props === undefined) continue;
-    out[key] = mergeProps(out[key], props);
+    out[key] = mergeProps(out[key], props, CHILDREN[key]);
   }
   return out;
 }

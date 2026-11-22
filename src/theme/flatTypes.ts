@@ -62,7 +62,8 @@ export interface BlockquoteTheme extends TextProps, MarginProps {
   admonitions?: Partial<Record<AdmonitionKind, AdmonitionTheme>>;
 }
 
-export interface ListTheme extends MarginProps {
+/** `list` also takes group T, applied to the item text (over the paragraph's). */
+export interface ListTheme extends TextProps, MarginProps {
   /** Bullet by depth, repeating. */
   bullets?: readonly string[];
   bulletColor?: string;
@@ -80,8 +81,6 @@ export interface ListTheme extends MarginProps {
   itemSpacing?: number;
 }
 
-export interface ListItemTheme extends TextProps {}
-
 export interface CodeBlockTheme extends TextFaceProps, MarginProps {
   backgroundColor?: string;
   borderColor?: string;
@@ -89,6 +88,7 @@ export interface CodeBlockTheme extends TextFaceProps, MarginProps {
   borderRadius?: number;
   padding?: number;
   syntax?: Partial<Record<SyntaxTokenType, string>>;
+  header?: CodeBlockHeaderTheme;
 }
 
 export interface CodeBlockHeaderTheme
@@ -102,7 +102,13 @@ export interface CodeBlockHeaderTheme
       | 'paddingVertical'
     > {}
 
-export interface TableTheme extends MarginProps {
+/** `table` also takes group T, applied to the cell text (over the paragraph's). */
+export interface TableTheme extends TextProps, MarginProps {
+  /** Padding of every cell. */
+  cellPadding?: ViewStyle['padding'];
+  cellPaddingHorizontal?: ViewStyle['paddingHorizontal'];
+  cellPaddingVertical?: ViewStyle['paddingVertical'];
+  cellBackgroundColor?: string;
   borderColor?: string;
   borderWidth?: number;
   borderRadius?: number;
@@ -120,13 +126,6 @@ export interface TableTheme extends MarginProps {
   rowEvenBackgroundColor?: string;
   rowOddBackgroundColor?: string;
 }
-
-export interface TableCellTheme
-  extends TextProps,
-    Pick<
-      ViewStyle,
-      'backgroundColor' | 'padding' | 'paddingHorizontal' | 'paddingVertical'
-    > {}
 
 export interface DividerTheme
   extends MarginProps,
@@ -224,6 +223,12 @@ export interface FootnoteReferenceTheme extends Pick<TextStyle, 'color'> {
 
 export interface FootnoteBackLinkTheme extends Pick<TextStyle, 'color'> {}
 
+export interface FootnoteTheme {
+  reference?: FootnoteReferenceTheme;
+  backLink?: FootnoteBackLinkTheme;
+  definition?: FootnoteDefinitionTheme;
+}
+
 /** Core keys and the props each accepts. */
 export interface CoreFlatTheme {
   paragraph?: ParagraphTheme;
@@ -235,16 +240,12 @@ export interface CoreFlatTheme {
   h6?: HeadingTheme;
   blockquote?: BlockquoteTheme;
   list?: ListTheme;
-  listItem?: ListItemTheme;
   codeBlock?: CodeBlockTheme;
-  codeBlockHeader?: CodeBlockHeaderTheme;
   table?: TableTheme;
-  tableCell?: TableCellTheme;
   divider?: DividerTheme;
   image?: ImageTheme;
   inlineImage?: InlineImageTheme;
   htmlBlock?: HtmlBlockTheme;
-  footnoteDefinition?: FootnoteDefinitionTheme;
   checkbox?: CheckboxTheme;
   strong?: StrongTheme;
   em?: EmTheme;
@@ -256,8 +257,7 @@ export interface CoreFlatTheme {
   kbd?: InlineCodeTheme;
   superscript?: ScriptTheme;
   subscript?: ScriptTheme;
-  footnoteReference?: FootnoteReferenceTheme;
-  footnoteBackLink?: FootnoteBackLinkTheme;
+  footnote?: FootnoteTheme;
 }
 
 /** Names of the core keys. */
@@ -343,9 +343,11 @@ export type MarkdownTheme = Readonly<
       >;
       divider: With<DividerTheme, { backgroundColor: string }>;
       highlight: With<HighlightTheme, { backgroundColor: string }>;
-      footnoteDefinition: With<
-        FootnoteDefinitionTheme,
-        { highlightColor: string }
+      footnote: With<
+        FootnoteTheme,
+        {
+          definition: With<FootnoteDefinitionTheme, { highlightColor: string }>;
+        }
       >;
       link: With<LinkTheme, { color: string }>;
       checkbox: With<CheckboxTheme, { checkedText: TextStyle | false }>;

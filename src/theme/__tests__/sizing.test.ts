@@ -30,7 +30,7 @@ describe('sizing: points and relative sizes (P3a-3, P3a-4)', () => {
     expect(own.elements.Paragraph.text!.lineHeight).toBe(40);
   });
 
-  it('footnote section follows footnoteDefinition and paragraph values', () => {
+  it('footnote section follows footnote.definition and paragraph values', () => {
     const def = getDefaultTheme().footnoteSection.text;
     expect(flat(def)).toMatchObject({ fontSize: 14, lineHeight: 21 });
     const t = resolveTheme({ paragraph: { fontSize: 20 } });
@@ -39,7 +39,7 @@ describe('sizing: points and relative sizes (P3a-3, P3a-4)', () => {
       lineHeight: 26.25,
     });
     const own = resolveTheme({
-      footnoteDefinition: { fontSize: 12, lineHeight: 18 },
+      footnote: { definition: { fontSize: 12, lineHeight: 18 } },
     });
     expect(flat(own.footnoteSection.text)).toMatchObject({
       fontSize: 12,
@@ -113,7 +113,7 @@ describe('fontScale defaults per platform', () => {
   it('is overridden per key', () => {
     const t = resolveTheme({
       superscript: { fontScale: 0.5 },
-      footnoteReference: { fontScale: 0.9 },
+      footnote: { reference: { fontScale: 0.9 } },
     });
     expect(scales(t).superscript).toBe(0.5);
     expect(scales(t).footnoteReference).toBe(0.9);

@@ -46,6 +46,7 @@ const ACCEPTED: Accepted = {
     'admonitions',
   ],
   list: [
+    ...TEXT,
     ...MARGIN,
     'bullets',
     'bulletColor',
@@ -57,7 +58,6 @@ const ACCEPTED: Accepted = {
     'marginLeft',
     'itemSpacing',
   ],
-  listItem: [...TEXT],
   codeBlock: [
     ...TEXT,
     ...MARGIN,
@@ -67,20 +67,15 @@ const ACCEPTED: Accepted = {
     'borderRadius',
     'padding',
     'syntax',
-  ],
-  codeBlockHeader: [
-    'color',
-    'fontFamily',
-    'fontSize',
-    'lineHeight',
-    'backgroundColor',
-    'borderBottomColor',
-    'borderBottomWidth',
-    'paddingHorizontal',
-    'paddingVertical',
+    'header',
   ],
   table: [
+    ...TEXT,
     ...MARGIN,
+    'cellPadding',
+    'cellPaddingHorizontal',
+    'cellPaddingVertical',
+    'cellBackgroundColor',
     'borderColor',
     'borderWidth',
     'borderRadius',
@@ -91,13 +86,6 @@ const ACCEPTED: Accepted = {
     'headerFontFamily',
     'rowEvenBackgroundColor',
     'rowOddBackgroundColor',
-  ],
-  tableCell: [
-    ...TEXT,
-    'backgroundColor',
-    'padding',
-    'paddingHorizontal',
-    'paddingVertical',
   ],
   divider: [...MARGIN, 'backgroundColor', 'height'],
   image: [
@@ -110,7 +98,7 @@ const ACCEPTED: Accepted = {
   ],
   inlineImage: ['size'],
   htmlBlock: ['color', 'fontFamily', 'fontSize', ...MARGIN],
-  footnoteDefinition: ['color', 'fontSize', 'lineHeight', 'highlightColor'],
+  footnote: ['reference', 'backLink', 'definition'],
   checkbox: [
     'color',
     'checkedColor',
@@ -137,9 +125,28 @@ const ACCEPTED: Accepted = {
   kbd: ['color', 'fontFamily', 'fontSize', 'backgroundColor'],
   superscript: ['color', 'fontScale'],
   subscript: ['color', 'fontScale'],
-  footnoteReference: ['color', 'fontScale'],
-  footnoteBackLink: ['color'],
 };
+
+/** Props of the child groups of a family key, by `family.child`. */
+const CHILD_ACCEPTED: Readonly<Record<string, readonly string[]>> = {
+  'codeBlock.header': [
+    'color',
+    'fontFamily',
+    'fontSize',
+    'lineHeight',
+    'backgroundColor',
+    'borderBottomColor',
+    'borderBottomWidth',
+    'paddingHorizontal',
+    'paddingVertical',
+  ],
+  'footnote.reference': ['color', 'fontScale'],
+  'footnote.backLink': ['color'],
+  'footnote.definition': ['color', 'fontSize', 'lineHeight', 'highlightColor'],
+};
+const CHILD_SETS = new Map<string, ReadonlySet<string>>(
+  Object.entries(CHILD_ACCEPTED).map(([key, props]) => [key, new Set(props)])
+);
 
 const ACCEPTED_SETS = new Map<string, ReadonlySet<string>>(
   Object.entries(ACCEPTED).map(([key, props]) => [
@@ -175,7 +182,18 @@ function checkBlock(block: unknown): void {
     if (accepted === undefined) continue;
     if (typeof props !== 'object' || props === null) continue;
     for (const [prop, value] of Object.entries(props)) {
-      if (!accepted.has(prop)) {
+      const child = CHILD_SETS.get(`${key}.${prop}`);
+      if (child !== undefined && accepted.has(prop)) {
+        if (typeof value !== 'object' || value === null) continue;
+        for (const name of Object.keys(value)) {
+          if (!child.has(name)) {
+            warnOnce(
+              `${key}.${prop}.${name}`,
+              `theme: "${name}" is not a prop of "${key}.${prop}" and is ignored.`
+            );
+          }
+        }
+      } else if (!accepted.has(prop)) {
         warnOnce(
           `${key}.${prop}`,
           `theme: "${prop}" is not a prop of "${key}" and is ignored.`

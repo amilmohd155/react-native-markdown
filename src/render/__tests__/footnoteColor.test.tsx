@@ -6,9 +6,9 @@ import { createRenderCtx } from '../context';
 import { defaultComponents } from '../defaults';
 import { tableFor } from './helpers';
 
-it('footnoteDefinition.color reaches the definition paragraph text', async () => {
+it('footnote.definition.color reaches the definition paragraph text', async () => {
   const theme = resolveThemeProp(
-    { footnoteDefinition: { color: '#a00' } },
+    { footnote: { definition: { color: '#a00' } } },
     'light'
   );
   const ctx = createRenderCtx({

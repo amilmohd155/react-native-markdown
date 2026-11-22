@@ -124,11 +124,11 @@ describe('resolveTheme', () => {
     expect(theme.elements.HtmlBlock.text.fontFamily).not.toBe('Inter');
   });
 
-  it("lets listItem, tableCell and htmlBlock props win over the paragraph's", () => {
+  it("lets list, table and htmlBlock props win over the paragraph's", () => {
     const theme = resolveTheme({
       paragraph: { color: 'p', fontSize: 18 },
-      listItem: { color: 'li' },
-      tableCell: { fontSize: 14, padding: 2 },
+      list: { color: 'li' },
+      table: { fontSize: 14, cellPadding: 2 },
       htmlBlock: { color: 'html', fontSize: 11 },
     });
     expect(theme.elements.ListItem.text).toMatchObject({

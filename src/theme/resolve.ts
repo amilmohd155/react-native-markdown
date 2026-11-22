@@ -140,10 +140,10 @@ function admonitionEntries(
 /**
  * Footnote text metrics: the size defaults to 0.875 of the paragraph's, and
  * the line height keeps the paragraph's ratio (so `paragraph.lineHeight`
- * reaches the footnotes) unless `footnoteDefinition.lineHeight` is set.
+ * reaches the footnotes) unless `footnote.definition.lineHeight` is set.
  */
 function footnoteMetrics(b: FlatThemeBlock, t: ThemeTokens) {
-  const note = b.footnoteDefinition ?? {};
+  const note = b.footnote?.definition ?? {};
   return {
     note,
     noteSize: note.fontSize ?? t.fontSize.base * 0.875,
@@ -220,16 +220,13 @@ const CORE_KEYS: ReadonlySet<string> = new Set([
   'h6',
   'blockquote',
   'list',
-  'listItem',
   'codeBlock',
-  'codeBlockHeader',
   'table',
-  'tableCell',
   'divider',
   'image',
   'inlineImage',
   'htmlBlock',
-  'footnoteDefinition',
+  'footnote',
   'checkbox',
   'strong',
   'em',
@@ -241,8 +238,6 @@ const CORE_KEYS: ReadonlySet<string> = new Set([
   'kbd',
   'superscript',
   'subscript',
-  'footnoteReference',
-  'footnoteBackLink',
 ]);
 
 /** The `link` props beyond `color`, shared by `link` and its variants. */
@@ -355,7 +350,7 @@ function tokensOf(
       border: b.divider!.backgroundColor! as string,
       quoteBar: b.blockquote!.borderLeftColor! as string,
       highlight: b.highlight!.backgroundColor! as string,
-      footnoteHighlight: b.footnoteDefinition!.highlightColor!,
+      footnoteHighlight: b.footnote!.definition!.highlightColor!,
     }),
     fonts: Object.freeze({
       body: b.paragraph!.fontFamily,
@@ -373,7 +368,7 @@ function tokensOf(
     fontScale: Object.freeze({
       superscript: b.superscript?.fontScale ?? scriptScale(),
       subscript: b.subscript?.fontScale ?? scriptScale(),
-      footnoteReference: b.footnoteReference?.fontScale ?? scriptScale(),
+      footnoteReference: b.footnote?.reference?.fontScale ?? scriptScale(),
     }),
     spacing: Object.freeze({ block: BLOCK_SPACING }),
     list: listTokens(b.list!),
@@ -431,10 +426,9 @@ function deriveElements(
   const list = b.list ?? {};
   const code = b.codeBlock!;
   const codeSize = code.fontSize ?? base * 0.875;
-  const header = b.codeBlockHeader ?? {};
+  const header = code.header ?? {};
   const headerSize = header.fontSize ?? base * 0.75;
   const table = b.table ?? {};
-  const cell = b.tableCell ?? {};
   const divider = b.divider!;
   const image = b.image ?? {};
   const html = b.htmlBlock ?? {};
@@ -490,7 +484,7 @@ function deriveElements(
       }),
     },
     ListItem: {
-      text: { ...blockText, ...pick<TextStyle>(b.listItem, TEXT_KEYS) },
+      text: { ...blockText, ...pick<TextStyle>(list, TEXT_KEYS) },
       container: { flexDirection: 'row' },
     },
     CodeBlock: {
@@ -545,19 +539,16 @@ function deriveElements(
     },
     TableRow: { container: { flexDirection: 'row' } },
     TableCell: {
-      text: { ...blockText, ...pick<TextStyle>(cell, TEXT_KEYS) },
+      text: { ...blockText, ...pick<TextStyle>(table, TEXT_KEYS) },
       container: defined<ViewStyle>({
         // The grid follows `table.borderColor`; the outer border is the
         // table's own (`borderWidth`, `borderRadius`).
         borderColor: table.borderColor ?? colors.border,
         borderWidth: StyleSheet.hairlineWidth,
-        padding: block * 0.5,
-        ...pick<ViewStyle>(cell, [
-          'backgroundColor',
-          'padding',
-          'paddingHorizontal',
-          'paddingVertical',
-        ]),
+        padding: table.cellPadding ?? block * 0.5,
+        paddingHorizontal: table.cellPaddingHorizontal,
+        paddingVertical: table.cellPaddingVertical,
+        backgroundColor: table.cellBackgroundColor,
       }),
     },
     Divider: {
@@ -633,11 +624,11 @@ function deriveElements(
     LineBreak: {},
     FootnoteReference: {
       text: {
-        color: b.footnoteReference?.color ?? colors.link,
+        color: b.footnote?.reference?.color ?? colors.link,
       },
     },
     FootnoteBackLink: {
-      text: { color: b.footnoteBackLink?.color ?? colors.link },
+      text: { color: b.footnote?.backLink?.color ?? colors.link },
     },
     HtmlInline: { text: {} },
   };

@@ -30,8 +30,22 @@ describe('flat theme types', () => {
       { divider: { color: 'red' } },
       // @ts-expect-error strikethrough takes color only
       { strikethrough: { fontSize: 12 } },
-      // @ts-expect-error listItem takes no margins
-      { listItem: { marginTop: 1 } },
+      // @ts-expect-error removed keys: folded into list, table, footnote, codeBlock
+      { listItem: { color: 'red' } },
+      // @ts-expect-error tableCell is folded into table
+      { tableCell: { padding: 1 } },
+      // @ts-expect-error footnoteReference is footnote.reference
+      { footnoteReference: { color: 'red' } },
+      // @ts-expect-error footnoteBackLink is footnote.backLink
+      { footnoteBackLink: { color: 'red' } },
+      // @ts-expect-error footnoteDefinition is footnote.definition
+      { footnoteDefinition: { color: 'red' } },
+      // @ts-expect-error codeBlockHeader is codeBlock.header
+      { codeBlockHeader: { color: 'red' } },
+      // @ts-expect-error unknown nested child prop
+      { footnote: { reference: { fontSize: 1 } } },
+      // @ts-expect-error unknown nested child
+      { footnote: { nope: {} } },
       // @ts-expect-error unknown key
       { nope: {} },
       // @ts-expect-error unknown prop
@@ -47,6 +61,6 @@ describe('flat theme types', () => {
       // @ts-expect-error scheme blocks do not nest
       { dark: { dark: {} } },
     ];
-    expect(bad).toHaveLength(10);
+    expect(bad).toHaveLength(17);
   });
 });

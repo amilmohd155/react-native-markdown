@@ -146,7 +146,7 @@ describe('codeBlock.syntax through the highlight plugin', () => {
   });
 });
 
-describe('footnoteDefinition.highlightColor', () => {
+describe('footnote.definition.highlightColor', () => {
   it('is the flash colour when the app sets none', async () => {
     jest
       .spyOn(AccessibilityInfo, 'isReduceMotionEnabled')
@@ -155,7 +155,7 @@ describe('footnoteDefinition.highlightColor', () => {
     const ctx = createRenderCtx({
       components: defaultComponents,
       theme: resolveTheme({
-        footnoteDefinition: { highlightColor: '#abcdef' },
+        footnote: { definition: { highlightColor: '#abcdef' } },
       }),
       handlers: { onFootnotePress: () => {} },
       footnoteFocus: {

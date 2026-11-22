@@ -50,8 +50,8 @@ describe('done when: changing one prop restyles every element deriving from it',
     ['blockquote.color', { blockquote: { color: '#020202' } }, ['Blockquote']],
     ['htmlBlock.color', { htmlBlock: { color: '#020202' } }, ['HtmlBlock']],
     [
-      'codeBlockHeader.color',
-      { codeBlockHeader: { color: '#020202' } },
+      'codeBlock.header.color',
+      { codeBlock: { header: { color: '#020202' } } },
       ['CodeBlockHeader'],
     ],
     [

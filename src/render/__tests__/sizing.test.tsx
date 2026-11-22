@@ -66,7 +66,7 @@ describe('fontScale at render', () => {
     });
     expect(byText(q, 'TM').style.fontSize).toBe(15);
     const t = await texts('| a |\n|---|\n| B<sup>TM</sup> |\n', {
-      tableCell: { fontSize: 20 },
+      table: { fontSize: 20 },
     });
     expect(byText(t, 'TM').style.fontSize).toBe(15);
   });
@@ -78,7 +78,7 @@ describe('fontScale at render', () => {
 
   it('footnoteReference uses its fontScale', async () => {
     const all = await texts('a[^1]\n\n[^1]: note\n', {
-      footnoteReference: { fontScale: 0.5 },
+      footnote: { reference: { fontScale: 0.5 } },
     });
     const ref = all.find((t) => t.style.fontSize === 8);
     expect(ref).toBeDefined();

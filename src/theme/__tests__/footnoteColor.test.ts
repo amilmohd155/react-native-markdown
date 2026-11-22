@@ -6,10 +6,10 @@ beforeEach(() => clearThemeCache());
 const flat = (s: unknown) =>
   StyleSheet.flatten(s as never) as { color?: string };
 
-describe('footnoteDefinition.color', () => {
+describe('footnote.definition.color', () => {
   it('colours the section text and the definition entry', () => {
     const t = resolveThemeProp(
-      { footnoteDefinition: { color: '#a00' } },
+      { footnote: { definition: { color: '#a00' } } },
       'light'
     );
     expect(flat(t.footnoteSection.text).color).toBe('#a00');
