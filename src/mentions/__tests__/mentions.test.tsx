@@ -3,7 +3,7 @@ import { Markdown } from '../../api/Markdown';
 import { renderTree, textOf } from '../../__tests__/tree';
 import { dumpBlocks, type Dumped } from '../../parse/__tests__/dump';
 import { parseWithMarkdownIt } from '../../parse/markdownItBackend';
-import { Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { mentions, useMentionPress } from '../index';
 import type { MentionAttrs } from '../Mention';
 
@@ -260,5 +260,36 @@ describe('mentions: render', () => {
         expect.anything()
       );
     });
+  });
+});
+
+describe('mentions: theme', () => {
+  const src = '[@A](user://a) [web](https://x.com)';
+  const color = (label: string) =>
+    StyleSheet.flatten(screen.getByText(label).props.style)?.color;
+
+  it('styles a mention by the matching link variant', async () => {
+    await render(
+      <Markdown
+        source={src}
+        plugins={[mentions({ schemes: ['user'] })]}
+        theme={{
+          link: { color: 'blue', variants: { '^user:': { color: 'green' } } },
+        }}
+      />
+    );
+    expect(color('@A')).toBe('green');
+    expect(color('web')).toBe('blue');
+  });
+
+  it('falls back to link without a matching variant', async () => {
+    await render(
+      <Markdown
+        source={src}
+        plugins={[mentions({ schemes: ['user'] })]}
+        theme={{ link: { color: 'blue' } }}
+      />
+    );
+    expect(color('@A')).toBe('blue');
   });
 });

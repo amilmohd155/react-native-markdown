@@ -150,7 +150,7 @@ const ACCEPTED_SETS = new Map<string, ReadonlySet<string>>(
 const SYNTAX_TYPES: ReadonlySet<string> = new Set(SYNTAX_TOKEN_TYPES);
 
 /** `__DEV__` as React Native and Jest define it; false when absent. */
-function isDev(): boolean {
+export function isDev(): boolean {
   return (globalThis as { __DEV__?: unknown }).__DEV__ === true;
 }
 
@@ -161,7 +161,7 @@ export function isHexColor(color: string): boolean {
 
 const warned = new Set<string>();
 
-function warnOnce(path: string, message: string): void {
+export function warnOnce(path: string, message: string): void {
   if (warned.has(path)) return;
   warned.add(path);
   console.warn(`[react-native-markdown] ${message}`);

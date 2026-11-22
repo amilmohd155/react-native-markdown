@@ -128,7 +128,8 @@ theme={{
 - A variant accepts the same props as `link` and is merged over it.
 - Keys are regular expression sources tested against the `href` in object order; the first match wins, and no match uses plain `link`.
 - Mentions: the `mention` key of the `mentions` plugin is dropped. A mention is styled by the variant that matches its URL, else by `link`.
-- Variants work inside the `dark` and `light` blocks like any other prop.
+- Variants work inside the `dark` and `light` blocks and merge per pattern, prop by prop: the same pattern keeps its position and props it does not set, new patterns append after the base ones.
+- Differences from enriched-markdown: no longest-first sort (object order decides); a variant's `backgroundColor` inherits `link.backgroundColor` (enriched: transparent); `textDecorationLine` instead of `underline`; no pill support; nested under `link`, not a top-level `linkVariants`.
 
 ## Implementation notes
 
@@ -136,7 +137,7 @@ Agreed, not blocking the whitelist:
 
 1. **Whitelist enforcement.** Mapped types per key, plus a dev-only warning for unknown props.
 2. **Per-platform defaults.** A table (system font, mono family, line height, `fontScale`), written once the built-in themes are rewritten.
-3. **Link variants.** Built as described above for now: the first matching pattern wins, a mention is matched by its URL. Whether a mention's URL always carries its scheme, how an invalid regular expression behaves in development, and the pattern syntax (taken from the maintainer's example; enriched-markdown's `MENTIONS.md` is unread) are revisited later.
+3. **Link variants.** Built as described above: first match wins, a mention is matched by its raw URL, an invalid regular expression is skipped with a one-time development warning. Still to check: whether a mention's URL always carries its scheme.
 4. **Decoration colour.** On Android a decoration line takes the text colour, so `strikethrough.color` and `underline.color` also colour the text there. Document it with the props. `inlineCode.borderColor` is not offered; check on a device before adding it.
 5. **Not adopted:** `video`, spoiler particles, `baselineOffsetScale`, `math` (a plugin-owned key if a math plugin ships), `link.underline` (we use `textDecorationLine`).
 6. **Provenance.** Names and defaults taken from enriched-markdown's `STYLES.md` come from a subagent's read of that file; re-check each against the source when implementing.

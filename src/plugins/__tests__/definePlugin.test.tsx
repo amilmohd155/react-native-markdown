@@ -264,7 +264,7 @@ describe('plugin nodes', () => {
     expect(style).toEqual({ text: { color: '#112233' }, container: {} });
   });
 
-  it('lets the theme prop override the plugin theme', async () => {
+  it('lets the theme prop override a plugin theme key', async () => {
     let style: ElementStyle | undefined;
     const probe = definePlugin({
       name: 'probe',
@@ -285,7 +285,8 @@ describe('plugin nodes', () => {
       theme: { Mention: { color: '#112233' } },
     });
     await render('@ada', [probe], {
-      theme: { Mention: { color: '#ffffff' } },
+      // `Mention` is no longer a typed theme key (links use `link.variants`).
+      theme: { Mention: { color: '#ffffff' } } as never,
     });
     expect(style?.text.color).toBe('#ffffff');
   });

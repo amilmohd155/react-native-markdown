@@ -21,7 +21,8 @@ import {
 } from './fonts';
 import { mergeFlat } from './merge';
 import { darkTheme, lightTheme } from './tokens';
-import { isHexColor, warnUnknownThemeProps } from './warn';
+import { compileLinkVariants } from './linkVariants';
+import { isDev, isHexColor, warnOnce, warnUnknownThemeProps } from './warn';
 import {
   ELEMENT_NAMES,
   SYNTAX_TOKEN_TYPES,
@@ -49,10 +50,6 @@ const HEADING_SCALE = 1.2;
 /** `fontScale` default of the scaled inline elements: Roboto's larger x-height needs less. */
 const scriptScale = (): number =>
   Platform.select({ android: 0.65, default: 0.75 });
-
-/**
- * Typed but ignored for now (no slot in the resolver yet): `link.variants`.
- */
 
 const DEFAULT_IMAGE_RATIO = 16 / 9;
 
@@ -246,6 +243,14 @@ const CORE_KEYS: ReadonlySet<string> = new Set([
   'footnoteReference',
   'footnoteBackLink',
 ]);
+
+/** The `link` props beyond `color`, shared by `link` and its variants. */
+const LINK_PROPS = [
+  'fontFamily',
+  'fontWeight',
+  'textDecorationLine',
+  'backgroundColor',
+] as const;
 
 /** The defined values of `keys` in `props`, or `{}`. */
 function pick<T extends object>(
@@ -618,12 +623,7 @@ function deriveElements(
       text: {
         color: colors.link,
         textDecorationLine: 'underline',
-        ...pick<TextStyle>(link, [
-          'fontFamily',
-          'fontWeight',
-          'textDecorationLine',
-          'backgroundColor',
-        ]),
+        ...pick<TextStyle>(link, LINK_PROPS),
       },
     },
     InlineCode: { text: inlineCode(b.inlineCode) },
@@ -847,6 +847,23 @@ export function resolveTheme(
   add('tightParagraph', tightParagraph);
   add('footnoteSection', footnoteSection);
   add('codeBlockGutter', codeBlockGutter);
+  // `link.variants`: the resolved `Link` text with each variant's props over it.
+  const linkVariants = compileLinkVariants(block.link?.variants, (source) => {
+    if (isDev()) {
+      warnOnce(
+        `link.variants.${source}`,
+        `theme: "${source}" in link.variants is not a valid regular expression and is skipped.`
+      );
+    }
+  });
+  linkVariants.forEach((v, i) =>
+    add(`link@${i}`, {
+      text: {
+        ...merged.Link.text,
+        ...pick<TextStyle>(v.props, ['color', ...LINK_PROPS]),
+      },
+    })
+  );
   variantEntries.Strong.forEach((e, i) => add(`Strong@${i}`, e));
   variantEntries.Emphasis.forEach((e, i) => add(`Emphasis@${i}`, e));
 
@@ -888,6 +905,9 @@ export function resolveTheme(
     elements: Object.freeze(elements),
     pluginElements: Object.freeze(pluginElements),
     admonitions: Object.freeze(admonitions),
+    linkVariants: Object.freeze(
+      linkVariants.map((v, i) => ({ test: v.test, style: pick1(`link@${i}`) }))
+    ),
     headings: Object.freeze([
       pick1('h1'),
       pick1('h2'),

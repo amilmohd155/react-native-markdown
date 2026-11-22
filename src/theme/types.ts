@@ -215,6 +215,13 @@ export interface AdmonitionStyle extends ElementStyle {
   readonly accent: string;
 }
 
+/** A `link.variants` entry: its pattern and the `Link` style merged with it. */
+export interface LinkVariantStyle {
+  /** Compiled without flags, so `test` keeps no state between calls. */
+  readonly test: RegExp;
+  readonly style: ElementStyle;
+}
+
 /**
  * A resolved theme: element styles derived from the merged flat theme,
  * created once with `StyleSheet.create`.
@@ -231,6 +238,11 @@ export interface ResolvedTheme {
   readonly pluginElements: Readonly<Record<string, ElementStyle>>;
   /** Styles of the admonition kinds (`blockquote.admonitions`), from the blockquote's. */
   readonly admonitions: Readonly<Record<AdmonitionKind, AdmonitionStyle>>;
+  /**
+   * `link.variants` compiled once, in object order: the first whose `test`
+   * matches the href styles the link (`linkStyleFor`). Empty without variants.
+   */
+  readonly linkVariants: readonly LinkVariantStyle[];
   /** `Heading` style by level: index 0 is h1. */
   readonly headings: readonly [
     ElementStyle,

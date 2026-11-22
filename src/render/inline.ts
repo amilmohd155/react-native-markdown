@@ -16,6 +16,7 @@ import {
   type ElementStyle,
   type FontState,
 } from '../theme';
+import { linkStyleFor } from '../theme/linkVariants';
 import type { RenderCtx } from './context';
 import { checkedInline, isDev } from './devInline';
 import { componentOf, createElementOf } from './element';
@@ -256,17 +257,19 @@ function renderInlineNode(
   }
 
   switch (type) {
-    case NodeType.Link:
+    case NodeType.Link: {
+      const props = linkProps(table, id);
       return inline(
         ctx,
         dev,
         blockText,
         'Link',
         id,
-        linkProps(table, id),
-        elements.Link,
+        props,
+        linkStyleFor(ctx.theme, props.href),
         renderInline(table, id, ctx, blockText, font, size)
       );
+    }
     case NodeType.InlineCode:
       return inline(
         ctx,

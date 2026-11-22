@@ -198,7 +198,12 @@ export interface LinkProps
   > {}
 
 export interface LinkTheme extends LinkProps {
-  /** Regular expression source tested against the href, in order; first match wins. */
+  /**
+   * Regular expression source tested against the href. Order matters: the
+   * first match wins. Variants merge per pattern, prop by prop, across
+   * layers (a `dark` entry for `'^user:'` keeps the top-level props it does
+   * not set); new patterns append after the existing ones.
+   */
   variants?: Record<string, LinkProps>;
 }
 

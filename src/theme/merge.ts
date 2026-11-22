@@ -4,7 +4,8 @@ import { darkTheme, lightTheme } from './tokens';
 
 /**
  * Merges flat theme blocks (P3a-2). Per key, per prop, shallowly; the maps
- * in `NESTED` merge one level deeper. `undefined` values are skipped.
+ * in `NESTED` merge one level deeper, and `variants` two (per pattern, prop
+ * by prop). `undefined` values are skipped.
  * Spec: docs/rewrite/phase-3a/theme-props.md
  */
 
@@ -27,6 +28,22 @@ function isMap(value: unknown): value is Props {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/**
+ * `link.variants`: the same pattern merges prop by prop (`over` wins) and
+ * keeps its original position; new patterns append in `over` order.
+ */
+function mergeVariants(base: Props, over: Props): Props {
+  const out: Props = { ...base };
+  for (const pattern of Object.keys(over)) {
+    const value = over[pattern];
+    if (value === undefined) continue;
+    const prev = out[pattern];
+    out[pattern] =
+      isMap(prev) && isMap(value) ? mergeProps(prev, value) : value;
+  }
+  return out;
+}
+
 function mergeProps(a: Props | undefined, b: Props | undefined) {
   const out: Props = { ...a };
   if (b === undefined) return out;
@@ -34,10 +51,12 @@ function mergeProps(a: Props | undefined, b: Props | undefined) {
     const value = b[key];
     if (value === undefined) continue;
     const prev = out[key];
-    out[key] =
-      NESTED.has(key) && isMap(prev) && isMap(value)
-        ? { ...prev, ...value }
-        : value;
+    if (NESTED.has(key) && isMap(prev) && isMap(value)) {
+      out[key] =
+        key === 'variants' ? mergeVariants(prev, value) : { ...prev, ...value };
+    } else {
+      out[key] = value;
+    }
   }
   return out;
 }
