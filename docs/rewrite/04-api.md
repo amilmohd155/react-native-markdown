@@ -161,6 +161,8 @@ declare module '@docren/react-native-markdown' {
 
 ## Theme
 
+> **Planned change ([Phase 3a](./phase-3a/README.md), [P3a-2](./phase-3a/decisions.md#p3a-2-flat-per-element-theme-tokens-become-internal)):** `theme` becomes one flat object keyed by element (`link: { color }`, `codeBlock: { backgroundColor, padding }`) with `dark: {…}` and `light: {…}` blocks; tokens, `elements` and `container`/`text` leave the public API, and `createTheme(input)` stays as a typed helper without `base`. This section describes the current (Phase 1) API and is rewritten when Phase 3a lands.
+
 ```ts
 const theme = createTheme(
   {
