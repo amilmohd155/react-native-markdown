@@ -1,4 +1,5 @@
 import type { TextStyle, ViewStyle } from 'react-native';
+import type { AdmonitionKind } from './flatTypes';
 
 /**
  * Built-in element names: the keys of `components`.
@@ -209,6 +210,11 @@ export interface ElementStyle {
   readonly container: ViewStyle;
 }
 
+/** An admonition's style: the box and text, plus its accent (bar, title). */
+export interface AdmonitionStyle extends ElementStyle {
+  readonly accent: string;
+}
+
 /**
  * A resolved theme: element styles derived from the merged flat theme,
  * created once with `StyleSheet.create`.
@@ -223,6 +229,8 @@ export interface ResolvedTheme {
    * Elements with no override are absent; the renderer uses an empty style.
    */
   readonly pluginElements: Readonly<Record<string, ElementStyle>>;
+  /** Styles of the admonition kinds (`blockquote.admonitions`), from the blockquote's. */
+  readonly admonitions: Readonly<Record<AdmonitionKind, AdmonitionStyle>>;
   /** `Heading` style by level: index 0 is h1. */
   readonly headings: readonly [
     ElementStyle,

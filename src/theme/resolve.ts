@@ -4,7 +4,11 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import type { FlatThemeBlock, FlatThemeInput } from './flatTypes';
+import type {
+  AdmonitionKind,
+  FlatThemeBlock,
+  FlatThemeInput,
+} from './flatTypes';
 import {
   BODY_FONT,
   FONT_STATE_COUNT,
@@ -17,10 +21,11 @@ import {
 } from './fonts';
 import { mergeFlat } from './merge';
 import { darkTheme, lightTheme } from './tokens';
-import { warnUnknownThemeProps } from './warn';
+import { isHexColor, warnUnknownThemeProps } from './warn';
 import {
   ELEMENT_NAMES,
   SYNTAX_TOKEN_TYPES,
+  type AdmonitionStyle,
   type ColorScheme,
   type ElementName,
   type ElementStyle,
@@ -46,8 +51,7 @@ const scriptScale = (): number =>
   Platform.select({ android: 0.65, default: 0.75 });
 
 /**
- * Typed but ignored for now (no slot in the resolver yet): `blockquote.admonitions`;
- * `link.variants`.
+ * Typed but ignored for now (no slot in the resolver yet): `link.variants`.
  */
 
 const DEFAULT_IMAGE_RATIO = 16 / 9;
@@ -73,6 +77,66 @@ function imageSizing(
       resizeMode ??
       (mode === 'ratio' || mode === 'maxHeight' ? 'cover' : 'contain'),
   });
+}
+
+const ADMONITION_KINDS: readonly AdmonitionKind[] = [
+  'note',
+  'tip',
+  'important',
+  'warning',
+  'caution',
+];
+
+/** Default accent per kind: `[light, dark]` (GitHub's alert colors). */
+const ACCENTS: Readonly<Record<AdmonitionKind, readonly [string, string]>> = {
+  note: ['#0969da', '#4493f8'],
+  tip: ['#1a7f37', '#3fb950'],
+  important: ['#8250df', '#ab7df8'],
+  warning: ['#9a6700', '#d29922'],
+  caution: ['#cf222e', '#f85149'],
+};
+
+type AdmonitionEntry = StyleEntry & { accent: string };
+
+/** The default background of an admonition: its accent at about 10% (hex `1a`). */
+function tint(color: string): string | undefined {
+  if (!isHexColor(color)) return undefined;
+  // `#rgb` expands to `#rrggbb` first: `#rgb1a` is not a color.
+  const full =
+    color.length === 4
+      ? '#' + [...color.slice(1)].map((c) => c + c).join('')
+      : color;
+  return full + '1a';
+}
+
+/**
+ * Admonition styles by kind, from the blockquote's entry: the bar, title and
+ * box take the kind's `color`, so geometry and fonts follow `blockquote`.
+ * Text defaults to the body colour (a quote's is muted).
+ */
+function admonitionEntries(
+  b: FlatThemeBlock,
+  scheme: ColorScheme,
+  quote: StyleEntry,
+  textColor: string
+): Record<AdmonitionKind, AdmonitionEntry> {
+  const out = {} as Record<AdmonitionKind, AdmonitionEntry>;
+  for (const kind of ADMONITION_KINDS) {
+    const own = b.blockquote?.admonitions?.[kind];
+    const accent = own?.color ?? ACCENTS[kind][scheme === 'dark' ? 1 : 0];
+    out[kind] = {
+      accent,
+      text: { ...quote.text, color: b.blockquote?.color ?? textColor },
+      container: defined<ViewStyle>({
+        ...quote.container,
+        borderLeftColor: accent,
+        backgroundColor: own?.backgroundColor ?? tint(accent),
+        paddingVertical: b.blockquote?.padding ?? BLOCK_SPACING * 0.5,
+        paddingRight: BLOCK_SPACING,
+      }),
+    };
+  }
+  return out;
 }
 
 /**
@@ -763,6 +827,15 @@ export function resolveTheme(
     flat[`${key}.container`] = entry.container ?? {};
   };
   for (const name of ELEMENT_NAMES) add(name, merged[name]);
+  const admonitionEntry = admonitionEntries(
+    block,
+    scheme,
+    merged.Blockquote,
+    tokens.colors.text
+  );
+  for (const kind of ADMONITION_KINDS) {
+    add(`admonition:${kind}`, admonitionEntry[kind]);
+  }
   const plugins = pluginEntries(block);
   for (const [name, entry] of plugins) add(`plugin:${name}`, entry);
   headings.forEach((entry, i) => add(`h${i + 1}`, entry));
@@ -791,6 +864,14 @@ export function resolveTheme(
     pluginElements[name] = pick1(`plugin:${name}`);
   }
 
+  const admonitions = {} as Record<AdmonitionKind, AdmonitionStyle>;
+  for (const kind of ADMONITION_KINDS) {
+    admonitions[kind] = Object.freeze({
+      ...pick1(`admonition:${kind}`),
+      accent: admonitionEntry[kind].accent,
+    });
+  }
+
   const variants = (name: 'Strong' | 'Emphasis'): readonly ElementStyle[] => {
     if (!faceMode) {
       return Object.freeze(
@@ -806,6 +887,7 @@ export function resolveTheme(
     tokens,
     elements: Object.freeze(elements),
     pluginElements: Object.freeze(pluginElements),
+    admonitions: Object.freeze(admonitions),
     headings: Object.freeze([
       pick1('h1'),
       pick1('h2'),

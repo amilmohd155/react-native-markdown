@@ -31,7 +31,11 @@ export {
   type ThemeTokens,
 } from './types';
 export type { PluginElementPropsMap } from './pluginElements';
-export type { FlatThemeBlock, FlatThemeInput } from './flatTypes';
+export type {
+  AdmonitionKind,
+  FlatThemeBlock,
+  FlatThemeInput,
+} from './flatTypes';
 export { darkTheme, lightTheme } from './tokens';
 export { createTheme } from './create';
 export { clearThemeCache, resolveThemeProp, type ThemeProp } from './cache';

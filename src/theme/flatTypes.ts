@@ -45,6 +45,7 @@ export type AdmonitionKind =
   | 'caution';
 
 export interface AdmonitionTheme {
+  /** Accent. A hex color gets a default tint as `backgroundColor`; any other format needs `backgroundColor` set. */
   color?: string;
   backgroundColor?: string;
 }

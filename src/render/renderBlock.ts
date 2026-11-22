@@ -349,19 +349,18 @@ function renderNode(
       // Plugin block nodes: a leaf (`math_block`) or a container.
       const plugin = pluginNodeOf(table, id);
       if (plugin === undefined) return null;
+      const props = pluginPropsOf(table, id);
+      const style = pluginStyleOf(ctx, plugin.name, props);
       const children =
         table.firstChild[id] === NONE
           ? undefined
-          : renderChildren(table, id, ctx, place);
+          : renderChildren(table, id, ctx, {
+              ...place,
+              textSize: style.text.fontSize ?? place.textSize,
+            });
       const component = pluginComponentOf(ctx, plugin.name);
       if (component === undefined) return children ?? null;
-      return createPluginElement(
-        component,
-        id,
-        pluginPropsOf(table, id),
-        pluginStyleOf(ctx, plugin.name),
-        children
-      );
+      return createPluginElement(component, id, props, style, children);
     }
   }
 }

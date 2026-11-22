@@ -154,6 +154,11 @@ function isDev(): boolean {
   return (globalThis as { __DEV__?: unknown }).__DEV__ === true;
 }
 
+/** A `#rgb` or `#rrggbb` color: the only kind an admonition tint is derived from. */
+export function isHexColor(color: string): boolean {
+  return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color);
+}
+
 const warned = new Set<string>();
 
 function warnOnce(path: string, message: string): void {
@@ -175,6 +180,21 @@ function checkBlock(block: unknown): void {
           `${key}.${prop}`,
           `theme: "${prop}" is not a prop of "${key}" and is ignored.`
         );
+      } else if (
+        key === 'blockquote' &&
+        prop === 'admonitions' &&
+        typeof value === 'object' &&
+        value !== null
+      ) {
+        for (const [kind, own] of Object.entries(value)) {
+          const color = (own as { color?: unknown } | null)?.color;
+          if (typeof color === 'string' && !isHexColor(color)) {
+            warnOnce(
+              `admonitions.${kind}.color:${color}`,
+              `theme: admonitions.${kind}.color is not a hex color; set backgroundColor, no tint is derived.`
+            );
+          }
+        }
       } else if (
         key === 'codeBlock' &&
         prop === 'syntax' &&
