@@ -265,13 +265,16 @@ The `emoji` plugin is a separate entry point, so apps that do not use it do not 
 ```tsx
 import { emoji } from '@docren/react-native-markdown/emoji';
 
-const plugins = [emoji({ map: { shipit: '🚢' } })];
+export const plugins = [emoji({ map: { shipit: '🚢' } })];
 ```
 
 The `mentions` plugin (`@docren/react-native-markdown/mentions`) turns `[@Alice](user://alice)` into a `Mention` with `scheme`, `id` (decoded), `label` and `url`. Only `scheme://` links for the listed schemes convert; autolinks and bare URLs stay links. Style it with the `link.variants` entry matching its URL (else `link`), or replace it with `components.Mention`. `onMentionPress` handles the press; without it the press goes to `onLinkPress`, which ignores `user://`. A custom `components.Mention` presses through the `useMentionPress()` hook from the same entry.
 
 ```tsx
+import { Markdown } from '@docren/react-native-markdown';
 import { mentions } from '@docren/react-native-markdown/mentions';
+
+declare function openProfile(id: string): void;
 
 <Markdown
   source="Hi [@Alice](user://alice)"
@@ -283,6 +286,7 @@ import { mentions } from '@docren/react-native-markdown/mentions';
 The `admonitions` plugin (`@docren/react-native-markdown/admonitions`) renders GitHub alerts: a blockquote whose first line is `[!NOTE]` (also `TIP`, `IMPORTANT`, `WARNING`, `CAUTION`, any case) becomes an `Admonition` with a title above its content. The marker must be alone on its line; an unknown kind or text after the marker stays a blockquote. Works under the `'commonmark'` preset. `titles` renames kinds. Style a kind with `theme.blockquote.admonitions.<kind>` (`note`, `tip`, `important`, `warning`, `caution`; `color` and `backgroundColor`); `components.Admonition` replaces the render and gets `kind`, `title`, `children` and `style`.
 
 ```tsx
+import { Markdown } from '@docren/react-native-markdown';
 import { admonitions } from '@docren/react-native-markdown/admonitions';
 
 <Markdown
@@ -299,7 +303,7 @@ The `highlight` plugin (`@docren/react-native-markdown/highlight`) colours fence
 ```tsx
 import { highlight } from '@docren/react-native-markdown/highlight';
 
-const plugins = [highlight()]; // create once, outside the component
+export const plugins = [highlight()]; // create once, outside the component
 ```
 
 ### Raw HTML

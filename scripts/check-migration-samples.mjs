@@ -15,7 +15,7 @@
 // Usage: yarn prepare && node scripts/check-migration-samples.mjs [file.md...]
 //   Default: docs/migration-from-v0.md and README.md.
 
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, symlinkSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -76,7 +76,9 @@ try {
   });
   const shims = join(dir, 'shims.d.ts');
   writeFileSync(shims, SHIMS);
-  mkdirSync(join(dir, 'node_modules'), { recursive: true });
+  // Normal node resolution from the temp dir: honors react-native's `exports`
+  // map (its types live in types_generated) and @types/react.
+  symlinkSync(join(root, 'node_modules'), join(dir, 'node_modules'), 'dir');
 
   const options = {
     strict: true,
@@ -95,11 +97,14 @@ try {
     moduleResolution: ts.ModuleResolutionKind.Bundler,
     types: ['node'],
     typeRoots: [join(root, 'node_modules/@types')],
-    baseUrl: root,
     paths: {
       '@docren/react-native-markdown': [entry],
-      // @types first: `react` ships no types of its own.
-      '*': ['node_modules/@types/*', 'node_modules/*'],
+      ...Object.fromEntries(
+        ['emoji', 'mentions', 'admonitions', 'highlight'].map((sub) => [
+          `@docren/react-native-markdown/${sub}`,
+          [join(root, `lib/typescript/src/${sub}/index.d.ts`)],
+        ])
+      ),
     },
   };
 
