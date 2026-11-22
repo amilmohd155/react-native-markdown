@@ -71,11 +71,11 @@ describe('useResolvedTheme', () => {
   it("defaults to 'auto' and follows the color scheme", async () => {
     const { seen, setScheme } = await mountProbe();
     expect(seen.at(-1)).toBe(resolveThemeProp('light', 'light'));
-    expect(seen.at(-1)!.tokens.colors).toEqual(lightTheme.colors);
+    expect(seen.at(-1)!.tokens.colors.text).toBe(lightTheme.paragraph!.color);
 
     await setScheme('dark');
     expect(seen.at(-1)).toBe(resolveThemeProp('dark', 'light'));
-    expect(seen.at(-1)!.tokens.colors).toEqual(darkTheme.colors);
+    expect(seen.at(-1)!.tokens.colors.text).toBe(darkTheme.paragraph!.color);
 
     await setScheme('light');
     expect(seen.at(-1)).toBe(resolveThemeProp('light', 'dark'));
@@ -83,12 +83,12 @@ describe('useResolvedTheme', () => {
 
   it("'light' and 'dark' ignore the color scheme", async () => {
     schemeMock.mockReturnValue('dark');
-    expect((await mountProbe('light')).seen.at(-1)!.tokens.colors).toEqual(
-      lightTheme.colors
+    expect((await mountProbe('light')).seen.at(-1)!.tokens.colors.text).toBe(
+      lightTheme.paragraph!.color
     );
     schemeMock.mockReturnValue('light');
-    expect((await mountProbe('dark')).seen.at(-1)!.tokens.colors).toEqual(
-      darkTheme.colors
+    expect((await mountProbe('dark')).seen.at(-1)!.tokens.colors.text).toBe(
+      darkTheme.paragraph!.color
     );
   });
 
@@ -100,11 +100,11 @@ describe('useResolvedTheme', () => {
   });
 
   it('merges a theme input onto the base of the current scheme', async () => {
-    const { seen, setScheme } = await mountProbe({ colors: { link: 'red' } });
-    expect(seen.at(-1)!.tokens.colors.text).toBe(lightTheme.colors.text);
+    const { seen, setScheme } = await mountProbe({ link: { color: 'red' } });
+    expect(seen.at(-1)!.tokens.colors.text).toBe(lightTheme.paragraph!.color);
     await setScheme('dark');
     const dark = seen.at(-1)!;
-    expect(dark.tokens.colors.text).toBe(darkTheme.colors.text);
+    expect(dark.tokens.colors.text).toBe(darkTheme.paragraph!.color);
     expect(dark.tokens.colors.link).toBe('red');
     expect(dark.elements.Link.text.color).toBe('red');
   });
@@ -142,17 +142,17 @@ describe('dark mode re-renders', () => {
   it('does not re-render blocks for an equal inline theme object', async () => {
     const { renders, components } = counted();
     const { rerender } = await mountProbe(
-      { colors: { link: 'red' } },
+      { link: { color: 'red' } },
       components
     );
     expect(renders).toEqual({ Paragraph: 1, Heading: 1 });
 
     // A new object literal with equal values: cache hit, same ctx, no work.
-    await rerender({ colors: { link: 'red' } });
+    await rerender({ link: { color: 'red' } });
     expect(renders).toEqual({ Paragraph: 1, Heading: 1 });
 
     // A real change re-renders.
-    await rerender({ colors: { link: 'blue' } });
+    await rerender({ link: { color: 'blue' } });
     expect(renders).toEqual({ Paragraph: 2, Heading: 2 });
   });
 
@@ -177,17 +177,71 @@ describe('useMarkdownTheme', () => {
     };
   }
 
-  it('gives custom components the tokens and resolved styles', async () => {
+  it('gives custom components the merged flat values', async () => {
     const { seen, components } = capture();
     const theme = resolveThemeProp('light', 'light');
     const ctx = createRenderCtx({ components, theme });
     await renderTree(<BlockList table={TABLE} ctx={ctx} />);
     const got = seen.at(-1)!;
-    expect(got.tokens).toBe(theme.tokens);
-    expect(got.styles).toBe(theme.elements);
-    expect(got.headings).toBe(theme.headings);
-    expect(got.styles.Link.text.color).toBe(lightTheme.colors.link);
-    expect(got.headings[0]!.text.fontSize).toBe(40);
+    expect(got).toBe(theme.flat);
+    expect(got.link.color).toBe(lightTheme.link!.color);
+    expect(got.paragraph.fontSize).toBe(16);
+    expect(got.paragraph.lineHeight).toBe(24);
+    expect(got.h1.fontSize).toBe(40);
+    expect(got.codeBlock.backgroundColor).toBe(
+      lightTheme.codeBlock!.backgroundColor
+    );
+    // The default code colour is the scheme's text colour.
+    expect(got.codeBlock.color).toBe(lightTheme.paragraph!.color);
+    expect(got.codeBlock.syntax.keyword).toBe(
+      lightTheme.codeBlock!.syntax!.keyword
+    );
+    expect(got.list.bullets).toEqual(lightTheme.list!.bullets);
+    expect(got).not.toHaveProperty('tokens');
+    expect(got).not.toHaveProperty('dark');
+  });
+
+  it('returns the dark values for the dark scheme and for auto', async () => {
+    const { seen, components } = capture();
+    for (const [prop, scheme] of [
+      ['dark', 'light'],
+      ['auto', 'dark'],
+    ] as const) {
+      const ctx = createRenderCtx({
+        components,
+        theme: resolveThemeProp(prop, scheme),
+      });
+      await renderTree(<BlockList table={TABLE} ctx={ctx} />);
+      const got = seen.at(-1)!;
+      expect(got.paragraph.color).toBe(darkTheme.paragraph!.color);
+      expect(got.link.color).toBe(darkTheme.link!.color);
+      expect(got.codeBlock.backgroundColor).toBe(
+        darkTheme.codeBlock!.backgroundColor
+      );
+    }
+  });
+
+  it('merges a user theme (top-level keys, then the scheme block) over the defaults', async () => {
+    const { seen, components } = capture();
+    const theme = resolveThemeProp(
+      {
+        link: { color: 'red' },
+        paragraph: { fontSize: 20 },
+        h2: { fontSize: 33 },
+        dark: { link: { color: 'blue' } },
+      },
+      'dark'
+    );
+    const ctx = createRenderCtx({ components, theme });
+    await renderTree(<BlockList table={TABLE} ctx={ctx} />);
+    const got = seen.at(-1)!;
+    expect(got.link.color).toBe('blue');
+    expect(got.paragraph.fontSize).toBe(20);
+    expect(got.paragraph.lineHeight).toBe(30);
+    expect(got.paragraph.color).toBe(darkTheme.paragraph!.color);
+    expect(got.h2.fontSize).toBe(33);
+    expect(got.h1.fontSize).toBe(Math.round(20 * 1.2 ** 5));
+    expect(got.codeBlock.color).toBe(darkTheme.paragraph!.color);
   });
 
   it('keeps the same reference until the theme changes', async () => {
@@ -214,7 +268,7 @@ describe('useMarkdownTheme', () => {
     });
     await root.rerender(<BlockList table={TABLE} ctx={dark} />);
     expect(seen.at(-1)).not.toBe(first);
-    expect(seen.at(-1)!.tokens.colors).toEqual(darkTheme.colors);
+    expect(seen.at(-1)!.paragraph.color).toBe(darkTheme.paragraph!.color);
   });
 
   it('throws outside <Markdown>', async () => {

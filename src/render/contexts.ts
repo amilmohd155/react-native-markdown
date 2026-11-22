@@ -76,8 +76,13 @@ export const TableKeyContext = createContext('');
 export interface TableLayout {
   /** Fixed width per column once measured; `null` while measuring. */
   readonly widths: readonly number[] | null;
-  /** Cells report their natural width while measuring. */
-  readonly report: (column: number, width: number) => void;
+  /**
+   * A measuring cell enrolls itself (once, on mount) and reports its natural
+   * width under its own identity; the columns are final once every enrolled
+   * cell has reported. Returns the cell's unenroll function.
+   */
+  readonly enroll: (cell: object) => () => void;
+  readonly report: (cell: object, column: number, width: number) => void;
 }
 
 export const TableLayoutContext = createContext<TableLayout | null>(null);

@@ -7,7 +7,7 @@ import {
   fontStyleFor,
   withFont,
 } from '../fonts';
-import { lightTheme, type FontFaces, type ThemeTokens } from '../index';
+import type { FontFaces, ThemeTokens } from '../index';
 
 const inter: FontFaces = {
   regular: 'Inter_400Regular',
@@ -26,7 +26,7 @@ function fonts(
   body: ThemeTokens['fonts']['body'],
   heading?: ThemeTokens['fonts']['heading']
 ): ThemeTokens['fonts'] {
-  return { ...lightTheme.fonts, body, heading };
+  return { mono: 'monospace', body, heading };
 }
 
 describe('font state', () => {

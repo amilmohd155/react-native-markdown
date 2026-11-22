@@ -1,7 +1,7 @@
 import { memo, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { renderTree } from '../../__tests__/tree';
-import { getDefaultTheme, lightTheme } from '../../theme';
+import { getDefaultTheme, resolveTheme } from '../../theme';
 import { BlockList } from '../Block';
 import { createRenderCtx, type RenderCtx } from '../context';
 import { defaultComponents } from '../defaults';
@@ -145,19 +145,21 @@ describe('inlineView()', () => {
 describe('baselineOf', () => {
   it('reads fontSize and lineHeight from the block text style, cached', async () => {
     const text = { fontSize: 20, lineHeight: 30 };
-    expect(baselineOf(text, lightTheme)).toEqual({
+    expect(baselineOf(text, resolveTheme({}).tokens)).toEqual({
       fontSize: 20,
       lineHeight: 30,
     });
-    expect(baselineOf(text, lightTheme)).toBe(baselineOf(text, lightTheme));
+    expect(baselineOf(text, resolveTheme({}).tokens)).toBe(
+      baselineOf(text, resolveTheme({}).tokens)
+    );
   });
 
   it('falls back to the tokens', async () => {
-    expect(baselineOf(undefined, lightTheme)).toEqual({
+    expect(baselineOf(undefined, resolveTheme({}).tokens)).toEqual({
       fontSize: 16,
       lineHeight: 24,
     });
-    expect(baselineOf({ fontSize: 20 }, lightTheme)).toEqual({
+    expect(baselineOf({ fontSize: 20 }, resolveTheme({}).tokens)).toEqual({
       fontSize: 20,
       lineHeight: 30,
     });

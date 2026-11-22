@@ -1,5 +1,7 @@
 import {
   useContext,
+  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -9,14 +11,17 @@ import {
   Animated,
   Image as RNImage,
   Pressable,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   View,
+  type ImageStyle,
   type StyleProp,
   type TextStyle,
+  type ViewStyle,
 } from 'react-native';
-import type { ElementStyle } from '../../theme';
+import type { ElementStyle, ThemeTokens } from '../../theme';
 import {
   InheritedTextContext,
   ListGapContext,
@@ -94,14 +99,20 @@ export function List({ style, children }: ElementProps<'List'>) {
   return <View style={style.container}>{children}</View>;
 }
 
-/** Task checkbox glyphs, forced to text presentation (U+FE0E), never emoji. */
-const CHECKED = '☑\uFE0E';
-const UNCHECKED = '☐\uFE0E';
+/** Black or white, whichever reads on `bg` (`#rgb`/`#rrggbb`; else white). */
+function contrastOn(bg: string): string {
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(bg)?.[1];
+  if (!hex) return '#ffffff';
+  const full = hex.length === 3 ? hex.replace(/./g, '$&$&') : hex;
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16));
+  return 0.299 * r! + 0.587 * g! + 0.114 * b! > 160 ? '#0d1117' : '#ffffff';
+}
 
-/** Space between the marker column and the item content. */
-const MARKER_GAP = 6;
+/** Checkbox size as a fraction of the list font size, when `size` is unset. */
+const CHECKBOX_SIZE = 0.9;
 
 export function ListItem({
+  index,
   ordered,
   marker,
   checked,
@@ -118,13 +129,17 @@ export function ListItem({
 
   // Same width for every item of the list, from its longest marker, so
   // "9." and "10." stay aligned (right-aligned when ordered).
-  const { fontSize, spacing } = theme.tokens;
+  const { fontSize, list, checkbox } = theme.tokens;
+  const textSize = style.text.fontSize ?? fontSize.base;
+  const boxSize = checkbox.size ?? textSize * CHECKBOX_SIZE;
   const width = Math.max(
-    spacing.listIndent,
-    Math.ceil(markerChars * fontSize.base * 0.6) + MARKER_GAP
+    list.indent,
+    Math.max(
+      list.markerMinWidth,
+      Math.ceil(markerChars * fontSize.base * 0.6)
+    ) + list.gap,
+    checked === null ? 0 : Math.floor(boxSize) + list.gap
   );
-
-  const { checkbox } = theme.tokens;
   const shown = task.checked;
 
   // A checked item's own text, never its sub-lists' (`InheritedTextReset`).
@@ -137,55 +152,93 @@ export function ListItem({
   );
 
   let markerNode;
+  // Room above and below a box taller than its line; the text drops by it.
+  let extra = 0;
   if (checked === null) {
     markerNode = (
       <Text
-        style={[style.text, inherited, ordered && styles.markerOrdered]}
+        style={[
+          style.text,
+          inherited,
+          ordered ? list.orderedStyle : list.bulletStyle,
+        ]}
         accessible={false}
       >
         {marker}
       </Text>
     );
   } else {
-    // The glyph is the visual; the Pressable is the touch target. Its
-    // box is the glyph by one line, so `hitSlop` tops it up (44pt wide,
-    // as tall as the gap to the next item allows: see `checkboxHitSlop`)
-    // without moving the first-line alignment with the item text.
-    const glyphSize = checkbox.size ?? style.text.fontSize ?? fontSize.base;
+    // The drawn box is the visual; the Pressable is the touch target. Its
+    // box is one line tall (a bigger box overflows it evenly), so `hitSlop` tops it up (44pt wide, as tall as
+    // the gap to the next item allows: see `checkboxHitSlop`).
     const lineHeight =
-      style.text.lineHeight ?? glyphSize * theme.tokens.lineHeight;
-    const color = shown
+      style.text.lineHeight ??
+      (textSize * theme.tokens.paragraphLineHeight) / fontSize.base;
+    extra = Math.max(0, (boxSize - lineHeight) / 2);
+    const accent = shown
       ? (checkbox.checkedColor ?? checkbox.color)
-      : checkbox.color;
+      : (checkbox.borderColor ?? checkbox.color);
+    const tint = accent ?? theme.tokens.colors.text;
+    const border = Math.max(1, Math.round(boxSize / 10));
     markerNode = (
       <Pressable
-        style={styles.checkbox}
+        style={[
+          styles.checkbox,
+          { height: lineHeight },
+          extra > 0 && { marginVertical: extra },
+        ]}
         accessibilityRole="checkbox"
         accessibilityLabel={text ? text : undefined}
         accessibilityState={{ checked: shown, disabled: !task.interactive }}
         disabled={!task.interactive}
         onPress={task.interactive ? task.toggle : undefined}
-        hitSlop={checkboxHitSlop(glyphSize, lineHeight, gap, width)}
+        hitSlop={checkboxHitSlop(boxSize, lineHeight, gap, width)}
       >
-        <Text
+        <View
+          testID="task-checkbox"
           style={[
-            style.text,
-            inherited,
-            checkbox.size !== undefined && { fontSize: checkbox.size },
-            color !== undefined && { color },
+            styles.box,
+            {
+              width: boxSize,
+              height: boxSize,
+              borderWidth: border,
+              borderColor: tint,
+              borderRadius: checkbox.borderRadius ?? boxSize * 0.2,
+              backgroundColor: shown ? tint : undefined,
+            },
           ]}
-          accessible={false}
         >
-          {shown ? CHECKED : UNCHECKED}
-        </Text>
+          {shown && (
+            <View
+              testID="task-checkmark"
+              style={{
+                width: boxSize * 0.28,
+                height: boxSize * 0.52,
+                borderRightWidth: border,
+                borderBottomWidth: border,
+                borderColor: checkbox.checkmarkColor ?? contrastOn(tint),
+                transform: [
+                  { rotate: '45deg' },
+                  { translateY: -boxSize * 0.07 },
+                ],
+              }}
+            />
+          )}
+        </View>
       </Pressable>
     );
   }
 
   return (
-    <View style={style.container}>
-      <View style={[styles.markerColumn, { width }]}>{markerNode}</View>
-      <View style={styles.content}>
+    <View
+      style={
+        index > 0 && list.itemSpacing > 0
+          ? [style.container, { marginTop: list.itemSpacing }]
+          : style.container
+      }
+    >
+      <View style={[{ width, paddingRight: list.gap }]}>{markerNode}</View>
+      <View style={[styles.content, extra > 0 && { marginTop: extra }]}>
         {checkedText === null ? (
           children
         ) : (
@@ -251,16 +304,41 @@ export function HtmlBlock({ html, style }: ElementProps<'HtmlBlock'>) {
 }
 
 /**
+ * Box of a block image: `aspectRatio` > `maxHeight` > `height`, else the
+ * natural ratio (`ratio` stands in until the size is known).
+ */
+function blockImageSize(
+  sizing: ThemeTokens['imageSizing'],
+  size: { readonly width: number; readonly height: number } | null,
+  ratio: number
+): ImageStyle {
+  const natural = size === null ? ratio : size.width / size.height;
+  switch (sizing.mode) {
+    case 'ratio':
+      return { aspectRatio: ratio };
+    case 'maxHeight':
+      return { aspectRatio: natural, maxHeight: sizing.maxHeight };
+    case 'height':
+      return { height: sizing.height };
+    default:
+      return { aspectRatio: natural };
+  }
+}
+
+/**
  * Block image at full width (never wider than its natural size), with its
  * real aspect ratio from the size cache. While the size is unknown, a quiet
  * placeholder box (theme `imageRatio`, `codeBg` fill) reserves the space, so
- * an image of that ratio never moves what is below it. Images
- * that fail to load show their alt text instead.
+ * an image of that ratio never moves what is below it. The loaded box
+ * follows `imageSizing` (ratio, `maxHeight`, fixed `height`, else natural)
+ * and `resizeMode`. Images that fail to load show their alt text instead.
  */
 export function Image({ src, alt, title, style }: ElementProps<'Image'>) {
   const { theme, handlers, options } = useRenderContext();
   const size = useImageSize(src);
   const { colors } = theme.tokens;
+  // `image.borderRadius`: clips the loaded image too (the container does not).
+  const radius = style.container.borderRadius;
 
   if (size === 'error') {
     return (
@@ -278,21 +356,24 @@ export function Image({ src, alt, title, style }: ElementProps<'Image'>) {
     );
   }
 
+  const { imageSizing, imageRatio } = theme.tokens;
   const image = (
     <RNImage
       source={{ uri: src }}
       accessibilityLabel={alt}
       accessibilityHint={title ?? undefined}
-      resizeMode="contain"
+      resizeMode={imageSizing.resizeMode}
       style={[
         styles.blockImage,
-        size === null
-          ? {
-              aspectRatio: theme.tokens.imageRatio,
-              backgroundColor: colors.codeBg,
-              borderRadius: theme.tokens.radius.code,
-            }
-          : { aspectRatio: size.width / size.height },
+        {
+          ...blockImageSize(imageSizing, size, imageRatio),
+          ...(size === null
+            ? {
+                backgroundColor: colors.codeBg,
+                borderRadius: radius ?? theme.tokens.radius.code,
+              }
+            : { borderRadius: radius }),
+        },
       ]}
     />
   );
@@ -336,44 +417,103 @@ export function Table({ style, children }: ElementProps<'Table'>) {
   const [state, setState] = useState(() => ({
     theme,
     widths: cachedColumnWidths(theme, key),
+    pass: 0,
   }));
   let widths = state.widths;
+  let pass = state.pass;
   if (state.theme !== theme) {
     // New fonts or sizes: use that theme's cached widths, or re-measure.
+    // A new measuring pass remounts the cells: native reports `onLayout` only
+    // for new or resized views, and unchanged sizes would never reveal it.
     widths = cachedColumnWidths(theme, key);
-    setState({ theme, widths });
+    if (widths === null) pass += 1;
+    setState({ theme, widths, pass });
   }
 
   // One measuring pass per layout object: a new theme or table makes a new
   // one, which starts again with no measurements.
-  const layout = useMemo<TableLayout>(() => {
-    const pass = { measured: [] as number[], scheduled: false };
-    return {
+  const { layout, attach } = useMemo(() => {
+    const scan = {
+      measured: [] as number[],
+      enrolled: new Set<object>(),
+      reported: new Set<object>(),
+      scheduled: false,
+      disposed: false,
+    };
+    // Web reports `onLayout` a frame or more apart under load, so committing
+    // on the first frame fixes only the columns measured so far (the rest
+    // keep their natural width, ragged). Commit when every cell has reported.
+    const commitWhenComplete = () => {
+      if (scan.disposed || scan.scheduled || scan.enrolled.size === 0) return;
+      for (const cell of scan.enrolled) if (!scan.reported.has(cell)) return;
+      // Cells lay out in the same frame; collect them all, then commit.
+      scan.scheduled = true;
+      requestAnimationFrame(() => {
+        if (scan.disposed) return;
+        const final = columnWidths(scan.measured);
+        storeColumnWidths(theme, key, final);
+        setState((prev) => ({ theme, widths: final, pass: prev.pass }));
+      });
+    };
+    const value: TableLayout = {
       widths,
-      report(column, width) {
+      enroll(cell) {
+        if (widths !== null) return () => {};
+        scan.enrolled.add(cell);
+        return () => {
+          scan.enrolled.delete(cell);
+          commitWhenComplete();
+        };
+      },
+      report(cell, column, width) {
         if (widths !== null) return;
-        pass.measured[column] = Math.max(pass.measured[column] ?? 0, width);
-        if (pass.scheduled) return;
-        // Cells lay out in the same frame; collect them all, then commit.
-        pass.scheduled = true;
-        requestAnimationFrame(() => {
-          const final = columnWidths(pass.measured);
-          storeColumnWidths(theme, key, final);
-          setState({ theme, widths: final });
-        });
+        scan.measured[column] = Math.max(scan.measured[column] ?? 0, width);
+        scan.reported.add(cell);
+        commitWhenComplete();
+      },
+    };
+    return {
+      layout: value,
+      // Strict mode runs effects twice: re-arm on every attach.
+      attach: () => {
+        scan.disposed = false;
+        return () => {
+          scan.disposed = true;
+        };
       },
     };
   }, [widths, theme, key]);
+  // A replaced layout (new theme, table or widths) drops its pending commit.
+  useEffect(attach, [attach]);
+
+  const { align, bleed } = theme.tableFrame;
+  const frame = useMemo(
+    () =>
+      align === null && bleed === 0
+        ? null
+        : splitTableFrame(style.container, align, bleed),
+    [style.container, align, bleed]
+  );
 
   return (
     <ScrollView
       horizontal
       bounces={false}
-      style={style.container}
+      style={frame === null ? style.container : frame.outer}
+      contentContainerStyle={frame?.content}
       showsHorizontalScrollIndicator={false}
     >
       {/* Hidden while measuring, so unaligned columns never show. */}
-      <View style={widths === null ? styles.measuring : undefined}>
+      <View
+        key={pass}
+        style={
+          frame === null
+            ? widths === null
+              ? styles.measuring
+              : undefined
+            : [frame.border, widths === null ? styles.measuring : undefined]
+        }
+      >
         <TableLayoutContext.Provider value={layout}>
           {children}
         </TableLayoutContext.Provider>
@@ -382,9 +522,55 @@ export function Table({ style, children }: ElementProps<'Table'>) {
   );
 }
 
+/**
+ * `table.align` and `horizontalOverflow` need the border on the table itself
+ * (not the full-width scroll view): the scroll view keeps the margins and
+ * bleeds out by `bleed` (padded back so the table starts in line), and its
+ * content aligns a table narrower than the container.
+ */
+function splitTableFrame(
+  container: ViewStyle | undefined,
+  align: 'left' | 'center' | 'right' | null,
+  bleed: number
+) {
+  const { borderColor, borderWidth, borderRadius, ...outer } =
+    StyleSheet.flatten(container) ?? {};
+  return {
+    outer: {
+      ...outer,
+      ...(bleed > 0 && { marginHorizontal: -bleed }),
+    } as ViewStyle,
+    content: {
+      flexGrow: 1,
+      paddingHorizontal: bleed,
+      justifyContent: ALIGN_JUSTIFY[align ?? 'left'],
+    } as ViewStyle,
+    border: {
+      borderColor,
+      borderWidth,
+      borderRadius,
+      overflow: borderRadius ? 'hidden' : undefined,
+    } as ViewStyle,
+  };
+}
+
+const ALIGN_JUSTIFY = {
+  left: 'flex-start',
+  center: 'center',
+  right: 'flex-end',
+} as const;
+
 export function TableRow({ style, children }: ElementProps<'TableRow'>) {
   return <View style={style.container}>{children}</View>;
 }
+
+/**
+ * react-native-web reports `onLayout` sizes from `offsetWidth`, which rounds
+ * to whole pixels: a cell whose natural width is 67.17 reports 67, so its
+ * text (53.17 wide, plus padding and border) wraps mid-word at the fixed
+ * width. One pixel of slack covers the rounding; native reports exact floats.
+ */
+const webLayoutSlack = () => (Platform.OS === 'web' ? 1 : 0);
 
 const CELL_ALIGN = {
   left: undefined,
@@ -402,6 +588,11 @@ export function TableCell({
   const layout = useContext(TableLayoutContext);
   const width = layout?.widths?.[column];
   const measuring = layout !== null && layout.widths === null;
+  const [identity] = useState(() => ({}));
+  useLayoutEffect(
+    () => (measuring ? layout.enroll(identity) : undefined),
+    [measuring, layout, identity]
+  );
 
   return (
     <View
@@ -411,7 +602,12 @@ export function TableCell({
       ]}
       onLayout={
         measuring
-          ? (event) => layout.report(column, event.nativeEvent.layout.width)
+          ? (event) =>
+              layout.report(
+                identity,
+                column,
+                event.nativeEvent.layout.width + webLayoutSlack()
+              )
           : undefined
       }
     >
@@ -471,9 +667,8 @@ export function FootnoteDefinition({
 }
 
 const styles = StyleSheet.create({
-  markerColumn: { paddingRight: MARKER_GAP },
-  markerOrdered: { textAlign: 'right' },
-  checkbox: { alignSelf: 'flex-start' },
+  checkbox: { alignSelf: 'flex-start', justifyContent: 'center' },
+  box: { alignItems: 'center', justifyContent: 'center' },
   content: { flex: 1, minWidth: 0 },
   imageFrame: { width: '100%' },
   blockImage: { width: '100%' },

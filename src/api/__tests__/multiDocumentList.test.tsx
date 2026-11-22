@@ -41,7 +41,7 @@ function paragraphFor(doc: string): Partial<Components> {
     const theme = useMarkdownTheme();
     return createElement(
       'Tagged',
-      { doc, themeText: theme.tokens.colors.text },
+      { doc, themeText: theme.paragraph.color },
       <Default {...props} />
     );
   }
@@ -75,7 +75,7 @@ function Chat() {
   const b = useMarkdownBlocks({ document: docB, theme: 'dark', components: B });
   const c = useMarkdownBlocks({
     document: stream.document,
-    theme: { colors: { text: '#123456' } },
+    theme: { paragraph: { color: '#123456' } },
     components: C,
   });
 

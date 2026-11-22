@@ -15,7 +15,7 @@ import { Markdown } from '../../api/Markdown';
 import { createRenderCtx } from '../../render/context';
 import { RenderCtxContext } from '../../render/contexts';
 import { defaultComponents } from '../../render/defaults';
-import { darkTheme, getDefaultTheme, lightTheme } from '../../theme';
+import { getDefaultTheme, resolveTheme } from '../../theme';
 import type { ThemeProp } from '../../theme/cache';
 import { highlight, type SyntaxTokenType, type Tokenizer } from '../index';
 import { bashTokenizer } from '../tokenizers/bash';
@@ -23,6 +23,9 @@ import { diffTokenizer } from '../tokenizers/diff';
 import { javascriptTokenizer } from '../tokenizers/javascript';
 import { jsonTokenizer } from '../tokenizers/json';
 import { pythonTokenizer } from '../tokenizers/python';
+
+const lightSyntax = resolveTheme({}).tokens.syntax;
+const darkSyntax = resolveTheme({}, 'dark').tokens.syntax;
 
 // React Native's jest setup replaces `useColorScheme` with a `jest.fn`.
 const schemeMock = useColorScheme as unknown as jest.Mock;
@@ -267,21 +270,21 @@ describe('the snippets', () => {
 });
 
 describe.each<[string, ThemeProp, 'light' | 'dark' | null, Syntax]>([
-  ['light', 'light', null, lightTheme.syntax],
-  ['dark', 'dark', null, darkTheme.syntax],
-  ['auto (light scheme)', 'auto', 'light', lightTheme.syntax],
-  ['auto (dark scheme)', 'auto', 'dark', darkTheme.syntax],
+  ['light', 'light', null, lightSyntax],
+  ['dark', 'dark', null, darkSyntax],
+  ['auto (light scheme)', 'auto', 'light', lightSyntax],
+  ['auto (dark scheme)', 'auto', 'dark', darkSyntax],
   [
     'a partial override (light scheme)',
-    { syntax: { keyword: '#123456' } },
+    { codeBlock: { syntax: { keyword: '#123456' } } },
     'light',
-    { ...lightTheme.syntax, keyword: '#123456' },
+    { ...lightSyntax, keyword: '#123456' },
   ],
   [
     'a partial override (dark scheme)',
-    { syntax: { keyword: '#123456' } },
+    { codeBlock: { syntax: { keyword: '#123456' } } },
     'dark',
-    { ...darkTheme.syntax, keyword: '#123456' },
+    { ...darkSyntax, keyword: '#123456' },
   ],
 ])('colours with theme %s', (_, theme, scheme, syntax) => {
   beforeEach(() => {
@@ -310,24 +313,24 @@ describe.each<[string, ThemeProp, 'light' | 'dark' | null, Syntax]>([
 });
 
 describe('the override', () => {
-  it('wins for keyword only; operators keep the default that keyword had', async () => {
+  it('wins for keyword only; operators keep the base colour', async () => {
     schemeMock.mockReturnValue('light');
-    // In the light palette keyword and operator share a colour.
-    expect(lightTheme.syntax.operator).toBe(lightTheme.syntax.keyword);
+    // Operators are drawn in the base code colour, not the keyword's (P3a-4).
+    expect(lightSyntax.operator).not.toBe(lightSyntax.keyword);
     const code = 'const a = b + 1;\n';
     const tree = await renderTree(
       <Markdown
         source={fence('ts', code)}
         plugins={plugins}
-        theme={{ syntax: { keyword: '#123456' } }}
+        theme={{ codeBlock: { syntax: { keyword: '#123456' } } }}
       />
     );
     const rendered = renderedColours(tree);
     const at = (text: string) => rendered[code.indexOf(text)]!.color;
     expect(at('const')).toBe('#123456');
-    expect(at('=')).toBe(lightTheme.syntax.operator);
-    expect(at('+')).toBe(lightTheme.syntax.operator);
-    expect(at('1')).toBe(lightTheme.syntax.number);
+    expect(at('=')).toBe(lightSyntax.operator);
+    expect(at('+')).toBe(lightSyntax.operator);
+    expect(at('1')).toBe(lightSyntax.number);
   });
 });
 

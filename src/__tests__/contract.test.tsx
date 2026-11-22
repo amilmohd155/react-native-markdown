@@ -16,17 +16,14 @@ import { Animated, FlatList, ScrollView, Text } from 'react-native';
 import {
   Markdown,
   createTheme,
-  darkTheme,
   defaults,
   definePlugin,
   inlineView,
-  lightTheme,
   parse,
   useMarkdownTheme,
   visit,
   type Components,
   type ElementProps,
-  type ElementStyle,
   type FootnoteBackLinkMark,
   type FootnotePressInfo,
   type FootnoteScrollOffset,
@@ -45,12 +42,16 @@ import {
   type MarkdownTheme,
   type ScrollOptions,
   type TaskToggleInfo,
-  type ThemeInput,
+  type FlatThemeBlock,
+  type FlatThemeInput,
   type VirtualizeOptions,
   type VisitProps,
 } from '@docren/react-native-markdown';
+import type { GuardedThemeKeys } from '../theme/flatTypes';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
+
+type TableOf = NonNullable<FlatThemeBlock['table']> | undefined;
 
 type Equal<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
@@ -68,6 +69,10 @@ function element(_node: ReactNode): void {}
 declare module '@docren/react-native-markdown' {
   interface PluginElementPropsMap {
     ContractBadge: { label: string };
+  }
+  // Theme keys of a plugin, by name, through the same `export *` chain.
+  interface PluginThemeMap {
+    ContractBadge?: { color?: string; padding?: number };
   }
 }
 
@@ -198,12 +203,25 @@ describe('<Markdown> props', () => {
   });
 
   it('accepts theme inputs and createTheme results', () => {
-    const input: ThemeInput = { colors: { link: '#00f' } };
+    const input: FlatThemeInput = {
+      link: { color: '#00f' },
+      dark: { link: { color: '#88f' } },
+    };
     element(<Markdown source="x" theme={input} />);
-    element(<Markdown source="x" theme={createTheme(input, darkTheme)} />);
-    element(<Markdown source="x" theme={lightTheme} />);
-    // @ts-expect-error: unknown token group
+    element(<Markdown source="x" theme={createTheme(input)} />);
+    element(<Markdown source="x" theme="dark" />);
+    // @ts-expect-error: unknown key
     element(<Markdown source="x" theme={{ sizes: {} }} />);
+    // @ts-expect-error: a prop the element does not accept
+    element(<Markdown source="x" theme={{ divider: { color: 'red' } }} />);
+    // @ts-expect-error: createTheme has no `base`
+    createTheme(input, input);
+    // @ts-expect-error: `elements` is gone (one flat shape)
+    element(<Markdown source="x" theme={{ elements: { Link: {} } }} />);
+    // @ts-expect-error: tokens are internal
+    element(<Markdown source="x" theme={{ colors: { text: 'red' } }} />);
+    // @ts-expect-error: a theme is not a string other than the built-in names
+    element(<Markdown source="x" theme="sepia" />);
   });
 
   it('types the scroll and virtualize containers', () => {
@@ -378,7 +396,9 @@ describe('elements', () => {
   it('gives each element its semantic props and style', () => {
     expectType<Equal<ElementProps<'Heading'>['level'], HeadingLevel>>(true);
     expectType<Equal<ElementProps<'Heading'>['id'], string>>(true);
-    expectType<Equal<ElementProps<'Heading'>['style'], ElementStyle>>(true);
+    expectType<
+      Equal<ElementProps<'Heading'>['style'], ElementProps<'Link'>['style']>
+    >(true);
     expectType<Equal<ElementProps<'Link'>['href'], string>>(true);
     expectType<Equal<ElementProps<'Link'>['title'], string | null>>(true);
     expectType<Equal<ElementProps<'CodeBlock'>['language'], string | null>>(
@@ -480,7 +500,7 @@ describe('plugins', () => {
     components: {
       ContractBadge: ({ label }) => <>{label}</>,
     },
-    theme: { ContractBadge: { text: { color: '#fff' } } },
+    theme: { ContractBadge: { color: '#fff' } },
   });
 
   it('infers node props and keeps the name literal', () => {
@@ -521,7 +541,7 @@ describe('plugins', () => {
       <Markdown
         source="x"
         components={{ ContractBadge: ({ label }) => <>{label}</> }}
-        theme={{ elements: { ContractBadge: { container: { padding: 2 } } } }}
+        theme={{ ContractBadge: { padding: 2 } }}
       />
     );
     element(
@@ -534,6 +554,42 @@ describe('plugins', () => {
       />
     );
     expectType<Equal<ElementProps<'ContractBadge'>['label'], string>>(true);
+  });
+
+  it('lets a plugin declare its theme keys by augmenting the package', () => {
+    element(
+      <Markdown
+        source="x"
+        theme={{
+          ContractBadge: { color: '#fff' },
+          dark: { ContractBadge: { padding: 1 } },
+        }}
+      />
+    );
+    element(
+      <Markdown
+        source="x"
+        // @ts-expect-error: the key takes the props the plugin declared
+        theme={{ ContractBadge: { fontSize: 12 } }}
+      />
+    );
+    // The augmentation clashes with no core key, so the input is not `never`.
+    expectType<Equal<[FlatThemeInput] extends [never] ? true : false, false>>(
+      true
+    );
+  });
+
+  it('turns a plugin key that clashes with a core key or a scheme block into never', () => {
+    // Replicates the guard on a map that clashes; the real map cannot be
+    // augmented with a clash here without breaking this very file.
+    type Clash = { link?: { color?: string }; mention?: { color?: string } };
+    type Fine = { mention?: { color?: string } };
+    expectType<Equal<GuardedThemeKeys<Clash>, never>>(true);
+    expectType<Equal<GuardedThemeKeys<{ dark?: {} }>, never>>(true);
+    expectType<Equal<GuardedThemeKeys<{ light?: {} }>, never>>(true);
+    expectType<Equal<GuardedThemeKeys<Fine>, { mention?: { color?: string } }>>(
+      true
+    );
   });
 
   it('does not expose markdown-it tokens to plugin authors', () => {
@@ -588,11 +644,22 @@ describe('parse and visit', () => {
 });
 
 describe('theme', () => {
-  it('gives custom components the merged tokens and styles', () => {
+  it('gives custom components the merged flat values', () => {
     type Theme = ReturnType<typeof useMarkdownTheme>;
     expectType<Equal<Theme, MarkdownTheme>>(true);
-    expectType<Equal<Theme['styles']['Link'], ElementStyle>>(true);
-    expectType<Equal<Theme['headings']['length'], 6>>(true);
+    expectType<Equal<Theme['link']['color'], string>>(true);
+    expectType<Equal<Theme['paragraph']['fontSize'], number>>(true);
+    expectType<Equal<Theme['h1']['fontSize'], number>>(true);
+    expectType<Equal<Theme['codeBlock']['syntax']['keyword'], string>>(true);
+    // Keys with no built-in default stay optional.
+    expectType<Equal<Theme['table'], TableOf>>(true);
+    const read = (theme: Theme) => {
+      // @ts-expect-error: readonly
+      theme.link = { color: 'red' };
+      // @ts-expect-error: no tokens, no element styles
+      void theme.tokens;
+    };
+    void read;
   });
 });
 
@@ -606,6 +673,12 @@ describe('internals', () => {
     void import('@docren/react-native-markdown').then((m) => m.tableOf);
     // @ts-expect-error: the internal backend contract is private
     void (null as unknown as import('@docren/react-native-markdown').ParserBackendImpl);
+    // @ts-expect-error: tokens are internal
+    void (null as unknown as import('@docren/react-native-markdown').ThemeTokens);
+    // @ts-expect-error: the container/text style split is internal
+    void (null as unknown as import('@docren/react-native-markdown').ElementStyle);
+    // @ts-expect-error: built-in themes are internal (use theme="light")
+    void import('@docren/react-native-markdown').then((m) => m.lightTheme);
   });
 
   it('runs', () => {

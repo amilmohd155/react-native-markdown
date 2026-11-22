@@ -2,13 +2,10 @@ import { StyleSheet } from 'react-native';
 import {
   ELEMENT_NAMES,
   clearThemeCache,
-  createTheme,
-  lightTheme,
   resolveTheme,
   resolveThemeProp,
+  type FlatThemeInput,
   type ResolvedTheme,
-  type ThemeInput,
-  type ThemeTokens,
 } from '../index';
 
 /** Every resolved style, by a readable name, as comparable JSON. */
@@ -26,20 +23,20 @@ function snapshotOf(theme: ResolvedTheme): Map<string, string> {
   return map;
 }
 
-/** Names whose resolved style differs between two token sets. */
-function changedBy(change: (t: ThemeTokens) => ThemeTokens): string[] {
-  const before = snapshotOf(resolveTheme(lightTheme));
-  const after = snapshotOf(resolveTheme(change(lightTheme)));
+/** Names whose resolved style differs when `input` is merged in. */
+function changedBy(input: FlatThemeInput): string[] {
+  const before = snapshotOf(resolveTheme());
+  const after = snapshotOf(resolveTheme(input));
   return [...before.keys()].filter((k) => before.get(k) !== after.get(k));
 }
 
 const HEADINGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
 
-describe('done when: changing one token restyles every element deriving from it', () => {
-  it.each<[string, (t: ThemeTokens) => ThemeTokens, string[]]>([
+describe('done when: changing one prop restyles every element deriving from it', () => {
+  it.each<[string, FlatThemeInput, string[]]>([
     [
-      'colors.text',
-      (t) => ({ ...t, colors: { ...t.colors, text: '#010101' } }),
+      'paragraph.color',
+      { paragraph: { color: '#010101' } },
       [
         'Paragraph',
         'ListItem',
@@ -50,30 +47,26 @@ describe('done when: changing one token restyles every element deriving from it'
         'tightParagraph',
       ],
     ],
+    ['blockquote.color', { blockquote: { color: '#020202' } }, ['Blockquote']],
+    ['htmlBlock.color', { htmlBlock: { color: '#020202' } }, ['HtmlBlock']],
     [
-      'colors.muted',
-      (t) => ({ ...t, colors: { ...t.colors, muted: '#020202' } }),
-      [
-        'Blockquote',
-        'HtmlBlock',
-        'footnoteSection',
-        'CodeBlockHeader',
-        'codeBlockGutter',
-      ],
+      'codeBlock.header.color',
+      { codeBlock: { header: { color: '#020202' } } },
+      ['CodeBlockHeader'],
     ],
     [
-      'colors.link',
-      (t) => ({ ...t, colors: { ...t.colors, link: '#030303' } }),
+      'link.color',
+      { link: { color: '#030303' } },
       ['Link', 'FootnoteReference', 'FootnoteBackLink'],
     ],
     [
-      'colors.codeBg',
-      (t) => ({ ...t, colors: { ...t.colors, codeBg: '#040404' } }),
+      'codeBlock.backgroundColor',
+      { codeBlock: { backgroundColor: '#040404' } },
       ['InlineCode', 'Kbd', 'CodeBlock', 'CodeBlockHeader'],
     ],
     [
-      'colors.border',
-      (t) => ({ ...t, colors: { ...t.colors, border: '#050505' } }),
+      'divider.backgroundColor',
+      { divider: { backgroundColor: '#050505' } },
       [
         'TableCell',
         'tableHeaderCell',
@@ -84,19 +77,23 @@ describe('done when: changing one token restyles every element deriving from it'
       ],
     ],
     [
-      'colors.quoteBar',
-      (t) => ({ ...t, colors: { ...t.colors, quoteBar: '#060606' } }),
+      'blockquote.borderLeftColor',
+      { blockquote: { borderLeftColor: '#060606' } },
       ['Blockquote'],
     ],
     [
-      'colors.highlight',
-      (t) => ({ ...t, colors: { ...t.colors, highlight: '#070707' } }),
+      'highlight.backgroundColor',
+      { highlight: { backgroundColor: '#070707' } },
       ['Highlight'],
     ],
-    ['radius.code', (t) => ({ ...t, radius: { code: 1 } }), ['CodeBlock']],
     [
-      'fonts.mono',
-      (t) => ({ ...t, fonts: { ...t.fonts, mono: 'Mono' } }),
+      'codeBlock.borderRadius',
+      { codeBlock: { borderRadius: 1 } },
+      ['CodeBlock'],
+    ],
+    [
+      'codeBlock.fontFamily',
+      { codeBlock: { fontFamily: 'Mono' } },
       [
         'InlineCode',
         'Kbd',
@@ -107,69 +104,43 @@ describe('done when: changing one token restyles every element deriving from it'
       ],
     ],
     [
-      'lineHeight',
-      (t) => ({ ...t, lineHeight: 2 }),
+      'paragraph.lineHeight',
+      { paragraph: { lineHeight: 31 } },
       [
         'Paragraph',
         'ListItem',
         'TableCell',
         'HtmlBlock',
         'FootnoteDefinition',
+        'footnoteSection',
         'tableHeaderCell',
         'tightParagraph',
-        'footnoteSection',
       ],
     ],
     [
-      'fontSize.scale',
-      (t) => ({ ...t, fontSize: { ...t.fontSize, scale: 1.5 } }),
-      // h6 is `base` itself, whatever the scale.
-      ['h1', 'h2', 'h3', 'h4', 'h5'],
+      'paragraph.marginBottom',
+      { paragraph: { marginBottom: 20 } },
+      ['Paragraph'],
     ],
-  ])('%s', (_name, change, expected) => {
-    expect(changedBy(change).sort()).toEqual([...expected].sort());
+    // h6 is the paragraph size itself, whatever the ratio.
+    ['h1.fontSize', { h1: { fontSize: 50 } }, ['h1']],
+  ])('%s', (_name, input, expected) => {
+    expect(changedBy(input).sort()).toEqual([...expected].sort());
   });
 
-  it('fontSize.base reaches text, headings, code, scripts and footnotes', () => {
-    expect(
-      changedBy((t) => ({ ...t, fontSize: { ...t.fontSize, base: 20 } }))
-    ).toEqual(
+  it('paragraph.fontSize reaches text, headings, code and footnotes (inline sizes are relative)', () => {
+    expect(changedBy({ paragraph: { fontSize: 20 } })).toEqual(
       expect.arrayContaining([
         'Paragraph',
         'ListItem',
         'TableCell',
         'CodeBlock',
-        'InlineCode',
-        'Kbd',
-        'Superscript',
-        'Subscript',
-        'FootnoteReference',
         'FootnoteDefinition',
         'HtmlBlock',
         ...HEADINGS,
         'tableHeaderCell',
         'tightParagraph',
         'footnoteSection',
-      ])
-    );
-  });
-
-  it('spacing.block reaches every block that spaces itself', () => {
-    expect(
-      changedBy((t) => ({ ...t, spacing: { ...t.spacing, block: 20 } }))
-    ).toEqual(
-      expect.arrayContaining([
-        'Paragraph',
-        'Blockquote',
-        'List',
-        'CodeBlock',
-        'Table',
-        'TableCell',
-        'Divider',
-        'Image',
-        'HtmlBlock',
-        'footnoteSection',
-        ...HEADINGS,
       ])
     );
   });
@@ -183,9 +154,9 @@ describe('done when: an equal theme object reuses the resolved theme', () => {
     const render = () =>
       resolveThemeProp(
         {
-          colors: { link: '#0a0a0a' },
-          fonts: { body: { regular: 'R', bold: 'B' } },
-          elements: { Link: { text: { fontSize: 18 } } },
+          link: { color: '#0a0a0a', fontWeight: '700' },
+          paragraph: { fontFamily: { regular: 'R', bold: 'B' } },
+          dark: { link: { color: '#fafafa' } },
         },
         'light'
       );
@@ -198,84 +169,26 @@ describe('done when: an equal theme object reuses the resolved theme', () => {
 
 describe('cache key edge cases', () => {
   beforeEach(() => clearThemeCache());
-  const resolve = (input: ThemeInput) => resolveThemeProp(input, 'light');
+  const resolve = (input: FlatThemeInput) => resolveThemeProp(input, 'light');
 
-  it('tells groups apart by key even when the key counts match', () => {
-    expect(resolve({ colors: { link: 'red' } })).not.toBe(
-      resolve({ colors: { text: 'red' } })
-    );
-    expect(resolve({ fonts: { body: { regular: 'R' } } })).not.toBe(
-      resolve({ fonts: { body: { regular: 'R', bold: 'B' } } })
-    );
+  it('tells props apart by key, element and value', () => {
+    const base = resolve({ link: { color: 'a' } });
+    expect(resolve({ paragraph: { color: 'a' } })).not.toBe(base);
+    expect(resolve({ link: { fontWeight: '700' } })).not.toBe(base);
+
+    const code = resolve({ codeBlock: { padding: 1 } });
+    expect(resolve({ codeBlock: { padding: 2 } })).not.toBe(code);
+    expect(resolve({ codeBlock: { padding: 1 } })).toBe(code);
   });
 
-  it('tells element overrides apart by element, part, kind and presence', () => {
-    const base = resolve({ elements: { Link: { text: { color: 'a' } } } });
-    expect(
-      resolve({ elements: { Paragraph: { text: { color: 'a' } } } })
-    ).not.toBe(base);
-    expect(
-      resolve({ elements: { Link: { container: { margin: 1 } } } })
-    ).not.toBe(base);
-
-    const code = resolve({
-      elements: { CodeBlock: { container: { padding: 1 } } },
+  it('compares syntax, variants and admonitions by value, two levels deep', () => {
+    const make = (color: string): FlatThemeInput => ({
+      codeBlock: { syntax: { keyword: color } },
+      link: { variants: { '^a': { color } } },
+      blockquote: { admonitions: { note: { color } } },
     });
-    expect(
-      resolve({ elements: { CodeBlock: { container: { padding: 2 } } } })
-    ).not.toBe(code);
-    expect(
-      resolve({ elements: { CodeBlock: { container: { padding: 1 } } } })
-    ).toBe(code);
-
-    // function vs object, and an undefined entry vs an object
-    const object = resolve({ elements: { Heading: { text: { color: 'a' } } } });
-    expect(
-      resolve({ elements: { Heading: () => ({ text: { color: 'a' } }) } })
-    ).not.toBe(object);
-    expect(resolve({ elements: { Link: undefined } })).not.toBe(
-      resolve({ elements: { Link: { text: { color: 'a' } } } })
-    );
-  });
-
-  it('compares checkbox, and its checkedText, by value', () => {
-    const a = resolve({
-      checkbox: { color: 'red', checkedText: { opacity: 0.5 } },
-    });
-    expect(
-      resolve({ checkbox: { color: 'red', checkedText: { opacity: 0.5 } } })
-    ).toBe(a);
-    expect(
-      resolve({ checkbox: { color: 'red', checkedText: { opacity: 0.4 } } })
-    ).not.toBe(a);
-    expect(
-      resolve({ checkbox: { color: 'red', checkedText: false } })
-    ).not.toBe(a);
-    expect(resolve({ checkbox: { size: 20 } })).not.toBe(resolve({}));
-  });
-
-  it('compares listBullets by value', () => {
-    const a = resolve({ listBullets: ['-', '*'] });
-    expect(resolve({ listBullets: ['-', '*'] })).toBe(a);
-    expect(resolve({ listBullets: ['-', '+'] })).not.toBe(a);
-    expect(resolve({ listBullets: ['-'] })).not.toBe(a);
-  });
-});
-
-describe('createTheme edge cases', () => {
-  it('merges two object Heading overrides per part', () => {
-    const base = createTheme({
-      elements: {
-        Heading: { text: { color: 'red' }, container: { margin: 1 } },
-      },
-    });
-    const theme = createTheme(
-      { elements: { Heading: { text: { letterSpacing: 2 } } } },
-      base
-    );
-    expect(theme.elements.Heading).toEqual({
-      text: { color: 'red', letterSpacing: 2 },
-      container: { margin: 1 },
-    });
+    const a = resolve(make('x'));
+    expect(resolve(make('x'))).toBe(a);
+    expect(resolve(make('y'))).not.toBe(a);
   });
 });

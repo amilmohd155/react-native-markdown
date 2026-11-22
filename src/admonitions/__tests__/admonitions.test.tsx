@@ -204,32 +204,12 @@ describe('admonitions: render', () => {
     expect(screen.queryByLabelText(/./)).toBeNull();
   });
 
-  it('themes by kind and falls back to the shared element', async () => {
-    await render(
-      <Markdown
-        source={'> [!NOTE]\n> a\n\n> [!TIP]\n> b'}
-        plugins={[admonitions()]}
-        theme={{
-          elements: {
-            Admonition: { container: { marginBottom: 33 } },
-            AdmonitionTip: { container: { backgroundColor: '#123456' } },
-          },
-        }}
-      />
-    );
-    const note = screen.getByLabelText('Note');
-    const tip = screen.getByLabelText('Tip');
-    expect(note).toHaveStyle({ marginBottom: 33 });
-    expect(tip).toHaveStyle({ marginBottom: 33, backgroundColor: '#123456' });
-    expect(note).not.toHaveStyle({ backgroundColor: '#123456' });
-  });
-
   it('titles in the body font, bold by weight for a family name', async () => {
     await render(
       <Markdown
         source={'> [!NOTE]\n> a'}
         plugins={[admonitions()]}
-        theme={{ fonts: { body: 'Inter' } }}
+        theme={{ paragraph: { fontFamily: 'Inter' } }}
       />
     );
     const title = screen.getByText('Note');
@@ -242,7 +222,9 @@ describe('admonitions: render', () => {
         source={'> [!NOTE]\n> a'}
         plugins={[admonitions()]}
         theme={{
-          fonts: { body: { regular: 'Inter-Regular', bold: 'Inter-Bold' } },
+          paragraph: {
+            fontFamily: { regular: 'Inter-Regular', bold: 'Inter-Bold' },
+          },
         }}
       />
     );

@@ -9,7 +9,7 @@
  * - read-only visit() (./visit)
  * - defaults, inlineView(): wrap or declare elements (../render)
  * - definePlugin and plugin types (../plugins)
- * - createTheme, built-in themes, useMarkdownTheme (../theme)
+ * - createTheme, useMarkdownTheme (../theme): one flat `theme` shape
  * - element, event and theme types
  *
  * Design:
@@ -98,18 +98,13 @@ export type {
 // Theme
 // `export *` on purpose: see ../theme/pluginElements (by-name augmentation).
 export * from '../theme/pluginElements';
-export { createTheme, darkTheme, lightTheme, useMarkdownTheme } from '../theme';
+export { createTheme, useMarkdownTheme } from '../theme';
 export type {
-  ElementName,
-  ElementOverride,
-  ElementOverrides,
-  ElementStyle,
+  AdmonitionKind,
+  FlatThemeBlock,
+  FlatThemeInput,
   FontFaces,
   FontFamily,
   MarkdownTheme,
   SyntaxTokenType,
-  Theme,
-  ThemeInput,
-  ThemeProp,
-  ThemeTokens,
 } from '../theme';

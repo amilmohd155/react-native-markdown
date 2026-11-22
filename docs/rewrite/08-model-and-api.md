@@ -127,17 +127,17 @@ The full spec is [04](./04-api.md); this is why it has the shape it has.
 
 1. **Element components** ([04 · Element catalog](./04-api.md#element-catalog)). Props are primitives plus `children` and a resolved `style` (text and container split), so a user's `memo(Heading)` bails out whenever the block is unchanged. Names are semantic (`level`, `href`, `language`, `Divider`). Default components are exported, so wrapping one is ordinary React. Plain text is never a component, which keeps the single-`<Text>`-per-block optimization ([03](./03-architecture.md#inline-flattener)); inline components must return Text-compatible output unless declared `inlineView: true`.
 2. **Plugins bundle syntax, element and theme** ([04 · Plugins](./04-api.md#plugins)). One unit adds a feature end to end, and types flow from `nodes` to `components`. GFM itself is a plugin set, so `preset="gfm"` is "GFM by default" and `preset="commonmark"` shrinks the bundle. `syntax.native` names a native extension; a plugin without it marks the document JS-backend only.
-3. **Theme tokens, then element overrides** ([04 · Theme](./04-api.md#theme)). Most apps change 3–5 tokens instead of overriding 20 elements; overrides remain for full control. Resolved once per theme change and shared through context ([03](./03-architecture.md#theme)).
+3. **One flat theme** ([04 · Theme](./04-api.md#theme)). A CSS-like object keyed by element with typed props (`link: { color }`), `dark`/`light` blocks; tokens stay internal ([P3a-2](./phase-3a/decisions.md#p3a-2-flat-per-element-theme-tokens-become-internal)). Resolved once per theme change and shared through context ([03](./03-architecture.md#theme)).
 4. **Lower-level and interop APIs** ([04](./04-api.md#lower-level-api)): `parse()` returns an opaque immutable document, `<Markdown document>` skips parsing, `visit()` is read-only traversal, there is no mdast export ([P1-20](./phase-1/decisions.md#p1-20-no-tomdast-mdast-interop-is-dropped)), `useMarkdownStream()` ([05](./05-streaming.md)).
 
 ### What this gains compared with the mdast-shaped API
 
-| | mdast-shaped render rules (earlier draft) | Components + plugins + tokens (decision) |
+| | mdast-shaped render rules (earlier draft) | Components + plugins + flat theme (decision) |
 |---|---|---|
 | Internal model can change (table, native) | ❌ breaking change | ✅ private |
 | User `memo` components bail out | ❌ node and styles objects change identity | ✅ primitive props |
 | Adding a syntax feature | 2–3 unrelated configs | 1 plugin, type-checked end to end |
-| Restyling the whole document | override many elements | change a few tokens |
+| Restyling the whole document | override many elements | set a few theme keys |
 | Vocabulary | AST (`depth`, `url`, `lang`) | app (`level`, `href`, `language`) |
 | Familiar to React developers | partly | ✅ (react-markdown `components`, MDX) |
 | unified/remark ecosystem | native | not supported (use `visit()`) |

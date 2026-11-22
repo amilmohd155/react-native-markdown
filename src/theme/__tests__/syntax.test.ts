@@ -2,16 +2,15 @@ import { StyleSheet } from 'react-native';
 import {
   SYNTAX_TOKEN_TYPES,
   clearThemeCache,
-  createTheme,
   darkTheme,
   lightTheme,
   resolveTheme,
   resolveThemeProp,
-  type ThemeInput,
+  type FlatThemeInput,
 } from '../index';
 
-// P3-33: `tokens.syntax`, a color per syntax token type that follows the
-// theme mode.
+// P3-33: `codeBlock.syntax`, a color per syntax token type that follows the
+// theme mode (P3a-2: flat input; `tokens.syntax` is the resolved palette).
 
 /** WCAG contrast ratio of two #rrggbb colors. */
 function contrast(a: string, b: string): number {
@@ -31,90 +30,132 @@ const BUILT_INS = [
   ['dark', darkTheme],
 ] as const;
 
+const syntaxOf = (t: typeof lightTheme) => t.codeBlock!.syntax!;
+
 beforeEach(() => clearThemeCache());
 
 describe('built-in syntax palettes', () => {
   it.each(BUILT_INS)('%s defines every type, frozen', (_n, t) => {
-    expect(Object.keys(t.syntax).sort()).toEqual(
+    expect(Object.keys(syntaxOf(t)).sort()).toEqual(
       [...SYNTAX_TOKEN_TYPES].sort()
     );
-    expect(Object.isFrozen(t.syntax)).toBe(true);
+    expect(Object.isFrozen(syntaxOf(t))).toBe(true);
   });
 
-  it.each(BUILT_INS)('%s: every type is >= 4.5:1 on codeBg', (_n, t) => {
-    for (const type of SYNTAX_TOKEN_TYPES) {
-      const ratio = contrast(t.syntax[type], t.colors.codeBg);
-      expect([type, ratio >= 4.5]).toEqual([type, true]);
+  it.each(BUILT_INS)(
+    '%s: every type is >= 4.5:1 on the code background',
+    (_n, t) => {
+      for (const type of SYNTAX_TOKEN_TYPES) {
+        const ratio = contrast(
+          syntaxOf(t)[type]!,
+          t.codeBlock!.backgroundColor as string
+        );
+        expect([type, ratio >= 4.5]).toEqual([type, true]);
+      }
     }
-  });
+  );
 
-  it.each(BUILT_INS)('%s: plain is the code text color', (_n, t) => {
-    expect(t.syntax.plain).toBe(resolveTheme(t).elements.CodeBlock.text.color);
+  it.each(BUILT_INS)('%s: plain is the code text color', (n) => {
+    const resolved = resolveTheme({}, n);
+    expect(resolved.tokens.syntax.plain).toBe(
+      resolved.elements.CodeBlock.text.color
+    );
   });
 
   it('light and dark palettes differ', () => {
-    expect(darkTheme.syntax).not.toEqual(lightTheme.syntax);
+    expect(syntaxOf(darkTheme)).not.toEqual(syntaxOf(lightTheme));
   });
 });
 
 describe('syntax through the theme prop', () => {
   it("'light', 'dark' and 'auto' pick the palette of the scheme", () => {
-    expect(resolveThemeProp('light', 'dark').tokens.syntax).toBe(
-      lightTheme.syntax
-    );
-    expect(resolveThemeProp('dark', 'light').tokens.syntax).toBe(
-      darkTheme.syntax
-    );
-    expect(resolveThemeProp('auto', 'light').tokens.syntax).toBe(
-      lightTheme.syntax
-    );
-    expect(resolveThemeProp('auto', 'dark').tokens.syntax).toBe(
-      darkTheme.syntax
-    );
+    const palette = (
+      p: Parameters<typeof resolveThemeProp>[0],
+      s: 'light' | 'dark'
+    ) => resolveThemeProp(p, s).tokens.syntax;
+    expect(palette('light', 'dark')).toEqual(syntaxOf(lightTheme));
+    expect(palette('dark', 'light')).toEqual(syntaxOf(darkTheme));
+    expect(palette('auto', 'light')).toEqual(syntaxOf(lightTheme));
+    expect(palette('auto', 'dark')).toEqual(syntaxOf(darkTheme));
   });
 
   it('a partial override merges per key onto the scheme palette', () => {
-    const input: ThemeInput = { syntax: { keyword: '#ff0000' } };
+    const input: FlatThemeInput = {
+      codeBlock: { syntax: { keyword: '#ff0000' } },
+    };
     const light = resolveThemeProp(input, 'light').tokens.syntax;
     const dark = resolveThemeProp(input, 'dark').tokens.syntax;
-    expect(light).toEqual({ ...lightTheme.syntax, keyword: '#ff0000' });
-    expect(dark).toEqual({ ...darkTheme.syntax, keyword: '#ff0000' });
+    expect(light).toEqual({ ...syntaxOf(lightTheme), keyword: '#ff0000' });
+    expect(dark).toEqual({ ...syntaxOf(darkTheme), keyword: '#ff0000' });
     expect(Object.isFrozen(light)).toBe(true);
   });
 
   it('an undefined value keeps the default', () => {
     const { syntax } = resolveThemeProp(
-      { syntax: { string: undefined } },
+      { codeBlock: { syntax: { string: undefined } } },
       'dark'
     ).tokens;
-    expect(syntax.string).toBe(darkTheme.syntax.string);
+    expect(syntax.string).toBe(syntaxOf(darkTheme).string);
   });
 
-  it('a custom colors.text leaves the syntax defaults alone', () => {
+  it('a custom paragraph colour leaves the syntax defaults alone', () => {
     const { syntax } = resolveThemeProp(
-      { colors: { text: '#000000' } },
+      { paragraph: { color: '#000000' } },
       'light'
     ).tokens;
-    expect(syntax).toEqual(lightTheme.syntax);
+    expect(syntax).toEqual(syntaxOf(lightTheme));
   });
 
-  it('createTheme merges syntax onto its base', () => {
-    const t = createTheme({ syntax: { comment: '#00ff00' } }, darkTheme);
-    expect(t.syntax).toEqual({ ...darkTheme.syntax, comment: '#00ff00' });
-    expect(createTheme({}).syntax).toBe(lightTheme.syntax);
+  it('a custom codeBlock colour moves only the base-colour types', () => {
+    const { syntax } = resolveThemeProp(
+      { codeBlock: { color: '#000000' } },
+      'light'
+    ).tokens;
+    expect(syntax).toEqual({
+      ...syntaxOf(lightTheme),
+      operator: '#000000',
+      punctuation: '#000000',
+      variable: '#000000',
+      embedded: '#000000',
+      plain: '#000000',
+    });
+  });
+
+  it('a scheme block merges its palette over the top-level one', () => {
+    const input: FlatThemeInput = {
+      codeBlock: { syntax: { comment: '#00ff00', keyword: '#111111' } },
+      dark: { codeBlock: { syntax: { keyword: '#222222' } } },
+    };
+    expect(resolveThemeProp(input, 'dark').tokens.syntax).toEqual({
+      ...syntaxOf(darkTheme),
+      comment: '#00ff00',
+      keyword: '#222222',
+    });
+    expect(resolveThemeProp(input, 'light').tokens.syntax.keyword).toBe(
+      '#111111'
+    );
   });
 
   it('themes differing only in syntax do not share a cache entry', () => {
     const spy = jest.spyOn(StyleSheet, 'create');
     try {
-      const a = resolveThemeProp({ syntax: { keyword: '#111111' } }, 'light');
-      const b = resolveThemeProp({ syntax: { keyword: '#222222' } }, 'light');
+      const a = resolveThemeProp(
+        { codeBlock: { syntax: { keyword: '#111111' } } },
+        'light'
+      );
+      const b = resolveThemeProp(
+        { codeBlock: { syntax: { keyword: '#222222' } } },
+        'light'
+      );
       expect(b).not.toBe(a);
       expect(a.tokens.syntax.keyword).toBe('#111111');
       expect(b.tokens.syntax.keyword).toBe('#222222');
       // An equal inline literal hits.
       expect(
-        resolveThemeProp({ syntax: { keyword: '#111111' } }, 'light')
+        resolveThemeProp(
+          { codeBlock: { syntax: { keyword: '#111111' } } },
+          'light'
+        )
       ).toBe(a);
       expect(spy).toHaveBeenCalledTimes(2);
     } finally {
@@ -123,8 +164,10 @@ describe('syntax through the theme prop', () => {
   });
 
   it('rejects unknown token types', () => {
-    // @ts-expect-error: not a syntax token type
-    const input: ThemeInput = { syntax: { regex: '#000000' } };
+    const input: FlatThemeInput = {
+      // @ts-expect-error: not a syntax token type
+      codeBlock: { syntax: { regex: '#000000' } },
+    };
     expect(input).toBeDefined();
   });
 });

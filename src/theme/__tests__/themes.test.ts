@@ -14,51 +14,71 @@ function contrast(a: string, b: string): number {
 }
 
 describe('built-in themes', () => {
-  it('are frozen', () => {
+  it('are frozen flat blocks', () => {
     expect(Object.isFrozen(lightTheme)).toBe(true);
     expect(Object.isFrozen(darkTheme)).toBe(true);
-    expect(Object.isFrozen(darkTheme.colors)).toBe(true);
+    expect(Object.isFrozen(darkTheme.paragraph)).toBe(true);
+    expect(Object.isFrozen(darkTheme.codeBlock!.syntax)).toBe(true);
   });
 
-  it('differ in colors only, so switching scheme never changes layout', () => {
-    expect(darkTheme.colors).not.toEqual(lightTheme.colors);
-    expect(Object.keys(darkTheme.colors)).toEqual(
-      Object.keys(lightTheme.colors)
+  it('set the same keys, so switching scheme never changes layout', () => {
+    expect(Object.keys(darkTheme)).toEqual(Object.keys(lightTheme));
+    for (const key of Object.keys(lightTheme) as (keyof typeof lightTheme)[]) {
+      expect(Object.keys(darkTheme[key] ?? {})).toEqual(
+        Object.keys(lightTheme[key] ?? {})
+      );
+    }
+    expect(darkTheme.paragraph!.color).not.toBe(lightTheme.paragraph!.color);
+
+    const light = resolveTheme({}, 'light');
+    const dark = resolveTheme({}, 'dark');
+    expect(dark.tokens.fontSize).toEqual(light.tokens.fontSize);
+    expect(dark.tokens.spacing).toEqual(light.tokens.spacing);
+    expect(dark.headings.map((h) => h.text.fontSize)).toEqual(
+      light.headings.map((h) => h.text.fontSize)
     );
-    expect(Object.keys(darkTheme.syntax)).toEqual(
-      Object.keys(lightTheme.syntax)
+    expect(dark.elements.Paragraph.container).toEqual(
+      light.elements.Paragraph.container
     );
-    expect({
-      ...darkTheme,
-      colors: lightTheme.colors,
-      syntax: lightTheme.syntax,
-    }).toEqual(lightTheme);
   });
 
   it.each([
-    ['light', lightTheme],
-    ['dark', darkTheme],
+    ['light', '#ffffff'],
+    ['dark', '#0d1117'],
   ] as const)(
     '%s: text on the page and on code/highlight is readable',
-    (_n, t) => {
-      const page = _n === 'light' ? '#ffffff' : '#0d1117';
-      expect(contrast(t.colors.text, page)).toBeGreaterThanOrEqual(7);
-      expect(contrast(t.colors.link, page)).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(t.colors.muted, page)).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(t.colors.text, t.colors.codeBg)).toBeGreaterThanOrEqual(
-        7
+    (scheme, page) => {
+      const { colors } = resolveTheme({}, scheme).tokens;
+      expect(contrast(colors.text, page)).toBeGreaterThanOrEqual(7);
+      expect(contrast(colors.link, page)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(colors.muted, page)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(colors.text, colors.codeBg)).toBeGreaterThanOrEqual(7);
+      expect(contrast(colors.text, colors.highlight)).toBeGreaterThanOrEqual(
+        4.5
       );
-      expect(
-        contrast(t.colors.text, t.colors.highlight)
-      ).toBeGreaterThanOrEqual(4.5);
     }
   );
 
   it('resolve to dark element colors', () => {
-    const { elements } = resolveTheme(darkTheme);
-    expect(elements.Link.text.color).toBe(darkTheme.colors.link);
+    const { elements } = resolveTheme({}, 'dark');
+    expect(elements.Link.text.color).toBe(darkTheme.link!.color);
     expect(elements.CodeBlock.container.backgroundColor).toBe(
-      darkTheme.colors.codeBg
+      darkTheme.codeBlock!.backgroundColor
     );
+  });
+
+  it('default code colour follows the scheme', () => {
+    expect(resolveTheme({}, 'light').elements.CodeBlock.text.color).toBe(
+      lightTheme.paragraph!.color
+    );
+    expect(resolveTheme({}, 'dark').elements.CodeBlock.text.color).toBe(
+      darkTheme.paragraph!.color
+    );
+    // Overriding only the background cannot make code invisible.
+    const dark = resolveTheme(
+      { codeBlock: { backgroundColor: '#222222' } },
+      'dark'
+    );
+    expect(dark.elements.CodeBlock.text.color).toBe(darkTheme.paragraph!.color);
   });
 });

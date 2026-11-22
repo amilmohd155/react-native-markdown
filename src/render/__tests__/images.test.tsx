@@ -93,7 +93,7 @@ describe('block Image', () => {
   it('reserves the theme imageRatio box while the size is unknown', async () => {
     getSize.mockReturnValue(new Promise(() => {}));
     await mount('![a](photo.png)\n', {
-      theme: resolveTheme(createTheme({ imageRatio: 2 })),
+      theme: resolveTheme(createTheme({ image: { aspectRatio: 2 } })),
     });
     expect(imageStyle()).toMatchObject({
       aspectRatio: 2,

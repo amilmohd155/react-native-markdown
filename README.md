@@ -12,7 +12,7 @@ A Markdown renderer for React Native. CommonMark and GitHub Flavored Markdown re
 ## Features
 
 - 📄 **CommonMark and GFM.** Parsed with markdown-it. Tables, task lists, strikethrough, autolinks and footnotes are on by default; choose `commonmark` or exclude single features with `preset`.
-- 🎨 **Theme tokens.** Colors, fonts, sizes and spacing, with built-in light and dark themes (`theme="auto"` follows the system), plus per-element overrides.
+- 🎨 **Flat theme.** One object keyed by element (`paragraph`, `link`, `codeBlock`, …) with plain style props and `dark`/`light` blocks, merged onto the built-in themes (`theme="auto"` follows the system).
 - 🧱 **Replaceable elements.** Swap any element for your own component with `components`. Components get semantic props (`level`, `href`, `code`) and a resolved `style`, never a parser node.
 - 🧩 **Plugins.** Add syntax with `definePlugin`: a markdown-it rule, the element it produces, how it renders and how it is themed, all type-checked.
 - 🔐 **Safe by default.** Links open only `http`, `https`, `mailto` and `tel`; `images` can be denied or limited to hosts; raw HTML is a small allowlist of inline tags, everything else is shown as text.
@@ -57,7 +57,7 @@ export default function App() {
 | `preset` | `'gfm' \| 'commonmark' \| { base: 'gfm', exclude: GfmPluginName[] }` | `'gfm'` | Which built-in syntax is on. |
 | `plugins` | `MarkdownPlugin[]` | `[]` | Added on top of the preset. |
 | `components` | `Partial<Components>` | built-in | Replace any element. See [Components](#components). |
-| `theme` | `ThemeInput \| 'light' \| 'dark' \| 'auto'` | `'auto'` | See [Theme](#theme). |
+| `theme` | `FlatThemeInput \| 'light' \| 'dark' \| 'auto'` | `'auto'` | See [Theme](#theme). |
 | `onLinkPress` | `(href, info) => boolean \| void` | opens with `Linking` | Called first for every link. Return `false` to skip the default. |
 | `onImagePress` | `(src, info) => void` | none | Makes images pressable. |
 | `onTaskToggle` | `({ index, checked, text }) => void` | none | Called after a tap flips a task checkbox (the library owns the box state). `enableTaskListItemToggle={false}` makes it read-only. |
@@ -155,19 +155,26 @@ export function Doc({ text }: { text: string }) {
 
 ### Theme
 
-A theme is a set of tokens, from which every element's style is derived, plus overrides for single elements. It always merges onto a built-in theme.
+A theme is one flat object keyed by element, with plain style props. It merges onto the built-in theme of the active scheme. Top-level keys apply to both schemes; `dark` and `light` blocks merge over them. `createTheme(input)` is an identity helper that type-checks the shape, so define a theme once, outside the component.
 
 ```tsx
 import { Markdown, createTheme } from '@docren/react-native-markdown';
 
 const theme = createTheme({
-  colors: { link: 'tomato' },
-  fontSize: { base: 16, scale: 1.25 },
-  listBullets: ['•', '–'],
-  elements: {
-    Blockquote: { container: { backgroundColor: '#cad8ee', borderRadius: 12 } },
-    Heading: (level) => ({ text: { fontWeight: level <= 2 ? '700' : '600' } }),
+  paragraph: { fontSize: 17 }, // headings scale from this
+  link: {
+    color: 'tomato',
+    // Style links by URL pattern (first match wins); mentions too.
+    variants: { '^user:': { backgroundColor: '#e8f5fb', textDecorationLine: 'none' } },
   },
+  list: { bullets: ['•', '–'] },
+  blockquote: {
+    backgroundColor: '#cad8ee',
+    borderRadius: 12,
+    // Per kind, with the `admonitions` plugin.
+    admonitions: { warning: { color: '#c2410c', backgroundColor: '#ffedd5' } },
+  },
+  dark: { link: { color: '#ff8a70' }, blockquote: { backgroundColor: '#1c2a44' } },
 });
 
 export function Styled({ text }: { text: string }) {
@@ -175,7 +182,7 @@ export function Styled({ text }: { text: string }) {
 }
 ```
 
-`lightTheme` and `darkTheme` are exported, and `useMarkdownTheme()` gives custom components the resolved styles. Custom fonts take a family name or a face map (`{ regular, italic, bold, boldItalic }`).
+`theme="light"` or `"dark"` pins a built-in theme; a theme object follows the device scheme. `useMarkdownTheme()` gives custom components the resolved values for the active scheme, for example `useMarkdownTheme().link.color`. Custom fonts take a family name or a face map (`{ regular, italic, bold, boldItalic }`).
 
 ### Components
 
@@ -258,13 +265,16 @@ The `emoji` plugin is a separate entry point, so apps that do not use it do not 
 ```tsx
 import { emoji } from '@docren/react-native-markdown/emoji';
 
-const plugins = [emoji({ map: { shipit: '🚢' } })];
+export const plugins = [emoji({ map: { shipit: '🚢' } })];
 ```
 
-The `mentions` plugin (`@docren/react-native-markdown/mentions`) turns `[@Alice](user://alice)` into a `Mention` with `scheme`, `id` (decoded), `label` and `url`. Only `scheme://` links for the listed schemes convert; autolinks and bare URLs stay links. Style it with the `Mention` theme element (falls back to `Link`) or `components.Mention`. `onMentionPress` handles the press; without it the press goes to `onLinkPress`, which ignores `user://`. A custom `components.Mention` presses through the `useMentionPress()` hook from the same entry.
+The `mentions` plugin (`@docren/react-native-markdown/mentions`) turns `[@Alice](user://alice)` into a `Mention` with `scheme`, `id` (decoded), `label` and `url`. Only `scheme://` links for the listed schemes convert; autolinks and bare URLs stay links. Style it with the `link.variants` entry matching its URL (else `link`), or replace it with `components.Mention`. `onMentionPress` handles the press; without it the press goes to `onLinkPress`, which ignores `user://`. A custom `components.Mention` presses through the `useMentionPress()` hook from the same entry.
 
 ```tsx
+import { Markdown } from '@docren/react-native-markdown';
 import { mentions } from '@docren/react-native-markdown/mentions';
+
+declare function openProfile(id: string): void;
 
 <Markdown
   source="Hi [@Alice](user://alice)"
@@ -273,26 +283,27 @@ import { mentions } from '@docren/react-native-markdown/mentions';
 />;
 ```
 
-The `admonitions` plugin (`@docren/react-native-markdown/admonitions`) renders GitHub alerts: a blockquote whose first line is `[!NOTE]` (also `TIP`, `IMPORTANT`, `WARNING`, `CAUTION`, any case) becomes an `Admonition` with a title above its content. The marker must be alone on its line; an unknown kind or text after the marker stays a blockquote. Works under the `'commonmark'` preset. `titles` renames kinds. Style every kind with the `Admonition` theme element, or one with `AdmonitionNote`, `AdmonitionTip`, `AdmonitionImportant`, `AdmonitionWarning` and `AdmonitionCaution`; `components.Admonition` replaces the render and gets `kind`, `title`, `children` and `style`.
+The `admonitions` plugin (`@docren/react-native-markdown/admonitions`) renders GitHub alerts: a blockquote whose first line is `[!NOTE]` (also `TIP`, `IMPORTANT`, `WARNING`, `CAUTION`, any case) becomes an `Admonition` with a title above its content. The marker must be alone on its line; an unknown kind or text after the marker stays a blockquote. Works under the `'commonmark'` preset. `titles` renames kinds. Style a kind with `theme.blockquote.admonitions.<kind>` (`note`, `tip`, `important`, `warning`, `caution`; `color` and `backgroundColor`); `components.Admonition` replaces the render and gets `kind`, `title`, `children` and `style`.
 
 ```tsx
+import { Markdown } from '@docren/react-native-markdown';
 import { admonitions } from '@docren/react-native-markdown/admonitions';
 
 <Markdown
   source={'> [!WARNING]\n> Back up first.'}
   plugins={[admonitions({ titles: { warning: 'Heads up' } })]}
   theme={{
-    elements: { AdmonitionWarning: { container: { borderLeftColor: 'orange' } } },
+    blockquote: { admonitions: { warning: { color: 'orange' } } },
   }}
 />;
 ```
 
-The `highlight` plugin (`@docren/react-native-markdown/highlight`) colours fenced code in JavaScript, TypeScript, JSON, shell, diff and Python, also while it streams. `languages` adds or replaces a tokenizer per fence tag and `tokenize` handles other tags; colours come from `theme.syntax`, with light and dark defaults. Blocks over `maxLength` (50,000 characters) render plain. Details: [`docs/rewrite/04-api.md`](docs/rewrite/04-api.md#highlight).
+The `highlight` plugin (`@docren/react-native-markdown/highlight`) colours fenced code in JavaScript, TypeScript, JSON, shell, diff and Python, also while it streams. `languages` adds or replaces a tokenizer per fence tag and `tokenize` handles other tags; colours come from `theme.codeBlock.syntax`, with light and dark defaults. Blocks over `maxLength` (50,000 characters) render plain. Details: [`docs/rewrite/04-api.md`](docs/rewrite/04-api.md#highlight).
 
 ```tsx
 import { highlight } from '@docren/react-native-markdown/highlight';
 
-const plugins = [highlight()]; // create once, outside the component
+export const plugins = [highlight()]; // create once, outside the component
 ```
 
 ### Raw HTML

@@ -11,7 +11,7 @@ import {
   type PluginNodeAttrs,
   type PluginNodeInfo,
 } from '../model';
-import type { ElementStyle } from '../theme';
+import type { AdmonitionKind, ElementStyle } from '../theme';
 import type { RenderCtx } from './context';
 import { isDev } from './devInline';
 
@@ -72,8 +72,21 @@ export function pluginComponentOf(
   return undefined;
 }
 
-/** The resolved style of plugin element `name` (empty without overrides). */
-export function pluginStyleOf(ctx: RenderCtx, name: string): ElementStyle {
+/**
+ * The resolved style of plugin element `name` (empty without overrides). An
+ * `Admonition` node takes its kind's style, from `blockquote.admonitions`.
+ */
+export function pluginStyleOf(
+  ctx: RenderCtx,
+  name: string,
+  props?: PluginNodeAttrs
+): ElementStyle {
+  if (name === 'Admonition') {
+    const kind = props?.kind;
+    if (typeof kind === 'string' && kind in ctx.theme.admonitions) {
+      return ctx.theme.admonitions[kind as AdmonitionKind];
+    }
+  }
   return ctx.theme.pluginElements[name] ?? NO_STYLE;
 }
 

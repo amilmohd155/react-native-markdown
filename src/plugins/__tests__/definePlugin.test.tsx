@@ -90,8 +90,8 @@ const host =
   ({ children, style: _style, ...props }: Props) =>
     createElement(name, props, children);
 
-// A plugin package declares its elements like this, so `components` and
-// `theme.elements` accept them.
+// A plugin package declares its elements like this, so `components` accepts
+// them (and `PluginThemeMap` its theme keys, as src/mentions does).
 declare module '@docren/react-native-markdown' {
   interface PluginElementPropsMap {
     // `Mention` itself is declared by src/mentions/Mention.tsx.
@@ -129,7 +129,7 @@ const mentions = definePlugin({
     Chip: host('Chip'),
   },
   theme: {
-    Mention: { text: { color: '#112233' } },
+    Mention: { color: '#112233' },
   },
 });
 
@@ -258,13 +258,13 @@ describe('plugin nodes', () => {
           return null;
         },
       },
-      theme: { Mention: { text: { color: '#112233' } } },
+      theme: { Mention: { color: '#112233' } },
     });
     await render('@ada', [probe]);
     expect(style).toEqual({ text: { color: '#112233' }, container: {} });
   });
 
-  it('lets the theme prop override the plugin theme', async () => {
+  it('lets the theme prop override a plugin theme key', async () => {
     let style: ElementStyle | undefined;
     const probe = definePlugin({
       name: 'probe',
@@ -282,10 +282,11 @@ describe('plugin nodes', () => {
           return null;
         },
       },
-      theme: { Mention: { text: { color: '#112233' } } },
+      theme: { Mention: { color: '#112233' } },
     });
     await render('@ada', [probe], {
-      theme: { elements: { Mention: { text: { color: '#ffffff' } } } },
+      // `Mention` is no longer a typed theme key (links use `link.variants`).
+      theme: { Mention: { color: '#ffffff' } } as never,
     });
     expect(style?.text.color).toBe('#ffffff');
   });

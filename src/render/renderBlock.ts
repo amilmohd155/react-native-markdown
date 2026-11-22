@@ -53,6 +53,12 @@ interface Place {
    * advanced in document order as items render.
    */
   readonly tasks: { next: number };
+  /**
+   * The font size an enclosing block's text style sets for its content
+   * (a blockquote's, the footnote section's): it overrides the paragraph's,
+   * so the scaled inline elements (`fontScale`) start from it.
+   */
+  readonly textSize?: number;
 }
 
 /**
@@ -123,7 +129,7 @@ function renderNode(
         id,
         props,
         heading,
-        renderInline(table, id, ctx, heading.text, HEADING_FONT)
+        renderInline(table, id, ctx, heading.text, HEADING_FONT, place.textSize)
       );
     }
 
@@ -148,7 +154,7 @@ function renderNode(
         id,
         {},
         paragraph,
-        renderInline(table, id, ctx, paragraph.text)
+        renderInline(table, id, ctx, paragraph.text, undefined, place.textSize)
       );
     }
 
@@ -159,7 +165,10 @@ function renderNode(
         id,
         {},
         elements.Blockquote,
-        renderChildren(table, id, ctx, place)
+        renderChildren(table, id, ctx, {
+          ...place,
+          textSize: elements.Blockquote.text.fontSize ?? place.textSize,
+        })
       );
 
     case NodeType.List: {
@@ -253,15 +262,23 @@ function renderNode(
       );
     }
 
-    case NodeType.TableRow:
+    case NodeType.TableRow: {
+      const props = tableRowProps(table, id);
+      // Rows are numbered across head and body: the first body row is 1.
+      const row = props.header
+        ? theme.tableHeaderRow
+        : props.index % 2 === 1
+          ? theme.tableRowEven
+          : theme.tableRowOdd;
       return element(
         ctx,
         'TableRow',
         id,
-        tableRowProps(table, id),
-        elements.TableRow,
+        props,
+        row,
         renderChildren(table, id, ctx, place)
       );
+    }
 
     case NodeType.TableCell: {
       const props = tableCellProps(table, id);
@@ -277,7 +294,8 @@ function renderNode(
           id,
           ctx,
           cell.text,
-          props.header ? TABLE_HEAD_FONT : BODY_FONT
+          props.header ? TABLE_HEAD_FONT : BODY_FONT,
+          place.textSize
         )
       );
     }
@@ -298,7 +316,10 @@ function renderNode(
         createElement(
           InheritedTextContext.Provider,
           { value: section.text },
-          renderChildren(table, id, ctx, place)
+          renderChildren(table, id, ctx, {
+            ...place,
+            textSize: section.text.fontSize ?? place.textSize,
+          })
         )
       );
     }
@@ -328,19 +349,18 @@ function renderNode(
       // Plugin block nodes: a leaf (`math_block`) or a container.
       const plugin = pluginNodeOf(table, id);
       if (plugin === undefined) return null;
+      const props = pluginPropsOf(table, id);
+      const style = pluginStyleOf(ctx, plugin.name, props);
       const children =
         table.firstChild[id] === NONE
           ? undefined
-          : renderChildren(table, id, ctx, place);
+          : renderChildren(table, id, ctx, {
+              ...place,
+              textSize: style.text.fontSize ?? place.textSize,
+            });
       const component = pluginComponentOf(ctx, plugin.name);
       if (component === undefined) return children ?? null;
-      return createPluginElement(
-        component,
-        id,
-        pluginPropsOf(table, id),
-        pluginStyleOf(ctx, plugin.name),
-        children
-      );
+      return createPluginElement(component, id, props, style, children);
     }
   }
 }

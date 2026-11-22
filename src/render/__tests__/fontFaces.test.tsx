@@ -5,7 +5,7 @@ import {
   createTheme,
   resolveTheme,
   type FontFaces,
-  type ThemeInput,
+  type FlatThemeInput,
 } from '../../theme';
 import { BlockList } from '../Block';
 import { createRenderCtx } from '../context';
@@ -47,7 +47,7 @@ function components(): Components {
   } as never);
 }
 
-function render(source: string, input: ThemeInput) {
+function render(source: string, input: FlatThemeInput) {
   const ctx = createRenderCtx({
     components: components(),
     theme: resolveTheme(createTheme(input)),
@@ -77,7 +77,7 @@ function faces(root: Tree): string[] {
 }
 
 describe('inline flattener with font faces (P1-16)', () => {
-  const theme: ThemeInput = { fonts: { body: inter } };
+  const theme: FlatThemeInput = { paragraph: { fontFamily: inter } };
 
   it('picks the bold or italic face for Strong and Emphasis', async () => {
     expect(faces(await render('a **b** *c*', theme))).toEqual([
@@ -109,7 +109,15 @@ describe('inline flattener with font faces (P1-16)', () => {
   });
 
   it('uses the heading faces inside a heading and the body faces elsewhere', async () => {
-    const both: ThemeInput = { fonts: { body: inter, heading: display } };
+    const both: FlatThemeInput = {
+      paragraph: { fontFamily: inter },
+      h1: { fontFamily: display },
+      h2: { fontFamily: display },
+      h3: { fontFamily: display },
+      h4: { fontFamily: display },
+      h5: { fontFamily: display },
+      h6: { fontFamily: display },
+    };
     expect(faces(await render('# *a*\n\n*b*', both))).toEqual([
       'Emphasis:Display_700_Italic/-/-',
       'Emphasis:Inter_400Regular_Italic/-/-',
@@ -127,13 +135,15 @@ describe('inline flattener with font faces (P1-16)', () => {
     // No bold or italic face: the regular face stays (inherited, so no
     // family is repeated) and the missing axes come from the style props.
     expect(
-      faces(await render('***x***', { fonts: { body: { regular: 'R' } } }))
+      faces(
+        await render('***x***', { paragraph: { fontFamily: { regular: 'R' } } })
+      )
     ).toEqual(['Emphasis:-/-/italic', 'Strong:-/700/italic']);
   });
 
   it('keeps the family-name behaviour: weight and style props only', async () => {
     expect(
-      faces(await render('# ***x***', { fonts: { body: 'Inter' } }))
+      faces(await render('# ***x***', { paragraph: { fontFamily: 'Inter' } }))
     ).toEqual(['Emphasis:-/-/italic', 'Strong:-/700/-']);
   });
 

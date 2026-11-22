@@ -26,14 +26,14 @@ markdown ──► Parser backend (pluggable)
                      │
      Inline content → ONE <Text> per block: raw strings, nested <Text> only for styled spans
                      │
-     Public API: element components with semantic props, plugins, theme tokens
+     Public API: element components with semantic props, plugins, flat theme
 ```
 
 In the benchmark, markdown-it parses 7–15× faster than the current parser (micromark). Block-level memoization keeps streaming cost close to the size of the newest chunk, not the whole document. The flat node table keeps about 5.5× less in memory than today's mdast tree.
 
 **Platforms:** iOS, Android and web (react-native-web). The default package works in Expo Go (pure JS). The native parser is an opt-in add-on.
 
-The rewrite is allowed to break the API, and does. Users work with **element components with semantic props** (`Heading { level }`, `Link { href }`), **plugins** that bundle syntax, element and theme, and **theme tokens**. The internal node format is private, so the JS and native backends can share it and it can change without breaking anyone. See [08](./08-model-and-api.md).
+The rewrite is allowed to break the API, and does. Users work with **element components with semantic props** (`Heading { level }`, `Link { href }`), **plugins** that bundle syntax, element and theme, and a **flat theme**. The internal node format is private, so the JS and native backends can share it and it can change without breaking anyone. See [08](./08-model-and-api.md).
 
 ## Documents
 
@@ -46,8 +46,8 @@ The rewrite is allowed to break the API, and does. Users work with **element com
 | 05 | [Streaming](./05-streaming.md) | Incremental parsing and rendering for LLM/chat output |
 | 06 | [Spec compliance & testing](./06-testing.md) | CommonMark/GFM spec suites, perf regression tests |
 | 07 | [Roadmap & decisions](./07-roadmap.md) | Phased plan, risks, competing libraries, **decision log (D1–D8)** |
-| 08 | [Data model & public API](./08-model-and-api.md) | Options and measurements behind the private node table and the components/plugins/tokens API |
+| 08 | [Data model & public API](./08-model-and-api.md) | Options and measurements behind the private node table and the components/plugins/theme API |
 
-Implementation detail is in [`phase-1/`](./phase-1/README.md), [`phase-2/`](./phase-2/README.md) and [`phase-2b/`](./phase-2b/README.md) (work breakdown, decisions, and design notes; Phase 2b runs before the rest of Phase 3), with the shared [testing harness](./testing-harness.md) and [benchmark protocol](./benchmark-protocol.md).
+Implementation detail is in [`phase-1/`](./phase-1/README.md), [`phase-2/`](./phase-2/README.md) and [`phase-2b/`](./phase-2b/README.md) (work breakdown, decisions, and design notes; Phase 2b runs before the rest of Phase 3). [`phase-3a/`](./phase-3a/README.md) holds the API refinement phase planned after Phase 3. Shared: the [testing harness](./testing-harness.md) and [benchmark protocol](./benchmark-protocol.md).
 
 The benchmark scripts are in [`bench/`](../../bench) (a private workspace at the repo root).

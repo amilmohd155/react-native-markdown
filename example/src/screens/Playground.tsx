@@ -7,17 +7,14 @@ import {
   View,
 } from 'react-native';
 import {
-  createTheme,
-  darkTheme,
-  lightTheme,
   Markdown,
+  type MarkdownProps,
+  createTheme,
   parse,
   type FontFaces,
-  type HeadingLevel,
   type ScriptFallback,
   type SoftBreak,
-  type ThemeInput,
-  type ThemeProp,
+  type FlatThemeInput,
 } from '@docren/react-native-markdown';
 import { MentionChip } from '../components/MentionChip';
 import { PLUGINS } from '../plugins';
@@ -46,11 +43,6 @@ const INTER: FontFaces = {
   boldItalic: 'Inter_700Bold_Italic',
 };
 
-// Module-level, so the theme cache can match it by identity.
-const headingOverride = (level: HeadingLevel) => ({
-  text: level === 1 ? { textTransform: 'uppercase' as const } : {},
-});
-
 // Declared inline views (D8): link chips and raised/lowered scripts.
 const CHIP_COMPONENTS = {
   Link: LinkChip,
@@ -58,7 +50,152 @@ const CHIP_COMPONENTS = {
   Subscript: LoweredSubscript,
 };
 
+/**
+ * Compact preset themes, one per Phase 3a feature. Each is a flat theme with
+ * a `dark` block, merged onto the built-in theme of the active scheme.
+ */
+const PRESETS = {
+  none: createTheme({}),
+  brand: createTheme({
+    paragraph: { color: '#2b2140', lineHeight: 26 },
+    h1: { color: '#6d28d9' },
+    h2: { color: '#6d28d9' },
+    link: { color: '#be185d' },
+    codeBlock: { backgroundColor: '#f3e8ff', borderRadius: 12, padding: 14 },
+    dark: {
+      paragraph: { color: '#e9ddff' },
+      h1: { color: '#c4b5fd' },
+      h2: { color: '#c4b5fd' },
+      link: { color: '#f9a8d4' },
+      codeBlock: { backgroundColor: '#2a1d47' },
+    },
+  }),
+  lists: createTheme({
+    list: {
+      bullets: ['●', '○', '■'],
+      bulletColor: '#0d9488',
+      markerColor: '#0d9488',
+      markerFontWeight: '700',
+      itemSpacing: 6,
+      gapWidth: 10,
+    },
+  }),
+  table: createTheme({
+    table: {
+      headerBackgroundColor: '#1e3a8a',
+      headerColor: '#ffffff',
+      rowEvenBackgroundColor: '#eff6ff',
+      rowOddBackgroundColor: '#dbeafe',
+      borderRadius: 10,
+      align: 'center',
+      color: '#0f172a',
+      cellPaddingVertical: 8,
+    },
+    dark: {
+      table: {
+        rowEvenBackgroundColor: '#172036',
+        rowOddBackgroundColor: '#1e2a47',
+        color: '#e2e8f0',
+      },
+    },
+  }),
+  admonitions: createTheme({
+    blockquote: {
+      borderLeftWidth: 5,
+      padding: 12,
+      borderRadius: 10,
+      admonitions: {
+        warning: { color: '#c2410c', backgroundColor: '#ffedd5' },
+        caution: { color: '#b91c1c', backgroundColor: '#fee2e2' },
+      },
+    },
+    dark: {
+      blockquote: {
+        admonitions: {
+          warning: { color: '#fdba74', backgroundColor: '#3a2410' },
+          caution: { color: '#fca5a5', backgroundColor: '#3b1414' },
+        },
+      },
+    },
+  }),
+  mentions: createTheme({
+    link: {
+      variants: {
+        '^user:': {
+          color: '#1264a3',
+          backgroundColor: '#e8f5fb',
+          textDecorationLine: 'none',
+        },
+        '^channel:': {
+          color: '#065f46',
+          backgroundColor: '#d1fae5',
+          textDecorationLine: 'none',
+        },
+      },
+    },
+    dark: {
+      link: {
+        variants: {
+          '^user:': { color: '#7cc4ee', backgroundColor: '#0f3047' },
+          '^channel:': { color: '#6ee7b7', backgroundColor: '#0b3a2c' },
+        },
+      },
+    },
+  }),
+  checkbox: createTheme({
+    checkbox: {
+      size: 22,
+      color: '#9333ea',
+      checkedColor: '#9333ea',
+      borderRadius: 11,
+      checkedText: { textDecorationLine: 'line-through' },
+    },
+  }),
+  images: createTheme({
+    image: { maxHeight: 140, borderRadius: 16 },
+    inlineImage: { size: 28 },
+  }),
+  footnotes: createTheme({
+    footnote: {
+      reference: { color: '#b45309', fontScale: 0.8 },
+      backLink: { color: '#b45309' },
+      definition: { color: '#78350f', fontSize: 14, highlightColor: '#fde68a' },
+    },
+    dark: {
+      footnote: {
+        reference: { color: '#fbbf24' },
+        backLink: { color: '#fbbf24' },
+        definition: { color: '#fde68a', highlightColor: '#78350f' },
+      },
+    },
+  }),
+  sizing: createTheme({
+    // Headings scale from paragraph.fontSize; inline sizes follow the parent.
+    paragraph: { fontSize: 20 },
+    superscript: { fontScale: 0.6 },
+    subscript: { fontScale: 0.6 },
+    light: { inlineCode: { backgroundColor: '#fde68a' } },
+    dark: { inlineCode: { backgroundColor: '#78350f', color: '#fde68a' } },
+  }),
+} as const;
+
+type PresetName = keyof typeof PRESETS;
+
+const PRESET_OPTIONS: readonly { value: PresetName; label: string }[] = [
+  { value: 'none', label: 'Built-in' },
+  { value: 'brand', label: 'Brand' },
+  { value: 'lists', label: 'Lists' },
+  { value: 'table', label: 'Table' },
+  { value: 'admonitions', label: 'Alerts' },
+  { value: 'mentions', label: 'Mentions' },
+  { value: 'checkbox', label: 'Checkbox' },
+  { value: 'images', label: 'Images' },
+  { value: 'footnotes', label: 'Footnotes' },
+  { value: 'sizing', label: 'Sizing' },
+];
+
 interface Options {
+  readonly preset: PresetName;
   readonly font: 'system' | 'inter';
   readonly size: 'default' | 'large';
   readonly accent: boolean;
@@ -75,6 +212,7 @@ interface Options {
 }
 
 const DEFAULTS: Options = {
+  preset: 'none',
   font: 'system',
   size: 'default',
   accent: false,
@@ -91,38 +229,43 @@ const DEFAULTS: Options = {
 };
 
 /**
- * The library's theme for these options. Under `'auto'` a tweak object
- * merges onto the device scheme's base; light and dark build on their own.
+ * The library's theme for these options: the chosen preset with the quick
+ * tweaks merged over it (one level deep, per element key). A theme object
+ * always merges onto the built-in theme of the *device* scheme, and
+ * `<Markdown>` has no `scheme` prop. Only the string themes pin a scheme, so
+ * the header's Light/Dark toggle also sets `Appearance.setColorScheme` (see
+ * App), which makes the device scheme, and so these objects, follow it.
  */
-function themeFor(
-  scheme: 'auto' | 'light' | 'dark',
-  options: Options
-): ThemeProp {
-  const tweaks: ThemeInput = {
-    ...(options.size === 'large' ? { fontSize: { base: 20 } } : null),
-    ...(options.accent
-      ? {
-          colors: { link: '#bf3989', quoteBar: '#bf3989' },
-          radius: { code: 16 },
-          listBullets: ['→', '·', '–'],
-        }
-      : null),
-    ...(options.font === 'inter' ? { fonts: { body: INTER } } : null),
-    ...(options.overrides
-      ? {
-          elements: {
-            Link: { text: { textDecorationLine: 'none', fontWeight: '700' } },
-            CodeBlock: {
-              container: { borderLeftWidth: 4, borderLeftColor: '#bf3989' },
-            },
-            Heading: headingOverride,
-          },
-        }
-      : null),
+function themeFor(options: Options): MarkdownProps['theme'] {
+  const tweaks: FlatThemeInput = {
+    paragraph: {
+      ...(options.size === 'large' ? { fontSize: 20 } : null),
+      ...(options.font === 'inter' ? { fontFamily: INTER } : null),
+    },
+    link: {
+      ...(options.accent ? { color: '#bf3989' } : null),
+      ...(options.overrides
+        ? { textDecorationLine: 'none', fontWeight: '700' }
+        : null),
+    },
+    blockquote: options.accent ? { borderLeftColor: '#bf3989' } : {},
+    codeBlock: {
+      ...(options.accent ? { borderRadius: 16 } : null),
+      ...(options.overrides
+        ? { borderWidth: 1, borderColor: '#bf3989' }
+        : null),
+    },
+    list: options.accent ? { bullets: ['→', '·', '–'] } : {},
   };
-  if (Object.keys(tweaks).length === 0) return scheme;
-  if (scheme === 'auto') return tweaks;
-  return createTheme(tweaks, scheme === 'dark' ? darkTheme : lightTheme);
+  const preset: FlatThemeInput = PRESETS[options.preset];
+  const merged: Record<string, object> = { ...preset };
+  for (const [key, value] of Object.entries(tweaks)) {
+    if (Object.keys(value).length > 0) {
+      merged[key] = { ...merged[key], ...value };
+    }
+  }
+  if (Object.keys(merged).length === 0) return 'auto';
+  return createTheme(merged as FlatThemeInput);
 }
 
 type Mode = 'preview' | 'edit';
@@ -140,7 +283,7 @@ function build(source: string) {
  * live in the options sheet; the light/dark switch is in the header.
  */
 export function Playground() {
-  const { p, setting } = useChrome();
+  const { p } = useChrome();
   const [mode, setMode] = useState<Mode>('preview');
   const [parsed, setParsed] = useState(() => build(gallery));
   const [options, setOptions] = useState(DEFAULTS);
@@ -150,7 +293,7 @@ export function Playground() {
   const set = <K extends keyof Options>(key: K, value: Options[K]) =>
     setOptions((current) => ({ ...current, [key]: value }));
 
-  const theme = useMemo(() => themeFor(setting, options), [setting, options]);
+  const theme = useMemo(() => themeFor(options), [options]);
   const components = useMemo(
     () =>
       options.inlineViews || options.mentionChip
@@ -296,7 +439,19 @@ export function Playground() {
             ]}
           />
         </Field>
-        <Field label="Theme">
+        <Field label="Preset theme">
+          <View style={styles.wrap}>
+            {PRESET_OPTIONS.map((o) => (
+              <Toggle
+                key={o.value}
+                label={o.label}
+                value={options.preset === o.value}
+                onChange={() => set('preset', o.value)}
+              />
+            ))}
+          </View>
+        </Field>
+        <Field label="Quick tweaks">
           <View style={styles.wrap}>
             <Toggle
               label="Accent colour"

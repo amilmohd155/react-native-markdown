@@ -11,11 +11,9 @@ describe('package entry', () => {
     expect(Object.keys(entry).sort()).toEqual([
       'Markdown',
       'createTheme',
-      'darkTheme',
       'defaults',
       'definePlugin',
       'inlineView',
-      'lightTheme',
       'parse',
       'useMarkdownBlocks',
       'useMarkdownStream',

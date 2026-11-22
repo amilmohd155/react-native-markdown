@@ -87,8 +87,12 @@ export function baselineOf(
   let baseline = baselines.get(key);
   if (baseline === undefined) {
     const fontSize = text?.fontSize ?? tokens.fontSize.base;
+    // Without its own line height, the paragraph's ratio at this size.
     const lineHeight =
-      text?.lineHeight ?? Math.round(fontSize * tokens.lineHeight);
+      text?.lineHeight ??
+      Math.round(
+        (fontSize * tokens.paragraphLineHeight) / tokens.fontSize.base
+      );
     baseline = Object.freeze({ fontSize, lineHeight });
     baselines.set(key, baseline);
   }

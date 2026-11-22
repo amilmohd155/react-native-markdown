@@ -84,7 +84,6 @@ function ScriptRun({
           { color: colors.text, fontFamily: regularFamily(fonts.body) },
           inherited,
           style.text,
-          { fontSize: baseline.fontSize * 0.75 },
         ]}
       >
         {children}
@@ -139,8 +138,9 @@ export function LineBreak({ hard }: ElementProps<'LineBreak'>) {
  * Inline image as an inline attachment (a declared inline view). Its size
  * comes from the props when the renderer already knows it, else from the
  * size cache; it is scaled down to at most the text's line height, so it
- * sits in the line like an emoji. While loading (or on error) it holds a
- * square of the line height.
+ * sits in the line like an emoji. With `inlineImage.size` it is scaled (up
+ * or down) to fit that square instead. While loading (or on error) it holds
+ * a square of the line height (or of `size`).
  */
 export const InlineImage = markInlineView(function DefaultInlineImage({
   src,
@@ -150,7 +150,7 @@ export const InlineImage = markInlineView(function DefaultInlineImage({
   height,
   baseline,
 }: InlineViewProps<'InlineImage'>) {
-  const { handlers, options } = useRenderContext();
+  const { handlers, options, theme } = useRenderContext();
   const loaded = useImageSize(src);
   const known =
     width !== null && height !== null
@@ -158,8 +158,15 @@ export const InlineImage = markInlineView(function DefaultInlineImage({
       : loaded !== null && loaded !== 'error'
         ? loaded
         : null;
-  const max = baseline.lineHeight;
-  const scale = known === null ? 1 : Math.min(1, max / known.height);
+  // `inlineImage.size`: a square the image is scaled to fit (up or down).
+  const fixed = theme.tokens.inlineImageSize;
+  const max = fixed ?? baseline.lineHeight;
+  const scale =
+    known === null
+      ? 1
+      : fixed === undefined
+        ? Math.min(1, max / known.height)
+        : max / Math.max(known.width, known.height);
   const image = (
     <Image
       source={{ uri: src }}

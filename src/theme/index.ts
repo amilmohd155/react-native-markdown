@@ -1,17 +1,17 @@
 /**
  * Theme tokens and resolution (Phase 1 · M4).
  *
- * Contents so far (minimal version for the M3 renderer):
+ * Internal: only what src/api/index.ts re-exports is public.
  * - Element names, tokens and resolved-theme types (./types)
- * - Built-in light and dark themes (./tokens)
- * - Token → element style derivation, one StyleSheet.create (./resolve)
+ * - Built-in light and dark flat themes (./tokens)
+ * - Flat theme → element style derivation, one StyleSheet.create (./resolve)
+ * - createTheme, the typed flat theme helper (./create), and the flat merge
+ *   (./merge)
  *
- * - createTheme and the token/element merge helpers (./create)
+ * - Resolve cache keyed on scheme, flat theme input and plugin layers (./cache)
  *
- * - Resolve cache keyed on scheme, theme input and plugin layers (./cache)
- *
- * - MarkdownThemeContext, useMarkdownTheme() and useResolvedTheme(), which
- *   follows the color scheme for 'auto' (./context)
+ * - MarkdownThemeContext, useMarkdownTheme() (the merged flat values) and
+ *   useResolvedTheme(), which follows the color scheme for 'auto' (./context)
  *
  * Design:
  * - docs/rewrite/04-api.md#theme
@@ -22,27 +22,27 @@ export {
   ELEMENT_NAMES,
   SYNTAX_TOKEN_TYPES,
   type ElementName,
-  type ElementOverride,
-  type ElementOverrides,
   type ElementStyle,
   type FontFaces,
   type FontFamily,
-  type HeadingLevel,
   type ResolvedTheme,
   type SyntaxTokenType,
-  type Theme,
-  type ThemeInput,
   type ThemeTokens,
 } from './types';
 export type { PluginElementPropsMap } from './pluginElements';
+export type {
+  AdmonitionKind,
+  FlatThemeBlock,
+  FlatThemeInput,
+  MarkdownTheme,
+} from './flatTypes';
 export { darkTheme, lightTheme } from './tokens';
-export { createTheme, mergeElements } from './create';
+export { createTheme } from './create';
 export { clearThemeCache, resolveThemeProp, type ThemeProp } from './cache';
 export {
   MarkdownThemeContext,
   useMarkdownTheme,
   useResolvedTheme,
-  type MarkdownTheme,
 } from './context';
 export {
   BODY_FONT,

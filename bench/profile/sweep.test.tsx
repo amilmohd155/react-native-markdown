@@ -12,7 +12,7 @@ import {
   renderBlock,
   type Components,
 } from '../../src/render';
-import { lightTheme, resolveTheme } from '../../src/theme';
+import { resolveTheme } from '../../src/theme';
 import { VARIANTS } from './variants';
 
 /**
@@ -173,7 +173,7 @@ jest.setTimeout(30 * 60 * 1000);
     const table = tableOf(doc);
     const ctx = createRenderCtx({ components: stubComponents });
     renderBlock(table, 0, ctx, 0);
-    resolveTheme(lightTheme);
+    resolveTheme({});
     await act(async () => createRoot().render(<Markdown document={doc} />));
   }
 );
@@ -184,12 +184,12 @@ jest.setTimeout(30 * 60 * 1000);
 
   // Cold theme first: nothing else may have resolved a theme yet.
   const coldStart = now();
-  resolveTheme(lightTheme);
+  resolveTheme({});
   const coldTheme = now() - coldStart;
   const warmTheme: number[] = [];
   for (let i = 0; i < 200; i++) {
     const t0 = now();
-    sink.push(resolveTheme(lightTheme));
+    sink.push(resolveTheme({}));
     warmTheme.push(now() - t0);
   }
   sink.length = 0;
@@ -200,7 +200,7 @@ jest.setTimeout(30 * 60 * 1000);
 
   print(`mode ${MODE}, node ${process.version}, reps ${REPS}`);
   print();
-  print('cold resolveTheme(lightTheme), first call in process');
+  print('cold resolveTheme({}), first call in process');
   print(
     `  cold ${fmt(coldTheme, 3)} ms   warm median ${fmt(median(warmTheme), 3)} ms`
   );

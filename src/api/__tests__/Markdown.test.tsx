@@ -103,7 +103,7 @@ describe('<Markdown>', () => {
       const props = (): MarkdownProps => ({
         source: 'one\n\ntwo',
         components: { Paragraph: Counting as never },
-        theme: { colors: { text: '#123456' } },
+        theme: { paragraph: { color: '#123456' } },
         plugins: [],
         preset: { base: 'gfm', exclude: ['autolinks'] },
         html: { allow: ['b'] },
@@ -155,7 +155,7 @@ describe('<Markdown>', () => {
     it('applies plugin theme layers under the theme prop', async () => {
       const plugin = definePlugin({
         name: 'accent',
-        theme: { Paragraph: { text: { color: '#aaaaaa' } } },
+        theme: { paragraph: { color: '#aaaaaa' } },
       });
       const { root } = await mount({ source: 'x', plugins: [plugin] });
       expect(JSON.stringify(root.toJSON())).toContain('#aaaaaa');

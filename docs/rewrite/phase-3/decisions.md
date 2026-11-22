@@ -204,6 +204,7 @@ Accepted · 2026-11-19
 - **Deferred:** no `toggleTask(source, info)` helper and no controlled `checked` or `initialChecked` prop; persistence is the app's job.
 - **Built:** the touch target is a `hitSlop`: measured box 10.7 x 19.6dp (Android, 420dpi), so the slop is asymmetric, right = floor(marker column - glyph) = 9dp (the item content, a later sibling, covers the rest) and left = 25dp into the gutter, total width at least 44 and vertical `min(ceil((44 - h) / 2), floor(gap / 2))` with `gap` the space between items (0 tight, 12 loose by default). 44pt tall is not reachable in a tight list without overlapping the next row. `checkedText` merges onto line-through and dim, or `false` turns it off. A nested List resets the inherited checked text style. Inside a checked item a Link's underline replaces the line-through. A custom `ListItem` gets the displayed state and a toggle from the `useTaskState` hook (props stay plain values, `checked` stays the source value).
 - Design: [task-toggling.md](./task-toggling.md#design).
+- **Phase 3a:** the glyph is replaced by a drawn box ([P3a-5](../phase-3a/decisions.md#p3a-5-the-checkbox-is-a-drawn-box)); `size` is now the box width. The touch-target measurements above are historical.
 
 ## P3-21: Official plugins: emoji, mentions, admonitions; math deferred
 
@@ -264,7 +265,7 @@ Accepted · 2026-11-19
 
 ## P3-28: `theme.linkVariants` styles links by scheme, in core
 
-Proposed · 2026-11-19
+Superseded by [P3a-4](../phase-3a/decisions.md#p3a-4-theme-details-settled-in-the-whitelist) (`link.variants`, matched by URL pattern) · 2026-11-19
 
 - **Decision:** a core theme token `linkVariants`, a map from URL scheme (`mailto`, `tel`, `user`) to a link style, falling back to the `Link` element style; the key type (scheme map vs also a `(url) => style` function) is open until review. Style only: no node, no new press API. Mentions ([P3-24](#p3-24-mentions-are-scheme-links-converted-to-a-mention-node)) do not depend on it and ship first; later the chain is the `Mention` element, then `linkVariants[scheme]`, then `Link`.
 - **Why:** it also styles `mailto:`, `tel:` and deep links, which no plugin covers, and it is cheap. enriched-markdown keys by regex, where first match wins and order matters; a scheme map is deterministic.
@@ -313,7 +314,7 @@ Accepted · 2026-11-21
 
 Accepted · 2026-11-21
 
-- **Decision:** a core `ThemeTokens.syntax`, a colour for each of the 13 types of [P3-29](#p3-29-hand-rolled-tokenizers-with-a-stateless-replaceable-contract): complete once resolved, partial in a theme input, where it merges key by key onto the built-in palette of the resolved scheme (GitHub light and dark, each at least 4.5:1 on `codeBg`; `plain` is the code text colour). It follows the `theme` prop (`light`, `dark`, `auto`) through normal theme resolution (`src/theme/context.ts`, `src/theme/cache.ts`); the code block reads it from the render context, and a type drawn in the block's text colour inherits it. The defaults do not follow a custom `colors.text`: set `syntax.plain` (and the rest) with it. It is a core token, like `tokens.checkbox`, because plugins can contribute element styles but not tokens. CodeBlock also gets an `open` prop: true only while a fence is unclosed on the tail block of a stream, false for static documents and after `done()`.
+- **Decision:** a core `ThemeTokens.syntax` (public as `codeBlock.syntax` since Phase 3a, 15 types), a colour for each of the 13 types of [P3-29](#p3-29-hand-rolled-tokenizers-with-a-stateless-replaceable-contract): complete once resolved, partial in a theme input, where it merges key by key onto the built-in palette of the resolved scheme (GitHub light and dark, each at least 4.5:1 on `codeBg`; `plain` is the code text colour). It follows the `theme` prop (`light`, `dark`, `auto`) through normal theme resolution (`src/theme/context.ts`, `src/theme/cache.ts`); the code block reads it from the render context, and a type drawn in the block's text colour inherits it. The defaults do not follow a custom `colors.text`: set `syntax.plain` (and the rest) with it. It is a core token, like `tokens.checkbox`, because plugins can contribute element styles but not tokens. CodeBlock also gets an `open` prop: true only while a fence is unclosed on the tail block of a stream, false for static documents and after `done()`.
 - **Why:** [enriched-markdown](https://docs.swmansion.com/enriched-markdown/rich-text-formatting/code-highlighting) does the same (14 token types, plain until the fence closes, about 50 KB cap) but is tree-sitter native with no Expo Go or web, so it cannot be reused ([D1, D2](../07-roadmap.md#decisions)). `open` lets the plugin skip incremental work on closed blocks and re-tokenize once at close.
 
 ## P3-34: Highlight scope, core changes and exit criteria

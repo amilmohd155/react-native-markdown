@@ -1,7 +1,8 @@
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, useContext } from 'react';
 import { useColorScheme } from 'react-native';
 import { resolveThemeProp, type ColorScheme, type ThemeProp } from './cache';
-import type { ElementOverrides, ResolvedTheme, ThemeTokens } from './types';
+import type { FlatThemeBlock, MarkdownTheme } from './flatTypes';
+import type { ResolvedTheme } from './types';
 
 /**
  * The resolved theme of the enclosing `<Markdown>` (provided by the block
@@ -12,23 +13,12 @@ import type { ElementOverrides, ResolvedTheme, ThemeTokens } from './types';
  */
 export const MarkdownThemeContext = createContext<ResolvedTheme | null>(null);
 
-/** What `useMarkdownTheme()` returns. */
-export interface MarkdownTheme {
-  /** The merged tokens: colors, fonts, sizes and spacing. */
-  readonly tokens: ThemeTokens;
-  /**
-   * The resolved style of every element, as `{ text, container }`. `Heading`
-   * is empty here because it depends on the level: use `headings`.
-   */
-  readonly styles: ResolvedTheme['elements'];
-  /** `Heading` style by level: index 0 is h1. */
-  readonly headings: ResolvedTheme['headings'];
-}
-
 /**
- * The tokens and resolved element styles, for custom components that want
- * to match the theme. Same reference until the theme changes.
- * Must be called inside a `<Markdown>` (it throws outside one).
+ * The merged flat theme of the active scheme, for custom components that want
+ * to match the theme: the same vocabulary as the `theme` prop
+ * (`useMarkdownTheme().link.color`, `.paragraph.fontSize`). Same reference
+ * until the theme changes. Must be called inside a `<Markdown>` (it throws
+ * outside one).
  */
 export function useMarkdownTheme(): MarkdownTheme {
   const theme = useContext(MarkdownThemeContext);
@@ -37,14 +27,7 @@ export function useMarkdownTheme(): MarkdownTheme {
       'useMarkdownTheme() must be called by a component rendered inside <Markdown>.'
     );
   }
-  return useMemo(
-    () => ({
-      tokens: theme.tokens,
-      styles: theme.elements,
-      headings: theme.headings,
-    }),
-    [theme]
-  );
+  return theme.flat;
 }
 
 /**
@@ -56,7 +39,7 @@ export function useMarkdownTheme(): MarkdownTheme {
  */
 export function useResolvedTheme(
   theme: ThemeProp = 'auto',
-  plugins?: readonly ElementOverrides[]
+  plugins?: readonly FlatThemeBlock[]
 ): ResolvedTheme {
   const scheme: ColorScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   return resolveThemeProp(theme, scheme, plugins);

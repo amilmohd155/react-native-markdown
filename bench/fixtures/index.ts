@@ -50,31 +50,27 @@ affected blocks without parsing the document again.
 |---|---|---|---|
 | \`source\` | \`string\` | — | The markdown to render |
 | \`preset\` | \`'gfm' \\| 'commonmark'\` | \`'gfm'\` | Which syntax to enable |
-| \`theme\` | \`Theme \\| 'auto'\` | \`'auto'\` | Colors, fonts and spacing |
+| \`theme\` | \`FlatThemeInput \\| 'auto'\` | \`'auto'\` | Colors, fonts and spacing |
 | \`softBreak\` | \`'space' \\| 'newline'\` | \`'space'\` | How soft line breaks render |
 | \`selectable\` | \`boolean\` | \`false\` | Text selection within blocks |
 | \`onLinkPress\` | \`(href) => boolean \\| void\` | opens the URL | Return \`false\` to cancel |
 
 ### ${n}.1 Themes
 
-A theme has two levels. **Tokens** cover what most apps change: colors, fonts, the base
-font size and the spacing scale. **Element overrides** give full control over a single
-element when the tokens aren't enough.
+A theme is one flat object keyed by element. Each element takes a few plain style
+props, and \`dark\` and \`light\` blocks override them per color scheme.
 
 \`\`\`tsx
 const theme = createTheme({
-  colors: { text: '#1f2328', link: '#0969da', codeBg: '#f6f8fa' },
-  fonts: { body: 'Inter', mono: 'JetBrainsMono' },
-  fontSize: { base: 16, scale: 1.2 },
-  elements: {
-    Link: { text: { textDecorationLine: 'none' } },
-  },
+  paragraph: { color: '#1f2328', fontSize: 16, fontFamily: 'Inter' },
+  link: { color: '#0969da', textDecorationLine: 'none' },
+  codeBlock: { backgroundColor: '#f6f8fa', fontFamily: 'JetBrainsMono' },
+  dark: { link: { color: '#4493f8' } },
 });
 \`\`\`
 
-> Element styles are split into \`text\` and \`container\`, so a view style can never end
-> up on a \`<Text>\` by accident. Inline styles only carry what they change: a **bold**
-> run inside a heading keeps the heading's size.
+> A prop an element does not accept is a type error. Inline styles only carry what they
+> change: a **bold** run inside a heading keeps the heading's size.
 
 ### ${n}.2 Custom components
 

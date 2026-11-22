@@ -26,13 +26,16 @@ import { codeLineCount, codeLines } from '../../render/codeLines';
 import { createRenderCtx, type RenderCtxInput } from '../../render/context';
 import { RenderCtxContext } from '../../render/contexts';
 import { defaultComponents } from '../../render/defaults';
-import { darkTheme, getDefaultTheme, lightTheme } from '../../theme';
+import { getDefaultTheme, resolveTheme } from '../../theme';
 import type { Chunk } from '../chunking';
 import {
   createHighlightedCodeBlock,
   SINGLE_TEXT_MAX_LENGTH,
 } from '../HighlightedCodeBlock';
 import { DEFAULT_MAX_LENGTH, highlight, type Tokenizer } from '../index';
+
+const lightSyntax = resolveTheme({}).tokens.syntax;
+const darkSyntax = resolveTheme({}, 'dark').tokens.syntax;
 
 // Records every `runsOf` call: one per chunk Text render. `lineRunsOf`
 // calls: one per chunk render in the numbered wrap layout (P3-35).
@@ -119,24 +122,24 @@ describe('highlight()', () => {
 
 describe('colours', () => {
   it.each([
-    ['light', lightTheme],
-    ['dark', darkTheme],
-  ] as const)('come from the %s theme', async (mode, tokens) => {
+    ['light', lightSyntax],
+    ['dark', darkSyntax],
+  ] as const)('come from the %s theme', async (mode, syntax) => {
     const tree = await renderTree(
       <Markdown source={fence('ts', TS)} plugins={plugins} theme={mode} />
     );
     const keyword = tree.findAll(
       (n) => n.type === 'Text' && textOf(n).startsWith('const')
     );
-    expect(keyword.map(colorOf)).toContain(tokens.syntax.keyword);
-    expect(spans(tree, '42').map(colorOf)).toEqual([tokens.syntax.number]);
+    expect(keyword.map(colorOf)).toContain(syntax.keyword);
+    expect(spans(tree, '42').map(colorOf)).toEqual([syntax.number]);
     const comment = tree.findAll(
       (n) => n.type === 'Text' && textOf(n).trim() === '// say hi'
     );
-    expect(comment.map(colorOf)).toEqual([tokens.syntax.comment]);
+    expect(comment.map(colorOf)).toEqual([syntax.comment]);
     // `plain` (the block colour) is inherited: no span of that colour.
     const colored = tree.findAll(
-      (n) => n.type === 'Text' && colorOf(n) === tokens.syntax.plain
+      (n) => n.type === 'Text' && colorOf(n) === syntax.plain
     );
     expect(colored.every((n) => n.props.selectable !== undefined)).toBe(true);
     expect(chunkTexts(tree).join('\n')).toBe(TS.slice(0, -1));
@@ -447,7 +450,7 @@ describe('options', () => {
     );
     expect(languages.TS).toHaveBeenCalledWith('let a = 1;', 'ts');
     expect(spans(tree, 'let a = 1;').map(colorOf)).toContain(
-      lightTheme.syntax.deleted
+      lightSyntax.deleted
     );
   });
 
@@ -460,10 +463,8 @@ describe('options', () => {
       />
     );
     expect(tokenize.mock.calls).toEqual([['x', 'foo']]);
-    expect(spans(tree, 'x').map(colorOf)).toContain(lightTheme.syntax.deleted);
-    expect(spans(tree, 'let').map(colorOf)).toContain(
-      lightTheme.syntax.keyword
-    );
+    expect(spans(tree, 'x').map(colorOf)).toContain(lightSyntax.deleted);
+    expect(spans(tree, 'let').map(colorOf)).toContain(lightSyntax.keyword);
   });
 
   it.each([
@@ -893,7 +894,7 @@ describe('line numbers and wrap (P3-35)', () => {
       expect(ariaHidden(c)).toBe(false);
     }
     // Colours survive.
-    expect(spans(tree, '42').map(colorOf)).toEqual([lightTheme.syntax.number]);
+    expect(spans(tree, '42').map(colorOf)).toEqual([lightSyntax.number]);
   });
 
   it('numbers on, wrap on: one row per line, coloured', async () => {
@@ -921,7 +922,7 @@ describe('line numbers and wrap (P3-35)', () => {
       expect(hiddenFromA11y(g)).toBe(true);
       expect(g.parent!.props['aria-hidden']).toBe(true);
     }
-    expect(spans(tree, '42').map(colorOf)).toEqual([lightTheme.syntax.number]);
+    expect(spans(tree, '42').map(colorOf)).toEqual([lightSyntax.number]);
   });
 
   describe('blank rows', () => {
@@ -1066,9 +1067,7 @@ describe('line numbers and wrap (P3-35)', () => {
       expect(gutter!.props.style[0]).toBe(
         getDefaultTheme().codeBlockGutter.text
       );
-      expect(spans(tree, '42').map(colorOf)).toEqual([
-        lightTheme.syntax.number,
-      ]);
+      expect(spans(tree, '42').map(colorOf)).toEqual([lightSyntax.number]);
       // The label is the code, without numbers.
       expect(body(tree).props.accessibilityLabel).toBe(CODE);
     });

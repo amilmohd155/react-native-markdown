@@ -1,5 +1,6 @@
-import { useMemo, useState, type ComponentType } from 'react';
+import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import {
+  Appearance,
   Platform,
   Pressable,
   StyleSheet,
@@ -32,6 +33,10 @@ import {
   type Chrome,
   type SchemeSetting,
 } from './ui';
+
+if (Platform.OS === 'web') {
+  require('./webAppearance');
+}
 
 const SCREENS: {
   name: string;
@@ -67,6 +72,13 @@ export default function App() {
   });
   const device = useColorScheme();
   const [setting, setSetting] = useState<SchemeSetting>('auto');
+
+  // A theme object follows the device scheme and <Markdown> has no `scheme`
+  // prop, so pin the app's scheme to the Light/Dark setting ('unspecified' = system).
+  // react-native-web has no `setColorScheme`; ./webAppearance adds it on web.
+  useEffect(() => {
+    Appearance.setColorScheme(setting === 'auto' ? 'unspecified' : setting);
+  }, [setting]);
 
   const chrome = useMemo<Chrome>(() => {
     const effective =
