@@ -29,7 +29,7 @@ v1 needs React Native 0.82 or later (New Architecture only) and React 18.2 or la
 1. Rename `markdown` to `source`.
 2. Replace `styles` / `mergeStyle` with `theme`.
 3. Replace each `renderRules` entry with the matching `components` entry (table below).
-4. Replace `listBulletStyle` / `customBulletElement` with a theme token or a `ListItem` component.
+4. Replace `listBulletStyle` / `customBulletElement` with `list.bullets` or a `ListItem` component.
 5. Rewrite `extensions` as `plugins`. GFM (tables, strikethrough, task lists, autolinks, footnotes) is now built in, so drop any GFM extension.
 6. Remove `debug`.
 7. Read [New behaviour to know about](#new-behaviour-to-know-about). Three defaults changed in ways that can bite: link handling, images and raw HTML.
@@ -37,7 +37,7 @@ v1 needs React Native 0.82 or later (New Architecture only) and React 18.2 or la
 | v0.x | v1 |
 |---|---|
 | `markdown` | `source` |
-| `styles` + `mergeStyle` | `theme` (tokens plus `elements` overrides, always merged onto a base) |
+| `styles` + `mergeStyle` | `theme` (one flat object keyed by element, merged onto the built-in theme) |
 | `renderRules.heading({ node })` using `node.depth` | `components.Heading({ level })` |
 | `renderRules.link` using `node.url`, `extras.onPress` | `components.Link({ href })` / `onLinkPress` |
 | `renderRules.code` using `node.lang`, `node.value` | `components.CodeBlock({ language, code })` |
@@ -45,7 +45,7 @@ v1 needs React Native 0.82 or later (New Architecture only) and React 18.2 or la
 | `renderRules.delete` | `components.Strikethrough` |
 | `renderRules.thematicBreak` | `components.Divider` |
 | `renderRules.image` | `components.Image` (block) / `components.InlineImage` |
-| `renderRules.text` | theme tokens (text isn't a component) |
+| `renderRules.text` | `theme.paragraph` (text isn't a component) |
 | `listBulletStyle`, `customBulletElement` | `components.ListItem` (`marker`) or theme |
 | `extensions` (mdast-util-from-markdown) | `plugins` (`definePlugin` with `syntax.markdownIt`) |
 | `debug` | removed (use React DevTools) |
@@ -81,7 +81,7 @@ export function Hello() {
 
 ## `styles` and `mergeStyle` → `theme`
 
-v0 took a `StyleMap` keyed by mdast node type (`heading1`, `blockquote`, `listBullet`...). v1 has a `theme`: design **tokens** (colors, fonts, sizes, spacing) from which every element's style is derived, plus per-element **`elements`** overrides for what tokens can't express.
+v0 took a `StyleMap` keyed by mdast node type (`heading1`, `blockquote`, `listBullet`...). v1 has a `theme`: one flat object keyed by element (`h1`, `blockquote`, `link`...), each key with a typed list of style props. Light and dark values go in `dark: {…}` and `light: {…}` blocks.
 
 ```jsx
 <Markdown
@@ -98,14 +98,10 @@ v0 took a `StyleMap` keyed by mdast node type (`heading1`, `blockquote`, `listBu
 import { Markdown, createTheme } from '@docren/react-native-markdown';
 
 const theme = createTheme({
-  colors: { link: 'tomato' },
-  fontSize: { base: 16, scale: 1.25 },
-  elements: {
-    Blockquote: {
-      container: { backgroundColor: '#cad8ee', borderRadius: 12 },
-    },
-    Heading: (level) => ({ text: { fontWeight: level <= 2 ? '700' : '600' } }),
-  },
+  blockquote: { backgroundColor: '#cad8ee', borderRadius: 12 },
+  link: { color: 'tomato' },
+  h1: { fontSize: 32 },
+  dark: { link: { color: '#ff8a70' } },
 });
 
 export function Styled({ text }: { text: string }) {
@@ -115,32 +111,36 @@ export function Styled({ text }: { text: string }) {
 
 What changed:
 
-- **`mergeStyle` is gone.** A theme always merges onto a base: the built-in theme for the current color scheme, or the one you pass as the second argument of `createTheme(input, base)`. To start from scratch, override every token you care about.
-- **Each element has a `text` and a `container` style.** `text` is a `TextStyle`, `container` is a `ViewStyle`. View and text styles can't be mixed up, which v0's single style object allowed.
-- **`heading1`…`heading6` are one `Heading` entry.** Give it an object, or a function of the level. Hoist the function: the theme compares it by identity.
-- **Built-in themes.** `theme="light" | "dark" | "auto"` (the default is `'auto'`, which follows `useColorScheme()`). `lightTheme` and `darkTheme` are exported as bases. This replaces the v0 roadmap item "dark mode".
+- **`mergeStyle` is gone.** A theme always merges onto the built-in theme of the active color scheme: built-in theme < plugin defaults < top-level keys < the `dark`/`light` block. To start from scratch, set every prop you care about.
+- **No text/container split to learn.** Each key lists the props it accepts and the library routes them to the right `View` or `Text`. A prop the key doesn't accept is a type error. The full table is in [04 · Theme](rewrite/04-api.md#theme).
+- **`heading1`…`heading6` are `h1`…`h6`.** Sizes scale from `paragraph.fontSize` unless a heading sets its own. `lineHeight` is in points.
+- **`createTheme(input)`** is a typed identity helper: it takes one flat object (no `base` argument). Compose with a spread: `createTheme({ ...brand, link: { color } })`.
+- **Built-in themes.** `theme="light" | "dark" | "auto"` (the default is `'auto'`, which follows `useColorScheme()`). This replaces the v0 roadmap item "dark mode".
 - **The theme is memoised for you.** You don't need `useMemo` around `theme`, `components` or `plugins`; they are compared shallowly. Define them outside the component anyway when you can.
-- **Fonts.** `fonts.body`, `fonts.heading` and `fonts.mono` take a family name, or a face map (`{ regular, italic, bold, boldItalic }`) for custom fonts loaded with `expo-font`.
+- **Fonts.** `fontFamily` on `paragraph`, `h1`…`h6` and `codeBlock` takes a family name, or a face map (`{ regular, italic, bold, boldItalic }`) for custom fonts loaded with `expo-font`.
+- **Task checkbox.** It is a drawn box now: `checkbox.size` is the box width in points (default 0.9 x the list font size), with `borderColor`, `checkmarkColor` and `borderRadius` props.
+- **Links by URL.** `link.variants` styles links by a URL pattern (`'^user:'`), first match wins.
+- **Admonitions.** `blockquote.admonitions.<kind>` takes `color` and `backgroundColor`.
 
 How v0 style keys map:
 
 | v0 `styles` key | v1 |
 |---|---|
-| `root`, `text` | tokens: `colors.text`, `fonts.body`, `fontSize.base`, `lineHeight`. Style the wrapping view yourself for a container. |
-| `heading1`…`heading6` | `elements.Heading` (object or `(level) => …`), sizes from `fontSize.base` and `fontSize.scale` |
-| `paragraph` | `elements.Paragraph` |
-| `strong`, `emphasis` | `elements.Strong`, `elements.Emphasis` |
-| `delete` | `elements.Strikethrough` |
-| `thematicBreak` | `elements.Divider`, `colors.border` |
-| `blockquote` | `elements.Blockquote`, `colors.quoteBar` |
-| `code` | `elements.CodeBlock`, `colors.codeBg`, `radius.code`, `fonts.mono` |
-| `inlineCode` | `elements.InlineCode` |
-| `link` | `elements.Link`, `colors.link` |
-| `image` | `elements.Image` |
-| `list`, `listItem`, `listItemContent` | `elements.List`, `elements.ListItem`, `spacing.listIndent` |
-| `listBullet` | `listBullets` token (see [below](#listbulletstyle-and-custombulletelement)) |
+| `root`, `text` | `paragraph` (`color`, `fontFamily`, `fontSize`, `lineHeight`). Style the wrapping view yourself for a container. |
+| `heading1`…`heading6` | `h1`…`h6` |
+| `paragraph` | `paragraph` |
+| `strong`, `emphasis` | `strong`, `em` |
+| `delete` | `strikethrough` |
+| `thematicBreak` | `divider` |
+| `blockquote` | `blockquote` (`borderLeftColor`, `borderLeftWidth`) |
+| `code` | `codeBlock` |
+| `inlineCode` | `inlineCode` |
+| `link` | `link` |
+| `image` | `image`, `inlineImage` |
+| `list`, `listItem`, `listItemContent` | `list` (`marginLeft`, `gapWidth`, `itemSpacing`), `listItem` |
+| `listBullet` | `list.bullets` (see [below](#listbulletstyle-and-custombulletelement)) |
 
-If a component needs the resolved styles of other elements, call `useMarkdownTheme()` inside it. It returns `{ tokens, styles, headings }` and only works inside `<Markdown>`.
+If a component needs the resolved styles of other elements, call `useMarkdownTheme()` inside it. It returns the resolved flat values for the active scheme, e.g. `useMarkdownTheme().link.color`, and only works inside `<Markdown>`.
 
 ## `renderRules` → `components`
 
@@ -218,7 +218,7 @@ export function Headings({ text }: { text: string }) {
 }
 ```
 
-Use a `Heading` theme function instead of a component when you only want to change styles.
+Use the `h1`-`h6` theme keys instead of a component when you only want to change styles.
 
 ### `link` and `onLinkPress`
 
@@ -493,7 +493,7 @@ Image loading is also gated by the new [`images` policy](#images).
 
 ### `text`
 
-Plain text is **not** a component in v1. Text runs are raw strings inside the block's `<Text>`, which keeps paragraphs a single text layout. Style it with theme tokens instead:
+Plain text is **not** a component in v1. Text runs are raw strings inside the block's `<Text>`, which keeps paragraphs a single text layout. Style it with `theme.paragraph` instead:
 
 ```jsx
 renderRules={{
@@ -505,9 +505,7 @@ renderRules={{
 import { Markdown, createTheme } from '@docren/react-native-markdown';
 
 const theme = createTheme({
-  colors: { text: '#222' },
-  fonts: { body: 'Georgia' },
-  fontSize: { base: 17 },
+  paragraph: { color: '#222', fontFamily: 'Georgia', fontSize: 17 },
 });
 
 export function Body({ text }: { text: string }) {
@@ -519,7 +517,7 @@ If you used a `text` rule to transform the content (emoji shortcodes, mentions),
 
 ## `listBulletStyle` and `customBulletElement`
 
-`listBulletStyle="dash"` becomes a `listBullets` theme token: one bullet per nesting depth. `customBulletElement` becomes a `ListItem` component, which receives the computed `marker` and renders the row itself.
+`listBulletStyle="dash"` becomes `list.bullets` in the theme: one bullet per nesting depth. `customBulletElement` becomes a `ListItem` component, which receives the computed `marker` and renders the row itself.
 
 ```jsx
 <Markdown markdown={text} listBulletStyle="dash" />
@@ -528,7 +526,7 @@ If you used a `text` rule to transform the content (emoji shortcodes, mentions),
 ```tsx
 import { Markdown, createTheme } from '@docren/react-native-markdown';
 
-const theme = createTheme({ listBullets: ['–', '·'] });
+const theme = createTheme({ list: { bullets: ['–', '·'] } });
 
 export function Dashes({ text }: { text: string }) {
   return <Markdown source={text} theme={theme} />;
@@ -567,7 +565,7 @@ v0 `extensions` were mdast-util-from-markdown/micromark extensions. v1 parses wi
 
 - `syntax.markdownIt` adds the syntax (a markdown-it rule).
 - `nodes` maps the tokens your rule produces to element props.
-- `components` renders them, and `theme` styles them.
+- `components` renders them, and `theme` (flat keys, plugin defaults below the user's theme) styles them.
 
 ```jsx
 // v0: a micromark syntax extension + an mdast-util extension
@@ -611,9 +609,8 @@ const mentions = definePlugin({
   },
   components: {
     // `userId` is inferred from `from` above.
-    Mention: ({ userId, style }) => <Text style={style.text}>@{userId}</Text>,
+    Mention: ({ userId, style }) => <Text style={[style.text, { color: '#0a66c2' }]}>@{userId}</Text>,
   },
-  theme: { Mention: { text: { color: '#0a66c2' } } },
 });
 
 const plugins = [mentions];
@@ -627,7 +624,7 @@ Notes:
 
 - **GFM is built in.** Tables, task lists, strikethrough, autolinks and footnotes are part of the default `preset="gfm"`. Remove any GFM `extensions`. Set `preset="commonmark"` for strict CommonMark, or `preset={{ base: 'gfm', exclude: ['tables'] }}` to drop individual features.
 - **Plugins come after the preset**, in array order, and a later plugin overrides an earlier one. The `components` and `theme` props override all plugins.
-- To use a plugin's elements in the `components` and `theme.elements` props of `<Markdown>`, a plugin package declares them once by augmenting `PluginElementPropsMap` (see [04 · Element catalog](rewrite/04-api.md#types)).
+- To use a plugin's elements in the `components` prop of `<Markdown>`, a plugin package declares them once by augmenting `PluginElementPropsMap`; a theme key of its own goes through `PluginThemeMap` (see [04 · Element catalog](rewrite/04-api.md#types)).
 - A plugin element that renders a `View` inline must set `inlineView: true` on its node.
 
 ## `debug`

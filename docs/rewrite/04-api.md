@@ -1,13 +1,13 @@
 # 04 · Public API (proposed)
 
-The reasoning behind this design, including the options rejected, is in [08 · Data model & public API](./08-model-and-api.md). In short, users work with **elements with semantic props**, **plugins** and **theme tokens**. They never see the parser's internal node format.
+The reasoning behind this design, including the options rejected, is in [08 · Data model & public API](./08-model-and-api.md). In short, users work with **elements with semantic props**, **plugins** and **a flat theme**. They never see the parser's internal node format.
 
 ## `<Markdown>`
 
 ```tsx
 <Markdown
   source={text}
-  theme={theme}                          // tokens + element overrides, or 'light' | 'dark' | 'auto'
+  theme={theme}                          // flat per-element object, or 'light' | 'dark' | 'auto'
   components={{ CodeBlock: MyCodeBlock }} // override any element
   plugins={[math]}                        // added to the preset
   onLinkPress={(href) => { router.push(href); return false; }}
@@ -21,7 +21,7 @@ The reasoning behind this design, including the options rejected, is in [08 · D
 | `preset` | `'gfm' \| 'commonmark' \| { base: 'gfm', exclude: GfmPluginName[] }` | `'gfm'` | GFM is a set of built-in plugins, footnotes included |
 | `plugins` | `MarkdownPlugin[]` | `[]` | Added on top of the preset |
 | `components` | `Partial<Components>` | built-in | See the [element catalog](#element-catalog) |
-| `theme` | `ThemeInput \| 'light' \| 'dark' \| 'auto'` | `'auto'` | See [Theme](#theme) |
+| `theme` | `FlatThemeInput \| 'light' \| 'dark' \| 'auto'` | `'auto'` | See [Theme](#theme) |
 | `onLinkPress` | `(href, info) => boolean \| void` | opens with `Linking` | Called first for every link. Return `false` to cancel the default. The default opens only `http`, `https`, `mailto`, `tel` and relative URLs, so custom-scheme deep links need this handler ([P1-3](./phase-1/decisions.md#p1-3-url-sanitization-layers)). Errors from `openURL` are caught. |
 | `onImagePress` | `(src, info) => void` | none | |
 | `onTaskToggle` | `({ index, checked, text }) => void` | none | Called after a tap flips a task checkbox ([P3-16](./phase-3/decisions.md#p3-16-library-owned-task-toggle-with-an--index-checked-text--payload)). `index` is global and 0-based; `text` is the item's own plain text. The library owns the box state (cleared when `source` changes); persisting is the app's job. |
@@ -53,7 +53,7 @@ const onCopyPress = ({ code }: CodeCopyInfo) => {
 <Markdown source={md} codeBlock={{ header: true, lineNumbers: true }} onCopyPress={onCopyPress} />;
 ```
 
-The header sits outside the code body: with it on, the body is the labelled element and Copy is a second accessible element, and `CodeBlock.container.padding` pads the body, not the bar. Style the bar with `theme.elements.CodeBlockHeader`, or replace it in `components`; Wrap is part of the default bar (underlined while on, `aria-pressed` on web, hidden while the fence streams) and flipping it remounts the body and resets its horizontal scroll. The gutter is the structural `codeBlockGutter` style (not an element), derived from the merged `CodeBlock` text so numbers match the code line for line. With numbers on, a plain block or a closed highlighted one of up to 800 characters selects whole without wrap; a larger or open highlighted block, or numbers with wrap, selects inside one 2-line chunk or row on Android and iOS, so Copy is the way to copy it all. Known iOS limitation of very large plain blocks: [P3-35](./phase-3/decisions.md#p3-35-code-block-header-line-numbers-and-wrap-in-pure-js).
+The header sits outside the code body: with it on, the body is the labelled element and Copy is a second accessible element, and `theme.codeBlock.padding` pads the body, not the bar. Style the bar with `theme.codeBlockHeader`, or replace it in `components`; Wrap is part of the default bar (underlined while on, `aria-pressed` on web, hidden while the fence streams) and flipping it remounts the body and resets its horizontal scroll. The gutter is the structural `codeBlockGutter` style (not an element), derived from the merged `CodeBlock` text so numbers match the code line for line. With numbers on, a plain block or a closed highlighted one of up to 800 characters selects whole without wrap; a larger or open highlighted block, or numbers with wrap, selects inside one 2-line chunk or row on Android and iOS, so Copy is the way to copy it all. Known iOS limitation of very large plain blocks: [P3-35](./phase-3/decisions.md#p3-35-code-block-header-line-numbers-and-wrap-in-pure-js).
 
 ### `MarkdownListRef`
 
@@ -127,7 +127,7 @@ Returning a `View` from an undeclared inline element triggers a dev-mode warning
 | `Kbd` | — (from `<kbd>`) |
 | `HtmlInline` | `html: string`. Any HTML tag outside the allowlist, shown as literal text by default. |
 
-Plain text is **not** a component. Text runs are raw strings inside the block's `<Text>`. Style them with the theme (`colors.text`, `fonts.body`, `fontSize`).
+Plain text is **not** a component. Text runs are raw strings inside the block's `<Text>`. Style them with `theme.paragraph` (`color`, `fontFamily`, `fontSize`).
 
 ### Wrapping a default
 
@@ -149,7 +149,7 @@ type Components = {
 // ElementProps<'Heading'> = { level: 1|2|3|4|5|6; id: string; children: ReactNode; style: ElementStyle }
 ```
 
-Plugins extend `ElementName` and `ElementProps` through their `nodes` declaration, so their components are type-checked too. Inside `definePlugin`, `components` are checked against the props each node's `from` returns. For the `components` and `theme.elements` props of `<Markdown>`, a plugin package declares its elements once, by augmenting `PluginElementPropsMap`:
+Plugins extend `ElementName` and `ElementProps` through their `nodes` declaration, so their components are type-checked too. Inside `definePlugin`, `components` are checked against the props each node's `from` returns. For the `components` prop of `<Markdown>`, a plugin package declares its elements once, by augmenting `PluginElementPropsMap`; a theme key of its own is declared the same way through `PluginThemeMap` (not a core key, `dark` or `light`):
 
 ```ts
 declare module '@docren/react-native-markdown' {
@@ -161,35 +161,55 @@ declare module '@docren/react-native-markdown' {
 
 ## Theme
 
-> **Planned change ([Phase 3a](./phase-3a/README.md), [P3a-2](./phase-3a/decisions.md#p3a-2-flat-per-element-theme-tokens-become-internal)):** `theme` becomes one flat object keyed by element (`link: { color }`, `codeBlock: { backgroundColor, padding }`) with `dark: {…}` and `light: {…}` blocks; tokens, `elements` and `container`/`text` leave the public API, and `createTheme(input)` stays as a typed helper without `base`. This section describes the current (Phase 1) API and is rewritten when Phase 3a lands.
+`theme` is `'light' | 'dark' | 'auto'` (default `'auto'`, follows `useColorScheme()`) or one flat object keyed by element, each key with a closed list of props ([P3a-2](./phase-3a/decisions.md#p3a-2-flat-per-element-theme-tokens-become-internal)). A prop an element does not accept is a type error, plus a dev-only warning for plain JS. Names are React Native style names where one exists; the library routes each prop to the element's `View` or `Text`.
 
-```ts
-const theme = createTheme(
-  {
-    colors: { text, muted, link, codeBg, border, quoteBar, highlight },
-    fonts: { body, heading, mono },       // each a family name, or a face map (see below)
-    fontSize: { base: 16, scale: 1.2 },   // heading sizes derived from base and scale
-    lineHeight: 1.5,
-    spacing: { block: 12, listIndent: 20 },
-    radius: { code: 6 },
-    listBullets: ['•', '◦', '▪'],          // bullet character by nesting depth
-    imageRatio: 16 / 9,                    // width / height of a block image's box until its size is known
-    checkbox: { color, checkedColor, size, checkedText },  // task checkbox glyph; checked item's own text style (merged onto line-through + dim, or false for none)
-    syntax: { keyword: '#cf222e' },        // code highlighting color by token type (13 types, P3-33); merges onto the scheme's built-in palette, unset types keep it
-    elements: {                            // per-element overrides: { text?, container? }
-      Link: { text: { textDecorationLine: 'none' } },
-      Heading: (level) => ({ text: { fontWeight: level <= 2 ? '700' : '600' } }),
-    },
-  },
-  lightTheme // base to merge onto
-);
+```tsx
+const theme = createTheme({
+  paragraph: { fontSize: 18 },
+  link: { color: '#2563EB' },
+  codeBlock: { backgroundColor: '#F3F4F6', borderRadius: 12, padding: 16 },
+  dark: { link: { color: '#60A5FA' }, codeBlock: { backgroundColor: '#1F2937' } },
+});
+<Markdown source={md} theme={theme} />;
 ```
 
-- `lightTheme` and `darkTheme` ship with the library. `theme="auto"` switches with `useColorScheme()`. A theme input (no base) merges onto the built-in theme of the current scheme; `createTheme(input, base)` pins its base.
-- **Font faces:** `fonts.body` and `fonts.heading` take a family name or `{ regular, italic?, bold?, boldItalic? }`; `fonts.mono` takes a name or `{ regular }`. Use a face map with fonts loaded by `expo-font`'s `useFonts` (one family per face), where `fontWeight`/`fontStyle` don't select faces on iOS. Missing faces fall back to `fontWeight`/`fontStyle` ([P1-16](./phase-1/decisions.md#p1-16-font-faces-for-custom-fonts)).
-- Element styles are split into `text` and `container`, so view and text styles can't be mixed up.
-- Resolved once per change of the theme value (equal values, compared shallowly per group, reuse the cached result), then shared through context. Hoist `Heading` functions: they are compared by identity.
-- `useMarkdownTheme()` gives custom components `{ tokens, styles, headings }`: the merged tokens, every element's resolved `{ text, container }`, and the per-level `Heading` styles. It must be called inside `<Markdown>`.
+**Keys.** **T** = `color`, `fontFamily`, `fontSize`, `fontWeight`, `fontStyle`, `lineHeight`, `textAlign` (`fontFamily` of T on `paragraph`, `h1`-`h6`, `codeBlock` also takes a face map, below). **M** = `marginTop`, `marginBottom`. Defaults, table details (`headerColor`, zebra, `horizontalOverflow`) and what stays a prop, not theme: [theme-props.md](./phase-3a/theme-props.md).
+
+| Key | Accepts |
+|---|---|
+| `paragraph`, `h1`-`h6` | T, M |
+| `blockquote` | T, M, `backgroundColor`, `borderLeftColor`, `borderLeftWidth`, `borderRadius`, `padding` (top and bottom), `paddingLeft` (bar to text), `admonitions` |
+| `list` | M, `bullets` (by depth), `bulletColor`, `bulletSize`, `markerColor`, `markerFontWeight`, `markerMinWidth`, `gapWidth`, `marginLeft` (indent per level), `itemSpacing` |
+| `listItem` | T |
+| `codeBlock` | T, M, `backgroundColor`, `borderColor`, `borderWidth`, `borderRadius`, `padding`, `syntax` |
+| `codeBlockHeader` | `color`, `fontFamily`, `fontSize`, `lineHeight`, `backgroundColor`, `borderBottomColor`, `borderBottomWidth`, `paddingHorizontal`, `paddingVertical` |
+| `table` | M, `borderColor`, `borderWidth`, `borderRadius`, `align`, `horizontalOverflow`, `headerBackgroundColor`, `headerColor`, `headerFontFamily`, `rowEvenBackgroundColor`, `rowOddBackgroundColor` |
+| `tableCell` | T, `backgroundColor`, `padding`, `paddingHorizontal`, `paddingVertical` |
+| `divider` | M, `backgroundColor`, `height` |
+| `image` | M, `borderRadius`, `aspectRatio`, `height`, `maxHeight`, `resizeMode` |
+| `inlineImage` | `size` |
+| `htmlBlock` | `color`, `fontFamily`, `fontSize`, M |
+| `footnoteDefinition` | `color`, `fontSize`, `lineHeight`, `highlightColor` |
+| `checkbox` | `color`, `checkedColor`, `size`, `borderColor`, `checkmarkColor`, `borderRadius`, `checkedText` |
+| `strong` | `color`, `fontFamily`, `fontWeight` |
+| `em` | `color`, `fontFamily`, `fontStyle` |
+| `strikethrough`, `underline` | `color` (colours the text too on Android) |
+| `highlight` | `color`, `backgroundColor` |
+| `link` | `color`, `fontFamily`, `fontWeight`, `textDecorationLine`, `backgroundColor`, `variants` |
+| `inlineCode`, `kbd` | `color`, `fontFamily`, `fontSize`, `backgroundColor` |
+| `superscript`, `subscript` | `color`, `fontScale` |
+| `footnoteReference` | `color`, `fontScale` |
+| `footnoteBackLink` | `color` |
+
+- **`dark` / `light` blocks** take the same keys. Merge order, later wins, per prop: built-in theme of the active scheme < plugin defaults < top-level keys < the active scheme's block. Top-level keys apply to both schemes. Pin a scheme with `theme="light"` or put values under `light: {…}`.
+- **`createTheme(input)`** is a typed identity helper (frozen copy, no `base`): it checks the whitelist for a theme defined outside JSX and lets a package ship a theme as a value. Compose with a spread: `createTheme({ ...brand, link: { color } })`. A plain object is equally valid as `theme`.
+- **Sizing.** Headings scale from `paragraph.fontSize` by an internal ratio unless an `h1`-`h6` sets its own `fontSize`. `lineHeight` is in points and, as on any RN `Text`, an exact height: taller inline content (an inline image, a larger `fontSize`) is clipped, so raise `paragraph.lineHeight` with `inlineImage.size`. Inline elements default to `1em` (the parent's size; a number is absolute). `superscript`, `subscript` and `footnoteReference` take `fontScale`, default 0.75 on iOS and web, 0.65 on Android (Roboto's larger x-height).
+- **`link.variants`** styles links by URL: keys are regular-expression sources tested against the `href` in object order, first match wins, no match uses `link`. A variant takes the props of `link` and merges over it; across layers variants merge per pattern, prop by prop, new patterns append. This is also how mentions are styled (no `Mention` key). An invalid pattern is skipped with a one-time dev warning.
+- **`blockquote.admonitions.<kind>`**, kind `note`, `tip`, `important`, `warning` or `caution`: `color` (accent) and `backgroundColor`. Geometry and fonts come from `blockquote`. Defaults are GitHub's palette; a hex `color` gets a default tint, any other format needs `backgroundColor`.
+- **`checkbox`** is always a drawn box ([P3a-5](./phase-3a/decisions.md#p3a-5-the-checkbox-is-a-drawn-box)): `size` is the box width in points (default 0.9 x the list font size), `color` the unchecked border (or `borderColor`), `checkedColor` the checked fill (both default to the text colour), `checkmarkColor` the tick (near-black or white by the fill's luminance), `checkedText` the checked item's text style (merged onto line-through and dim, or `false`).
+- **`codeBlock.syntax`**: a colour per token type, 15 types (`keyword`, `string`, `number`, `comment`, `function`, `type`, `operator`, `punctuation`, `property`, `constant`, `variable`, `embedded`, `plain`, `inserted`, `deleted`). A partial object merges onto the scheme's palette. `plain`, `operator`, `punctuation`, `variable` and `embedded` follow a custom `codeBlock.color` unless set; the other types follow the scheme only, so with a dark custom `codeBlock.backgroundColor` set `number`, `keyword` and the rest too ([P3-33](./phase-3/decisions.md#p3-33-syntax-colours-are-a-core-theme-token-that-follows-the-theme-mode)).
+- **Font faces:** `fontFamily` on `paragraph`, `h1`-`h6` and `codeBlock` takes a family name or `{ regular, italic?, bold?, boldItalic? }` for fonts loaded with `expo-font`'s `useFonts` (`codeBlock`: `{ regular }`). Missing faces fall back to `fontWeight`/`fontStyle` ([P1-16](./phase-1/decisions.md#p1-16-font-faces-for-custom-fonts)).
+- `useMarkdownTheme()` gives custom components the resolved flat values for the active scheme (`MarkdownTheme`: the merged flat block, e.g. `useMarkdownTheme().link.color`; props that have a built-in default are required, everything else stays optional, `dark`/`light` already applied). It must be called inside `<Markdown>`.
 
 ## Plugins
 
@@ -207,7 +227,7 @@ interface MarkdownPlugin<N extends Record<string, object> = {}> {
     from: (tok: PluginToken) => N[K];
   } };
   components?: { [K in keyof N]?: ComponentType<N[K] & { children?: ReactNode; style: ElementStyle }> };
-  theme?: Partial<ElementOverrides<keyof N>>;
+  theme?: FlatThemeBlock;   // plugin defaults: flat keys, merged below the user's theme
 }
 
 const definePlugin: <N>(p: MarkdownPlugin<N>) => MarkdownPlugin<N>;
@@ -229,8 +249,8 @@ const plugins = [highlight()];   // once, at module scope: each call makes a new
 
 - **Options:** `highlight({ languages?, tokenize?, maxLength? })`. `languages` maps a fence tag to a `Tokenizer`, adding to or overriding the built-ins; `tokenize` is the catch-all for other tags; an untagged block, or a tag nothing knows, renders plain. Tags are trimmed and matched case-insensitively ([P3-29](./phase-3/decisions.md#p3-29-hand-rolled-tokenizers-with-a-stateless-replaceable-contract)).
 - **Built-in languages:** `js` `jsx` `javascript` `mjs` `cjs`, `ts` `tsx` `typescript`, `json` `jsonc`, `sh` `bash` `shell` `zsh`, `diff` `patch`, `py` `python`.
-- **Tokenizer:** `(code: string, language: string) => readonly Token[]`, with `Token = { type: SyntaxTokenType; text: string }`. Sync and stateless; the token texts joined in order equal `code`. A throw, or (checked in dev only) a mismatch, renders the block plain with a dev warning. The 13 types: `keyword`, `string`, `number`, `comment`, `function`, `type`, `operator`, `punctuation`, `property`, `constant`, `plain`, `inserted`, `deleted`. Bring your own (a lowlight recipe of about 20 lines): [plugins.md](./phase-3/plugins.md#highlight).
-- **Colours:** `theme.syntax` ([Theme](#theme)). `lightTheme` and `darkTheme` define every type and follow `theme="auto"`; a partial `syntax` in a theme input merges onto the current scheme's palette. The defaults ignore a custom `colors.text`: set `syntax.plain` with it ([P3-33](./phase-3/decisions.md#p3-33-syntax-colours-are-a-core-theme-token-that-follows-the-theme-mode)).
+- **Tokenizer:** `(code: string, language: string) => readonly Token[]`, with `Token = { type: SyntaxTokenType; text: string }`. Sync and stateless; the token texts joined in order equal `code`. A throw, or (checked in dev only) a mismatch, renders the block plain with a dev warning. The 15 types: `keyword`, `string`, `number`, `comment`, `function`, `type`, `operator`, `punctuation`, `property`, `constant`, `variable`, `embedded`, `plain`, `inserted`, `deleted`. Bring your own (a lowlight recipe of about 20 lines): [plugins.md](./phase-3/plugins.md#highlight).
+- **Colours:** `theme.codeBlock.syntax` ([Theme](#theme)). The built-in themes define every type and follow `theme="auto"`; a partial `syntax` merges onto the current scheme's palette. `plain` and the punctuation-like types follow a custom `codeBlock.color`; the colour types do not ([P3-33](./phase-3/decisions.md#p3-33-syntax-colours-are-a-core-theme-token-that-follows-the-theme-mode)).
 - **`open`:** the `CodeBlock` prop that is true only while a stream's tail fence is unclosed. While open, finished lines are frozen and colours may be approximate; on close the block is re-tokenized once.
 - **Size cap:** a block longer than `maxLength` characters (default 50,000, exported as `DEFAULT_MAX_LENGTH`) renders as the default `CodeBlock`, streaming or not, and stays plain ([P3-31](./phase-3/decisions.md#p3-31-highlight-up-to-maxlength-50000-characters-then-plain)).
 - **Selection:** a closed block of up to 800 characters is one `Text`, so selection and copy cover all of it. A larger or open block is one `Text` per 2 lines: selection stays inside one chunk on Android, crosses chunks exactly on web, and iOS (no range selection anywhere) copies one chunk. With the header off, the block is one accessible element labelled with the code ([P3-30](./phase-3/decisions.md#p3-30-highlighted-code-renders-as-one-text-per-2-lines)).

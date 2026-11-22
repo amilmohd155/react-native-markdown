@@ -8,13 +8,13 @@
 4. **Minimal host work.** Few React elements, few shadow nodes, few native views.
 5. **Correct by default.** CommonMark + GFM pass the official spec suites without user configuration.
 6. **Swappable layers.** The parser, renderer and component are separate, so each can be replaced or used on its own.
-7. **Private model, public elements.** The node format is an internal detail chosen for speed and memory. Users see only element components with semantic props, plugins and theme tokens. See [08](./08-model-and-api.md).
+7. **Private model, public elements.** The node format is an internal detail chosen for speed and memory. Users see only element components with semantic props, plugins and a flat theme. See [08](./08-model-and-api.md).
 
 ## Layers
 
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│ Public API: <Markdown>, components, plugins, theme tokens     │  ← stable contract
+│ Public API: <Markdown>, components, plugins, flat theme     │  ← stable contract
 ├───────────────────────────────────────────────────────────────┤
 │ Renderer:  BlockList → memo(Block) → inline flattener         │
 │            (reads node table → semantic element props)        │
@@ -262,7 +262,7 @@ The full catalog with props is in [04](./04-api.md#element-catalog).
 | Element | Default rendering |
 |---|---|
 | `Heading` / `Paragraph` | One `<Text>` via the inline flattener. `Heading` gets `accessibilityRole="header"`. |
-| `List` / `ListItem` | `View` rows with a marker column. Ordered markers use `start`. Task items render a checkbox glyph (toggled by the library on tap, reported by `onTaskToggle`). Nesting depth comes from context, not a parent-stack copy. |
+| `List` / `ListItem` | `View` rows with a marker column. Ordered markers use `start`. Task items render a drawn checkbox ([P3a-5](./phase-3a/decisions.md#p3a-5-the-checkbox-is-a-drawn-box); toggled by the library on tap, reported by `onTaskToggle`). Nesting depth comes from context, not a parent-stack copy. |
 | `Blockquote` | `View` with a container style, rendering its child blocks recursively (not memoized individually). |
 | `CodeBlock` | `ScrollView horizontal` + one `<Text>`. Syntax highlighting is the `/highlight` plugin (or a user `CodeBlock`), outside the main entry; it draws a column of `Text`s ([P3-30](./phase-3/decisions.md#p3-30-highlighted-code-renders-as-one-text-per-2-lines)). |
 | `Table` / `TableRow` / `TableCell` | `ScrollView horizontal`. Column widths are computed once per table (max cell intrinsic width, capped) and cached per table. |
@@ -283,13 +283,10 @@ This happens inside the single token → table pass, so it costs nothing extra. 
 
 ### Theme
 
-A theme has two levels ([04](./04-api.md#theme)):
+The public theme is one flat object keyed by element, with `dark`/`light` blocks ([04](./04-api.md#theme)). Internally the resolver derives tokens (colors, fonts, sizes, spacing) from the merged flat block and builds each element's `{ text, container }` style from them; neither is public.
 
-1. **Tokens:** `colors`, `fonts`, `fontSize` (base + scale), `lineHeight`, `spacing`, `radius`. Most apps change only these.
-2. **Element overrides:** `elements: { [Element]?: { text?: TextStyle; container?: ViewStyle } }`, for full control.
-
-- **Text and container styles are separate namespaces**, which removes the `_VIEW_SAFE_` duplication and its bug class.
-- **Element keys are a closed union** (the built-in elements plus those registered by plugins), so typos fail to compile.
+- **Text and container styles are separate namespaces** internally, which removes the `_VIEW_SAFE_` duplication and its bug class.
+- **Theme keys are a closed union** (the built-in keys plus those a plugin registers), each with a prop whitelist, so typos fail to compile.
 - **The default theme is built once at module load** with `StyleSheet.create`. User themes are deep-merged once per change of the `theme` value (with a `useMemo`/WeakMap cache).
 - **Base text style cascades through context**, so a link inside a heading inherits the heading's font size.
 - **Light and dark themes ship with the library.** Portable font weights only (`'400'`, `'600'`, `'700'`).
@@ -324,7 +321,7 @@ src/
   model/        node table, builder, block index, block identity (private)
   plugins/      definePlugin, built-in GFM plugins (tables, taskLists, strikethrough, autolinks, footnotes, tagfilter)
   render/       BlockList, Block, inline flattener, table → props, default elements
-  theme/        tokens, createTheme, light/dark themes, context
+  theme/        flat theme resolver (tokens internal), createTheme, light/dark themes, context
   api/          parse, visit, public types
   stream/       useMarkdownStream, tail re-parse
   components/   <Markdown>

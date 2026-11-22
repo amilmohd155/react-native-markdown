@@ -7,7 +7,7 @@ Implementation detail: [`phase-1/`](./phase-1/README.md).
 - markdown-it backend with the full GFM set (linkify-it + thin GFM wrapper for autolinks, see [P1-1](./phase-1/decisions.md#p1-1-gfm-autolinks-linkify-it--thin-wrapper-custom-code-only-for-proven-gaps); in-house tagfilter).
 - Private flat node table, token → table conversion, block index and block identity (P1-9).
 - `BlockList`, memoized `Block`, inline flattener, table → semantic props, all default elements (tables included).
-- Public API: `components`, `definePlugin` with GFM implemented as built-in plugins, theme tokens + `createTheme` (light and dark), `parse`/`visit`, `onLinkPress` semantics, URL sanitization.
+- Public API: `components`, `definePlugin` with GFM implemented as built-in plugins, theme + `createTheme` (light and dark; flat since Phase 3a), `parse`/`visit`, `onLinkPress` semantics, URL sanitization.
 - CommonMark and GFM spec suites, renderer and API-contract tests, perf CI job.
 - Raw HTML safe subset (D3), declared inline views (D8).
 - Platform CI: iOS, Android, web (react-native-web), plus an Expo Go check that the main entry has no native imports (D1, D2).
@@ -41,7 +41,7 @@ Implementation detail: [`phase-3/`](./phase-3/README.md). **In progress**, resum
 - Official plugins: `emoji`, `mentions`, `admonitions`, each a subpath entry ([P3-21](./phase-3/decisions.md#p3-21-official-plugins-emoji-mentions-admonitions-math-deferred), [design](./phase-3/plugins.md)). `math` is deferred: it needs a renderer and the incomplete-tail hook. There is no mdast interop entry point ([P1-20](./phase-1/decisions.md#p1-20-no-tomdast-mdast-interop-is-dropped)).
 
 ### Phase 3a: API refinement (between Phase 3 and Phase 4)
-Implementation detail: [`phase-3a/`](./phase-3a/README.md). Starts when Phase 3 is done ([P3a-1](./phase-3a/decisions.md#p3a-1-api-refinement-is-phase-3a-between-phase-3-and-phase-4)). Not a feature phase.
+Implementation detail: [`phase-3a/`](./phase-3a/README.md). **Status: done** (M5 docs landed; M0-M4 in code). Not a feature phase ([P3a-1](./phase-3a/decisions.md#p3a-1-api-refinement-is-phase-3a-between-phase-3-and-phase-4)).
 - Flat per-element `theme` with a typed prop whitelist per element, `dark`/`light` blocks, and tokens, `elements` and `container`/`text` out of the public API (`createTheme(input)` stays as a typed helper, without `base`) ([P3a-2](./phase-3a/decisions.md#p3a-2-flat-per-element-theme-tokens-become-internal)).
 - Inline sizes relative to the parent, `fontScale` for sub and superscript ([P3a-3](./phase-3a/decisions.md#p3a-3-inline-sizes-are-relative-to-the-parent)).
 - Not here: new elements or plugins, streaming changes, performance tuning.
@@ -109,7 +109,7 @@ Decided on 2026-11-03. Each one is reflected in the linked documents.
 | D3 | Raw HTML default | **Safe subset, rest as literal text.** | `html="safe"` (default) maps `br`, `b`, `i`, `u`, `s`, `sub`, `sup`, `kbd`, `mark` to elements. All other HTML is shown as text. Also `'text'`, `'strip'`, or `{ allow: [...] }`. ([03](./03-architecture.md#raw-html), [04](./04-api.md#markdown)) |
 | D4 | Footnotes on by default? | **Yes, in the `gfm` preset.** | Matches github.com. Removable: `preset="gfm"` with `exclude: ['footnotes']`. |
 | D5 | Component key casing | **PascalCase** (`Heading`, `CodeBlock`). | Applies to `components`, plugin `nodes`, theme `elements` and `visit()` keys. |
-| D6 | `Heading` vs `Heading1…6` | **One `Heading` with `level`.** | Per-level styling goes through the theme (`elements.Heading: (level) => …`). |
+| D6 | `Heading` vs `Heading1…6` | **One `Heading` with `level`.** | Per-level styling goes through the theme (`h1`-`h6` theme keys). |
 | D7 | `visit()` write mode? | **Read-only.** | Documents are immutable. Syntax changes happen at parse time through plugins. |
 | D8 | Inline Views (chips, badges)? | **Allowed if declared** with `inlineView: true`. | Declared elements render as native inline attachments inside the paragraph's `<Text>`. Undeclared inline components must be Text-compatible, with a dev warning. ([03](./03-architecture.md#inline-views), [04](./04-api.md#inline-elements)) |
 | D9 | Where do waived or deferred items go? | **By kind.** Items a later phase depends on (correctness, exit criteria, APIs) carry to that phase. Pure performance tuning is deferred to one **optimization pass** after the last feature phase. | Avoids optimizing code that later features change. Budgets can be checked by hand in the meantime; the v1.0 gate follows the pass. ([P2-7](./phase-2/decisions.md#p2-7-where-the-phase-1-carry-over-lives) amended) |
