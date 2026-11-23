@@ -95,6 +95,7 @@ const ACCEPTED: Accepted = {
     'height',
     'maxHeight',
     'resizeMode',
+    'fadeDuration',
   ],
   inlineImage: ['size'],
   htmlBlock: ['color', 'fontFamily', 'fontSize', ...MARGIN],

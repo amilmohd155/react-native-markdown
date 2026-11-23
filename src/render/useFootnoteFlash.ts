@@ -1,4 +1,10 @@
-import { useEffect, useState, type ComponentRef, type RefObject } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ComponentRef,
+  type RefObject,
+} from 'react';
 import { AccessibilityInfo, Animated, View } from 'react-native';
 import { useRenderContext } from './contexts';
 import { useFootnoteFlashToken } from './footnoteFocus';
@@ -40,6 +46,11 @@ export function useFootnoteFlash(
   const highlight = focus?.highlight ?? null;
   const duration = highlight?.duration ?? 0;
   const color = highlight?.color ?? theme.tokens.colors.footnoteHighlight;
+  // Latest config, read by the flash effect so only a new token restarts it.
+  const latest = useRef({ focus, highlight, duration, color });
+  useEffect(() => {
+    latest.current = { focus, highlight, duration, color };
+  });
   // Identifies this element to `store.claim`: a remount is a new owner.
   const [owner] = useState(() => ({}));
   // The token this element has played; a remount does not replay a flash.
@@ -49,8 +60,10 @@ export function useFootnoteFlash(
     useState<Animated.AnimatedInterpolation<string> | null>(null);
 
   useEffect(() => {
-    if (token === 0 || focus === null) return;
-    if (!focus.store.claim(token, owner)) return;
+    const cfg = latest.current;
+    const f = cfg.focus;
+    if (token === 0 || f === null) return;
+    if (!f.store.claim(token, owner)) return;
     let active = true;
     let animation: Animated.CompositeAnimation | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -58,27 +71,27 @@ export function useFootnoteFlash(
     const start = (reduce: boolean) => {
       if (!active) return;
       setPlayed(token);
-      if (highlight === null) return;
+      if (cfg.highlight === null) return;
       if (reduce) {
         setShown(true);
-        timer = setTimeout(() => setShown(false), duration);
+        timer = setTimeout(() => setShown(false), cfg.duration);
         return;
       }
       setBackground(
         value.interpolate({
           inputRange: [0, 1],
-          outputRange: ['rgba(0, 0, 0, 0)', color],
+          outputRange: ['rgba(0, 0, 0, 0)', cfg.color],
         })
       );
       animation = Animated.sequence([
         Animated.timing(value, {
           toValue: 1,
-          duration: duration * FADE_IN,
+          duration: cfg.duration * FADE_IN,
           useNativeDriver: false,
         }),
         Animated.timing(value, {
           toValue: 0,
-          duration: duration * (1 - FADE_IN),
+          duration: cfg.duration * (1 - FADE_IN),
           useNativeDriver: false,
         }),
       ]);
@@ -91,9 +104,8 @@ export function useFootnoteFlash(
       if (timer !== undefined) clearTimeout(timer);
       setShown(false);
     };
-    // `highlight` is stable config; a new flash is a new token.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+    // Config comes from `latest`; a new flash is a new token.
+  }, [token, owner]);
 
   useEffect(() => {
     if (token === 0 || focusRef === undefined || played !== token) return;

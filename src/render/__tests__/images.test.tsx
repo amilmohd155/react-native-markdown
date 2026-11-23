@@ -1,4 +1,4 @@
-import { Image, StyleSheet } from 'react-native';
+import { AccessibilityInfo, Animated, Image, StyleSheet } from 'react-native';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { find } from '../../__tests__/tree';
 import { BlockList } from '../Block';
@@ -168,5 +168,214 @@ describe('InlineImage', () => {
     // Already cached: the renderer passes the size as props.
     await mount('see ![i](small.png) here\n');
     expect(imageStyle()).toEqual({ width: 12, height: 10 });
+  });
+});
+
+describe('image cache polish (P3-36)', () => {
+  const provided = { 'p.png': { width: 200, height: 100 } };
+  let timing: jest.SpyInstance;
+  beforeEach(() => {
+    timing = jest.spyOn(Animated, 'timing');
+    jest
+      .spyOn(AccessibilityInfo, 'isReduceMotionEnabled')
+      .mockResolvedValue(false);
+  });
+  afterEach(() => {
+    timing.mockRestore();
+    jest.restoreAllMocks();
+  });
+
+  const load = async () => {
+    await fireEvent(theImage(), 'load');
+    await act(async () => {});
+  };
+
+  it('renders a provided size at its ratio with no lookup (block)', async () => {
+    await mount('![a](p.png)\n', { imageSizes: provided });
+    expect(imageStyle()).toMatchObject({ aspectRatio: 2 });
+    expect(imageStyle()).not.toHaveProperty('backgroundColor');
+    expect(frameMaxWidth()).toBe(200);
+    await act(async () => {});
+    expect(getSize).not.toHaveBeenCalled();
+  });
+
+  it('renders a provided size with no lookup (inline)', async () => {
+    await mount('see ![i](p.png) here\n', {
+      imageSizes: { 'p.png': { width: 12, height: 10 } },
+    });
+    expect(imageStyle()).toEqual({ width: 12, height: 10 });
+    await act(async () => {});
+    expect(getSize).not.toHaveBeenCalled();
+  });
+
+  it('clears busy on an inline image once its size is known', async () => {
+    const d = deferred<{ width: number; height: number }>();
+    getSize.mockReturnValue(d.promise);
+    await mount('see ![i](late.png) here\n');
+    expect(theImage().props.accessibilityState).toEqual({ busy: true });
+    expect(theImage().props['aria-busy']).toBe(true);
+    d.resolve({ width: 12, height: 10 });
+    await act(async () => {});
+    expect(theImage().props.accessibilityState).toEqual({ busy: false });
+    expect(theImage().props['aria-busy']).toBeUndefined();
+  });
+
+  it('is not busy once an inline lookup has failed', async () => {
+    const d = deferred<{ width: number; height: number }>();
+    getSize.mockReturnValue(d.promise);
+    await mount('see ![i](nope.png) here\n');
+    expect(theImage().props.accessibilityState).toEqual({ busy: true });
+    d.reject(new Error('404'));
+    await act(async () => {});
+    expect(theImage().props.accessibilityState).toEqual({ busy: false });
+    expect(theImage().props['aria-busy']).toBeUndefined();
+  });
+
+  it('reports a failed inline image once', async () => {
+    const onImageError = jest.fn();
+    const d = deferred<{ width: number; height: number }>();
+    getSize.mockReturnValue(d.promise);
+    await mount('see ![i](gone.png "T") here\n', {
+      handlers: { onImageError },
+    });
+    d.reject(new Error('404'));
+    await act(async () => {});
+    expect(onImageError).toHaveBeenCalledTimes(1);
+    expect(onImageError).toHaveBeenCalledWith({
+      src: 'gone.png',
+      alt: 'i',
+      title: 'T',
+    });
+  });
+
+  it('does not fade a provided or cached size', async () => {
+    await mount('![a](p.png)\n', { imageSizes: provided });
+    await load();
+    expect(timing).not.toHaveBeenCalled();
+    await screen.unmount();
+
+    getSize.mockResolvedValue({ width: 10, height: 10 });
+    await loadImageSize('c.png');
+    await mount('![a](c.png)\n');
+    await load();
+    expect(timing).not.toHaveBeenCalled();
+  });
+
+  it('fades in on load when the size was unknown', async () => {
+    getSize.mockResolvedValue({ width: 10, height: 10 });
+    await mount('![a](f.png)\n');
+    await act(async () => {});
+    expect(timing).not.toHaveBeenCalled();
+    await load();
+    expect(timing).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ toValue: 1, duration: 150 })
+    );
+  });
+
+  it('does not fade with fadeDuration 0', async () => {
+    getSize.mockResolvedValue({ width: 10, height: 10 });
+    await mount('![a](z.png)\n', {
+      theme: resolveTheme(createTheme({ image: { fadeDuration: 0 } })),
+    });
+    await act(async () => {});
+    await load();
+    expect(timing).not.toHaveBeenCalled();
+  });
+
+  it('does not fade with reduce motion on', async () => {
+    jest
+      .spyOn(AccessibilityInfo, 'isReduceMotionEnabled')
+      .mockResolvedValue(true);
+    getSize.mockResolvedValue({ width: 10, height: 10 });
+    await mount('![a](r.png)\n');
+    await act(async () => {});
+    await load();
+    expect(timing).not.toHaveBeenCalled();
+  });
+
+  it('is busy while loading and hides an empty alt', async () => {
+    getSize.mockReturnValue(new Promise(() => {}));
+    await mount('![](d.png)\n');
+    expect(theImage().props.accessibilityState).toEqual({ busy: true });
+    expect(theImage().props.accessible).toBe(false);
+    expect(theImage().props['aria-hidden']).toBe(true);
+  });
+
+  it('keeps an image with alt text accessible', async () => {
+    await mount('![a](p.png)\n', { imageSizes: provided });
+    expect(theImage().props.accessible).toBeUndefined();
+    expect(theImage().props.accessibilityState).toEqual({ busy: false });
+    expect(theImage().props['aria-busy']).toBeUndefined();
+  });
+
+  it('draws a visible hairline on the placeholder only', async () => {
+    const d = deferred<{ width: number; height: number }>();
+    getSize.mockReturnValue(d.promise);
+    await mount('![a](hair.png)\n');
+    expect(imageStyle()).toMatchObject({
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: expect.any(String),
+    });
+    d.resolve({ width: 20, height: 10 });
+    await act(async () => {});
+    await load();
+    expect(imageStyle()).not.toHaveProperty('borderWidth');
+  });
+
+  it('reports again when a remount retries an expired error', async () => {
+    const now = jest.spyOn(Date, 'now');
+    now.mockReturnValue(1_000_000);
+    const first = jest.fn();
+    getSize.mockRejectedValue(new Error('404'));
+    await mount('![Broken](x.png)\n', { handlers: { onImageError: first } });
+    await act(async () => {});
+    expect(first).toHaveBeenCalledTimes(1);
+
+    now.mockReturnValue(1_000_000 + 61_000);
+    const second = jest.fn();
+    await mount('![Broken](x.png)\n', { handlers: { onImageError: second } });
+    await act(async () => {});
+    expect(getSize).toHaveBeenCalledTimes(2);
+    expect(second).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not report a cached error again on remount', async () => {
+    const onImageError = jest.fn();
+    getSize.mockRejectedValue(new Error('404'));
+    await mount('![Broken](c.png)\n', { handlers: { onImageError } });
+    await act(async () => {});
+    expect(onImageError).toHaveBeenCalledTimes(1);
+    await mount('![Broken](c.png)\n', { handlers: { onImageError } });
+    await act(async () => {});
+    expect(onImageError).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries a failed image on press and reports the error once', async () => {
+    const onImageError = jest.fn();
+    // The first lookup fails after mount (as a network failure does); the
+    // retry fails at once.
+    const first = deferred<{ width: number; height: number }>();
+    getSize
+      .mockReturnValueOnce(first.promise)
+      .mockRejectedValue(new Error('404'));
+    await mount('![Broken](b.png "T")\n', {
+      handlers: { onImageError, onImagePress: jest.fn() },
+    });
+    first.reject(new Error('404'));
+    await act(async () => {});
+    expect(onImageError).toHaveBeenCalledTimes(1);
+    expect(onImageError).toHaveBeenCalledWith({
+      src: 'b.png',
+      alt: 'Broken',
+      title: 'T',
+    });
+    expect(screen.queryAllByRole('imagebutton')).toHaveLength(0);
+    expect(getSize).toHaveBeenCalledTimes(1);
+
+    await fireEvent.press(screen.getByRole('button'));
+    await act(async () => {});
+    expect(getSize).toHaveBeenCalledTimes(2);
+    expect(onImageError).toHaveBeenCalledTimes(2);
   });
 });

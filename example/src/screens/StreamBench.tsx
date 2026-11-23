@@ -234,7 +234,7 @@ function Run({
       const meter = meterRef.current;
       if (!meter) return;
       meter.endCalls++;
-      meter.endedAt ??= performance.now() - meter.start;
+      meter.endedAt = meter.endedAt ?? performance.now() - meter.start;
     },
   });
   const { append, done, document } = stream;
@@ -327,7 +327,7 @@ function Run({
       meter.appends.push({ t: performance.now(), cum: pos });
       meter.chunks++;
       append(text);
-      k++;
+      k += 1;
       timer = setTimeout(
         tick,
         Math.max(0, meter.start + k * periodMs - performance.now())

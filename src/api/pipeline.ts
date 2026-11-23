@@ -22,7 +22,8 @@ import {
   type SoftBreak,
   type TaskToggleInfo,
 } from '../render';
-import type { RenderCtx } from '../render/context';
+import type { ImageErrorInfo, RenderCtx } from '../render/context';
+import type { ImageSize } from '../render/imageSize';
 import {
   DEFAULT_FOOTNOTE_HIGHLIGHT_DURATION,
   type FootnoteFocusConfig,
@@ -84,6 +85,8 @@ export interface MarkdownRenderOptions {
   /** Called first for every link; return `false` to cancel the default. */
   readonly onLinkPress?: (href: string, info: LinkPressInfo) => boolean | void;
   readonly onImagePress?: (src: string, info: ImagePressInfo) => void;
+  /** Called when an image fails to load; a press on it retries (P3-36). */
+  readonly onImageError?: (info: ImageErrorInfo) => void;
   /**
    * Called for a press on a mention (the `mentions` plugin). When absent the
    * press goes to `onLinkPress` with the raw url.
@@ -94,6 +97,12 @@ export interface MarkdownRenderOptions {
    * `'allow'`. Use `'deny'` or `{ allowHosts }` for untrusted content.
    */
   readonly images?: ImagesPolicy;
+  /**
+   * Known sizes by image `src`, `{ [src]: { width, height } }`: the image
+   * reserves its box on the first render, with no layout shift (P3-36).
+   * The object may be inline.
+   */
+  readonly imageSizes?: Readonly<Record<string, ImageSize>>;
   /**
    * Called after a task checkbox is toggled by a tap (P3-16). The library
    * flips the box itself; persist the state in your source if you need it.
@@ -236,6 +245,23 @@ function imagesEqual(
   return shallowEqualArray(a.allowHosts, b.allowHosts);
 }
 
+function imageSizesEqual(
+  a: Readonly<Record<string, ImageSize>> | undefined,
+  b: Readonly<Record<string, ImageSize>> | undefined
+): boolean {
+  if (a === b) return true;
+  if (a === undefined || b === undefined) return false;
+  const keys = Object.keys(a);
+  if (keys.length !== Object.keys(b).length) return false;
+  for (const key of keys) {
+    const x = a[key];
+    const y = b[key];
+    if (y === undefined || x === undefined) return false;
+    if (x.width !== y.width || x.height !== y.height) return false;
+  }
+  return true;
+}
+
 function htmlEqual(a: HtmlMode | undefined, b: HtmlMode | undefined): boolean {
   if (a === b) return true;
   if (typeof a !== 'object' || typeof b !== 'object') return false;
@@ -312,7 +338,7 @@ function footnotePressOf(
  * `document`) and builds the render context.
  *
  * Memoization is internal: `theme`, `components`, `plugins`, `preset`,
- * `html` and `images` are compared shallowly, key by key, so inline objects
+ * `html`, `images` and `imageSizes` are compared shallowly, key by key, so inline objects
  * and arrays don't rebuild the render context. Handlers are read through a
  * ref, so inline callbacks never re-render a block.
  *
@@ -328,6 +354,7 @@ export function useMarkdownPipeline(
     document,
     onLinkPress,
     onImagePress,
+    onImageError,
     onMentionPress,
     onTaskToggle,
     onCopyPress,
@@ -345,6 +372,7 @@ export function useMarkdownPipeline(
   const html = useStable(props.html, htmlEqual);
   const components = useStable(props.components, shallowEqualObject);
   const images = useStable(props.images, imagesEqual);
+  const imageSizes = useStable(props.imageSizes, imageSizesEqual);
   const codeBlock = useStable(props.codeBlock, shallowEqualObject);
 
   const parsed = useMemo(() => {
@@ -396,6 +424,7 @@ export function useMarkdownPipeline(
   const handlers: RenderHandlers = {
     onLinkPress,
     onImagePress,
+    onImageError,
     onMentionPress,
     onTaskToggle,
     onCopyPress,
@@ -408,6 +437,7 @@ export function useMarkdownPipeline(
     softBreak,
     scriptFallback,
     images,
+    imageSizes,
     selectable,
     maxFontSizeMultiplier,
     footnoteLabels,

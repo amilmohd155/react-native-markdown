@@ -9,6 +9,7 @@ import { getDefaultTheme, type ResolvedTheme } from '../theme';
 import type { Components } from './elements';
 import type { FootnoteFocusConfig } from './footnoteFocus';
 import type { ImagesPolicy } from './imagePolicy';
+import type { ImageSize } from './imageSize';
 import { createTaskStore, type TaskStore } from './taskStore';
 
 /** How soft line breaks render (P1-2). */
@@ -34,6 +35,12 @@ export interface MentionPressInfo {
   readonly label: string;
 }
 export interface ImagePressInfo {
+  readonly alt: string;
+  readonly title: string | null;
+}
+/** What `onImageError` receives (P3-36). */
+export interface ImageErrorInfo {
+  readonly src: string;
   readonly alt: string;
   readonly title: string | null;
 }
@@ -134,6 +141,8 @@ export interface RenderHandlers {
   /** Return `false` to cancel the default handling. */
   readonly onLinkPress?: (href: string, info: LinkPressInfo) => boolean | void;
   readonly onImagePress?: (src: string, info: ImagePressInfo) => void;
+  /** An image failed to load (P3-36). */
+  readonly onImageError?: (info: ImageErrorInfo) => void;
   /**
    * A press on a mention. When set it handles the press alone; when absent
    * the press goes through `onLinkPress` with the raw url.
@@ -177,6 +186,8 @@ export interface RenderOptions {
   readonly scriptFallback: ScriptFallback;
   /** Which images load; the rest render as their alt text. */
   readonly images: ImagesPolicy;
+  /** Known image sizes by src, read before the cache (P3-36). */
+  readonly imageSizes: Readonly<Record<string, ImageSize>> | undefined;
   /** The `codeBlock` prop resolved; `copyable` is true when `onCopyPress` is set (P3-35). */
   readonly codeBlock: {
     readonly header: boolean;
@@ -200,6 +211,7 @@ const DEFAULT_RENDER_OPTIONS: RenderOptions = Object.freeze({
   footnoteFocus: null,
   scriptFallback: 'smaller',
   images: 'allow',
+  imageSizes: undefined,
   codeBlock: Object.freeze({
     header: false,
     lineNumbers: false,
@@ -249,6 +261,8 @@ export interface RenderCtxInput {
   readonly scriptFallback?: ScriptFallback;
   /** Default `'allow'`. Keep the reference stable: it is part of `ctx` identity. */
   readonly images?: ImagesPolicy;
+  /** P3-36. Keep the reference stable: it is part of `ctx` identity. */
+  readonly imageSizes?: Readonly<Record<string, ImageSize>>;
   /** Default English. Keep the reference stable: it is part of `ctx` identity. */
   readonly footnoteLabels?: FootnoteA11yLabels;
   /** Default `↩`, `↩²`... Keep the reference stable: it is part of `ctx` identity. */
@@ -293,6 +307,7 @@ function optionsOf(input: RenderCtxInput): RenderOptions {
     scriptFallback:
       input.scriptFallback ?? DEFAULT_RENDER_OPTIONS.scriptFallback,
     images: input.images ?? DEFAULT_RENDER_OPTIONS.images,
+    imageSizes: input.imageSizes,
     codeBlock: Object.freeze({
       header: input.codeBlock?.header ?? false,
       lineNumbers: input.codeBlock?.lineNumbers ?? false,
@@ -344,6 +359,7 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
   const scriptFallback =
     input.scriptFallback ?? DEFAULT_RENDER_OPTIONS.scriptFallback;
   const images = input.images ?? DEFAULT_RENDER_OPTIONS.images;
+  const imageSizes = input.imageSizes;
   const header = input.codeBlock?.header ?? false;
   const lineNumbers = input.codeBlock?.lineNumbers ?? false;
   const wrap = input.codeBlock?.wrap ?? false;
@@ -363,6 +379,7 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
         footnoteFocus,
         scriptFallback,
         images,
+        imageSizes,
         codeBlock: Object.freeze({ header, lineNumbers, wrap, copyable }),
       }),
     [
@@ -377,6 +394,7 @@ export function useRenderCtx(input: RenderCtxInput): RenderCtx {
       footnoteFocus,
       scriptFallback,
       images,
+      imageSizes,
       header,
       lineNumbers,
       wrap,

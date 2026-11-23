@@ -141,6 +141,8 @@ export interface ImageTheme extends MarginProps {
   maxHeight?: number;
   /** Default `'cover'` with `aspectRatio` or `maxHeight`, else `'contain'`. */
   resizeMode?: 'contain' | 'cover' | 'stretch' | 'center' | 'none';
+  /** Fade-in on load, in ms. Default 150; `0` turns it off. */
+  fadeDuration?: number;
 }
 
 export interface InlineImageTheme {

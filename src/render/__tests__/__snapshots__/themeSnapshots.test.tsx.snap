@@ -768,18 +768,25 @@ exports[`theme snapshots dark element Image 1`] = `
     }
   >
     <View
+      collapsable={false}
       style={
-        [
-          {
-            "width": "100%",
-          },
-          undefined,
-        ]
+        {
+          "opacity": 0,
+          "width": "100%",
+        }
       }
     >
       <Image
         accessibilityHint="Title"
         accessibilityLabel="An image"
+        accessibilityState={
+          {
+            "busy": true,
+          }
+        }
+        aria-busy={true}
+        fadeDuration={0}
+        onLoad={[Function]}
         resizeMode="contain"
         source={
           {
@@ -794,7 +801,9 @@ exports[`theme snapshots dark element Image 1`] = `
             {
               "aspectRatio": 1.7777777777777777,
               "backgroundColor": "#151b23",
+              "borderColor": "#3d444d",
               "borderRadius": 6,
+              "borderWidth": 0.5,
             },
           ]
         }
@@ -861,6 +870,13 @@ exports[`theme snapshots dark element InlineImage 1`] = `
     An 
     <Image
       accessibilityLabel="icon"
+      accessibilityState={
+        {
+          "busy": true,
+        }
+      }
+      aria-busy={true}
+      fadeDuration={0}
       source={
         {
           "uri": "https://example.com/i.png",
@@ -3485,18 +3501,25 @@ exports[`theme snapshots light element Image 1`] = `
     }
   >
     <View
+      collapsable={false}
       style={
-        [
-          {
-            "width": "100%",
-          },
-          undefined,
-        ]
+        {
+          "opacity": 0,
+          "width": "100%",
+        }
       }
     >
       <Image
         accessibilityHint="Title"
         accessibilityLabel="An image"
+        accessibilityState={
+          {
+            "busy": true,
+          }
+        }
+        aria-busy={true}
+        fadeDuration={0}
+        onLoad={[Function]}
         resizeMode="contain"
         source={
           {
@@ -3511,7 +3534,9 @@ exports[`theme snapshots light element Image 1`] = `
             {
               "aspectRatio": 1.7777777777777777,
               "backgroundColor": "#f6f8fa",
+              "borderColor": "#d1d9e0",
               "borderRadius": 6,
+              "borderWidth": 0.5,
             },
           ]
         }
@@ -3578,6 +3603,13 @@ exports[`theme snapshots light element InlineImage 1`] = `
     An 
     <Image
       accessibilityLabel="icon"
+      accessibilityState={
+        {
+          "busy": true,
+        }
+      }
+      aria-busy={true}
+      fadeDuration={0}
       source={
         {
           "uri": "https://example.com/i.png",

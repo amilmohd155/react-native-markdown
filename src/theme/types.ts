@@ -166,6 +166,8 @@ export interface ThemeTokens {
     readonly height: number | undefined;
     readonly maxHeight: number | undefined;
     readonly resizeMode: 'contain' | 'cover' | 'stretch' | 'center' | 'none';
+    /** `image.fadeDuration`: fade-in on load in ms; `0` is off. Default 150. */
+    readonly fadeDuration: number;
   };
   /** `inlineImage.size`: square side in points; unset, the line height. */
   readonly inlineImageSize: number | undefined;

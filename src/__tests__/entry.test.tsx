@@ -15,6 +15,7 @@ describe('package entry', () => {
       'definePlugin',
       'inlineView',
       'parse',
+      'prefetchImageSizes',
       'useMarkdownBlocks',
       'useMarkdownStream',
       'useMarkdownTheme',

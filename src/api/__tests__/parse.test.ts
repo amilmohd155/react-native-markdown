@@ -71,6 +71,7 @@ describe('parse', () => {
       'definePlugin',
       'inlineView',
       'parse',
+      'prefetchImageSizes',
       'useMarkdownBlocks',
       'useMarkdownStream',
       'useMarkdownTheme',
