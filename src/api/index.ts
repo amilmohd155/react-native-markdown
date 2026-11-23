@@ -86,6 +86,10 @@ export type {
   TaskToggleInfo,
 } from '../render';
 
+export { prefetchImageSizes } from '../render/imageSize';
+export type { ImageSize } from '../render/imageSize';
+export type { ImageErrorInfo } from '../render/context';
+
 // Plugins
 export { definePlugin } from '../plugins';
 export type {

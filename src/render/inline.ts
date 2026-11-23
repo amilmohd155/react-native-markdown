@@ -288,7 +288,7 @@ function renderInlineNode(
       // in, as plain text.
       if (!imageAllowed(ctx.options.images, src))
         return alt === '' ? null : alt;
-      const imageSize = cachedImageSize(src);
+      const imageSize = cachedImageSize(src, ctx.options.imageSizes?.[src]);
       return inline(
         ctx,
         dev,

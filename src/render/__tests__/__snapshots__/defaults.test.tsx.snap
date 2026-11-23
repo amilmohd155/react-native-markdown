@@ -866,17 +866,24 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
     }
   >
     <View
+      collapsable={false}
       style={
-        [
-          {
-            "width": "100%",
-          },
-          undefined,
-        ]
+        {
+          "opacity": 0,
+          "width": "100%",
+        }
       }
     >
       <Image
         accessibilityLabel="img"
+        accessibilityState={
+          {
+            "busy": true,
+          }
+        }
+        aria-busy={true}
+        fadeDuration={0}
+        onLoad={[Function]}
         resizeMode="contain"
         source={
           {
@@ -891,7 +898,9 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
             {
               "aspectRatio": 1.7777777777777777,
               "backgroundColor": "#f6f8fa",
+              "borderColor": "#d1d9e0",
               "borderRadius": 6,
+              "borderWidth": 0.5,
             },
           ]
         }

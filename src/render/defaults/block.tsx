@@ -6,8 +6,10 @@ import {
   useRef,
   useState,
   type ComponentRef,
+  type ReactNode,
 } from 'react';
 import {
+  AccessibilityInfo,
   Animated,
   Image as RNImage,
   Pressable,
@@ -40,7 +42,8 @@ import {
   useCodeBlockWrap,
 } from './codeBlockShell';
 import type { ElementProps } from '../elements';
-import { useImageSize } from '../imageSize';
+import { cachedImageSize, retryImageSize, useImageSize } from '../imageSize';
+import { useImageErrorReport } from '../useImageErrorReport';
 import { useTaskState } from '../useTaskState';
 import { useFootnoteFlash } from '../useFootnoteFlash';
 import {
@@ -325,6 +328,23 @@ function blockImageSize(
   }
 }
 
+/** Frame of a block image; fades with `opacity` when given. */
+function ImageFrame({
+  style,
+  opacity,
+  children,
+}: {
+  readonly style: StyleProp<ViewStyle>;
+  readonly opacity: Animated.Value | undefined;
+  readonly children: ReactNode;
+}) {
+  return opacity === undefined ? (
+    <View style={style}>{children}</View>
+  ) : (
+    <Animated.View style={[style, { opacity }]}>{children}</Animated.View>
+  );
+}
+
 /**
  * Block image at full width (never wider than its natural size), with its
  * real aspect ratio from the size cache. While the size is unknown, a quiet
@@ -335,41 +355,101 @@ function blockImageSize(
  */
 export function Image({ src, alt, title, style }: ElementProps<'Image'>) {
   const { theme, handlers, options } = useRenderContext();
-  const size = useImageSize(src);
+  const provided = options.imageSizes?.[src];
+  const size = useImageSize(src, provided);
   const { colors } = theme.tokens;
+  const { fadeDuration } = theme.tokens.imageSizing;
   // `image.borderRadius`: clips the loaded image too (the container does not).
   const radius = style.container.borderRadius;
+  // Fade only an image whose size was unknown on the first render: a known
+  // size (cached or provided) means the image is likely ready already.
+  const [fades] = useState(
+    () => fadeDuration > 0 && cachedImageSize(src, provided) === undefined
+  );
+  const [opacity] = useState(() => new Animated.Value(fades ? 0 : 1));
+  const [loaded, setLoaded] = useState(!fades);
+  const animation = useRef<Animated.CompositeAnimation | null>(null);
+  const unmounted = useRef(false);
+  useEffect(() => {
+    unmounted.current = false;
+    return () => {
+      unmounted.current = true;
+      animation.current?.stop();
+    };
+  }, []);
+  const failed = size === 'error';
+  useImageErrorReport(src, alt, title, size, provided);
 
-  if (size === 'error') {
+  if (failed) {
     return (
-      <View
+      <Pressable
         style={[
           style.container,
           styles.imageFallback,
           { backgroundColor: colors.codeBg, borderColor: colors.border },
         ]}
-        accessibilityRole="image"
-        accessibilityLabel={alt}
+        accessibilityRole="button"
+        accessibilityLabel={alt === '' ? src : alt}
+        accessibilityHint="Retry loading the image"
+        onPress={() => retryImageSize(src)}
       >
         <Text style={{ color: colors.muted }}>{alt === '' ? src : alt}</Text>
-      </View>
+      </Pressable>
     );
   }
 
+  const onLoad = () => {
+    if (!fades || loaded) return;
+    setLoaded(true);
+    const start = (reduce: boolean) => {
+      if (unmounted.current) return;
+      if (reduce) {
+        opacity.setValue(1);
+        return;
+      }
+      animation.current = Animated.timing(opacity, {
+        toValue: 1,
+        duration: fadeDuration,
+        // The web has no native driver; asking for it warns.
+        useNativeDriver: Platform.OS !== 'web',
+        isInteraction: false,
+      });
+      animation.current.start();
+    };
+    AccessibilityInfo.isReduceMotionEnabled().then(start, () => start(false));
+  };
+
   const { imageSizing, imageRatio } = theme.tokens;
+  // An empty alt marks a decorative image: hidden from screen readers.
+  const decorative = alt === '';
   const image = (
     <RNImage
       source={{ uri: src }}
+      onLoad={onLoad}
+      // Android's own fade would hide the library's (and add one to images
+      // whose size is known): the fade is `fadeDuration`.
+      fadeDuration={0}
+      accessible={decorative ? false : undefined}
+      aria-hidden={decorative ? true : undefined}
+      importantForAccessibility={decorative ? 'no' : undefined}
       accessibilityLabel={alt}
       accessibilityHint={title ?? undefined}
+      // Always set: Android keeps the last native state when it goes undefined.
+      // The web drops `accessibilityState`, so it gets `aria-busy` too.
+      accessibilityState={{ busy: size === null }}
+      aria-busy={size === null ? true : undefined}
       resizeMode={imageSizing.resizeMode}
       style={[
         styles.blockImage,
         {
           ...blockImageSize(imageSizing, size, imageRatio),
-          ...(size === null
+          ...(size === null || !loaded
             ? {
                 backgroundColor: colors.codeBg,
+                // A hairline keeps the box visible when `codeBg` matches the
+                // page (a dark theme); it is inside the box, so no size change.
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: colors.border,
                 borderRadius: radius ?? theme.tokens.radius.code,
               }
             : { borderRadius: radius }),
@@ -377,17 +457,17 @@ export function Image({ src, alt, title, style }: ElementProps<'Image'>) {
       ]}
     />
   );
-
   // The frame caps the width at the natural size; the image fills the
   // frame. (Yoga derives an aspect-ratio height from `width` before
   // applying `maxWidth`, so both can't sit on the image itself.)
   return (
     <View style={style.container}>
-      <View
+      <ImageFrame
         style={[
           styles.imageFrame,
           size === null ? undefined : { maxWidth: size.width },
         ]}
+        opacity={fades ? opacity : undefined}
       >
         {options.interactiveImages ? (
           <Pressable
@@ -400,7 +480,7 @@ export function Image({ src, alt, title, style }: ElementProps<'Image'>) {
         ) : (
           image
         )}
-      </View>
+      </ImageFrame>
     </View>
   );
 }

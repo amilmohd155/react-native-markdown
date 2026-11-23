@@ -53,12 +53,25 @@ const scriptScale = (): number =>
   Platform.select({ android: 0.65, default: 0.75 });
 
 const DEFAULT_IMAGE_RATIO = 16 / 9;
+const DEFAULT_IMAGE_FADE_MS = 150;
 
 /** Sizing mode of a block image: `aspectRatio` > `maxHeight` > `height`. */
 function imageSizing(
   image: FlatThemeBlock['image']
 ): ThemeTokens['imageSizing'] {
-  const { aspectRatio, maxHeight, height, resizeMode } = image ?? {};
+  const { aspectRatio, maxHeight, height, resizeMode, fadeDuration } =
+    image ?? {};
+  let fade = DEFAULT_IMAGE_FADE_MS;
+  if (fadeDuration !== undefined) {
+    if (Number.isFinite(fadeDuration) && fadeDuration >= 0) {
+      fade = fadeDuration;
+    } else if (isDev()) {
+      warnOnce(
+        'image.fadeDuration',
+        `theme: image.fadeDuration must be a number of milliseconds >= 0 (got ${String(fadeDuration)}); using ${DEFAULT_IMAGE_FADE_MS}.`
+      );
+    }
+  }
   const mode =
     aspectRatio !== undefined
       ? 'ratio'
@@ -74,6 +87,7 @@ function imageSizing(
     resizeMode:
       resizeMode ??
       (mode === 'ratio' || mode === 'maxHeight' ? 'cover' : 'contain'),
+    fadeDuration: fade,
   });
 }
 

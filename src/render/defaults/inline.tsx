@@ -3,6 +3,7 @@ import { Animated, Image, Pressable, Text, View } from 'react-native';
 import { InheritedTextContext, useRenderContext } from '../contexts';
 import type { ElementProps } from '../elements';
 import { useImageSize } from '../imageSize';
+import { useImageErrorReport } from '../useImageErrorReport';
 import { markInlineView, type InlineViewProps } from '../inlineView';
 import { pressLink } from '../links';
 import { toSubscript, toSuperscript } from '../scripts';
@@ -151,13 +152,17 @@ export const InlineImage = markInlineView(function DefaultInlineImage({
   baseline,
 }: InlineViewProps<'InlineImage'>) {
   const { handlers, options, theme } = useRenderContext();
-  const loaded = useImageSize(src);
+  const provided = options.imageSizes?.[src];
+  const loaded = useImageSize(src, provided);
+  useImageErrorReport(src, alt, title, loaded, provided);
   const known =
     width !== null && height !== null
       ? { width, height }
       : loaded !== null && loaded !== 'error'
         ? loaded
         : null;
+  // Busy only while the lookup runs: a failed one is not loading any more.
+  const busy = known === null && loaded !== 'error';
   // `inlineImage.size`: a square the image is scaled to fit (up or down).
   const fixed = theme.tokens.inlineImageSize;
   const max = fixed ?? baseline.lineHeight;
@@ -170,7 +175,16 @@ export const InlineImage = markInlineView(function DefaultInlineImage({
   const image = (
     <Image
       source={{ uri: src }}
+      accessible={alt === '' ? false : undefined}
+      aria-hidden={alt === '' ? true : undefined}
+      // No native Android fade (as the block image).
+      fadeDuration={0}
+      importantForAccessibility={alt === '' ? 'no' : undefined}
       accessibilityLabel={alt}
+      // Always set: Android keeps the last native state when it goes undefined.
+      // The web drops `accessibilityState`, so it gets `aria-busy` too.
+      accessibilityState={{ busy }}
+      aria-busy={busy ? true : undefined}
       style={
         known === null
           ? { width: max, height: max }

@@ -1312,6 +1312,35 @@ The same harness as the Android pass, on the iOS simulator (Expo Go SDK 58, `--n
 - **Affected:** the plain block in the gutter layout (any size) and the last chunk of a chunked highlighted block. **Not affected:** a highlighted block drawn as one `Text` and both rows layouts. Native draws an empty last line after a final `\n`; web (`pre-wrap`) draws none.
 - **Fix:** the gutter text ends in a bare `\n` when its code does ([P3-35](../../docs/rewrite/phase-3/decisions.md#p3-35-code-block-header-line-numbers-and-wrap-in-pure-js)). Verified by unit tests and the web e2e (gutter and code heights equal within 1 px), and re-measured on the S25 FE (font scale 0.8 and 2.0) and the iOS simulator (content size `large` and XXXL) with the same cases: gutter minus code height is now 0 in every case, including the plain gutter with 1 to 3 trailing blanks, a large plain block, the plain gutter with a header and a large highlighted chunked block; the cases that lined up before (plain with no trailing blank, middle blanks only, one line, the highlighted single `Text`, rows) did not regress. Not tested on a device: the open-to-closed swap of a real stream (covered by unit tests only).
 
+## Image size polish: Android device, iOS simulator and web check (S25 FE, iPhone 18 Pro simulator, react-native-web, 2026-11-22)
+
+P3-36 ([decision](../../docs/rewrite/phase-3/decisions.md#p3-36-image-size-polish-explicit-sizes-a-hardened-cache-fade-in-and-a-retry)). Temporary example screens, reverted.
+
+- **Android (S25 FE, Expo Go, describe trees and screen-record frames):**
+  - Cold load: a busy 16:9 placeholder, then the image at its ratio; content below shifts when the ratio differs, as expected without `imageSizes`.
+  - `imageSizes`: no shift from the first frame.
+  - `virtualize`: after a jump of about 110 blocks and back, top images appear at size with no placeholder; not proven that block 0 unmounted.
+  - Broken URL: the alt box is a button; each press re-runs the lookup and `onImageError` fires once per lookup. Not verified: a second request on the wire (Expo Go has no network log), the 60 s expiry, TalkBack (waived).
+- **iOS simulator (iPhone 18 Pro, Expo Go, after the fixes):**
+  - Cold load: the fade is visible in video (about 150 to 190 ms, no native fade on iOS); the image first paints letterboxed in the 16:9 box, then the box snaps to its ratio (the expected shift without `imageSizes`; the lag was a slow test server).
+  - `imageSizes`: 4:1 box at the first frame, nothing below moves, no fade. `virtualize`: after End and Top the top image is at size, opaque, no placeholder.
+  - Broken URL: the alt box is a button with the retry hint; `onImageError` fires once per failure for block and inline, not again on a remount onto the cached error, and once per retry press. Empty `alt` is absent from the accessibility tree. No console errors.
+  - Not verified: `busy` on iOS (the accessibility tree never lists the placeholder and does not print `busy`; native devtools did not start), for block and inline, including "a failed inline image is not busy".
+  - Dark theme (before the border fix below): the placeholder was invisible (`#0d1117` on a `#0d1117` page); light was faint (`#f1f1f1` on `#fdfdfd`).
+- **Web (Chromium, react-native-web 0.21):** `getSize` works in its callback-only form and the fade ends at opacity 1; `imageSizes` shows no shift (112 px to the next paragraph before and after); a failed lookup issues two requests and a retry two more; empty `alt` is `aria-hidden`; no library warnings. Playwright smoke: 73 passed, 0 failed.
+- **Found in the first pass, fixed, and re-checked** (second pass, same day: S25 FE and web; web smoke 73 passed, 0 failed):
+  - Android kept `busy` on a loaded image whose size arrived after mount: `accessibilityState` is now always set. Re-checked on the S25 FE, block and inline: busy while loading, not after.
+  - The web dropped `accessibilityState`: `aria-busy` added. Re-checked: set on the placeholder, gone after load, no React unknown-prop warnings.
+  - `onImageError` re-fired on every remount of a cached error: it now fires once per lookup the image saw start, for block and inline images. Re-checked on both: once per failure, none on remount, one per retry press.
+  - Android's own 300 ms image fade overlapped the library's: `fadeDuration={0}`. Re-checked for the block image; on the S25 FE an inline image still faded, so `fadeDuration={0}` was added there too.
+  - On Android an empty-`alt` image stayed in the `describe` tree; `importantForAccessibility="no"` removes it (re-checked; TalkBack not run, waived).
+- **Found in the second pass, fixed, re-checked on the S25 FE (third pass):**
+  - A failed inline image stayed busy forever: now not busy (a loading inline image is busy). Inline `fadeDuration={0}`: inline, block and `imageSizes` images each jump to bright in one 33 ms frame.
+  - The loading placeholder was invisible in a dark theme (iOS and Android): it now has a hairline `colors.border` border. Android dark: border `#3d444d` around the fill on a `#0d1117` page; light: `#d1d9e0`. The loaded image starts on the border pixel, so nothing changes when it arrives (tested with a 16:9 image only, the placeholder's own ratio). Not re-run on the iOS simulator.
+  - The 60 s error expiry: after 87 s a remount made new requests and `onImageError` fired once per image.
+- **Not verified:** a second request on the wire on Android on first load (Expo Go has no network log). Odd, not investigated: a failed image makes 2 requests per lookup on web and on an Android remount (1 on the first Android load), and the iOS run saw one extra inline request at a remount.
+- **Known:** the retry hint is not exposed on the web (react-native-web drops `accessibilityHint`); `busy` could not be read on the iOS simulator.
+
 ## Phase 3a (flat theme) device run
 
 Cost check for the flat theme ([Phase 3a exit criteria](../../docs/rewrite/phase-3a/README.md#exit-criteria)). Raw data: [`sm-s731b-2026-11-22-phase-3a.json`](./sm-s731b-2026-11-22-phase-3a.json).

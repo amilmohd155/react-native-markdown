@@ -2,38 +2,82 @@ import { useCallback, useSyncExternalStore } from 'react';
 import { Image } from 'react-native';
 
 /**
- * Image size cache (basic version). Spec: docs/rewrite/03-architecture.md
- * (Default elements: Image), phase 3 adds the placeholder polish.
+ * Image size cache. Spec: docs/rewrite/phase-3/image-cache.md (Design > Cache).
  *
  * - One `Image.getSize` request per URL, shared by every image using it;
  *   later renders and remounts read the size synchronously.
- * - Failed lookups are cached too, so a broken URL isn't retried on every
- *   render (it is retried after the entry is evicted).
- * - Bounded: the oldest entries are evicted past `MAX_ENTRIES`.
+ * - Failed lookups are cached too, with their time, so a broken URL isn't
+ *   retried on every render. An error entry expires after `ERROR_TTL_MS`:
+ *   the next subscribe (or `loadImageSize`) looks it up again.
+ *   `retryImageSize` clears it on demand.
+ * - Bounded LRU: a read refreshes recency; the least recently used entries
+ *   are evicted past `MAX_ENTRIES`.
  * - A small external store: components subscribe per URL with
  *   `useSyncExternalStore` and re-render when that URL's size arrives.
+ * - A size provided by the caller (`imageSizes`) wins over the cache and
+ *   is never looked up.
  */
 
-interface ImageSize {
+export interface ImageSize {
   readonly width: number;
   readonly height: number;
 }
 
-type Entry = ImageSize | 'error';
+interface ErrorEntry {
+  readonly status: 'error';
+  readonly at: number;
+}
+
+type Entry = ImageSize | ErrorEntry;
+type Result = ImageSize | 'error';
 
 const MAX_ENTRIES = 500;
+const ERROR_TTL_MS = 60_000;
 const cache = new Map<string, Entry>();
-const pending = new Map<string, Promise<Entry>>();
+const pending = new Map<string, Promise<Result>>();
 const listeners = new Map<string, Set<() => void>>();
 
-function remember(src: string, entry: Entry): Entry {
+const isError = (entry: Entry): entry is ErrorEntry => 'status' in entry;
+
+const publicEntry = (entry: Entry): Result =>
+  isError(entry) ? 'error' : entry;
+
+const isExpired = (entry: Entry | undefined): boolean =>
+  entry !== undefined &&
+  isError(entry) &&
+  Date.now() - entry.at >= ERROR_TTL_MS;
+
+const errorEntry = (): ErrorEntry =>
+  Object.freeze({ status: 'error', at: Date.now() });
+
+function notify(src: string): void {
+  listeners.get(src)?.forEach((onChange) => onChange());
+}
+
+function remember(src: string, entry: Entry): Result {
+  // Re-inserting moves an existing key to the newest position.
+  cache.delete(src);
   if (cache.size >= MAX_ENTRIES) {
-    // Maps iterate in insertion order: drop the oldest.
+    // Maps iterate in insertion order: drop the least recently used.
     const oldest = cache.keys().next();
     if (!oldest.done) cache.delete(oldest.value);
   }
   cache.set(src, entry);
-  listeners.get(src)?.forEach((notify) => notify());
+  notify(src);
+  return publicEntry(entry);
+}
+
+/**
+ * Reads an entry and refreshes its recency. The entry object is unchanged,
+ * so snapshots stay stable. Expiry is not checked here: that would change
+ * the snapshot during render.
+ */
+function read(src: string): Entry | undefined {
+  const entry = cache.get(src);
+  if (entry !== undefined) {
+    cache.delete(src);
+    cache.set(src, entry);
+  }
   return entry;
 }
 
@@ -44,17 +88,27 @@ function subscribe(src: string, onChange: () => void): () => void {
     listeners.set(src, set);
   }
   set.add(onChange);
-  // Start the lookup on subscribe (after commit), not during render.
-  if (!cache.has(src)) loadImageSize(src);
+  // Start the lookup on subscribe (after commit), not during render. An
+  // expired error entry is looked up again.
+  const entry = cache.get(src);
+  if (entry === undefined || isExpired(entry)) loadImageSize(src);
   return () => {
     set.delete(onChange);
     if (set.size === 0) listeners.delete(src);
   };
 }
 
-/** The cached size of `src`: a size, `'error'`, or `undefined` if unknown. */
-export function cachedImageSize(src: string): Entry | undefined {
-  return cache.get(src);
+/**
+ * The cached size of `src`: a size, `'error'`, or `undefined` if unknown.
+ * A provided size wins.
+ */
+export function cachedImageSize(
+  src: string,
+  provided?: ImageSize
+): Result | undefined {
+  if (provided !== undefined) return provided;
+  const entry = read(src);
+  return entry === undefined ? undefined : publicEntry(entry);
 }
 
 /**
@@ -73,37 +127,75 @@ function getSize(src: string): Promise<ImageSize> {
   });
 }
 
+/** Stores a result unless the request was superseded by a retry. */
+function settle(src: string, request: Promise<Result>, entry: Entry): Result {
+  if (pending.get(src) !== request) return publicEntry(entry);
+  pending.delete(src);
+  return remember(src, entry);
+}
+
 /** Looks up the size of `src`, at most one request per URL at a time. */
-export function loadImageSize(src: string): Promise<Entry> {
+export function loadImageSize(src: string): Promise<Result> {
   const cached = cache.get(src);
-  if (cached !== undefined) return Promise.resolve(cached);
+  if (cached !== undefined) {
+    if (!isExpired(cached)) return Promise.resolve(publicEntry(cached));
+    // Expired error: forget it and look up again.
+    cache.delete(src);
+    notify(src);
+  }
   let request = pending.get(src);
   if (request === undefined) {
-    request = getSize(src).then(
+    const started: Promise<Result> = getSize(src).then(
       ({ width, height }) =>
-        remember(
+        settle(
           src,
-          width > 0 && height > 0 ? Object.freeze({ width, height }) : 'error'
+          started,
+          width > 0 && height > 0
+            ? Object.freeze({ width, height })
+            : errorEntry()
         ),
-      () => remember(src, 'error')
+      () => settle(src, started, errorEntry())
     );
-    request.finally(() => pending.delete(src));
-    pending.set(src, request);
+    request = started;
+    pending.set(src, started);
   }
   return request;
 }
 
+/** Clears the entry (and any pending lookup) of `src` and looks it up again. */
+export function retryImageSize(src: string): void {
+  cache.delete(src);
+  pending.delete(src);
+  notify(src);
+  loadImageSize(src);
+}
+
+/**
+ * Warms the cache for `urls`. Resolves when every lookup has settled; a
+ * failure is cached as an error entry, never thrown.
+ */
+export async function prefetchImageSizes(
+  urls: readonly string[]
+): Promise<void> {
+  await Promise.all(
+    urls.map((url) => loadImageSize(url).catch((): Result => 'error'))
+  );
+}
+
 /**
  * The size of `src` for rendering: known size, `'error'`, or `null` while
- * loading. Renders once more when the lookup finishes.
+ * loading. Renders once more when the lookup finishes. A `provided` size is
+ * returned as is, with no lookup.
  */
-export function useImageSize(src: string): Entry | null {
+export function useImageSize(src: string, provided?: ImageSize): Result | null {
+  const hasProvided = provided !== undefined;
   const subscribeToSrc = useCallback(
-    (onChange: () => void) => subscribe(src, onChange),
-    [src]
+    (onChange: () => void) =>
+      hasProvided ? () => {} : subscribe(src, onChange),
+    [src, hasProvided]
   );
   // Cached entries are frozen objects or 'error': stable snapshots.
-  const snapshot = () => cache.get(src) ?? null;
+  const snapshot = () => cachedImageSize(src, provided) ?? null;
   return useSyncExternalStore(subscribeToSrc, snapshot, snapshot);
 }
 
