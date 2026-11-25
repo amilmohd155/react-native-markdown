@@ -1341,6 +1341,64 @@ P3-36 ([decision](../../docs/rewrite/phase-3/decisions.md#p3-36-image-size-polis
 - **Not verified:** a second request on the wire on Android on first load (Expo Go has no network log). Odd, not investigated: a failed image makes 2 requests per lookup on web and on an Android remount (1 on the first Android load), and the iOS run saw one extra inline request at a remount.
 - **Known:** the retry hint is not exposed on the web (react-native-web drops `accessibilityHint`); `busy` could not be read on the iOS simulator.
 
+## Table width cache polish: streaming, close, remount, rotation and web (S25 FE, iOS simulator, WebKit and Chromium, 2026-11-25)
+
+P3-37 ([decision](../../docs/rewrite/phase-3/decisions.md#p3-37-table-width-cache-polish-no-blink-while-streaming-a-table-slice-key-a-render-time-cap)). Temporary example screens (`TableStreamCheck`, and a TableCheck screen that samples the web page every 50 ms), not committed. Raw web data: [`table-cache-polish/`](./table-cache-polish/) (`<browser>-<stream|resize|late>.json`; the harness script was deleted).
+
+- **Method:** web, WebKit and Chromium, the TableCheck screen sampled every 50 ms (stream, resize, late `onLayout` under 8x CPU throttle). S25 FE (SM-S731B, Expo Go SDK 58, Metro dev JS) and iPhone 18 Pro simulator: screen recordings, judged on contact sheets.
+- **Web:**
+  - Stream: 0 hidden frames after the first measured frame, 0 shrinks, widths stable 2.5 s after the stream ended.
+  - Resize 900 / 300 / 1200 / 220: columns re-clamp to `min(280, container)` with no hidden frame.
+  - Late `onLayout` (8x throttle): the longest hidden run was one sample (about 50 ms).
+  - Existing e2e suite: Chromium 73/73, WebKit 63/73 (10 are the same environment limits as P3-35: 8 clipboard permission, 2 chunked highlight).
+- **Found and fixed:** a growing open cell was measured against the ceiling, so a column briefly went 131 -> 1800 -> 280 for 30 to 50 ms on throttled web, and one frame put a cell off screen on the S25 FE. An open cell is now bounded by the token max.
+- **S25 FE, after the fix:** stream of 53 frames, 0 off-screen, ragged or blank frames; a remount after `done()` shows no hidden frame; rotation, closed and mid-stream, no blank frame.
+- **iOS simulator:** stream of about 19 frames, columns at the same x in every frame; the only blank frames are the 3 before any table exists (the one-time hidden first measure).
+- **Known:**
+  - The first open table has one hidden first measure (about 50 ms on web, about 1.2 s on the first mount in dev-JS iOS).
+  - An open table that remounts (a virtualized tail block) re-measures hidden.
+  - Rotation: not testable on iOS in Expo Go (portrait-only `app.json`).
+  - First frame: until the ScrollView `onLayout` reports, a cached table in a container narrower than 280 paints at the token width for one frame, then shrinks (accepted, [P3-37](../../docs/rewrite/phase-3/decisions.md)).
+
+### Recheck after the `useTableWidths` refactor (2026-11-25)
+
+After the refactor and the `Math.max(2 x window, token max)` ceiling fix. S25 FE (SM-S731B, Expo Go SDK 58, dev JS) and iPhone 18 Pro simulator. Blank frames: per-frame mean brightness of the table region. Off-screen: text pixels in the 8 px right screen edge. Plus contact sheets. ffmpeg `-fps_mode passthrough`, because recorders emit frames on change only.
+
+| Check | Android | iOS |
+| --- | --- | --- |
+| Stream | 128 frames, table first at frame 39, 0 blank, 0 off-screen after | 80 frames, first table frame 17, 0 blank, no cell wider than the screen |
+| Close at `done()` | no hidden frame | no hidden frame |
+| Cache-hit remount (key bump on the Markdown subtree) | 5 taps (remount, virtualize on, remount, virtualize off, remount), 102 frames, brightness flat | 12 distinct frames |
+| Table in first frame after every remount | yes | yes |
+| Rotation (temporary `orientation: default`, restored) | closed table and mid-stream (189 frames): no blank frame, columns re-clamp, no double jump | not checked (portrait-only in Expo Go) |
+| Wide-table scroll offset (issue #55) | held while rows append and after `done()` | held, boundaries fixed in the final sampled frames |
+
+- An earlier pass: column c at the left edge stayed there through rows 22-40 and after `done()`.
+- **Caveats:** the 330-character-cell doc makes column C scroll off the right edge by design (the table scrolls horizontally). After a remount the list jumps to the top and autoscrolls back (the list's autoscroll, not the table).
+
+### `yarn perf` (2026-11-25, darwin-arm64, `node --jitless`)
+
+Ratio to markdown-it, tolerance baseline x1.2, retried twice.
+
+- **As shipped, the warm step failed:** `ReferenceError: WebAssembly is not defined` in 4 tests (10 KB / 100 KB / 1 MB render, rerender-one-block). The PERF_WARM step mounted only F1 (no table), so React Native's lazy `useWindowDimensions` module was first transformed under `--jitless`. v1 passes. Fixed by mounting F2 and F3 in the warm test (`perf/perf.test.tsx`; `perf/baseline.json` untouched).
+- **After a manual pre-warm, branch vs v1** (same machine, back to back): render, parse and stream ratios within run-to-run spread.
+
+| Metric | Baseline | Limit | Branch run3 | Branch run5 | v1 run1 | v1 run3 |
+| --- | --- | --- | --- | --- | --- | --- |
+| parse:1KB | 1.26 | 1.51 | 1.241 | 1.265 | 1.259 | 1.263 |
+| render:1KB | 3.7 | 4.44 | 3.858 | 3.906 | 3.894 | 3.978 |
+| parse:10KB | 1.28 | 1.54 | 1.279 | 1.274 | 1.282 | 1.269 |
+| render:10KB | 4.29 | 5.15 | 4.913 | 5.006 | 5.007 | 4.882 |
+| parse:100KB | 1.25 | 1.5 | 1.239 | 1.258 | 1.258 | 1.258 |
+| render:100KB | 4.6 | 5.52 | 5.138 | 5.207 | 5.09 | 5.069 |
+| parse:1MB | 1.29 | 1.55 | 1.281 | 1.360 | 1.335 | 1.296 |
+| render:1MB | 4.62 | 5.54 | 5.489 | 5.409 | 5.068 | 4.904 |
+| rerender-one-block:100KB | 0.106 | 0.127 | 0.121 | 0.127 | 0.124 | 0.125 |
+| stream:F4a | 20.5 | 24.6 | 22.096 | 21.834 | 21.571 | 21.961 |
+
+- **Final code, cold cache:** the WASM error is gone and every metric is within 20% of baseline except `rerender-one-block:100KB`: 0.128 on all three attempts vs the 0.1272 limit. Absolute re-render time is 6.1 ms before and 6.08 ms after the refactor; the ratio moves with the markdown-it yardstick. v1 needed retries on the same metric (first tries 0.129, passed on the third).
+- **Open:** render ratios of both branch and v1 sit 10-26% above the recorded baseline on this machine, so the margin is thin on v1 as well. Baseline refresh not done; decision for the maintainer.
+
 ## Phase 3a (flat theme) device run
 
 Cost check for the flat theme ([Phase 3a exit criteria](../../docs/rewrite/phase-3a/README.md#exit-criteria)). Raw data: [`sm-s731b-2026-11-22-phase-3a.json`](./sm-s731b-2026-11-22-phase-3a.json).

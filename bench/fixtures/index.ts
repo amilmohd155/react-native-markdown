@@ -12,9 +12,6 @@
  * referenced from markdown in the example app without an asset resolver,
  * and remote images would put network time in the numbers.
  *
- * - F5: 200 chat messages for a `FlatList`, ~200 KB (`F5_MESSAGES`). Not in
- *   `FIXTURES`: it has its own run (heap and scroll), see BenchList.tsx.
- *
  * F4 (streaming) comes with phase 2.
  */
 
@@ -158,30 +155,6 @@ export const F3 =
 
 /** ~98 KB: F3 without tables, task lists, strikethrough, autolinks and footnotes. */
 export const F3_CM = toCommonMark(F3).source;
-
-/** Messages in the F5 chat list. */
-export const F5_COUNT = 200;
-
-/**
- * F5: 200 chat messages (~200 KB), rendered one per row of a `FlatList`.
- * Each is F1 with a distinct prefix, so no two messages are identical.
- */
-export const F5_MESSAGES: readonly string[] = Array.from(
-  { length: F5_COUNT },
-  (_, i) => `Re #${i + 1}: ${F1}`
-);
-
-export interface Fixture {
-  readonly id: 'F1' | 'F2' | 'F3' | 'F3-cm';
-  readonly source: string;
-}
-
-export const FIXTURES: readonly Fixture[] = [
-  { id: 'F1', source: F1 },
-  { id: 'F2', source: F2 },
-  { id: 'F3', source: F3 },
-  { id: 'F3-cm', source: F3_CM },
-];
 
 /**
  * `source` with its last sentence edited, for `reRenderOneBlock`: the edit

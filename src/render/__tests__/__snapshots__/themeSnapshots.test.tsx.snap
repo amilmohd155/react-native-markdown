@@ -1545,6 +1545,7 @@ exports[`theme snapshots dark element Table 1`] = `
   <RCTScrollView
     bounces={false}
     horizontal={true}
+    onLayout={[Function]}
     showsHorizontalScrollIndicator={false}
     style={
       {
@@ -1577,7 +1578,7 @@ exports[`theme snapshots dark element Table 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -1610,7 +1611,7 @@ exports[`theme snapshots dark element Table 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -1653,7 +1654,7 @@ exports[`theme snapshots dark element Table 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -1685,7 +1686,7 @@ exports[`theme snapshots dark element Table 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -1721,6 +1722,7 @@ exports[`theme snapshots dark element TableCell 1`] = `
   <RCTScrollView
     bounces={false}
     horizontal={true}
+    onLayout={[Function]}
     showsHorizontalScrollIndicator={false}
     style={
       {
@@ -1753,7 +1755,7 @@ exports[`theme snapshots dark element TableCell 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -1796,7 +1798,7 @@ exports[`theme snapshots dark element TableCell 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -1832,6 +1834,7 @@ exports[`theme snapshots dark element TableRow 1`] = `
   <RCTScrollView
     bounces={false}
     horizontal={true}
+    onLayout={[Function]}
     showsHorizontalScrollIndicator={false}
     style={
       {
@@ -1864,7 +1867,7 @@ exports[`theme snapshots dark element TableRow 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -1905,7 +1908,7 @@ exports[`theme snapshots dark element TableRow 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -2226,6 +2229,7 @@ exports[`theme snapshots dark plugin tables 1`] = `
   <RCTScrollView
     bounces={false}
     horizontal={true}
+    onLayout={[Function]}
     showsHorizontalScrollIndicator={false}
     style={
       {
@@ -2258,7 +2262,7 @@ exports[`theme snapshots dark plugin tables 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -2291,7 +2295,7 @@ exports[`theme snapshots dark plugin tables 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -2332,7 +2336,7 @@ exports[`theme snapshots dark plugin tables 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -2364,7 +2368,7 @@ exports[`theme snapshots dark plugin tables 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -4278,6 +4282,7 @@ exports[`theme snapshots light element Table 1`] = `
   <RCTScrollView
     bounces={false}
     horizontal={true}
+    onLayout={[Function]}
     showsHorizontalScrollIndicator={false}
     style={
       {
@@ -4310,7 +4315,7 @@ exports[`theme snapshots light element Table 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -4343,7 +4348,7 @@ exports[`theme snapshots light element Table 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -4386,7 +4391,7 @@ exports[`theme snapshots light element Table 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -4418,7 +4423,7 @@ exports[`theme snapshots light element Table 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -4454,6 +4459,7 @@ exports[`theme snapshots light element TableCell 1`] = `
   <RCTScrollView
     bounces={false}
     horizontal={true}
+    onLayout={[Function]}
     showsHorizontalScrollIndicator={false}
     style={
       {
@@ -4486,7 +4492,7 @@ exports[`theme snapshots light element TableCell 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -4529,7 +4535,7 @@ exports[`theme snapshots light element TableCell 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -4565,6 +4571,7 @@ exports[`theme snapshots light element TableRow 1`] = `
   <RCTScrollView
     bounces={false}
     horizontal={true}
+    onLayout={[Function]}
     showsHorizontalScrollIndicator={false}
     style={
       {
@@ -4597,7 +4604,7 @@ exports[`theme snapshots light element TableRow 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -4638,7 +4645,7 @@ exports[`theme snapshots light element TableRow 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -4959,6 +4966,7 @@ exports[`theme snapshots light plugin tables 1`] = `
   <RCTScrollView
     bounces={false}
     horizontal={true}
+    onLayout={[Function]}
     showsHorizontalScrollIndicator={false}
     style={
       {
@@ -4991,7 +4999,7 @@ exports[`theme snapshots light plugin tables 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -5024,7 +5032,7 @@ exports[`theme snapshots light plugin tables 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -5065,7 +5073,7 @@ exports[`theme snapshots light plugin tables 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -5097,7 +5105,7 @@ exports[`theme snapshots light plugin tables 1`] = `
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]

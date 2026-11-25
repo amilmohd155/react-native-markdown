@@ -76,4 +76,11 @@ export interface NodeTable {
    * on ordinary parses.
    */
   readonly openFenceBlock?: number;
+  /**
+   * Block index of the block a stream is still writing (P3-37): the last
+   * content block while a `useMarkdownStream` stream runs. Set by the
+   * pipeline's view of the table; absent after `done()` and on documents
+   * that are not streamed. Read by `Table` through `useIsOpenBlock`.
+   */
+  readonly openBlock?: number;
 }

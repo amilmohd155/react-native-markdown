@@ -35,6 +35,7 @@ import {
   type HeadingLevel,
   type ResolvedTheme,
   type SyntaxTokenType,
+  type TableColumns,
   type TableFrame,
   type ThemeTokens,
 } from './types';
@@ -200,7 +201,56 @@ function deriveTableVariants(
     align: table.align ?? null,
     bleed: Math.max(0, table.horizontalOverflow ?? 0),
   });
-  return { tableHeaderCell, tableRows, tableFrame };
+  return {
+    tableHeaderCell,
+    tableRows,
+    tableFrame,
+    tableColumns: resolveTableColumns(
+      table.minColumnWidth,
+      table.maxColumnWidth
+    ),
+  };
+}
+
+const DEFAULT_MIN_COLUMN_WIDTH = 48;
+const DEFAULT_MAX_COLUMN_WIDTH = 280;
+
+function columnWidth(
+  key: string,
+  value: number | undefined,
+  fallback: number
+): number {
+  if (value === undefined) return fallback;
+  if (Number.isFinite(value) && value >= 0) return value;
+  if (isDev()) {
+    warnOnce(
+      `table.${key}`,
+      `theme: table.${key} must be a finite number of points >= 0 (got ${String(value)}); using ${fallback}.`
+    );
+  }
+  return fallback;
+}
+
+/**
+ * `table.minColumnWidth` / `table.maxColumnWidth`: invalid values fall back to
+ * the defaults; when min > max, max is raised to min (min wins).
+ */
+function resolveTableColumns(
+  minIn: number | undefined,
+  maxIn: number | undefined
+): TableColumns {
+  const min = columnWidth('minColumnWidth', minIn, DEFAULT_MIN_COLUMN_WIDTH);
+  let max = columnWidth('maxColumnWidth', maxIn, DEFAULT_MAX_COLUMN_WIDTH);
+  if (max < min) {
+    if (isDev()) {
+      warnOnce(
+        'table.maxColumnWidth.order',
+        `theme: table.maxColumnWidth (${max}) is below table.minColumnWidth (${min}); using ${min}.`
+      );
+    }
+    max = min;
+  }
+  return Object.freeze({ min, max });
 }
 
 const TEXT_KEYS = [
@@ -777,12 +827,8 @@ export function resolveTheme(
   // Variants, from the merged elements.
   const paragraph = merged.Paragraph;
   const tableCell = merged.TableCell;
-  const { tableHeaderCell, tableRows, tableFrame } = deriveTableVariants(
-    block,
-    tableCell,
-    merged.TableRow,
-    fonts
-  );
+  const { tableHeaderCell, tableRows, tableFrame, tableColumns } =
+    deriveTableVariants(block, tableCell, merged.TableRow, fonts);
   // A sub-list sits `itemSpacing` below its parent item's text.
   const nestedList: StyleEntry = {
     container: {
@@ -960,6 +1006,7 @@ export function resolveTheme(
     tableRowEven: pick1('tableRowEven'),
     tableRowOdd: pick1('tableRowOdd'),
     tableFrame,
+    tableColumns,
     nestedList: pick1('nestedList'),
     tightParagraph: pick1('tightParagraph'),
     footnoteSection: pick1('footnoteSection'),

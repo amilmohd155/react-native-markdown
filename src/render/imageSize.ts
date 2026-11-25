@@ -1,5 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import { Image } from 'react-native';
+import { createLru } from './lru';
 
 /**
  * Image size cache. Spec: docs/rewrite/phase-3/image-cache.md (Design > Cache).
@@ -33,7 +34,7 @@ type Result = ImageSize | 'error';
 
 const MAX_ENTRIES = 500;
 const ERROR_TTL_MS = 60_000;
-const cache = new Map<string, Entry>();
+const cache = createLru<Entry>(MAX_ENTRIES);
 const pending = new Map<string, Promise<Result>>();
 const listeners = new Map<string, Set<() => void>>();
 
@@ -55,13 +56,6 @@ function notify(src: string): void {
 }
 
 function remember(src: string, entry: Entry): Result {
-  // Re-inserting moves an existing key to the newest position.
-  cache.delete(src);
-  if (cache.size >= MAX_ENTRIES) {
-    // Maps iterate in insertion order: drop the least recently used.
-    const oldest = cache.keys().next();
-    if (!oldest.done) cache.delete(oldest.value);
-  }
   cache.set(src, entry);
   notify(src);
   return publicEntry(entry);
@@ -72,14 +66,7 @@ function remember(src: string, entry: Entry): Result {
  * so snapshots stay stable. Expiry is not checked here: that would change
  * the snapshot during render.
  */
-function read(src: string): Entry | undefined {
-  const entry = cache.get(src);
-  if (entry !== undefined) {
-    cache.delete(src);
-    cache.set(src, entry);
-  }
-  return entry;
-}
+const read = (src: string): Entry | undefined => cache.get(src);
 
 function subscribe(src: string, onChange: () => void): () => void {
   let set = listeners.get(src);
@@ -90,7 +77,7 @@ function subscribe(src: string, onChange: () => void): () => void {
   set.add(onChange);
   // Start the lookup on subscribe (after commit), not during render. An
   // expired error entry is looked up again.
-  const entry = cache.get(src);
+  const entry = cache.peek(src);
   if (entry === undefined || isExpired(entry)) loadImageSize(src);
   return () => {
     set.delete(onChange);
@@ -136,7 +123,7 @@ function settle(src: string, request: Promise<Result>, entry: Entry): Result {
 
 /** Looks up the size of `src`, at most one request per URL at a time. */
 export function loadImageSize(src: string): Promise<Result> {
-  const cached = cache.get(src);
+  const cached = cache.peek(src);
   if (cached !== undefined) {
     if (!isExpired(cached)) return Promise.resolve(publicEntry(cached));
     // Expired error: forget it and look up again.

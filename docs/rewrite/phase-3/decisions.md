@@ -358,3 +358,23 @@ Accepted · 2026-11-22
 - **Waived by name** (user decision, 2026-11-22): VoiceOver and TalkBack passes, carried to the accessibility pass (with #20, tracked in #56). Device checks: Android Expo Go and web, plus an iOS simulator pass; no physical iPhone.
 - **Built and checked** (2026-11-22): all of the above, in `src/render/imageSize.ts`, `src/render/defaults/block.tsx` and the `imageSizes` and `onImageError` props; unit tests, the S25 FE in Expo Go, the iOS simulator and web ([REPORT](../../../bench/results/REPORT.md#image-size-polish-android-device-and-web-check-s25-fe-expo-go-and-react-native-web-2026-11-22)). Three device passes found eight bugs, among them an invisible placeholder in a dark theme (now a hairline border); all were fixed and re-checked on the S25 FE, the border not on the iOS simulator. Known: `busy` could not be read on iOS; the web does not expose the retry hint.
 - **Deferred** (user decision, 2026-11-22): request headers for the size lookup and the image ([#59](https://github.com/amilmohd155/react-native-markdown/issues/59)). **Not decided:** using the real `<Image>` `onLoad` as a second size source ([image-cache.md](./image-cache.md#open)).
+
+## P3-37: Table width cache polish: no blink while streaming, a table-slice key, a render-time cap
+
+Accepted · 2026-11-25
+
+- **Decision:** refines the column width cache of [P3-6](#p3-6-the-image-placeholder-ships-with-or-before-virtualize), in pure JS ([D2](../07-roadmap.md#decisions)) (`src/render/tableLayout.ts`).
+  - **Streaming:** a table in the open block renders the previous widths as `minWidth` (a seed, grow-only); the closing block adopts the seed and stores it. The open flag is `NodeTable.openBlock`, read through `OpenBlockContext`.
+  - **Keys:** the React key is positional (block index and position in the block); the cache key is the Table node's own source slice (the `source` attr set in `convert.ts`, plus document and block context), amending [P1-9](../phase-1/decisions.md) for this cache only. An empty source means do not cache.
+  - **Widths:** the cache holds natural widths with a ceiling of `max(2 x window width, token max)`; the cap `min(maxColumnWidth, containerWidth - 2 x bleed)` is applied at render, so rotation re-clamps without a re-measure.
+  - **Tokens:** flat `table.minColumnWidth` and `table.maxColumnWidth` theme keys (48 and 280).
+  - **Eviction:** one LRU helper (`src/render/lru.ts`) shared with the image cache of [P3-36](#p3-36-image-size-polish-explicit-sizes-a-hardened-cache-fade-in-and-a-retry); FIFO let the keys of a running stream evict real entries.
+- **Why:** confirmed cause: the content key was also the React key, so the whole table remounted on every flush. Fixed widths would clamp each cell so `onLayout` could never report growth, hence the seed is `minWidth`. Rejected: an off-screen measuring copy (doubles the cells), a hash key (against P1-9), the cap in the key (rotation would re-measure).
+- **Known:**
+  - Before the first `onLayout`, a cached table in a container narrower than 280 paints at the token width for one frame.
+  - An open table that remounts re-measures hidden once: open widths are never stored.
+  - A growing open cell can paint up to 280 in a container narrower than 280 until close (the table scrolls horizontally); kept so natural widths stay reusable after a rotation.
+  - The OS font scale is not in the key.
+  - The StrictMode test cannot count measurements.
+  - The render-time store effect refreshes LRU recency on a cache-hit mount, which is wanted.
+- **Evidence:** [REPORT](../../../bench/results/REPORT.md#table-width-cache-polish-streaming-close-remount-rotation-and-web-s25-fe-ios-simulator-webkit-and-chromium-2026-11-25). Design: [virtualization.md](./virtualization.md).

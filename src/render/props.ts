@@ -120,6 +120,11 @@ export function tableProps(
   return { align: attrsOf(table, id, NodeType.Table).align };
 }
 
+/** The table's own source lines (P3-37), for its width cache key. */
+export function tableSourceOf(table: NodeTable, id: number): string {
+  return attrsOf(table, id, NodeType.Table).source;
+}
+
 export function tableRowProps(
   table: NodeTable,
   id: number

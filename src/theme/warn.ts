@@ -81,6 +81,8 @@ const ACCEPTED: Accepted = {
     'borderRadius',
     'align',
     'horizontalOverflow',
+    'minColumnWidth',
+    'maxColumnWidth',
     'headerBackgroundColor',
     'headerColor',
     'headerFontFamily',

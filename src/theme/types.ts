@@ -279,6 +279,8 @@ export interface ResolvedTheme {
   readonly tableRowOdd: ElementStyle;
   /** Table placement: `align` of a narrow table, `bleed` of a scrolling one. */
   readonly tableFrame: TableFrame;
+  /** Table column width bounds in points (`table.minColumnWidth`, `maxColumnWidth`). */
+  readonly tableColumns: TableColumns;
   /** `List` nested inside a list item: no bottom margin. */
   readonly nestedList: ElementStyle;
   /** `Paragraph` inside a tight list: no block spacing. */
@@ -300,6 +302,12 @@ export interface ResolvedTheme {
 export interface TableFrame {
   readonly align: 'left' | 'center' | 'right' | null;
   readonly bleed: number;
+}
+
+/** Column width bounds in points; `min <= max` always holds. */
+export interface TableColumns {
+  readonly min: number;
+  readonly max: number;
 }
 
 /** Heading level, 1 to 6. */

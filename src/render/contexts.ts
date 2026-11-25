@@ -72,10 +72,31 @@ export const ListGapContext = createContext(0);
  */
 export const TableKeyContext = createContext('');
 
+/**
+ * Whether the enclosing table sits in the open block: the one a stream is
+ * still writing (P3-37). False after `done()` and for every document that is
+ * not streamed.
+ */
+export const OpenBlockContext = createContext(false);
+
+/** True inside the block a stream is still writing (P3-37). */
+export function useIsOpenBlock(): boolean {
+  return useContext(OpenBlockContext);
+}
+
+/** How a cell is sized: fixed, or at least `minWidth` while it can still grow. */
+export type TableCellSize =
+  | { readonly width: number }
+  | { readonly minWidth: number; readonly maxWidth: number };
+
 /** Column widths of the enclosing table, provided by the default `Table`. */
 export interface TableLayout {
-  /** Fixed width per column once measured; `null` while measuring. */
-  readonly widths: readonly number[] | null;
+  /** Size per column once known; `null` during a hidden measuring pass. */
+  readonly sizes: readonly TableCellSize[] | null;
+  /** Size of a cell that is measuring: its natural width, bounded. */
+  readonly measureSize: TableCellSize;
+  /** The table is open: sized cells still report a wider natural width. */
+  readonly grow: boolean;
   /**
    * A measuring cell enrolls itself (once, on mount) and reports its natural
    * width under its own identity; the columns are final once every enrolled

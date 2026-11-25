@@ -184,7 +184,7 @@ const theme = createTheme({
 | `list` | M, T (item text, over `paragraph`), `bullets` (by depth), `bulletColor`, `bulletSize`, `markerColor`, `markerFontWeight`, `markerMinWidth`, `gapWidth`, `marginLeft` (indent per level), `itemSpacing` |
 | `codeBlock` | T, M, `backgroundColor`, `borderColor`, `borderWidth`, `borderRadius`, `padding`, `syntax`, `header` |
 | `codeBlock.header` | `color`, `fontFamily`, `fontSize`, `lineHeight`, `backgroundColor`, `borderBottomColor`, `borderBottomWidth`, `paddingHorizontal`, `paddingVertical` |
-| `table` | M, T (cell text), `cellPadding`, `cellPaddingHorizontal`, `cellPaddingVertical`, `cellBackgroundColor`, `borderColor`, `borderWidth`, `borderRadius`, `align`, `horizontalOverflow`, `headerBackgroundColor`, `headerColor`, `headerFontFamily`, `rowEvenBackgroundColor`, `rowOddBackgroundColor` |
+| `table` | M, T (cell text), `cellPadding`, `cellPaddingHorizontal`, `cellPaddingVertical`, `cellBackgroundColor`, `borderColor`, `borderWidth`, `borderRadius`, `align`, `horizontalOverflow`, `minColumnWidth`, `maxColumnWidth`, `headerBackgroundColor`, `headerColor`, `headerFontFamily`, `rowEvenBackgroundColor`, `rowOddBackgroundColor` |
 | `divider` | M, `backgroundColor`, `height` |
 | `image` | M, `borderRadius`, `aspectRatio`, `height`, `maxHeight`, `resizeMode`, `fadeDuration` |
 | `inlineImage` | `size` |

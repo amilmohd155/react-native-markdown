@@ -690,6 +690,7 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
   <RCTScrollView
     bounces={false}
     horizontal={true}
+    onLayout={[Function]}
     showsHorizontalScrollIndicator={false}
     style={
       {
@@ -722,7 +723,7 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -755,7 +756,7 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -798,7 +799,7 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]
@@ -830,7 +831,7 @@ exports[`default elements renders the gallery of block and inline elements 1`] =
                   "padding": 6,
                 },
                 {
-                  "maxWidth": 280,
+                  "maxWidth": 1500,
                   "minWidth": 48,
                 },
               ]

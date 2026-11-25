@@ -32,7 +32,7 @@ Implementation detail: [`phase-2b/`](./phase-2b/README.md). Extends Phase 2, and
 **Exit criteria:** `done()` still equals `parse(source)`; the F4 bars hold with `hide-incomplete` always on; the P3-5 follow-tail device pass is re-run with `smooth` on. Full list in the [phase README](./phase-2b/README.md#exit-criteria).
 
 ### Phase 3: Scale & polish
-Implementation detail: [`phase-3/`](./phase-3/README.md). **In progress**, resumed after [Phase 2b](#phase-2b-streaming-polish-scheduled-before-the-rest-of-phase-3). Left: the accessibility pass, the image and table cache polish, and the virtualization leftovers (release build, keyboard resize, Reanimated).
+Implementation detail: [`phase-3/`](./phase-3/README.md). **In progress**, resumed after [Phase 2b](#phase-2b-streaming-polish-scheduled-before-the-rest-of-phase-3). The image and table cache polish is done. Left: the accessibility pass and the virtualization leftovers (release build, keyboard resize, Reanimated).
 - `scroll` (owned `ScrollView`) and `virtualize` (`FlatList`), a headless block hook, and scroll control for Reanimated. FlashList stays user-side through the hook.
 - Image aspect-ratio cache and placeholder, table column measurement cache.
 - `/highlight` entry point (hand-rolled tokenizers, outside the main bundle): built and verified ([P3-29 to P3-34](./phase-3/decisions.md#p3-29-hand-rolled-tokenizers-with-a-stateless-replaceable-contract), [plugins](./phase-3/plugins.md#highlight)).
