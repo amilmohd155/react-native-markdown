@@ -193,6 +193,10 @@ jest.retryTimes(2);
     // One of each thing the measured run does, so every module it needs is
     // compiled: parse, mount, update, unmount.
     await mounted(parse(F1), parse(editLastParagraph(F1)))();
+    // The larger fixtures render node types F1 lacks (tables, ...), whose
+    // lazy React Native getters (`useWindowDimensions`) transform on first use.
+    await mounted(parse(F2))();
+    await mounted(parse(F3))();
     streamed(F1, 20)();
     md.parse(F1, {});
   }

@@ -272,7 +272,16 @@ export function convertTokens(
       case 'table_open':
         tableAlign = [];
         tableRow = 0;
-        open(token, NodeType.Table, 0, { align: tableAlign });
+        open(token, NodeType.Table, 0, {
+          align: tableAlign,
+          // The table's own lines, for its width cache key (P3-37).
+          source: token.map
+            ? source.slice(
+                lineToOffset(lineOffsets, token.map[0]),
+                lineToOffset(lineOffsets, token.map[1])
+              )
+            : '',
+        });
         break;
       case 'thead_open':
         inTableHead = true;

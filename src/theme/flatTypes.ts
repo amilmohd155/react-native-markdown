@@ -120,6 +120,10 @@ export interface TableTheme extends TextProps, MarginProps {
    * clips the bleed. Negative values count as 0.
    */
   horizontalOverflow?: number;
+  /** Narrowest a column may be, in points (default 48). Invalid: default. */
+  minColumnWidth?: number;
+  /** Widest a column may be, in points (default 280). Below min: raised to min. */
+  maxColumnWidth?: number;
   headerBackgroundColor?: string;
   headerColor?: string;
   headerFontFamily?: string;

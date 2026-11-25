@@ -29,10 +29,9 @@ import {
   ListGapContext,
   ListMarkerContext,
   TextResetContext,
-  TableKeyContext,
   TableLayoutContext,
   useRenderContext,
-  type TableLayout,
+  type TableCellSize,
 } from '../contexts';
 import { checkboxHitSlop } from '../checkbox';
 import { codeLayout, PlainCodeBody } from './codeBlockLayout';
@@ -46,13 +45,8 @@ import { cachedImageSize, retryImageSize, useImageSize } from '../imageSize';
 import { useImageErrorReport } from '../useImageErrorReport';
 import { useTaskState } from '../useTaskState';
 import { useFootnoteFlash } from '../useFootnoteFlash';
-import {
-  cachedColumnWidths,
-  columnWidths,
-  MAX_COLUMN_WIDTH,
-  MIN_COLUMN_WIDTH,
-  storeColumnWidths,
-} from '../tableLayout';
+import { measuringSize } from '../tableLayout';
+import { useTableWidths } from '../useTableWidths';
 
 /**
  * Default block elements. Spec: docs/rewrite/03-architecture.md#default-elements
@@ -487,92 +481,28 @@ export function Image({ src, alt, title, style }: ElementProps<'Image'>) {
 
 /**
  * Table in a horizontal ScrollView, with fixed column widths: on first
- * render every cell reports its natural width (capped), then each column
- * takes its widest cell. The result is cached per table content and theme,
- * so re-renders and remounts skip the measuring pass.
+ * render every cell reports its natural width (bounded by a ceiling of about
+ * twice the window), then each column takes its widest cell. The natural
+ * widths are cached per table content and theme, so remounts skip the
+ * measuring pass; the cap (`tableColumns.max`, or the container if narrower)
+ * is applied when rendering, so a resize needs no re-measure (P3-37).
+ *
+ * While the table sits in the open block of a stream its widths are a
+ * grow-only seed applied as `minWidth`: nothing is hidden or stored, a wider
+ * cell grows its column. On close the seed becomes the final widths (stored,
+ * no hidden pass); with no seed it measures hidden once.
  */
-export function Table({ style, children }: ElementProps<'Table'>) {
+export function Table({ style, align, children }: ElementProps<'Table'>) {
   const { theme } = useRenderContext();
-  const key = useContext(TableKeyContext);
-  const [state, setState] = useState(() => ({
-    theme,
-    widths: cachedColumnWidths(theme, key),
-    pass: 0,
-  }));
-  let widths = state.widths;
-  let pass = state.pass;
-  if (state.theme !== theme) {
-    // New fonts or sizes: use that theme's cached widths, or re-measure.
-    // A new measuring pass remounts the cells: native reports `onLayout` only
-    // for new or resized views, and unchanged sizes would never reveal it.
-    widths = cachedColumnWidths(theme, key);
-    if (widths === null) pass += 1;
-    setState({ theme, widths, pass });
-  }
+  const { layout, hidden, pass, onLayout } = useTableWidths(align.length);
 
-  // One measuring pass per layout object: a new theme or table makes a new
-  // one, which starts again with no measurements.
-  const { layout, attach } = useMemo(() => {
-    const scan = {
-      measured: [] as number[],
-      enrolled: new Set<object>(),
-      reported: new Set<object>(),
-      scheduled: false,
-      disposed: false,
-    };
-    // Web reports `onLayout` a frame or more apart under load, so committing
-    // on the first frame fixes only the columns measured so far (the rest
-    // keep their natural width, ragged). Commit when every cell has reported.
-    const commitWhenComplete = () => {
-      if (scan.disposed || scan.scheduled || scan.enrolled.size === 0) return;
-      for (const cell of scan.enrolled) if (!scan.reported.has(cell)) return;
-      // Cells lay out in the same frame; collect them all, then commit.
-      scan.scheduled = true;
-      requestAnimationFrame(() => {
-        if (scan.disposed) return;
-        const final = columnWidths(scan.measured);
-        storeColumnWidths(theme, key, final);
-        setState((prev) => ({ theme, widths: final, pass: prev.pass }));
-      });
-    };
-    const value: TableLayout = {
-      widths,
-      enroll(cell) {
-        if (widths !== null) return () => {};
-        scan.enrolled.add(cell);
-        return () => {
-          scan.enrolled.delete(cell);
-          commitWhenComplete();
-        };
-      },
-      report(cell, column, width) {
-        if (widths !== null) return;
-        scan.measured[column] = Math.max(scan.measured[column] ?? 0, width);
-        scan.reported.add(cell);
-        commitWhenComplete();
-      },
-    };
-    return {
-      layout: value,
-      // Strict mode runs effects twice: re-arm on every attach.
-      attach: () => {
-        scan.disposed = false;
-        return () => {
-          scan.disposed = true;
-        };
-      },
-    };
-  }, [widths, theme, key]);
-  // A replaced layout (new theme, table or widths) drops its pending commit.
-  useEffect(attach, [attach]);
-
-  const { align, bleed } = theme.tableFrame;
+  const { align: frameAlign, bleed } = theme.tableFrame;
   const frame = useMemo(
     () =>
-      align === null && bleed === 0
+      frameAlign === null && bleed === 0
         ? null
-        : splitTableFrame(style.container, align, bleed),
-    [style.container, align, bleed]
+        : splitTableFrame(style.container, frameAlign, bleed),
+    [style.container, frameAlign, bleed]
   );
 
   return (
@@ -582,16 +512,17 @@ export function Table({ style, children }: ElementProps<'Table'>) {
       style={frame === null ? style.container : frame.outer}
       contentContainerStyle={frame?.content}
       showsHorizontalScrollIndicator={false}
+      onLayout={onLayout}
     >
       {/* Hidden while measuring, so unaligned columns never show. */}
       <View
         key={pass}
         style={
           frame === null
-            ? widths === null
+            ? hidden
               ? styles.measuring
               : undefined
-            : [frame.border, widths === null ? styles.measuring : undefined]
+            : [frame.border, hidden ? styles.measuring : undefined]
         }
       >
         <TableLayoutContext.Provider value={layout}>
@@ -644,14 +575,6 @@ export function TableRow({ style, children }: ElementProps<'TableRow'>) {
   return <View style={style.container}>{children}</View>;
 }
 
-/**
- * react-native-web reports `onLayout` sizes from `offsetWidth`, which rounds
- * to whole pixels: a cell whose natural width is 67.17 reports 67, so its
- * text (53.17 wide, plus padding and border) wraps mid-word at the fixed
- * width. One pixel of slack covers the rounding; native reports exact floats.
- */
-const webLayoutSlack = () => (Platform.OS === 'web' ? 1 : 0);
-
 const CELL_ALIGN = {
   left: undefined,
   center: { textAlign: 'center' },
@@ -664,10 +587,14 @@ export function TableCell({
   style,
   children,
 }: ElementProps<'TableCell'>) {
-  const { options } = useRenderContext();
+  const { options, theme } = useRenderContext();
   const layout = useContext(TableLayoutContext);
-  const width = layout?.widths?.[column];
-  const measuring = layout !== null && layout.widths === null;
+  const measuring = layout !== null && layout.sizes === null;
+  const reporting = layout !== null && (layout.sizes === null || layout.grow);
+  const size: TableCellSize =
+    layout === null
+      ? measuringSize(theme.tableColumns)
+      : (layout.sizes?.[column] ?? layout.measureSize);
   const [identity] = useState(() => ({}));
   useLayoutEffect(
     () => (measuring ? layout.enroll(identity) : undefined),
@@ -676,18 +603,11 @@ export function TableCell({
 
   return (
     <View
-      style={[
-        style.container,
-        width === undefined ? styles.cellMeasure : { width },
-      ]}
+      style={[style.container, size]}
       onLayout={
-        measuring
+        reporting
           ? (event) =>
-              layout.report(
-                identity,
-                column,
-                event.nativeEvent.layout.width + webLayoutSlack()
-              )
+              layout.report(identity, column, event.nativeEvent.layout.width)
           : undefined
       }
     >
@@ -758,6 +678,5 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   measuring: { opacity: 0 },
-  cellMeasure: { minWidth: MIN_COLUMN_WIDTH, maxWidth: MAX_COLUMN_WIDTH },
   footnoteLabel: { minWidth: 24 },
 });

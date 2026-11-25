@@ -5,7 +5,11 @@ import { resolveTheme } from '../../theme';
 import { BlockList } from '../Block';
 import { createRenderCtx, type RenderCtx } from '../context';
 import { defaultComponents } from '../defaults';
-import { cachedColumnWidths, columnWidths } from '../tableLayout';
+import {
+  cachedColumnWidths,
+  capColumnWidths,
+  columnWidths,
+} from '../tableLayout';
 import { tableFor } from './helpers';
 
 const SOURCE = '| a | b |\n|---|--:|\n| one | two |\n| three | 4 |\n';
@@ -112,7 +116,7 @@ describe('table column widths', () => {
     );
   });
 
-  it('re-measures when the table content changes', async () => {
+  it('re-measures when the table content changes (a new key)', async () => {
     const ctx = createRenderCtx({ components: defaultComponents });
     const root = await mount(SOURCE, ctx);
     await layOut(root, [30, 20, 50, 60, 90, 10]);
@@ -138,9 +142,65 @@ describe('table column widths', () => {
     expect(cachedColumnWidths(theme, '')).toBeNull();
   });
 
-  it('clamps column widths', () => {
-    expect(columnWidths([10, 100.2, 1000, undefined])).toEqual([
-      48, 101, 280, 48,
+  it('stores natural widths clamped to [min, ceiling]', () => {
+    expect(
+      columnWidths([10, 100.2, 1000, undefined], { min: 48, max: 600 })
+    ).toEqual([48, 101, 600, 48]);
+  });
+
+  it('measures up to the token max when it exceeds twice the window', async () => {
+    const theme = resolveTheme({ table: { maxColumnWidth: 5000 } });
+    const ctx = createRenderCtx({ components: defaultComponents, theme });
+    const root = await mount('| x |\n|---|\n| y |\n', ctx);
+    const style = StyleSheet.flatten(cells(root)[0]!.props.style) as {
+      maxWidth?: number;
+    };
+    expect(style.maxWidth).toBe(5000); // not 2 x window (1500)
+    await layOut(root, [3000, 3000]);
+    expect(cells(root).map(widthOf)).toEqual([3000, 3000]);
+  });
+
+  it('caps natural widths at render time', () => {
+    expect(capColumnWidths([48, 101, 600], { min: 48, max: 280 })).toEqual([
+      48, 101, 280,
     ]);
+    expect(capColumnWidths([48, 101, 600], { min: 48, max: 90 })).toEqual([
+      48, 90, 90,
+    ]);
+    // A cap below the minimum never goes under it.
+    expect(capColumnWidths([60], { min: 48, max: 20 })).toEqual([48]);
+  });
+
+  it('re-clamps on a container resize without measuring again', async () => {
+    const ctx = createRenderCtx({ components: defaultComponents });
+    const root = await mount(SOURCE.replace('three', 'wide'), ctx);
+    await layOut(root, [30, 20, 50, 60, 400, 10]);
+    expect(cells(root).map(widthOf)).toEqual([280, 60, 280, 60, 280, 60]);
+    const before = cells(root);
+
+    const scroll = root.findAll((n) => n.type === 'RCTScrollView')[0]!;
+    await act(async () => {
+      scroll.props.onLayout({ nativeEvent: { layout: { width: 150 } } });
+    });
+    expect(cells(root).map(widthOf)).toEqual([150, 60, 150, 60, 150, 60]);
+    expect(JSON.stringify(root.toJSON())).not.toContain('"opacity":0');
+    // The same cells stayed mounted: no new pass.
+    expect(cells(root)).toEqual(before);
+
+    await act(async () => {
+      scroll.props.onLayout({ nativeEvent: { layout: { width: 500 } } });
+    });
+    expect(cells(root).map(widthOf)).toEqual([280, 60, 280, 60, 280, 60]);
+  });
+
+  it('treats a container width of 0 as unknown, not as a cap of min', async () => {
+    const ctx = createRenderCtx({ components: defaultComponents });
+    const root = await mount(SOURCE.replace('three', 'wide'), ctx);
+    await layOut(root, [30, 20, 50, 60, 400, 10]);
+    const scroll = root.findAll((n) => n.type === 'RCTScrollView')[0]!;
+    await act(async () => {
+      scroll.props.onLayout({ nativeEvent: { layout: { width: 0 } } });
+    });
+    expect(cells(root).map(widthOf)).toEqual([280, 60, 280, 60, 280, 60]);
   });
 });

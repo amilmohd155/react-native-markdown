@@ -108,7 +108,14 @@ export interface NodeAttrsMap {
   };
   [NodeType.ListItem]: { index: number };
   [NodeType.CodeBlock]: { language: string | null; meta: string | null };
-  [NodeType.Table]: { align: Align[] };
+  [NodeType.Table]: {
+    align: Align[];
+    /**
+     * The table's own source lines (P3-37): the identity of its content for
+     * the column width cache. A substring of the parsed source, not a copy.
+     */
+    source: string;
+  };
   [NodeType.TableRow]: { index: number };
   [NodeType.TableCell]: { align: Align; column: number };
   [NodeType.Link]: { href: string; title: string | null };

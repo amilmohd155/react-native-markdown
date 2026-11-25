@@ -38,6 +38,8 @@ export function blockPropsEqual(a: BlockProps, b: BlockProps): boolean {
     // changing its text.
     (a.table.openFenceBlock === a.index) ===
       (b.table.openFenceBlock === b.index) &&
+    // Table `open` (P3-37): the closing flush leaves the text unchanged.
+    (a.table.openBlock === a.index) === (b.table.openBlock === b.index) &&
     isSameBlock(a.table, a.index, b.table, b.index)
   );
 }

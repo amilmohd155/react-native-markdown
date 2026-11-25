@@ -392,13 +392,20 @@ export function useMarkdownPipeline(
   const streaming = streamInfo !== undefined && !streamInfo.ended;
   const hasSection = footnoteSectionIndex(full) >= 0;
   const hidden = streaming && hasSection ? 1 : 0;
-  const table = useMemo(
-    () =>
-      hidden === 0
-        ? full
-        : Object.freeze({ ...full, blockCount: full.blockCount - hidden }),
-    [full, hidden]
-  );
+  const table = useMemo(() => {
+    if (hidden === 0 && !streaming) return full;
+    const blockCount = full.blockCount - hidden;
+    // The last block is the open one while a stream runs (P3-37).
+    return Object.freeze({
+      ...full,
+      blockCount,
+      // A tail that the stream already closed (`stableCount` reached the
+      // end, e.g. after a blank line) has no open block.
+      ...(streaming && blockCount > 0 && blockCount > (full.stableCount ?? 0)
+        ? { openBlock: blockCount - 1 }
+        : null),
+    });
+  }, [full, hidden, streaming]);
 
   const fade = useFadePlan(parsed, hidden);
 

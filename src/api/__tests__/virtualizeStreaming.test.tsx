@@ -330,11 +330,9 @@ describe('500-chunk stream', () => {
       expect(topHosts(tree.container)).toHaveLength(24);
       // Kind changes: about one per code block and table (4 each).
       expect(run.kindChanges).toBeLessThanOrEqual(12);
-      // The open table is keyed by its content, so it remounts on each
-      // change. A row shows when its line ends (P2b-3): about one remount
-      // per finished row (4 tables of 2 rows), not one per flush.
-      expect(run.tableRemounts).toBeGreaterThanOrEqual(4);
-      expect(run.tableRemounts).toBeLessThanOrEqual(12);
+      // The table is keyed by its position, not its content (P3-37): it
+      // stays mounted while its rows arrive.
+      expect(run.tableRemounts).toBe(0);
       expect(spies.all()).toEqual({
         scrollTo: 0,
         scrollToEnd: 0,

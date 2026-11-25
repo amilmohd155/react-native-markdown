@@ -7,6 +7,7 @@ import {
   InheritedTextReset,
   ListGapContext,
   ListMarkerContext,
+  OpenBlockContext,
   TableKeyContext,
 } from './contexts';
 import { element } from './element';
@@ -32,6 +33,7 @@ import {
   listProps,
   tableCellProps,
   tableProps,
+  tableSourceOf,
   tableRowProps,
 } from './props';
 
@@ -61,11 +63,6 @@ interface Place {
   readonly textSize?: number;
 }
 
-/**
- * Identity of a table's content, for the column width cache: what its
- * top-level block renders (document context, block context, source text,
- * as in `isSameBlock`) plus the table's position inside the block.
- */
 /** The top margin of the footnote section: the gap above its first definition. */
 function sectionInset(container: ViewStyle): number {
   const flat = StyleSheet.flatten(container);
@@ -73,12 +70,18 @@ function sectionInset(container: ViewStyle): number {
   return typeof margin === 'number' ? margin : 0;
 }
 
+/**
+ * Identity of a table's content, for the column width cache (P3-37): the
+ * document context, the block context, the table's position inside its
+ * block, and the table's own source lines, not its whole block's.
+ */
 function tableKey(table: NodeTable, id: number, place: Place): string {
-  const start = table.blockStart[place.block]!;
-  const end = table.blockEnd[place.block]!;
+  // No source (no token map): '' means do not cache.
+  const source = tableSourceOf(table, id);
+  if (source === '') return '';
   return `${table.context}\u0001${table.blockContext[place.block]}\u0001${
     id - place.root
-  }\u0001${table.source.slice(start, end)}`;
+  }\u0001${source}`;
 }
 
 function renderChildren(
@@ -247,17 +250,22 @@ function renderNode(
 
     case NodeType.Table: {
       const key = tableKey(table, id, place);
-      // Keyed by content: a changed table remounts and re-measures.
       return createElement(
         TableKeyContext.Provider,
-        { key, value: key },
-        element(
-          ctx,
-          'Table',
-          id,
-          tableProps(table, id),
-          elements.Table,
-          renderRows(table, id, ctx, place)
+        // React key: position only, so a table survives every flush. The
+        // cache key (content) is the context value, never a React key.
+        { key: `${place.block}:${id - place.root}`, value: key },
+        createElement(
+          OpenBlockContext.Provider,
+          { value: table.openBlock === place.block },
+          element(
+            ctx,
+            'Table',
+            id,
+            tableProps(table, id),
+            elements.Table,
+            renderRows(table, id, ctx, place)
+          )
         )
       );
     }
